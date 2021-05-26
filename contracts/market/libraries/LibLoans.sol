@@ -161,6 +161,10 @@ library LibLoans {
         }
     }
 
+    /**
+     * @notice check if a loan can go to end of auction with a collateral ratio
+     * @return bool checking if collateralRatio is >= the over collateralized buffer value
+     */
     function canGoToEOAWithCollateralRatio(uint256 collateralRatio)
         internal
         view

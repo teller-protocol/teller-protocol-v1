@@ -84,6 +84,13 @@ contract LoanDataFacet {
         return LibLoans.getInterestOwedFor(loanID, amountBorrow);
     }
 
+    /**
+     * @notice it returns the collateral needed for a loan
+     * @param loanID the identifier of the loan ID to retrieve collateral from
+     * @return neededInLendingTokens total collateral needed in lending tokens
+     * @return neededInCollateralTokens total collateral needed in collateral tokens
+     * @return escrowLoanValue total collateral needed in loan value
+     */
     function getCollateralNeededInfo(uint256 loanID)
         external
         view
@@ -96,6 +103,11 @@ contract LoanDataFacet {
         return LibLoans.getCollateralNeededInfo(loanID);
     }
 
+    /**
+     * @notice it returns the typed address of a loan escrow
+     * @param loanID the identifier of the respective escrow's loan
+     * @return escrow_ the typed address of the returned ILoanEscrow
+     */
     function getLoanEscrow(uint256 loanID)
         external
         view
@@ -104,6 +116,11 @@ contract LoanDataFacet {
         escrow_ = address(LibLoans.s().loanEscrows[loanID]);
     }
 
+    /**
+     * @notice it returns the escrow's total value by calculating the value all the escrow tokens
+     * @param loanID the identifier of the respective escrow's loan
+     * @return the total value of the loan escrow
+     */
     function getLoanEscrowValue(uint256 loanID)
         external
         view
@@ -112,6 +129,11 @@ contract LoanDataFacet {
         return LibEscrow.calculateTotalValue(loanID);
     }
 
+    /**
+     * @notice it returns the total escrow tokens held by an escrow
+     * @param loanID the identifier of the respective escrow's loan
+     * @return tokens_ the tokens held at the escrow loan 
+     */
     function getEscrowTokens(uint256 loanID)
         external
         view

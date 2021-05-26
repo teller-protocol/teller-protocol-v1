@@ -105,6 +105,13 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         emit LoanTermsSet(loanID, msg.sender);
     }
 
+    /**
+     * @notice it takes out a loan using NFT(s)
+     * @notice it requires that the amount of loan is less than the allowedLoanSize, which is calculated by adding the baseLoanSize of the NFT proofs
+     * @param loanID the identifier of the respective loan
+     * @param amount the amount of loan requested to take out
+     * @param proofs the NFT(s) data that contains the baseLoanSize
+     */
     function takeOutLoanWithNFTs(
         uint256 loanID,
         uint256 amount,
@@ -136,6 +143,12 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         emit LoanTakenOut(loanID, msg.sender, amount, true);
     }
 
+    /**
+     * @notice it is a modifier that does all the checks if a user can take out a loan
+     * @notice once all requirements pass, the data of interest, borrowed amount and debt is stored
+     * @param loanID the main identifier of the loan
+     * @param amount the amount of loan requested to take out
+     */
     modifier __takeOutLoan(uint256 loanID, uint256 amount) {
         Loan storage loan = LibLoans.loan(loanID);
 
@@ -163,7 +176,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         );
         loan.status = LoanStatus.Active;
         loan.loanStartTime = uint32(block.timestamp);
-
         _;
     }
 
@@ -213,6 +225,11 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 }
 
 library CreateLoanLib {
+    /**
+     * @notice it checks if a loan's request passes all the necessary requirements
+     * @param request the LoanRequest to check it's parameters before creating a loan
+     * @param collateralToken the collateral token to cross reference with the loan request
+     */
     function verifyCreateLoan(
         LoanRequest calldata request,
         address collateralToken
@@ -238,6 +255,12 @@ library CreateLoanLib {
         );
     }
 
+    /**
+     * @notice it creates a new loan after processing loan terms provided by the request and responses
+     * @param request the Loan Request
+     * @param responses the Loan Responses which contain signers data
+     * @param collateralToken the token provided as collateral for the loan
+     */
     function initLoan(
         LoanRequest calldata request,
         LoanResponse[] calldata responses,
@@ -268,6 +291,10 @@ library CreateLoanLib {
         );
     }
 
+    /**
+     * @notice creates a new ID for the loan
+     * @return id_ the new ID requested, which stores it in the loan data
+     */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
@@ -275,6 +302,11 @@ library CreateLoanLib {
         Counters.increment(counter);
     }
 
+    /**
+     * @notice it creates a new loan escrow for the respective loan to hold it's funds
+     * @param loanID the ID that identifies the loan
+     * @return escrow_ the loanEscrow that gets created
+     */
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
         escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");
