@@ -38,6 +38,9 @@ After this, you will need to make sure that the following variables are defined 
   - `ALCHEMY_RINKEBY_KEY`
   - `ALCHEMY_ROPSTEN_KEY`
   - `ALCHEMY_KOVAN_KEY`
+- Matic nodes used to deploy smart contracts on their respective networks
+  - `MATIC_MAINNET_KEY`
+  - `MATIC_MUMBAI_KEY`
 - `ETHERSCAN_API_KEY` - Used to verify smart contracts after deployment
 - `CMC_KEY` - Used to fetch gas pricing info when running tests
 - `GAS_PRICE_GWEI_KEY` - Default gas price to use when running Hardhat

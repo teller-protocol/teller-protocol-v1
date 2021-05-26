@@ -1,10 +1,14 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
-import { deploy, deployDiamond } from '../utils/deploy-helpers'
+import {
+  deploy,
+  deployDiamond,
+  DeployDiamondArgs,
+} from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, run, log, ethers } = hre
+  const { getNamedSigner, run, log, contracts } = hre
   const deployer = await getNamedSigner('deployer')
   // Make sure contracts are compiled
   await run('compile')
@@ -18,7 +22,33 @@ const deployNFT: DeployFunction = async (hre) => {
     hre,
   })
 
-  const nftDistributor = await deployDiamond<ITellerNFTDistributor>({
+  let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
+  try {
+    // Try to get deployment of TellerDiamond
+    await contracts.get('TellerNFTDistributor')
+
+    // If deployment exists execute upgrade function
+    const executeMethod = undefined
+    const upgradeExecute: DeployDiamondArgs<
+      ITellerNFTDistributor,
+      typeof executeMethod
+    >['execute'] = undefined
+
+    execute = upgradeExecute
+  } catch {
+    const executeMethod = 'initialize'
+    const initExecute: DeployDiamondArgs<
+      ITellerNFTDistributor,
+      typeof executeMethod
+    >['execute'] = {
+      methodName: executeMethod,
+      args: [nft.address, await deployer.getAddress()],
+    }
+
+    execute = initExecute
+  }
+
+  const nftDistributor = await deployDiamond<ITellerNFTDistributor, any>({
     name: 'TellerNFTDistributor',
     facets: [
       'ent_initialize_NFTDistributor_v1',
@@ -28,6 +58,7 @@ const deployNFT: DeployFunction = async (hre) => {
       'ext_distributor_NFT_v1',
     ],
     hre,
+    execute,
   })
 
   log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
@@ -50,5 +81,6 @@ const deployNFT: DeployFunction = async (hre) => {
 }
 
 deployNFT.tags = ['nft']
+deployNFT.dependencies = ['setup']
 
 export default deployNFT

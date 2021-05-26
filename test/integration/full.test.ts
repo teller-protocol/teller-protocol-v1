@@ -6,31 +6,19 @@ import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
-import { RUN_EXISTING } from '../helpers/env-helpers'
 import { fundLender, getFunds } from '../helpers/get-funds'
-import { getLPHelpers } from '../helpers/lending-pool'
 import { LoanType, takeOut } from '../helpers/loans'
 
 chai.should()
 chai.use(solidity)
 
-const {
-  contracts,
-  tokens,
-  deployments,
-  getNamedSigner,
-  ethers,
-  network,
-  evm,
-  toBN,
-} = hre
+const { contracts, tokens, deployments, getNamedSigner, network, evm, toBN } =
+  hre
 
 describe('Full Integration', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
-  console.log({ RUN_EXISTING, network: network.name })
-  // throw new Error('test')
   function testLP(market: Market): void {
     let diamond: ITellerDiamond
     let lendingToken: ERC20
@@ -47,14 +35,12 @@ describe('Full Integration', () => {
       })
 
       diamond = await contracts.get('TellerDiamond')
+      lender = await getNamedSigner('lender')
+      lender2 = await getNamedSigner('lender2')
       lendingToken = await tokens.get(market.lendingToken)
       tToken = await contracts.get('ITToken', {
         at: await diamond.getTTokenFor(lendingToken.address),
       })
-
-      deployer = await getNamedSigner('deployer')
-      lender = await getNamedSigner('lender')
-      lender2 = await getNamedSigner('lender2')
     })
 
     describe(`${market.lendingToken} Market`, () => {
