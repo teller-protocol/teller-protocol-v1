@@ -70,7 +70,11 @@ describe('Lending', () => {
           it('should NOT be able deposit directly on the Teller Token contract', async () => {
             await tToken.connect(deployer).restrict(true)
 
-            const depositAmount = await fundLender(lendingToken, 100)
+            const depositAmount = await fundLender({
+              token: lendingToken,
+              amount: 100,
+              hre,
+            })
             await tToken
               .connect(lender)
               .functions['mint(uint256)'](depositAmount)
@@ -88,7 +92,11 @@ describe('Lending', () => {
               .withArgs(LENDING_ID, await deployer.getAddress())
 
             // Fund the lender
-            const depositAmount = await fundLender(lendingToken, 1000)
+            const depositAmount = await fundLender({
+              token: lendingToken,
+              amount: 1000,
+              hre,
+            })
 
             // Approve amount to loan
             await lendingToken
@@ -118,6 +126,7 @@ describe('Lending', () => {
               to: await lender.getAddress(),
               tokenSym: market.lendingToken,
               amount: depositAmount,
+              hre,
             })
 
             // Approve amount to loan
@@ -144,7 +153,11 @@ describe('Lending', () => {
               )
 
             // Fund the market
-            const depositAmount = await fundLender(lendingToken, 1000)
+            const depositAmount = await fundLender({
+              token: lendingToken,
+              amount: 1000,
+              hre,
+            })
             await helpers.deposit(lender, depositAmount)
 
             const tTokenBalAfter = await tToken.balanceOf(
@@ -174,7 +187,11 @@ describe('Lending', () => {
           await tToken.connect(deployer).restrict(false)
 
           // Fund the lender
-          depositAmount1 = await fundLender(lendingToken, 1000)
+          depositAmount1 = await fundLender({
+            token: lendingToken,
+            amount: 1000,
+            hre,
+          })
 
           // Approve amount to loan
           await lendingToken
@@ -252,6 +269,7 @@ describe('Lending', () => {
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
             amount: depositAmount2,
+            hre,
           })
 
           // Approve amount to loan

@@ -1,17 +1,24 @@
 import { task, types } from 'hardhat/config'
 
-interface TestForkArgs {
-  chain: string
-}
-task<TestForkArgs>('test', async (args, hre, runSuper): Promise<void> => {
+task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
-  const { chain } = args
 
-  await run('fork', { chain, onlyDeployments: true })
-  await runSuper({ ...args })
-}).addOptionalParam(
-  'chain',
-  'An ETH network name to fork',
-  'mainnet',
-  types.string
-)
+  const chain = process.env.FORKING_NETWORK
+  if (chain == null) {
+    throw new Error(`Invalid network to fork and run tests on: ${chain}`)
+  }
+
+  // Fork the deployment files into the 'hardhat' network
+  await run('fork', {
+    chain,
+    onlyDeployment: true,
+  })
+
+  // Disable logging
+  // process.env.DISABLE_LOGS = 'true'
+
+  // Run the actual test task
+  await runSuper({
+    deployFixture: true,
+  })
+})

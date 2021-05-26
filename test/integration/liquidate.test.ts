@@ -86,6 +86,7 @@ describe('Liquidate Loans', () => {
           to: liquidator.address,
           tokenSym: market.lendingToken,
           amount: neededAmount,
+          hre,
         })
       }
       // Approve the token on the diamond

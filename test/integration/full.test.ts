@@ -7,31 +7,19 @@ import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
-import { RUN_EXISTING } from '../helpers/env-helpers'
 import { fundLender, getFunds } from '../helpers/get-funds'
-import { getLPHelpers } from '../helpers/lending-pool'
 import { LoanType, takeOut } from '../helpers/loans'
 
 chai.should()
 chai.use(solidity)
 
-const {
-  contracts,
-  tokens,
-  deployments,
-  getNamedSigner,
-  ethers,
-  network,
-  evm,
-  toBN,
-} = hre
+const { contracts, tokens, deployments, getNamedSigner, network, evm, toBN } =
+  hre
 
 describe('Full Integration', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
-  console.log({ RUN_EXISTING, network: network.name })
-  // throw new Error('test')
   function testLP(market: Market): void {
     let diamond: ITellerDiamond
     let lendingToken: ERC20
@@ -48,14 +36,12 @@ describe('Full Integration', () => {
       })
 
       diamond = await contracts.get('TellerDiamond')
+      lender = await getNamedSigner('lender')
+      lender2 = await getNamedSigner('lender2')
       lendingToken = await tokens.get(market.lendingToken)
       tToken = await contracts.get('ITToken', {
         at: await diamond.getTTokenFor(lendingToken.address),
       })
-
-      deployer = await getNamedSigner('deployer')
-      lender = await getNamedSigner('lender')
-      lender2 = await getNamedSigner('lender2')
     })
 
     describe(`${market.lendingToken} Market`, () => {
@@ -73,7 +59,11 @@ describe('Full Integration', () => {
           await tToken.connect(deployer).restrict(false)
 
           // Fund the lender
-          depositAmount1 = await fundLender(lendingToken, 1000)
+          depositAmount1 = await fundLender({
+            token: lendingToken,
+            amount: 1000,
+            hre,
+          })
 
           // Approve amount to loan
           await lendingToken
@@ -162,6 +152,7 @@ describe('Full Integration', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment
@@ -202,6 +193,7 @@ describe('Full Integration', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment
@@ -231,6 +223,7 @@ describe('Full Integration', () => {
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
             amount: depositAmount2,
+            hre,
           })
 
           // Approve amount to loan

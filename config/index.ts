@@ -1,4 +1,3 @@
-import fs from 'fs-extra'
 import { Network } from 'hardhat/types'
 import path from 'path'
 
@@ -13,15 +12,8 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 
-const deploymentsDir = path.join(__dirname, '../deployments')
-
-const getNetworkName = (network: Network): string =>
-  /localhost|hardhat/.test(network.name)
-    ? fs.readFileSync(
-        path.join(deploymentsDir, network.name, '.forkingNetwork'),
-        'utf-8'
-      )
-    : network.name
+export const getNetworkName = (network: Network): string =>
+  process.env.FORKING_NETWORK ?? network.name
 
 export const getAssetSettings = (network: Network) =>
   assetSettings[getNetworkName(network)]
@@ -31,10 +23,7 @@ export const getATMs = (network: Network) => atms[getNetworkName(network)]
 export const getChainlink = (network: Network) =>
   chainlink[getNetworkName(network)]
 
-export const getMarkets = (network: Network) =>
-  /localhost|hardhat/.test(network.name)
-    ? markets[getNetworkName(network)]
-    : markets[network.name]
+export const getMarkets = (network: Network) => markets[getNetworkName(network)]
 
 export const getNodes = (network: Network) => nodes[getNetworkName(network)]
 
@@ -44,10 +33,7 @@ export const getPlatformSettings = (network: Network) =>
 export const getSigners = (network: Network) => signers[network.name]
 
 export const getTokens = (network: Network) => {
-  const networkTokens = /localhost|hardhat/.test(network.name)
-    ? tokens[getNetworkName(network)]
-    : tokens[network.name]
-
+  const networkTokens = tokens[getNetworkName(network)]
   const all: Tokens = Object.keys(networkTokens).reduce((map, type) => {
     // @ts-expect-error keys
     map = { ...map, ...networkTokens[type] }

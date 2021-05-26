@@ -175,6 +175,7 @@ export const takeOut = async (
       to: borrower,
       amount: ethers.utils.parseEther('1'),
       tokenSym: 'ETH',
+      hre,
     })
   }
 

@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, Signer } from 'ethers'
-import hre from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getTokens } from '../../config'
 import { Address, TokenSymbol } from '../../types/custom/config-types'
@@ -10,10 +10,11 @@ export interface SwapArgs {
   to: Address | Signer
   tokenSym: TokenSymbol
   amount: BigNumberish
+  hre: HardhatRuntimeEnvironment
 }
 
 export const getFunds = async (args: SwapArgs): Promise<void> => {
-  const { getNamedSigner, ethers, tokens, contracts } = hre
+  const { getNamedSigner, ethers, tokens, contracts } = args.hre
 
   const funder = await getNamedSigner('funder')
 
@@ -24,7 +25,7 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
   })
 
   // Tokens
-  const { all: tokenAddresses } = getTokens(hre.network)
+  const { all: tokenAddresses } = getTokens(args.hre.network)
 
   const toAddress = Signer.isSigner(args.to)
     ? await args.to.getAddress()
@@ -53,16 +54,20 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
   }
 }
 
-export const fundLender = async (
-  token: ERC20,
+export interface FundLenderArgs {
+  token: ERC20
   amount: BigNumberish
-): Promise<BigNumber> => {
-  amount = hre.toBN(amount, await token.decimals())
+  hre: HardhatRuntimeEnvironment
+}
+
+export const fundLender = async (args: FundLenderArgs): Promise<BigNumber> => {
+  const amount = args.hre.toBN(args.amount, await args.token.decimals())
   // Get lender DAI to deposit
   await getFunds({
-    to: await hre.getNamedSigner('lender'),
-    tokenSym: await token.symbol(),
+    to: await args.hre.getNamedSigner('lender'),
+    tokenSym: await args.token.symbol(),
     amount,
+    hre: args.hre,
   })
   return amount
 }
