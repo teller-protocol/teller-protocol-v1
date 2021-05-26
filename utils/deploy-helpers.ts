@@ -62,32 +62,35 @@ export const deploy = async <C extends Contract>(
   return (await ethers.getContractAt(args.contract, contractAddress)) as C
 }
 
-interface DiamondExecuteArgs<F, A> {
+export interface DiamondExecuteArgs<F, A> {
   methodName: F
   args: A
 }
 
-type Facets = Array<string | Omit<DeployArgs, 'hre'>>
+export type Facets = Array<string | Omit<DeployArgs, 'hre'>>
 
 export interface DeployDiamondArgs<
   C extends Contract,
   F = string | undefined,
-  A = F extends string ? Parameters<C[F]> : never[]
+  A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
 > extends CommonDeployArgs {
   name: string
   facets: Facets
   owner?: string
-  execute?: F extends string ? DiamondExecuteArgs<F, A> : undefined
+  execute?: F extends keyof C['functions']
+    ? DiamondExecuteArgs<F, A>
+    : undefined
+  onFacetDeployment?: (result: DeployResult) => Promise<void>
 }
 
 export const deployDiamond = async <
   C extends Contract,
   F = string | undefined,
-  A = F extends string ? Parameters<C[F]> : undefined
+  A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
 >(
   args: DeployDiamondArgs<C, F, A>
 ): Promise<C> => {
-  const { hre, indent = 1 } = args
+  const { onFacetDeployment, hre, indent = 1 } = args
   const {
     deployments: { diamond },
     getNamedAccounts,
@@ -109,8 +112,10 @@ export const deployDiamond = async <
     owner: args.owner ?? deployer,
     libraries: args.libraries,
     facets: args.facets,
-    onFacetDeployment: (result) =>
-      onDeployResult({ result, hre, indent: indent + 1 }),
+    onFacetDeployment: async (result) => {
+      await onDeployResult({ result, hre, indent: indent + 1 })
+      await onFacetDeployment?.(result)
+    },
     // @ts-expect-error fix type
     execute: args.execute,
     from: deployer,

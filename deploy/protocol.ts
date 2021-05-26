@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
+import { getNetworkName, getTokens } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -12,11 +13,13 @@ import {
   deploy,
   deployDiamond,
   DeployDiamondArgs,
+  Facets,
 } from '../utils/deploy-helpers'
 
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
   const { deployer } = await getNamedAccounts()
+  const networkName = getNetworkName(network)
 
   log('********** Teller Diamond **********', { indent: 1 })
 
@@ -25,96 +28,163 @@ const deployProtocol: DeployFunction = async (hre) => {
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
 
-  const executeMethod = undefined
-  const execute: DeployDiamondArgs<
-    ITellerDiamond,
-    typeof executeMethod
-  >['execute'] = undefined
+  let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
+
+  try {
+    // Try to get deployment of TellerDiamond
+    await contracts.get('TellerDiamond')
+
+    // If deployment exists execute upgrade function
+    const executeMethod = undefined
+    const upgradeExecute: DeployDiamondArgs<
+      ITellerDiamond,
+      typeof executeMethod
+    >['execute'] = undefined
+
+    execute = upgradeExecute
+  } catch {
+    // Else execute initialize function
+
+    const tokens = getTokens(network)
+    const executeMethod = 'init'
+    const initExecute: DeployDiamondArgs<
+      ITellerDiamond,
+      typeof executeMethod
+    >['execute'] = {
+      methodName: executeMethod,
+      args: [
+        {
+          admin: deployer,
+          assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({
+            sym,
+            addr,
+          })),
+          cTokens: Object.values(tokens.compound),
+          tellerNFT: nftAddress,
+          loansEscrowBeacon: loansEscrowBeacon.address,
+          collateralEscrowBeacon: collateralEscrowBeacon.address,
+          tTokenBeacon: tTokenBeacon.address,
+          // Teller Gnosis Safe contract
+          nftLiquidationController:
+            '0x95143890162bd671d77ae9b771881a1cb76c29a4',
+        },
+      ],
+    }
+
+    execute = initExecute
+  }
 
   // Deploy platform diamond
-  const diamond = await deployDiamond<ITellerDiamond, typeof executeMethod>({
+  const facets: Facets = [
+    // Settings
+    {
+      contract: 'SettingsFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'PlatformSettingsFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'AssetSettingsDataFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'AssetSettingsFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'PausableFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // Pricing
+    {
+      contract: 'PriceAggFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'ChainlinkAggFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // Lending
+    {
+      contract: 'LendingFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // Loans
+    {
+      contract: 'CollateralFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'CreateLoanFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'LoanDataFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'RepayFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'SignersFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // NFT
+    {
+      contract: 'NFTFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // Escrow
+    {
+      contract: 'EscrowClaimTokensFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    // Dapps
+    {
+      contract: 'AaveFacet',
+      skipIfAlreadyDeployed: false,
+    },
+  ]
+
+  // Network specify Facets
+  switch (networkName) {
+    case 'mainnet':
+    case 'kovan':
+    case 'rinkeby':
+    case 'ropsten':
+      facets.push(
+        // Dapps
+        {
+          contract: 'UniswapFacet',
+          skipIfAlreadyDeployed: false,
+        }
+      )
+
+      break
+
+    case 'polygon':
+      facets.push(
+        // Dapps
+        {
+          contract: 'SushiswapFacet',
+          skipIfAlreadyDeployed: false,
+        }
+      )
+
+      break
+  }
+
+  const tellerDiamondArgs: DeployDiamondArgs<ITellerDiamond, any> = {
     hre,
     name: 'TellerDiamond',
-    facets: [
-      // Settings
-      {
-        contract: 'SettingsFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'PlatformSettingsFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'AssetSettingsDataFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'AssetSettingsFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'PausableFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // Pricing
-      {
-        contract: 'PriceAggFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'ChainlinkAggFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // Lending
-      {
-        contract: 'LendingFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // Loans
-      {
-        contract: 'CollateralFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'CreateLoanFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'LoanDataFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'RepayFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'SignersFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // NFT
-      {
-        contract: 'NFTFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // Escrow
-      {
-        contract: 'EscrowClaimTokensFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      // Dapps
-      {
-        contract: 'CompoundFacet',
-        skipIfAlreadyDeployed: false,
-      },
-      {
-        contract: 'UniswapFacet',
-        skipIfAlreadyDeployed: false,
-      },
-    ],
+    facets,
     owner: deployer,
     execute,
-  })
+  }
+  const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
 
   await addAuthorizedAddresses(hre, diamond)
 }
@@ -306,6 +376,6 @@ const deployTTokenBeacon = async (
 }
 
 deployProtocol.tags = ['protocol']
-deployProtocol.dependencies = ['nft']
+deployProtocol.dependencies = ['setup', 'nft']
 
 export default deployProtocol

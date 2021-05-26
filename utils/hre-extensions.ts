@@ -244,7 +244,7 @@ extendEnvironment((hre) => {
   }
 
   hre.log = (msg: string, config: LogConfig = {}): void => {
-    const { disable = false } = config
+    const { disable = process.env.DISABLE_LOGS === 'true' } = config
 
     if (disable) return
     const fn = config?.error ? process.stderr : process.stdout
