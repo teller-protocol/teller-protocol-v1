@@ -52,6 +52,7 @@ library LibLoans {
      * @return uint256 The total owed amount.
      */
     function getTotalOwed(uint256 loanID) internal view returns (uint256) {
+        //
         if (loan(loanID).status == LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(loanID, terms(loanID).maxLoanAmount);
@@ -76,6 +77,13 @@ library LibLoans {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
 
+    /**
+     * @notice it returns the total collateral needed in lending tokens, in collateral tokens and in escrowed loan values
+     * @param loanID the loanID to get the total collateral needed
+     * @return neededInLendingTokens total collateral needed in lending tokens
+     * @return neededInCollateralTokens total collateral needed in collateral tokens
+     * @return escrowLoanValue total collateral needed in loan value
+     */
     function getCollateralNeededInfo(uint256 loanID)
         internal
         view
@@ -89,6 +97,7 @@ library LibLoans {
             loanID
         );
 
+        // check if needed lending tokens is zero. if true, then needed collateral tokens is zero. else,
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
@@ -183,6 +192,11 @@ library LibLoans {
         }
     }
 
+    /**
+     * @notice it gets the loan amount of a respective loan
+     * @param loanID the loanID used to get the respective loan amount
+     * @return loan amount in uint256
+     */
     function _getLoanAmount(uint256 loanID) private view returns (uint256) {
         if (loan(loanID).status == LoanStatus.TermsSet) {
             return terms(loanID).maxLoanAmount;
@@ -192,6 +206,11 @@ library LibLoans {
         return 0;
     }
 
+    /**
+     * @notice it checks if a loan is active or the terms are set
+     * @param loanID the ID of the respective loan
+     * @return boolean of the loan status
+     */
     function _isActiveOrSet(uint256 loanID) private view returns (bool) {
         LoanStatus status = loan(loanID).status;
         return status == LoanStatus.Active || status == LoanStatus.TermsSet;
