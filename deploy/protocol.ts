@@ -160,6 +160,10 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'UniswapFacet',
           skipIfAlreadyDeployed: false,
+        },
+        {
+          contract: 'CompoundFacet',
+          skipIfAlreadyDeployed: false,
         }
       )
 
