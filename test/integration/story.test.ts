@@ -19,9 +19,13 @@ chai.use(solidity)
 
 describe.only('story test', async () => {
   // Run tests for all markets
-  const expectedResult = {
-    type: true,
+  const args = {
+    pass: false,
+    type: LOAN_ACTIONS[0],
     revert: 'Promise',
+    description: 'shoud do another stuff',
   }
-  await generateTests(LOAN_ACTIONS[0], expectedResult)
+  it(`${args.description}`, async () => {
+    await generateTests(args)
+  })
 })

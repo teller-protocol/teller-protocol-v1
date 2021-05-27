@@ -9,6 +9,8 @@ import {
 } from '../helpers/loans'
 import { getMarkets, getNFT } from '../../config'
 import { expect } from 'chai'
+import Prando from 'prando'
+let rng = new Prando('teller-v1')
 
 export const LOAN_ACTIONS: string[] = [
   'CREATE',
@@ -18,10 +20,12 @@ export const LOAN_ACTIONS: string[] = [
   'LIQUIDATE',
 ]
 
-interface TestResultArgs {
-  type: boolean
+interface TestArgs {
+  type: string
+  pass: boolean
   tx?: Promise<ContractTransaction>
-  revert: string
+  revert?: string
+  description: string
 }
 
 const STORY_TREE: { [id: number]: number } = {
@@ -43,18 +47,6 @@ const STORY_TREE: { [id: number]: number } = {
 // - Lend Compound
 // - Redeem Compound
 
-export const checkDeployed = async (): Promise<boolean> => {
-  const { contracts } = hre
-  try {
-    await contracts.get('TellerDiamond')
-    return true
-  } catch (error) {
-    return false
-  }
-}
-const randomInt = (max: number) => {
-  return Math.floor(Math.random() * max)
-}
 const getChildren = (id: number) => {
   return Object.entries(STORY_TREE).reduce(
     (prev: Array<any>, value: Array<any>) => {
@@ -71,11 +63,17 @@ const getChildren = (id: number) => {
 const create_loan_args = (): CreateLoanArgs => {
   const { network } = hre
   const markets = getMarkets(network)
-  const randomMarket = randomInt(markets.length)
+  const randomMarket = rng.nextInt(0, markets.length - 1)
   const market = markets[randomMarket]
-  const randomCollateralToken = randomInt(market.collateralTokens.length)
-  const randomLoanType = randomInt(
-    Object.values(LoanType).filter((value) => typeof value != 'string').length
+  console.log({ markets })
+  const randomCollateralToken = rng.nextInt(
+    0,
+    market.collateralTokens.length - 1
+  )
+  const randomLoanType = rng.nextInt(
+    0,
+    Object.values(LoanType).filter((value) => typeof value != 'string').length -
+      1
   )
   return {
     lendToken: market.lendingToken,
@@ -84,38 +82,24 @@ const create_loan_args = (): CreateLoanArgs => {
   }
 }
 
-export const generateTests = async (
-  loanCase: string,
-  result: TestResultArgs
-) => {
-  console.log(loanCase)
+export const generateTests = async (args: TestArgs) => {
   const revert = await hre.evm.snapshot()
-  switch (loanCase) {
+  switch (args.type) {
     case LOAN_ACTIONS[0]:
-      console.log('yes action')
-      //   try {
       // expect loan args to match loan case
-      const args = create_loan_args()
-      console.log(args)
+      const loan_args = create_loan_args()
+      console.log(loan_args)
 
       // run test
       console.log('run')
-      const done = await createLoan(args)
-      console.log('wait for result', done)
-      console.log('result type', result.type)
-      // if (result.type) {
-      //     await tx.should.exist
-      // } else {
-      //     await tx.should.be.revertedWith(result.revert)
-      // }
-
-      // if for true result, take snapshot
-      // await tx.should.be.revertedWith('Pausable: paused')
-
-      // get Node children
-      //   } catch (error) {
-      //       console.log(error)
-      //   }
+      const { tx } = await createLoan(loan_args)
+      console.log('tx is here')
+      if (args.pass) {
+        expect(tx).should.exist
+      } else {
+        console.log('args no pass')
+        expect(tx).should.not.exist
+      }
       break
     default:
       break

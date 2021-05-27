@@ -108,11 +108,9 @@ export const createLoan = async (
   } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  console.log({ lendToken })
   const lendingToken =
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
 
-  console.log({ lendingToken })
   const collateralToken =
     typeof collToken === 'string' ? await tokens.get(collToken) : collToken
 
