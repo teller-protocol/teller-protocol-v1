@@ -4,8 +4,8 @@
   "license": "MIT",
   "scripts": {
     "setup": "./scripts/setup.sh",
-    "test": "test() { FORKING_NETWORK=\"$1\" TS_NODE_TRANSPILE_ONLY=1 yarn hh test; }; test",
-    "fork": "fork() { local network=\"$1\"; shift; FORKING_NETWORK=$network yarn hh fork $network \"$@\"; }; fork",
+    "hf": "hf() { local network=\"$1\"; shift; FORKING_NETWORK=$network yarn hh \"$@\"; }; hf",
+    "test": "test() { TS_NODE_TRANSPILE_ONLY=1 yarn hf \"$1\" test; }; test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format:write": "prettier --write",
