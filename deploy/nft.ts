@@ -22,6 +22,35 @@ const deployNFT: DeployFunction = async (hre) => {
     hre,
   })
 
+  /** TODO */
+
+  let proxyMethodName: string | undefined
+  let proxyMethodArgs: Array<any> | undefined
+
+  try {
+    // Try to get deployment of TellerDiamond
+    await contracts.get('TellerNFTDictionary')
+
+    proxyMethodName = undefined
+    proxyMethodArgs = undefined
+  } catch (e) {
+    ;(proxyMethodName = 'initialize'), //call this method on deployment
+      (proxyMethodArgs = [])
+  }
+
+  const nftDictionary = await deploy<ITellerNFT>({
+    contract: 'TellerNFTDictionary',
+    hre,
+
+    proxy: {
+      proxyContract: 'OpenZeppelinTransparentProxy',
+      methodName: proxyMethodName,
+    },
+    args: proxyMethodArgs,
+  })
+
+  //call initialize on the dictionary
+
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
     // Try to get deployment of TellerDiamond

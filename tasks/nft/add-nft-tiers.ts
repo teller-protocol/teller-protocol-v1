@@ -32,12 +32,18 @@ export const addTiers = async (
       `No deployment for Teller NFT. Please run the NFT deployment script.`
     )
 
+  /** TODO */
+  const nftDictionary = await contracts.get<IStakeableNFT>(
+    'TellerNFTDictionary'
+  )
+
   log('')
   log('Adding Tiers to Teller NFT', { indent: 2, star: true })
   log('')
   const deployer = await getNamedSigner('deployer')
   const { tiers } = getNFT(network)
   for (let i = 0; i < tiers.length; i++) {
+    //Add Tier information to the Teller NFT
     const tier = await nft.getTier(i)
     if (tier.contributionAsset === NULL_ADDRESS) {
       await nft
@@ -58,6 +64,8 @@ export const addTiers = async (
     } else {
       log(`Tier ${i} already exists`, { indent: 3, star: true })
     }
+
+    //Add Tier information to the Teller NFT Dictionary
   }
 }
 
