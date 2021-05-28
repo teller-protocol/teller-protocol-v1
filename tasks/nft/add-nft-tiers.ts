@@ -34,7 +34,6 @@ export const addTiers = async (
       `No deployment for Teller NFT. Please run the NFT deployment script.`
     )
 
-  /** TODO */
   const nftDictionary = await contracts.get<TellerNFTDictionary>(
     'TellerNFTDictionary'
   )
@@ -64,10 +63,22 @@ export const addTiers = async (
       log('')
       throw new Error('NFT tiers config not match existing deployed')
     } else {
-      log(`Tier ${i} already exists`, { indent: 3, star: true })
+      log(`Tier ${i} already exists in NFT`, { indent: 3, star: true })
     }
 
     //Add Tier information to the Teller NFT Dictionary
+
+    const cAsset = await nftDictionary.tokenContributionAsset(i)
+    if (cAsset === NULL_ADDRESS) {
+      log(`Creating Tier ${i} in Dictionary`, { indent: 3, star: true })
+
+      await nftDictionary
+        .connect(deployer)
+        .setTier(i, tiers[i])
+        .then(({ wait }) => wait())
+    } else {
+      log(`Tier ${i} already exists in Dictionary`, { indent: 3, star: true })
+    }
   }
 }
 
