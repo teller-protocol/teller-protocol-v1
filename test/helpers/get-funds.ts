@@ -4,7 +4,10 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getTokens } from '../../config'
 import { Address, TokenSymbol } from '../../types/custom/config-types'
 import { ERC20, IUniswapV2Router } from '../../types/typechain'
-import { UNISWAP_ROUTER_V2_ADDRESS } from '../../utils/consts'
+import {
+  UNISWAP_ROUTER_V2_ADDRESS,
+  SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON,
+} from '../../utils/consts'
 
 export interface SwapArgs {
   to: Address | Signer
@@ -14,13 +17,22 @@ export interface SwapArgs {
 }
 
 export const getFunds = async (args: SwapArgs): Promise<void> => {
-  const { getNamedSigner, ethers, tokens, contracts } = args.hre
+  const { getNamedSigner, ethers, contracts } = args.hre
 
   const funder = await getNamedSigner('funder')
 
+  let routerAddress = UNISWAP_ROUTER_V2_ADDRESS
+  // If the forked network is polygon (or something other than L1 eth)
+  // Use the Sushiswap router Polygon address instead of Mainnet Uniswap
+  if (
+    (await args.hre.config.networks.hardhat.forking?.url)?.match(/eth/) == null
+  ) {
+    routerAddress = SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON
+  }
+
   // Uniswap - https://uniswap.org/docs/v2/smart-contracts/router02/ the Router V2 instance
   const swapper = await contracts.get<IUniswapV2Router>('IUniswapV2Router', {
-    at: UNISWAP_ROUTER_V2_ADDRESS,
+    at: routerAddress,
     from: funder,
   })
 
