@@ -68,7 +68,9 @@ export const addTiers = async (
 
     //Add Tier information to the Teller NFT Dictionary
 
-    const cAsset = await nftDictionary.tokenContributionAsset(i)
+    const cAsset = await nftDictionary.getTierContributionAsset(i)
+    log(`  c asset ${cAsset}`, { indent: 3, star: true })
+
     if (cAsset === NULL_ADDRESS) {
       log(`Creating Tier ${i} in Dictionary`, { indent: 3, star: true })
 
@@ -76,6 +78,9 @@ export const addTiers = async (
         .connect(deployer)
         .setTier(i, tiers[i])
         .then(({ wait }) => wait())
+
+      let newcAsset = await nftDictionary.getTierContributionAsset(i)
+      log(`new c asset ${newcAsset}`, { indent: 3, star: true })
     } else {
       log(`Tier ${i} already exists in Dictionary`, { indent: 3, star: true })
     }
