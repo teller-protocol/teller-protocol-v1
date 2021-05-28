@@ -24,5 +24,5 @@ interface IStakeableNFT {
     function tokenContributionMultiplier(uint256 tokenId)
         external
         view
-        returns (uint256);
+        returns (uint8);
 }

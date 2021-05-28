@@ -1,5 +1,5 @@
 /**
- * @notice TellerNFTDictionary Version 1.0
+ * @notice TellerNFTDictionary Version 1.01
  *
  * @notice This contract is used to gather data for TellerV1 NFTs more efficiently.
  * @notice This contract has data which must be continuously synchronized with the TellerV1 NFT data
@@ -50,6 +50,12 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
 
     /* State Variables */
 
+    // It holds the information about a tier.
+    //mapping(uint256 => Tier) internal _tiers;
+
+    // It holds which tier a token ID is in.
+    //mapping(uint256 => uint256) internal _tokenTier;
+
     mapping(uint256 => uint256) public _tokenTierMappingCompressed;
 
     /* Modifiers */
@@ -66,6 +72,15 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     }
 
     /* External Functions */
+
+    /*  function getTier(uint256 index)
+        external
+        view
+         
+        returns (Tier memory tier_)
+    {
+        tier_ = _tiers[index];
+    }*/
 
     /**
      * @notice It returns information about a Tier for a token ID.
@@ -90,19 +105,6 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         uint8 tierIndex = uint8((compressedRegister >> offset));
 
         return tierIndex;
-    }
-
-    /**
-     * @notice It returns an array of token IDs owned by an address.
-     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
-     * @dev Can be costly if calling within a contract for address with many tokens.
-     */
-    function getTierHashes(uint256 tierIndex)
-        public
-        view
-        returns (string[] memory hashes_)
-    {
-        hashes_ = _hashes[tierIndex];
     }
 
     /**
@@ -197,6 +199,51 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     */
 
     /**
+     * @notice It returns an array of token IDs owned by an address.
+     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
+     * @dev Can be costly if calling within a contract for address with many tokens.
+     */
+    function getTierHashes(uint256 tierIndex)
+        public
+        view
+        returns (string[] memory hashes_)
+    {
+        hashes_ = _hashes[tierIndex];
+    }
+
+    function getTierBaseLoanSize(uint256 tokenTier)
+        public
+        view
+        returns (uint256)
+    {
+        return _baseLoanSizes[tokenTier];
+    }
+
+    function getTierContributionAsset(uint256 tokenTier)
+        public
+        view
+        returns (address)
+    {
+        return _contributionAsset[tokenTier];
+    }
+
+    function getTierContributionSize(uint256 tokenTier)
+        public
+        view
+        returns (uint256)
+    {
+        return _contributionSize[tokenTier];
+    }
+
+    function getTierContributionMultiplier(uint256 tokenTier)
+        public
+        view
+        returns (uint8)
+    {
+        return _contributionMultiplier[tokenTier];
+    }
+
+    /**
      * @notice It returns information about the type of NFT.     *
      */
     function stakeableTokenType() public view override returns (bytes32) {
@@ -272,7 +319,7 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         public
         view
         override
-        returns (uint256)
+        returns (uint8)
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
