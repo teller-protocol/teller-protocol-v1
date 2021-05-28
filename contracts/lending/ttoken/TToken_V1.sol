@@ -410,7 +410,10 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @dev
+     * @notice it retrieves the value of the underlying token
+     * @param amount the amount of tokens to calculate the value of
+     * @param rate the exchangeRate() to divide with the amount * exchange_rate_factor
+     * @return value_ the underlying value of the token amount
      */
     function _valueOfUnderlying(uint256 amount, uint256 rate)
         internal
@@ -421,7 +424,8 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @dev
+     * @notice it retrives the value in the underlying tokens
+     * 
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal

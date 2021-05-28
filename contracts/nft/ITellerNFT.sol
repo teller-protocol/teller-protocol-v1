@@ -21,7 +21,7 @@ interface ITellerNFT {
     function contractURI() external view returns (string memory);
 
     /**
-     * @notice It returns information about a Tier for a token ID.
+     * @notice It returns information about a Tier with from a tier index
      * @param index Tier index to get info.
      * @return tier_ the tier which belongs to the respective index
      */

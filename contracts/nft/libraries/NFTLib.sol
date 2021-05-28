@@ -31,7 +31,7 @@ library NFTLib {
         nft_ = AppStorageLib.store().nft;
     }
 
-    /**
+    /**s
      * @notice it transfers the NFT from the sender to the diamond to stake then adds the NFTID to the list of the owner's stakedNFTs
      * @param nftID the ID of the NFT to stake
      * @param owner the owner of the NFT who will stake the NFT
@@ -118,7 +118,8 @@ library NFTLib {
     }
 
     /**
-     * @notice it verifies the nft's loan using the Merkle proof 
+     * @notice it verifies the NFT id to base loan size using the merkle proof
+     * @param proof the NFTLoanSizeProof to verify with the nft;s merkle root
      * @return verified_ tells us if the loan is verified or not
      */
     function verifyLoanSize(NftLoanSizeProof calldata proof)
