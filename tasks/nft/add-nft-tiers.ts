@@ -4,7 +4,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getNFT } from '../../config'
 import { TierInfo } from '../../types/custom/config-types'
-import { ITellerNFT } from '../../types/typechain'
+import { ITellerNFT, TellerNFTDictionary } from '../../types/typechain'
+
 import { NULL_ADDRESS } from '../../utils/consts'
 
 interface AddTiersArgs {
@@ -33,7 +34,7 @@ export const addTiers = async (
     )
 
   /** TODO */
-  const nftDictionary = await contracts.get<IStakeableNFT>(
+  const nftDictionary = await contracts.get<TellerNFTDictionary>(
     'TellerNFTDictionary'
   )
 
