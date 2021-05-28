@@ -26,11 +26,6 @@ export enum LoanType {
 export interface LoanHelpersReturn {
   diamond: ITellerDiamond
   details: PromiseReturnType<typeof loanDetails>
-  takeOut: (
-    amount?: BigNumberish,
-    from?: Signer,
-    nft?: boolean
-  ) => ReturnType<typeof takeOutLoan>
   repay: (amount: BigNumberish, from?: Signer) => ReturnType<typeof repayLoan>
   escrowRepay: (
     amount: BigNumberish,
@@ -59,11 +54,6 @@ export const loanHelpers = async (
   return {
     diamond,
     details,
-    takeOut: (
-      amount = details.terms.maxLoanAmount,
-      from?: Signer,
-      nft?: boolean
-    ) => takeOutLoan({ diamond, details, amount, from, nft }),
     repay: (amount: BigNumberish, from?: Signer) =>
       repayLoan({ diamond, details, amount, from }),
     escrowRepay: (amount: BigNumberish, from?: Signer) =>
@@ -79,7 +69,7 @@ export const loanHelpers = async (
   }
 }
 
-interface CreateLoanArgs {
+interface CreateLoanRequestArgs {
   lendToken: string | ERC20
   collToken: string | ERC20
   loanType: LoanType
@@ -95,9 +85,9 @@ export interface CreateLoanReturn {
   getHelpers: () => Promise<LoanHelpersReturn>
 }
 
-export const createLoan = async (
-  args: CreateLoanArgs
-): Promise<CreateLoanReturn> => {
+export const createLoanRequest = async (
+  args: CreateLoanRequestArgs
+): Promise<PromiseReturnType<typeof mockCRAResponse>> => {
   const {
     lendToken,
     collToken,
@@ -107,11 +97,8 @@ export const createLoan = async (
     duration = moment.duration(1, 'day'),
   } = args
 
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const lendingToken =
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
-  const collateralToken =
-    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
 
   const borrower = args.borrower ?? (await getNamedAccounts()).borrower
   const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
@@ -130,7 +117,7 @@ export const createLoan = async (
   }
 
   // Get mock cra request and response
-  const craReturn = await mockCRAResponse({
+  return await mockCRAResponse({
     lendingToken: lendingToken.address,
     loanAmount,
     loanTermLength: duration.asSeconds(),
@@ -138,79 +125,6 @@ export const createLoan = async (
     interestRate: '400',
     borrower,
   })
-
-  // Create loan with terms
-  const tx = diamond
-    .connect(ethers.provider.getSigner(borrower))
-    .createLoanWithTerms(
-      craReturn.request,
-      [craReturn.response],
-      collateralToken.address,
-      '0'
-    )
-
-  return {
-    tx,
-    getHelpers: async (): Promise<LoanHelpersReturn> => {
-      await tx
-      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
-      const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(loanID)
-    },
-  }
-}
-
-export const takeOut = async (
-  args: CreateLoanArgs
-): Promise<LoanHelpersReturn> => {
-  // Setup for NFT user
-  const { merkleTrees } = getNFT(hre.network)
-  const borrower = ethers.utils.getAddress(merkleTrees[0].balances[0].address)
-  if (args.nft) {
-    args.borrower = borrower
-    await evm.impersonate(borrower)
-    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-    await diamond.addAuthorizedAddress(borrower)
-    await getFunds({
-      to: borrower,
-      amount: ethers.utils.parseEther('1'),
-      tokenSym: 'ETH',
-      hre,
-    })
-  }
-
-  // Create loan
-  const { getHelpers } = await createLoan(args)
-  const helpers = await getHelpers()
-  const { diamond, collateral, details, takeOut } = helpers
-
-  // Deposit collateral needed
-  const neededCollateral = await collateral.needed()
-  if (neededCollateral.gt(0)) {
-    await collateral.deposit(neededCollateral)
-    // .should.emit(diamond, 'CollateralDeposited')
-    // .withArgs(loanID, borrowerAddress, collateralNeeded)
-  }
-
-  // Advance time
-  await evm.advanceTime(moment.duration(5, 'minutes'))
-
-  // Take out loan
-  await takeOut(details.terms.maxLoanAmount, details.borrower.signer, args.nft)
-    .should.emit(diamond, 'LoanTakenOut')
-    .withArgs(
-      details.loan.id,
-      details.borrower.address,
-      details.terms.maxLoanAmount,
-      args.nft
-    )
-
-  // Refresh details after taking out loan
-  helpers.details = await details.refresh()
-  // Verify loan is now active
-  helpers.details.loan.status.should.eq(LoanStatus.Active)
-
-  return helpers
 }
 
 interface LoanDetailsReturn {
@@ -257,17 +171,69 @@ interface CommonLoanArgs {
   from?: Signer
 }
 
-interface TakeOutLoanArgs extends CommonLoanArgs {
-  amount?: BigNumberish
-  nft?: boolean
-}
+interface TakeOutLoanArgs extends CommonLoanArgs, CreateLoanRequestArgs {}
 
 const takeOutLoan = async (
   args: TakeOutLoanArgs
 ): Promise<ContractTransaction> => {
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+
+  // Setup for NFT user
+  if (args.nft) {
+    const { merkleTrees } = getNFT(hre.network)
+    const borrower = ethers.utils.getAddress(merkleTrees[0].balances[0].address)
+
+    args.borrower = borrower
+    await evm.impersonate(borrower)
+    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    await diamond.addAuthorizedAddress(borrower)
+    await getFunds({
+      to: borrower,
+      amount: ethers.utils.parseEther('1'),
+      tokenSym: 'ETH',
+    })
+  }
+
+  // const collateralToken =
+  //   typeof collToken === 'string' ? await tokens.get(collToken) : collToken
+
+  // Create loan
+  const { request, responses } = await createLoanRequest(args)
+
+  // const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+  // const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+  // const helpers = await loanHelpers(loanID)
+  // const { collateral, details } = helpers
+
+  // Deposit collateral needed
+  const neededCollateral = await collateral.needed()
+  if (neededCollateral.gt(0)) {
+    await collateral.deposit(neededCollateral)
+    // .should.emit(diamond, 'CollateralDeposited')
+    // .withArgs(loanID, borrowerAddress, collateralNeeded)
+  }
+
+  // Advance time
+  await evm.advanceTime(moment.duration(5, 'minutes'))
+
+  // // Take out loan
+  // await takeOut(details.terms.maxLoanAmount, details.borrower.signer, args.nft)
+  //   .should.emit(diamond, 'LoanTakenOut')
+  //   .withArgs(
+  //     details.loan.id,
+  //     details.borrower.address,
+  //     details.terms.maxLoanAmount,
+  //     args.nft
+  //   )
+  //
+  // // Refresh details after taking out loan
+  // helpers.details = await details.refresh()
+  // // Verify loan is now active
+  // helpers.details.loan.status.should.eq(LoanStatus.Active)
+
+  const { getHelpers } = await createLoanRequest(args)
+  const { details } = await getHelpers()
   const {
-    diamond,
-    details,
     amount = details.terms.maxLoanAmount,
     from = details.borrower.signer,
     nft,

@@ -44,7 +44,6 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 // Storage
 import {
     LoanRequest,
-    LoanResponse,
     LoanStatus,
     LoanTerms,
     Loan,
@@ -53,13 +52,6 @@ import {
 import { AppStorageLib } from "../storage/app.sol";
 
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
-    /**
-     * @notice This event is emitted when loan terms have been successfully set
-     * @param loanID ID of loan from which collateral was withdrawn
-     * @param borrower Account address of the borrower
-     */
-    event LoanTermsSet(uint256 indexed loanID, address indexed borrower);
-
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -75,41 +67,32 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     );
 
     /**
-     * @notice Creates a loan with the loan request and terms
+     * @notice Creates the loan from requests and validator responses then calling the main function.
      * @param request Struct of the protocol loan request
-     * @param responses List of structs of the protocol loan responses
-     * @param collateralToken Token address to use as collateral for the new loan
-     * @param collateralAmount Amount of collateral required for the loan
      */
-    function createLoanWithTerms(
-        LoanRequest calldata request,
-        LoanResponse[] calldata responses,
-        address collateralToken,
-        uint256 collateralAmount
-    )
-        external
-        payable
-        paused(LibLoans.ID, false)
-        nonReentry("")
-        authorized(AUTHORIZED, msg.sender)
-    {
-        CreateLoanLib.verifyCreateLoan(request, collateralToken);
-        uint256 loanID =
-            CreateLoanLib.initLoan(request, responses, collateralToken);
+    modifier __createLoan(LoanRequest calldata request) {
+        Loan storage loan = CreateLoanLib.createLoan(request);
 
-        // Pay in collateral
-        if (collateralAmount > 0) {
-            LibCollateral.deposit(loanID, collateralAmount);
-        }
+        _;
 
-        emit LoanTermsSet(loanID, msg.sender);
+        loan.status = LoanStatus.Active;
+        loan.loanStartTime = uint32(block.timestamp);
+        loan.duration = request.request.duration;
     }
 
+    /**
+     * @notice Creates a loan with the loan request and NFTs without any collateral
+     * @param request Struct of the protocol loan request
+     * @param proofs Merkle proofs for validating NFT base loan size
+     */
     function takeOutLoanWithNFTs(
-        uint256 loanID,
-        uint256 amount,
+        LoanRequest calldata request,
         NftLoanSizeProof[] calldata proofs
-    ) external paused(LibLoans.ID, false) __takeOutLoan(loanID, amount) {
+    ) external paused(LibLoans.ID, false) __createLoan(request) {
+        // Get the ID of the newly created loan
+        uint256 loanID = CreateLoanLib.currentID();
+        uint256 amount = LibLoans.loan(loanID).borrowedAmount;
+
         // Set the collateral ratio to 0 as linked NFTs are used as the collateral
         LibLoans.loan(loanID).collateralRatio = 0;
 
@@ -133,38 +116,12 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             amount
         );
 
-        emit LoanTakenOut(loanID, msg.sender, amount, true);
-    }
-
-    modifier __takeOutLoan(uint256 loanID, uint256 amount) {
-        Loan storage loan = LibLoans.loan(loanID);
-
-        require(msg.sender == loan.borrower, "Teller: not borrower");
-        require(loan.status == LoanStatus.TermsSet, "Teller: loan not set");
-        require(
-            uint256(LibLoans.terms(loanID).termsExpiry) >= block.timestamp,
-            "Teller: loan terms expired"
+        emit LoanTakenOut(
+            loanID,
+            msg.sender,
+            LibLoans.loan(loanID).borrowedAmount,
+            true
         );
-        require(
-            LendingLib.tToken(loan.lendingToken).debtRatioFor(amount) <=
-                MaxDebtRatioLib.get(loan.lendingToken),
-            "Teller: max supply-to-debt ratio exceeded"
-        );
-        require(
-            LibLoans.terms(loanID).maxLoanAmount >= amount,
-            "Teller: max loan amount exceeded"
-        );
-
-        loan.borrowedAmount = amount;
-        LibLoans.debt(loanID).principalOwed = amount;
-        LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
-            uint256(loan.id),
-            amount
-        );
-        loan.status = LoanStatus.Active;
-        loan.loanStartTime = uint32(block.timestamp);
-
-        _;
     }
 
     /**
@@ -173,98 +130,116 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @dev collateral ratio is a percentage of the loan amount that's required in collateral
      * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
      * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
+     *
+     * @param request Struct of the protocol loan request
+     * @param collateralToken Token address to use as collateral for the new loan
+     * @param collateralAmount Amount of collateral required for the loan
      */
-    function takeOutLoan(uint256 loanID, uint256 amount)
+    function takeOutLoan(
+        LoanRequest calldata request,
+        address collateralToken,
+        uint256 collateralAmount
+    )
         external
+        payable
         paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
-        __takeOutLoan(loanID, amount)
+        __createLoan(request)
     {
-        {
-            // Check that enough collateral has been provided for this loan
-            (, uint256 neededInCollateral, ) =
-                LibLoans.getCollateralNeededInfo(loanID);
-            require(
-                neededInCollateral <=
-                    LibCollateral.e(loanID).loanSupply(loanID),
-                "Teller: more collateral required"
-            );
-        }
-
-        Loan storage loan = MarketStorageLib.store().loans[loanID];
-        address loanRecipient;
-        bool eoaAllowed =
-            LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio);
-        if (eoaAllowed) {
-            loanRecipient = loan.borrower;
-        } else {
-            loanRecipient = CreateLoanLib.createEscrow(loanID);
-        }
-
-        // Pull funds from Teller token LP and and transfer to the recipient
-        LendingLib.tToken(LibLoans.loan(loanID).lendingToken).fundLoan(
-            loanRecipient,
-            amount
-        );
-
-        emit LoanTakenOut(loanID, msg.sender, amount, false);
-    }
-}
-
-library CreateLoanLib {
-    function verifyCreateLoan(
-        LoanRequest calldata request,
-        address collateralToken
-    ) internal view {
-        // Perform loan request checks
-        require(msg.sender == request.borrower, "Teller: not loan requester");
-        require(
-            PlatformSettingsLib.getMaximumLoanDurationValue() >=
-                request.duration,
-            "Teller: max loan duration exceeded"
-        );
         // Verify collateral token is acceptable
         require(
             EnumerableSet.contains(
-                MarketStorageLib.store().collateralTokens[request.assetAddress],
+                MarketStorageLib.store().collateralTokens[
+                    request.request.assetAddress
+                ],
                 collateralToken
             ),
             "Teller: collateral token not allowed"
         );
-        require(
-            MaxLoanAmountLib.get(request.assetAddress) > request.amount,
-            "Teller: asset max loan amount exceeded"
-        );
-    }
 
-    function initLoan(
-        LoanRequest calldata request,
-        LoanResponse[] calldata responses,
-        address collateralToken
-    ) internal returns (uint256 loanID_) {
+        // Get the ID of the newly created loan
+        Loan storage loan = LibLoans.loan(CreateLoanLib.currentID());
+        // Save collateral token to loan
+        loan.collateralToken = collateralToken;
+
+        // Pay in collateral
+        if (collateralAmount > 0) {
+            LibCollateral.deposit(loan.id, collateralAmount);
+        }
+
+        // Check that enough collateral has been provided for this loan
+        require(
+            LibLoans.getCollateralNeeded(loan.id) <=
+                LibCollateral.e(loan.id).loanSupply(loan.id),
+            "Teller: more collateral required"
+        );
+
+        // Pull funds from Teller token LP and and transfer to the recipient
+        LendingLib.tToken(loan.lendingToken).fundLoan(
+            LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio)
+                ? loan.borrower
+                : CreateLoanLib.createEscrow(loan.id),
+            loan.borrowedAmount
+        );
+
+        emit LoanTakenOut(loan.id, msg.sender, loan.borrowedAmount, false);
+    }
+}
+
+library CreateLoanLib {
+    function createLoan(LoanRequest calldata request)
+        internal
+        returns (Loan storage loan)
+    {
+        // Perform loan request checks
+        require(
+            msg.sender == request.request.borrower,
+            "Teller: not loan requester"
+        );
+        require(
+            PlatformSettingsLib.getMaximumLoanDurationValue() >=
+                request.request.duration,
+            "Teller: max loan duration exceeded"
+        );
+
         // Get consensus values from request
         (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
-            LibConsensus.processLoanTerms(request, responses);
+            LibConsensus.processLoanTerms(request);
+
+        // Perform loan value checks
+        require(
+            MaxLoanAmountLib.get(request.request.assetAddress) > maxLoanAmount,
+            "Teller: asset max loan amount exceeded"
+        );
+        require(
+            LendingLib.tToken(request.request.assetAddress).debtRatioFor(
+                maxLoanAmount
+            ) <= MaxDebtRatioLib.get(request.request.assetAddress),
+            "Teller: max supply-to-debt ratio exceeded"
+        );
 
         // Get and increment new loan ID
-        loanID_ = CreateLoanLib.newID();
-        LibLoans.terms(loanID_).maxLoanAmount = maxLoanAmount;
-        LibLoans.terms(loanID_).termsExpiry = uint32(
-            block.timestamp + PlatformSettingsLib.getTermsExpiryTimeValue()
+        uint256 loanID = CreateLoanLib.newID();
+        // Set loan data based on terms
+        loan = LibLoans.loan(loanID);
+        loan.id = uint128(loanID);
+        loan.status = LoanStatus.TermsSet;
+        loan.lendingToken = request.request.assetAddress;
+        loan.borrower = request.request.borrower;
+        loan.borrowedAmount = maxLoanAmount;
+        loan.interestRate = interestRate;
+        loan.collateralRatio = collateralRatio;
+        // Set loan debt
+        LibLoans.debt(loanID).principalOwed = maxLoanAmount;
+        LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
+            uint256(loanID),
+            maxLoanAmount
         );
-        LibLoans.loan(loanID_).id = uint128(loanID_);
-        LibLoans.loan(loanID_).status = LoanStatus.TermsSet;
-        LibLoans.loan(loanID_).lendingToken = request.assetAddress;
-        LibLoans.loan(loanID_).collateralToken = collateralToken;
-        LibLoans.loan(loanID_).borrower = request.borrower;
-        LibLoans.loan(loanID_).interestRate = interestRate;
-        LibLoans.loan(loanID_).collateralRatio = collateralRatio;
-        LibLoans.loan(loanID_).duration = request.duration;
 
         // Add loanID to borrower list
-        MarketStorageLib.store().borrowerLoans[request.borrower].push(
-            uint128(loanID_)
+        MarketStorageLib.store().borrowerLoans[loan.borrower].push(
+            uint128(loanID)
         );
     }
 
@@ -273,6 +248,12 @@ library CreateLoanLib {
             MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
+    }
+
+    function currentID() internal returns (uint256 id_) {
+        Counters.Counter storage counter =
+            MarketStorageLib.store().loanIDCounter;
+        id_ = Counters.current(counter);
     }
 
     function createEscrow(uint256 loanID) internal returns (address escrow_) {

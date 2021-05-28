@@ -11,7 +11,7 @@ import { ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { fundLender, getFunds } from '../helpers/get-funds'
-import { createLoan, LoanType, takeOut } from '../helpers/loans'
+import { createLoanRequest, LoanType, takeOut } from '../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -59,7 +59,7 @@ describe('Loans', () => {
           .withArgs(LOANS_ID, await deployer.getAddress())
 
         // Try deposit into lending pool
-        const { tx } = await createLoan({
+        const { tx } = await createLoanRequest({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -76,7 +76,7 @@ describe('Loans', () => {
 
       it('should not be able to take out a loan without collateral', async () => {
         // Create loan with terms without depositing collateral
-        const { getHelpers } = await createLoan({
+        const { getHelpers } = await createLoanRequest({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -156,7 +156,7 @@ describe('Loans', () => {
           .then(({ wait }) => wait())
 
         // Create loan
-        const { getHelpers } = await createLoan({
+        const { getHelpers } = await createLoanRequest({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -184,7 +184,7 @@ describe('Loans', () => {
         const revert = await evm.snapshot()
 
         // Create loan
-        const { getHelpers } = await createLoan({
+        const { getHelpers } = await createLoanRequest({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -209,7 +209,7 @@ describe('Loans', () => {
 
       it('should be able to withdraw collateral before takeOutLoan', async () => {
         // Create loan with terms without depositing collateral
-        const { getHelpers } = await createLoan({
+        const { getHelpers } = await createLoanRequest({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,

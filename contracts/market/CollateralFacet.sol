@@ -37,7 +37,7 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
     {
-        uint256 status = uint256(MarketStorageLib.store().loans[loanID].status);
+        uint256 status = uint256(LibLoans.loan(loanID).status);
         require(
             status ==
                 (uint256(LoanStatus.TermsSet) ^ uint256(LoanStatus.Active)) &

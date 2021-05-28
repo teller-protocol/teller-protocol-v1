@@ -6,7 +6,8 @@ import {
     MarketStorageLib,
     MarketStorage,
     LoanRequest,
-    LoanResponse,
+    LoanUserRequest,
+    LoanConsensusResponse,
     Signature
 } from "../../storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
@@ -39,10 +40,7 @@ library LibConsensus {
         return MarketStorageLib.store();
     }
 
-    function processLoanTerms(
-        LoanRequest calldata request,
-        LoanResponse[] calldata responses
-    )
+    function processLoanTerms(LoanRequest calldata request)
         internal
         view
         returns (
@@ -52,33 +50,36 @@ library LibConsensus {
         )
     {
         EnumerableSet.AddressSet storage signers =
-            s().signers[request.assetAddress];
+            s().signers[request.request.assetAddress];
         require(
             uint256(
                 NumbersLib.ratioOf(
-                    responses.length,
+                    request.responses.length,
                     EnumerableSet.length(signers)
                 )
             ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
 
-        _validateLoanRequest(request.borrower, request.requestNonce);
+        _validateLoanRequest(
+            request.request.borrower,
+            request.request.requestNonce
+        );
 
         uint32 chainId = _getChainId();
-        bytes32 requestHash = _hashRequest(request, chainId);
+        bytes32 requestHash = _hashRequest(request.request, chainId);
 
         AccruedLoanTerms memory termSubmissions;
 
-        for (uint256 i = 0; i < responses.length; i++) {
-            LoanResponse memory response = responses[i];
+        for (uint256 i = 0; i < request.responses.length; i++) {
+            LoanConsensusResponse memory response = request.responses[i];
 
             require(
                 EnumerableSet.contains(signers, response.signer),
                 "Teller: invalid signer"
             );
             require(
-                response.assetAddress == request.assetAddress,
+                response.assetAddress == request.request.assetAddress,
                 "Teller: consensus address mismatch"
             );
             require(
@@ -99,7 +100,7 @@ library LibConsensus {
             // TODO: use a local AddressArrayLib instead to save gas
             for (uint8 j = 0; j < i; j++) {
                 require(
-                    response.signer != responses[j].signer,
+                    response.signer != request.responses[j].signer,
                     "Teller: dup signer response"
                 );
             }
@@ -169,7 +170,7 @@ library LibConsensus {
      * @param request Struct of the protocol loan request
      * @return bytes32 Hash of the loan request
      */
-    function _hashRequest(LoanRequest memory request, uint32 chainId)
+    function _hashRequest(LoanUserRequest memory request, uint32 chainId)
         private
         pure
         returns (bytes32)
@@ -196,7 +197,7 @@ library LibConsensus {
      */
     function _hashResponse(
         bytes32 requestHash,
-        LoanResponse memory response,
+        LoanConsensusResponse memory response,
         uint32 chainId
     ) internal pure returns (bytes32) {
         return
