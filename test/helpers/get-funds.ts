@@ -21,13 +21,27 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
 
   const funder = await getNamedSigner('funder')
 
-  let routerAddress = UNISWAP_ROUTER_V2_ADDRESS
+  let routerAddress: string
+  let pathZero: string
   // If the forked network is polygon (or something other than L1 eth)
   // Use the Sushiswap router Polygon address instead of Mainnet Uniswap
-  if (
-    (await args.hre.config.networks.hardhat.forking?.url)?.match(/eth/) == null
-  ) {
-    routerAddress = SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON
+  switch (process.env.FORKING_NETWORK) {
+    case 'mainnet':
+    case 'kovan':
+    case 'rinkeby':
+    case 'ropsten':
+      routerAddress = UNISWAP_ROUTER_V2_ADDRESS
+      pathZero = 'WETH'
+      break
+    case 'polygon':
+    case 'polygon_mumbai':
+      routerAddress = SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON
+      pathZero = 'WMATIC'
+      break
+    default:
+      throw new Error(
+        `Forking network is invalid: ${process.env.FORKING_NETWORK}`
+      )
   }
 
   // Uniswap - https://uniswap.org/docs/v2/smart-contracts/router02/ the Router V2 instance
@@ -58,7 +72,7 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     // Swap ETH for given token
     await swapper.swapETHForExactTokens(
       args.amount,
-      [tokenAddresses.WETH, tokenAddresses[args.tokenSym]],
+      [tokenAddresses[pathZero], tokenAddresses[args.tokenSym]],
       toAddress,
       Date.now() + 10000,
       { value: ethToSend }
