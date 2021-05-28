@@ -21,6 +21,8 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
   const { chain, block, onlyDeployment } = args
   const { log, run, network } = hre
 
+  console.log('forking things', network)
+
   if (network.name !== HARDHAT_NETWORK_NAME) {
     throw new Error(`Must use "${HARDHAT_NETWORK_NAME}" network for forking`)
   }
