@@ -11,7 +11,6 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "hardhat/console.sol";
 
 // Interfaces
 import "./IStakeableNFT.sol";
@@ -62,11 +61,6 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         __AccessControl_init();
     }
 
-    /*function addAdmin(address newAdmin) onlyAdmin{
-
-
-    }*/
-
     /* External Functions */
 
     /**
@@ -93,27 +87,6 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
 
         return tierIndex;
     }
-
-    /* function bitBashing(uint256 tokenId)
-        public
-        view
-        returns (uint256  )
-    {
-        //32 * 8 = 256 - each uint256 holds the data of 32 tokens . 8 bits each.
-
-        uint256 mappingIndex = tokenId / 32;
-
-        uint256 compressedRegister = _tokenTierMappingCompressed[mappingIndex];
-
-        //use 31 instead of 32 to account for the '0x' in the start.
-        //the '31 -' reverses our bytes order which is necessary
-
-        uint256 offset = ((1 +  (tokenId % 32))  );  //19  
-
-        uint8 tierIndex = uint8((compressedRegister >> (offset*8)));
-
-        return tierIndex;
-    }*/
 
     /**
      * @notice Adds a new Tier to be minted with the given information.
