@@ -1,5 +1,5 @@
 /**
- * @notice TellerNFTDictionary Version 1.01
+ * @notice TellerNFTDictionary Version 1.02
  *
  * @notice This contract is used to gather data for TellerV1 NFTs more efficiently.
  * @notice This contract has data which must be continuously synchronized with the TellerV1 NFT data
@@ -11,10 +11,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-
-// Libraries
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 // Interfaces
 import "./IStakeableNFT.sol";
@@ -27,9 +24,6 @@ import "./IStakeableNFT.sol";
  * @author develop@teller.finance
  */
 contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
-    using EnumerableSet for EnumerableSet.UintSet;
-    using SafeMath for uint256;
-
     struct Tier {
         uint256 baseLoanSize;
         string[] hashes;
@@ -38,23 +32,17 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         uint8 contributionMultiplier;
     }
 
-    mapping(uint256 => uint256) internal _baseLoanSizes;
-    mapping(uint256 => string[]) internal _hashes;
-    mapping(uint256 => address) internal _contributionAsset;
-    mapping(uint256 => uint256) internal _contributionSize;
-    mapping(uint256 => uint8) internal _contributionMultiplier;
+    mapping(uint256 => uint256) public baseLoanSizes;
+    mapping(uint256 => string[]) public hashes;
+    mapping(uint256 => address) public contributionAssets;
+    mapping(uint256 => uint256) public contributionSizes;
+    mapping(uint256 => uint8) public contributionMultipliers;
 
     /* Constants */
 
     bytes32 public constant ADMIN = keccak256("ADMIN");
 
     /* State Variables */
-
-    // It holds the information about a tier.
-    //mapping(uint256 => Tier) internal _tiers;
-
-    // It holds which tier a token ID is in.
-    //mapping(uint256 => uint256) internal _tokenTier;
 
     mapping(uint256 => uint256) public _tokenTierMappingCompressed;
 
@@ -65,22 +53,21 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         _;
     }
 
-    constructor() {
-        _setupRole(ADMIN, msg.sender);
+    constructor() {}
 
-        //setAllTokenTierMappings(tiersMapping);
+    function initialize(address initialAdmin) public {
+        _setupRole(ADMIN, initialAdmin);
+        _setRoleAdmin(ADMIN, ADMIN);
+
+        __AccessControl_init();
     }
 
-    /* External Functions */
+    /*function addAdmin(address newAdmin) onlyAdmin{
 
-    /*  function getTier(uint256 index)
-        external
-        view
-         
-        returns (Tier memory tier_)
-    {
-        tier_ = _tiers[index];
+
     }*/
+
+    /* External Functions */
 
     /**
      * @notice It returns information about a Tier for a token ID.
@@ -93,19 +80,40 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         //32 * 8 = 256 - each uint256 holds the data of 32 tokens . 8 bits each.
 
-        uint256 mappingIndex = tokenId.div(32);
+        uint256 mappingIndex = tokenId / 32;
 
         uint256 compressedRegister = _tokenTierMappingCompressed[mappingIndex];
 
         //use 31 instead of 32 to account for the '0x' in the start.
         //the '31 -' reverses our bytes order which is necessary
 
-        uint256 offset = ((31 - tokenId.mod(32)).mul(8));
+        uint256 offset = ((31 - (tokenId % 32)) * 8);
 
         uint8 tierIndex = uint8((compressedRegister >> offset));
 
         return tierIndex;
     }
+
+    /* function bitBashing(uint256 tokenId)
+        public
+        view
+        returns (uint256  )
+    {
+        //32 * 8 = 256 - each uint256 holds the data of 32 tokens . 8 bits each.
+
+        uint256 mappingIndex = tokenId / 32;
+
+        uint256 compressedRegister = _tokenTierMappingCompressed[mappingIndex];
+
+        //use 31 instead of 32 to account for the '0x' in the start.
+        //the '31 -' reverses our bytes order which is necessary
+
+        uint256 offset = ((1 +  (tokenId % 32))  );  //19  
+
+        uint8 tierIndex = uint8((compressedRegister >> (offset*8)));
+
+        return tierIndex;
+    }*/
 
     /**
      * @notice Adds a new Tier to be minted with the given information.
@@ -120,11 +128,11 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         onlyAdmin
         returns (bool)
     {
-        _baseLoanSizes[index] = newTier.baseLoanSize;
-        _hashes[index] = newTier.hashes;
-        _contributionAsset[index] = newTier.contributionAsset;
-        _contributionSize[index] = newTier.contributionSize;
-        _contributionMultiplier[index] = newTier.contributionMultiplier;
+        baseLoanSizes[index] = newTier.baseLoanSize;
+        hashes[index] = newTier.hashes;
+        contributionAssets[index] = newTier.contributionAsset;
+        contributionSizes[index] = newTier.contributionSize;
+        contributionMultipliers[index] = newTier.contributionMultiplier;
 
         return true;
     }
@@ -151,16 +159,27 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         return true;
     }
 
+    function setTokenTierForTokenIds(
+        uint256[] calldata tokenIds,
+        uint256 tokenTier
+    ) public onlyAdmin returns (bool) {
+        for (uint256 i; i < tokenIds.length; i++) {
+            setTokenTierForTokenId(tokenIds[i], tokenTier);
+        }
+
+        return true;
+    }
+
     function setTokenTierForTokenId(uint256 tokenId, uint256 tokenTier)
         public
         onlyAdmin
         returns (bool)
     {
-        uint256 mappingIndex = tokenId.div(32);
+        uint256 mappingIndex = tokenId / 32;
 
         uint256 existingRegister = _tokenTierMappingCompressed[mappingIndex];
 
-        uint256 offset = ((31 - tokenId.mod(32)).mul(8));
+        uint256 offset = ((31 - (tokenId % 32)) * 8);
 
         uint256 updateMaskShifted =
             0x00000000000000000000000000000000000000000000000000000000000000FF <<
@@ -170,7 +189,7 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
 
         uint256 tokenTierShifted =
             ((0x0000000000000000000000000000000000000000000000000000000000000000 |
-                0x0b) << offset);
+                tokenTier) << offset);
 
         uint256 existingRegisterClearedWithMask =
             existingRegister & updateMaskShiftedNegated;
@@ -199,58 +218,6 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     */
 
     /**
-     * @notice It returns an array of token IDs owned by an address.
-     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
-     * @dev Can be costly if calling within a contract for address with many tokens.
-     */
-    function getTierHashes(uint256 tierIndex)
-        public
-        view
-        returns (string[] memory hashes_)
-    {
-        hashes_ = _hashes[tierIndex];
-    }
-
-    function getTierBaseLoanSize(uint256 tokenTier)
-        public
-        view
-        returns (uint256)
-    {
-        return _baseLoanSizes[tokenTier];
-    }
-
-    function getTierContributionAsset(uint256 tokenTier)
-        public
-        view
-        returns (address)
-    {
-        return _contributionAsset[tokenTier];
-    }
-
-    function getTierContributionSize(uint256 tokenTier)
-        public
-        view
-        returns (uint256)
-    {
-        return _contributionSize[tokenTier];
-    }
-
-    function getTierContributionMultiplier(uint256 tokenTier)
-        public
-        view
-        returns (uint8)
-    {
-        return _contributionMultiplier[tokenTier];
-    }
-
-    /**
-     * @notice It returns information about the type of NFT.     *
-     */
-    function stakeableTokenType() public view override returns (bytes32) {
-        return keccak256("TellerNFTV1");
-    }
-
-    /**
      * @notice It returns information about a Tier for a token ID.
      * @param tokenId ID of the token to get Tier info.
      */
@@ -262,7 +229,7 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
-        return _baseLoanSizes[tokenTier];
+        return baseLoanSizes[tokenTier];
     }
 
     /**
@@ -277,8 +244,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
-        string[] memory tierImageHashes = getTierHashes(tokenTier);
-        return tierImageHashes[tokenId.mod(tierImageHashes.length)];
+        string[] memory tierImageHashes = hashes[tokenTier];
+        return tierImageHashes[tokenId % (tierImageHashes.length)];
     }
 
     /**
@@ -293,7 +260,7 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
-        return _contributionAsset[tokenTier];
+        return contributionAssets[tokenTier];
     }
 
     /**
@@ -308,7 +275,7 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
-        return _contributionSize[tokenTier];
+        return contributionSizes[tokenTier];
     }
 
     /**
@@ -323,6 +290,6 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     {
         uint8 tokenTier = getTokenTierIndex(tokenId);
 
-        return _contributionMultiplier[tokenTier];
+        return contributionMultipliers[tokenTier];
     }
 }

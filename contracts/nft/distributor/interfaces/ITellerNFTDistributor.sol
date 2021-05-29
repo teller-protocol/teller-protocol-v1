@@ -69,6 +69,8 @@ interface ITellerNFTDistributor {
 
     function renounceRole(bytes32 role, address account) external;
 
+    function setNFTDictionaryAddress(address dictionary) external;
+
     /**
      * @notice Initializes the Distributor contract with the TellerNFT
      * @param _nft The address of the TellerNFT.

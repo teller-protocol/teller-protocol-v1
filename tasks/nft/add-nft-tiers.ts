@@ -6,6 +6,7 @@ import { getNFT } from '../../config'
 import { TierInfo } from '../../types/custom/config-types'
 import { ITellerNFT } from '../../types/typechain'
 import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
+import { TellerNFT } from '../../types/typechain'
 
 import { NULL_ADDRESS } from '../../utils/consts'
 
@@ -68,8 +69,7 @@ export const addTiers = async (
 
     //Add Tier information to the Teller NFT Dictionary
 
-    const cAsset = await nftDictionary.getTierContributionAsset(i)
-    log(`  c asset ${cAsset}`, { indent: 3, star: true })
+    const cAsset = await nftDictionary.contributionAssets(i)
 
     if (cAsset === NULL_ADDRESS) {
       log(`Creating Tier ${i} in Dictionary`, { indent: 3, star: true })
@@ -78,13 +78,22 @@ export const addTiers = async (
         .connect(deployer)
         .setTier(i, tiers[i])
         .then(({ wait }) => wait())
-
-      let newcAsset = await nftDictionary.getTierContributionAsset(i)
-      log(`new c asset ${newcAsset}`, { indent: 3, star: true })
     } else {
       log(`Tier ${i} already exists in Dictionary`, { indent: 3, star: true })
     }
   }
+
+  /* Inject the compressedTiersMapping    */
+  //iterate through all tokens to get their tierIndex  (run a task)
+
+  const claimedNFTData = await getAllTellerNFTTierData(hre)
+
+  const compressedTierData = compressTokenTierMappingsFromArray(claimedNFTData)
+
+  await nftDictionary
+    .connect(deployer)
+    .setAllTokenTierMappings(compressedTierData)
+    .then(({ wait }) => wait())
 }
 
 const hashTier = (tier: TierInfo): string => {
@@ -115,6 +124,63 @@ const logTier = (tier: TierInfo, indent: number): void => {
   ${indentStr}}
   `
   )
+}
+
+/*
+
+  [{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x00"},{"type":"BigNumber","hex":"0x01"},{"type":"BigNumber","hex":"0x02"},
+
+
+  */
+
+const compressTokenTierMappingsFromArray = (
+  tokenTiers: Array<ethers.BigNumber>
+): Array<string> => {
+  let tokenTierMappingCompressed = []
+
+  let tokenTierMappingLengthMax = tokenTiers.length / 32
+
+  for (let i = 0; i < tokenTierMappingLengthMax; i++) {
+    let newRow = '0x'
+
+    for (let j = 0; j < 32; j++) {
+      let tokenId = i * 32 + j
+
+      if (tokenId < tokenTiers.length) {
+        let tierLevelHexBytes = tokenTiers[tokenId].toHexString().substr(2)
+        // console.log('tier level hex bytes', tierLevelHexBytes.padStart(2, '0'))
+        newRow += tierLevelHexBytes.padStart(2, '0')
+      } else {
+        newRow += '00'
+      }
+    }
+
+    tokenTierMappingCompressed.push(newRow)
+  }
+
+  return tokenTierMappingCompressed
+}
+
+export const getAllTellerNFTTierData = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<Array<ethers.BigNumber>> => {
+  const { contracts, ethers, toBN } = hre
+
+  const nft = await contracts.get<TellerNFT>('TellerNFT')
+
+  const info: Array<ethers.BigNumber> = []
+  try {
+    let nftID = ethers.BigNumber.from(0)
+    while (await nft.ownerOf(nftID)) {
+      const { index_ } = await nft.getTokenTier(nftID)
+
+      info.push(index_)
+      nftID = nftID.add(1)
+    }
+  } catch (e) {
+    // Throws once all NFTs have been looped
+  }
+  return info
 }
 
 task(

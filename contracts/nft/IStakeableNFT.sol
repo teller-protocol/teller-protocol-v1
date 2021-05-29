@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IStakeableNFT {
-    function stakeableTokenType() external view returns (bytes32);
-
     function tokenBaseLoanSize(uint256 tokenId) external view returns (uint256);
 
     function tokenURIHash(uint256 tokenId)
