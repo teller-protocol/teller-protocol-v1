@@ -16,18 +16,22 @@ interface ITellerNFT {
 
     /**
      * @notice The contract metadata URI.
+     * @return the contractURI in string
      */
     function contractURI() external view returns (string memory);
 
     /**
-     * @notice It returns information about a Tier for a token ID.
+     * @notice It returns information about a Tier with from a tier index
      * @param index Tier index to get info.
+     * @return tier_ the tier which belongs to the respective index
      */
     function getTier(uint256 index) external view returns (Tier memory tier_);
 
     /**
      * @notice It returns information about a Tier for a token ID.
      * @param tokenId ID of the token to get Tier info.
+     * @return index_ the index of the tier the tokenID belongs in
+     * @return tier_ the tier where the tokenID belongs in
      */
     function getTokenTier(uint256 tokenId)
         external
@@ -35,9 +39,9 @@ interface ITellerNFT {
         returns (uint256 index_, Tier memory tier_);
 
     /**
-     * @notice It returns an array of token IDs owned by an address.
-     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
-     * @dev Can be costly if calling within a contract for address with many tokens.
+     * @notice It returns an array of hashes in a tier
+     * @param tierIndex the tier index to get the tier hashes
+     * @return hashes_ all the tokenID hashes
      */
     function getTierHashes(uint256 tierIndex)
         external
@@ -48,6 +52,7 @@ interface ITellerNFT {
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
      * @dev Can be costly if calling within a contract for address with many tokens.
+     * @return owned the array of tokenIDs owned by the address
      */
     function getOwnedTokens(address owner)
         external
@@ -56,7 +61,8 @@ interface ITellerNFT {
 
     /**
      * @notice It mints a new token for a Tier index.
-     *
+     * @param tierIndex the tier index to mint the token in
+     * @param owner the owner of the new token
      * Requirements:
      *  - Caller must be an authorized minter
      */
