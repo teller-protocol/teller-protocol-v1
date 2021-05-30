@@ -1,31 +1,30 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-// import hre from 'hardhat'
+import hre from 'hardhat'
+import { updatePlatformSetting } from '../../tasks'
 import { generateTests, LOAN_ACTIONS } from '../helpers/story-helpers'
 
 chai.should()
 chai.use(solidity)
 
-// const {
-//   contracts,
-//   tokens,
-//   deployments,
-//   getNamedSigner,
-//   ethers,
-//   network,
-//   evm,
-//   toBN,
-// } = hre
-
 describe.only('story test', async () => {
   // Run tests for all markets
   const args = {
-    pass: false,
+    pass: true,
     type: LOAN_ACTIONS[0],
-    revert: 'Promise',
-    description: 'shoud do another stuff',
+    revert: '',
+    // description: 'shoud do another stuff',
   }
-  it(`${args.description}`, async () => {
+  before(async () => {
+    await updatePlatformSetting(
+      {
+        name: 'RequiredSubmissionsPercentage',
+        value: 100,
+      },
+      hre
+    )
+  })
+  it(`Run story tests`, async () => {
     await generateTests(args)
   })
 })

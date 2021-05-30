@@ -259,12 +259,12 @@ interface CommonLoanArgs {
   from?: Signer
 }
 
-interface TakeOutLoanArgs extends CommonLoanArgs {
+export interface TakeOutLoanArgs extends CommonLoanArgs {
   amount?: BigNumberish
   nft?: boolean
 }
 
-const takeOutLoan = async (
+export const takeOutLoan = async (
   args: TakeOutLoanArgs
 ): Promise<ContractTransaction> => {
   const {

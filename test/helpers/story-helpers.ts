@@ -1,15 +1,15 @@
 import hre from 'hardhat'
-import { ContractTransaction } from 'ethers'
 import {
   createLoan,
   LoanType,
   takeOut,
-  CreateLoanReturn,
+  takeOutLoan,
+  TakeOutLoanArgs,
   CreateLoanArgs,
 } from '../helpers/loans'
 import { getMarkets, getNFT } from '../../config'
-import { expect } from 'chai'
 import Prando from 'prando'
+import moment from 'moment'
 let rng = new Prando('teller-v1')
 
 export const LOAN_ACTIONS: string[] = [
@@ -20,12 +20,13 @@ export const LOAN_ACTIONS: string[] = [
   'LIQUIDATE',
 ]
 
+// generate test arg details based off action and pass
 interface TestArgs {
   type: string
   pass: boolean
-  tx?: Promise<ContractTransaction>
   revert?: string
-  description: string
+  nft?: boolean
+  loanArgs?: Object
 }
 
 const STORY_TREE: { [id: number]: number } = {
@@ -36,16 +37,7 @@ const STORY_TREE: { [id: number]: number } = {
   4: 1,
 }
 
-// - Create loan → snapshot (root) []
-//     - take out
-// - Take out loan → snapshot (left) [1] (supporting functions) (activate)
-//     - repay [1]
-//     - liquidate [1]
-// - LP Lend -> snapshot (right)
-// - Repay (left)
-// - Liquidate (right)
-// - Lend Compound
-// - Redeem Compound
+const SNAPSHOTS: { [name: string]: Function } = {}
 
 const getChildren = (id: number) => {
   return Object.entries(STORY_TREE).reduce(
@@ -60,7 +52,7 @@ const getChildren = (id: number) => {
   )
 }
 
-const create_loan_args = (): CreateLoanArgs => {
+const createLoanArgs = (): CreateLoanArgs => {
   const { network } = hre
   const markets = getMarkets(network)
   const randomMarket = rng.nextInt(0, markets.length - 1)
@@ -70,11 +62,7 @@ const create_loan_args = (): CreateLoanArgs => {
     0,
     market.collateralTokens.length - 1
   )
-  const randomLoanType = rng.nextInt(
-    0,
-    Object.values(LoanType).filter((value) => typeof value != 'string').length -
-      1
-  )
+  const randomLoanType = rng.nextInt(0, Object.values(LoanType).length / 2 - 1)
   return {
     lendToken: market.lendingToken,
     collToken: market.collateralTokens[randomCollateralToken],
@@ -83,24 +71,296 @@ const create_loan_args = (): CreateLoanArgs => {
 }
 
 export const generateTests = async (args: TestArgs) => {
-  const revert = await hre.evm.snapshot()
+  SNAPSHOTS.revert = await hre.evm.snapshot()
   switch (args.type) {
-    case LOAN_ACTIONS[0]:
-      // expect loan args to match loan case
-      const loan_args = create_loan_args()
-      console.log(loan_args)
+    case LOAN_ACTIONS[0]: {
+      const loanID = 0
+      try {
+        // expect loan args to match loan case
+        const createArgs = createLoanArgs()
 
-      // run test
-      console.log('run')
-      const { tx } = await createLoan(loan_args)
-      console.log('tx is here')
-      if (args.pass) {
-        expect(tx).should.exist
-      } else {
-        console.log('args no pass')
-        expect(tx).should.not.exist
+        // run test
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        const { tx, getHelpers } = await createLoan(createArgs)
+        if (args.pass) {
+          // check use cases
+          if (tx) console.log(`- Pass`.green)
+          //take snapshot
+          SNAPSHOTS.create_loan = await hre.evm.snapshot()
+          // get children
+          const children = getChildren(loanID)
+          if (children.length > 0) {
+            const randomChild = rng.nextInt(0, children.length - 1)
+            const child = children[randomChild]
+            const helpers = await getHelpers()
+            const { diamond, collateral, details, takeOut } = helpers
+            switch (child) {
+              case 1:
+                const neededCollateral = await collateral.needed()
+                if (neededCollateral.gt(0)) {
+                  await collateral.deposit(neededCollateral)
+                }
+                await generateTests({
+                  type: LOAN_ACTIONS[children[randomChild]],
+                  pass: args.pass,
+                  revert: args.revert,
+                  loanArgs: {
+                    type: LOAN_ACTIONS[children[randomChild]],
+                    amount: details.terms.maxLoanAmount,
+                    from: details.borrower.signer,
+                    nft: args.nft ? args.nft : false,
+                    diamond,
+                    details,
+                  },
+                })
+                break
+              case 2:
+                break
+            }
+          }
+        } else {
+          console.log(`- Failed`.red)
+        }
+      } catch (error) {
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        if (!args.pass) {
+          console.log(`- Pass`.green)
+        } else {
+          console.log(`- Failed`.red)
+        }
       }
       break
+    }
+    case LOAN_ACTIONS[1]: {
+      const loanID = 1
+      let takeOutLoanArgs: TakeOutLoanArgs
+      console.log(
+        `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
+          args.pass == true ? 'pass' : 'fail'
+        }`.underline.magenta
+      )
+      try {
+        if (!args.loanArgs) {
+          console.log(`- Fail`.red)
+          break
+        }
+        takeOutLoanArgs = {
+          amount: args.loanArgs.amount,
+          from: args.loanArgs.from,
+          nft: args.loanArgs.nft,
+          diamond: args.loanArgs.diamond,
+          details: args.loanArgs.details,
+        }
+        await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+        const tx = await takeOutLoan(takeOutLoanArgs)
+        if (args.pass) {
+          // check use cases
+          if (tx) console.log(`- Pass`.green)
+
+          //take snapshot
+          SNAPSHOTS.takeout_loan = await hre.evm.snapshot()
+          // get children
+          const children = getChildren(loanID)
+          if (children.length > 0) {
+            const randomChild = rng.nextInt(0, children.length - 1)
+            console.log('randomChild is: ', children[randomChild])
+            await generateTests({
+              type: LOAN_ACTIONS[children[randomChild]],
+              pass: args.pass,
+              revert: args.revert,
+            })
+          }
+        } else {
+          console.log(`- Failed`.red)
+        }
+      } catch (error) {
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        if (!args.pass) {
+          console.log(`- Pass`.green)
+        } else {
+          console.log(`- Failed`.red)
+        }
+      }
+
+      break
+    }
+    case LOAN_ACTIONS[2]: {
+      const loanID = 3
+      let takeOutLoanArgs: TakeOutLoanArgs
+      console.log(
+        `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
+          args.pass == true ? 'pass' : 'fail'
+        }`.underline.magenta
+      )
+      try {
+        if (!args.loanArgs) {
+          console.log(`- Fail`.red)
+          break
+        }
+        takeOutLoanArgs = {
+          amount: args.loanArgs.amount,
+          from: args.loanArgs.from,
+          nft: args.loanArgs.nft,
+          diamond: args.loanArgs.diamond,
+          details: args.loanArgs.details,
+        }
+        await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+        const tx = await takeOutLoan(takeOutLoanArgs)
+        if (args.pass) {
+          // check use cases
+          if (tx) console.log(`- Pass`.green)
+
+          //take snapshot
+          SNAPSHOTS.takeout_loan = await hre.evm.snapshot()
+          // get children
+          const children = getChildren(loanID)
+          if (children.length > 0) {
+            const randomChild = rng.nextInt(0, children.length - 1)
+            console.log('randomChild is: ', children[randomChild])
+            await generateTests({
+              type: LOAN_ACTIONS[children[randomChild]],
+              pass: args.pass,
+              revert: args.revert,
+            })
+          }
+        } else {
+          console.log(`- Failed`.red)
+        }
+      } catch (error) {
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        if (!args.pass) {
+          console.log(`- Pass`.green)
+        } else {
+          console.log(`- Failed`.red)
+        }
+      }
+    }
+    case LOAN_ACTIONS[3]: {
+      const loanID = 3
+      let takeOutLoanArgs: TakeOutLoanArgs
+      console.log(
+        `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
+          args.pass == true ? 'pass' : 'fail'
+        }`.underline.magenta
+      )
+      try {
+        if (!args.loanArgs) {
+          console.log(`- Fail`.red)
+          break
+        }
+        takeOutLoanArgs = {
+          amount: args.loanArgs.amount,
+          from: args.loanArgs.from,
+          nft: args.loanArgs.nft,
+          diamond: args.loanArgs.diamond,
+          details: args.loanArgs.details,
+        }
+        await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+        const tx = await takeOutLoan(takeOutLoanArgs)
+        if (args.pass) {
+          // check use cases
+          if (tx) console.log(`- Pass`.green)
+
+          //take snapshot
+          SNAPSHOTS.takeout_loan = await hre.evm.snapshot()
+          // get children
+          const children = getChildren(loanID)
+          if (children.length > 0) {
+            const randomChild = rng.nextInt(0, children.length - 1)
+            console.log('randomChild is: ', children[randomChild])
+            await generateTests({
+              type: LOAN_ACTIONS[children[randomChild]],
+              pass: args.pass,
+              revert: args.revert,
+            })
+          }
+        } else {
+          console.log(`- Failed`.red)
+        }
+      } catch (error) {
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        if (!args.pass) {
+          console.log(`- Pass`.green)
+        } else {
+          console.log(`- Failed`.red)
+        }
+      }
+    }
+    case LOAN_ACTIONS[4]: {
+      const loanID = 4
+      let takeOutLoanArgs: TakeOutLoanArgs
+      console.log(
+        `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
+          args.pass == true ? 'pass' : 'fail'
+        }`.underline.magenta
+      )
+      try {
+        if (!args.loanArgs) {
+          console.log(`- Fail`.red)
+          break
+        }
+        takeOutLoanArgs = {
+          amount: args.loanArgs.amount,
+          from: args.loanArgs.from,
+          nft: args.loanArgs.nft,
+          diamond: args.loanArgs.diamond,
+          details: args.loanArgs.details,
+        }
+        await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+        const tx = await takeOutLoan(takeOutLoanArgs)
+        if (args.pass) {
+          // check use cases
+          if (tx) console.log(`- Pass`.green)
+
+          //take snapshot
+          SNAPSHOTS.takeout_loan = await hre.evm.snapshot()
+          // get children
+          const children = getChildren(loanID)
+          if (children.length > 0) {
+            const randomChild = rng.nextInt(0, children.length - 1)
+            console.log('randomChild is: ', children[randomChild])
+            await generateTests({
+              type: LOAN_ACTIONS[children[randomChild]],
+              pass: args.pass,
+              revert: args.revert,
+            })
+          }
+        } else {
+          console.log(`- Failed`.red)
+        }
+      } catch (error) {
+        console.log(
+          `${LOAN_ACTIONS[loanID].toLowerCase()} loan should ${
+            args.pass == true ? 'pass' : 'fail'
+          }`.underline.magenta
+        )
+        if (!args.pass) {
+          console.log(`- Pass`.green)
+        } else {
+          console.log(`- Failed`.red)
+        }
+      }
+    }
     default:
       break
   }
