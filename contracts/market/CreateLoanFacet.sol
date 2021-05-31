@@ -34,6 +34,7 @@ import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Proxy
 import {
@@ -50,6 +51,9 @@ import {
     MarketStorageLib
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
+
+// Helper functions
+import "hardhat/console.sol";
 
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
@@ -174,9 +178,10 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
                 LibCollateral.e(loan.id).loanSupply(loan.id),
             "Teller: more collateral required"
         );
-
         // Pull funds from Teller token LP and and transfer to the recipient
-        LendingLib.tToken(loan.lendingToken).fundLoan(
+        ITToken tToken = LendingLib.tToken(request.request.assetAddress);
+
+        tToken.fundLoan(
             LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio)
                 ? loan.borrower
                 : CreateLoanLib.createEscrow(loan.id),

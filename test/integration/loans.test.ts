@@ -1,4 +1,4 @@
-import chai from 'chai'
+import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import hre from 'hardhat'
@@ -11,14 +11,19 @@ import { ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { fundLender, getFunds } from '../helpers/get-funds'
-import { createLoanRequest, LoanType, takeOut } from '../helpers/loans'
+import {
+  createLoan,
+  LoanType,
+  takeOut,
+  takeOutLoanWithoutNfts,
+} from '../helpers/loans'
 
 chai.should()
 chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('Loans', () => {
+describe.only('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -35,9 +40,34 @@ describe('Loans', () => {
 
       deployer = await getNamedSigner('deployer')
     })
-
+    // tests for merged loan functions
+    describe.only('merge create loan', () => {
+      var helpers: any = null
+      before(async () => {
+        // Advance time
+        const { value: rateLimit } = await getPlatformSetting(
+          'RequestLoanTermsRateLimit',
+          hre
+        )
+        const { getHelpers } = await takeOutLoanWithoutNfts({
+          lendToken: market.lendingToken,
+          collToken: market.collateralTokens[0],
+          loanType: LoanType.UNDER_COLLATERALIZED,
+        })
+        helpers = await getHelpers()
+        await evm.advanceTime(rateLimit)
+      })
+      it('should create a loan and set its status to Active', () => {
+        // get loanStatus from helpers and check if it's equal to 2, which is LoanStatus.Active
+        const loanStatus = helpers.details.loan.status
+        expect(loanStatus).to.equal(2)
+      })
+      it('should have collateral deposited', async () => {
+        // const { collateral } = helpers
+        // const currentCollateral = await collateral.current()
+      })
+    })
     describe('create', () => {})
-
     describe('take out', () => {
       beforeEach(async () => {
         // Advance time
@@ -59,10 +89,10 @@ describe('Loans', () => {
           .withArgs(LOANS_ID, await deployer.getAddress())
 
         // Try deposit into lending pool
-        const { tx } = await createLoanRequest({
+        const { tx } = await createLoan({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
-          loanType: LoanType.OVER_COLLATERALIZED,
+          loanType: LoanType.UNDER_COLLATERALIZED,
         })
         await tx.should.be.revertedWith('Pausable: paused')
 
@@ -76,7 +106,7 @@ describe('Loans', () => {
 
       it('should not be able to take out a loan without collateral', async () => {
         // Create loan with terms without depositing collateral
-        const { getHelpers } = await createLoanRequest({
+        const { getHelpers } = await createLoan({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -105,86 +135,86 @@ describe('Loans', () => {
         currentColl.gt(0).should.eq(true, 'Loan must have collateral')
       })
 
-      it('should be able to take out a loan with an NFT', async () => {
-        // Setup for NFT user
-        const { merkleTrees } = getNFT(hre.network)
-        const merkleIndex = 0
-        const borrower = ethers.utils.getAddress(
-          merkleTrees[merkleIndex].balances[0].address
-        )
-        const imp = await evm.impersonate(borrower)
-        await diamond.connect(deployer).addAuthorizedAddress(borrower)
+      // it('should be able to take out a loan with an NFT', async () => {
+      //   // Setup for NFT user
+      //   const { merkleTrees } = getNFT(hre.network)
+      //   const merkleIndex = 0
+      //   const borrower = ethers.utils.getAddress(
+      //     merkleTrees[merkleIndex].balances[0].address
+      //   )
+      //   const imp = await evm.impersonate(borrower)
+      //   await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
-        // Claim user's NFTs
-        await claimNFT({ account: borrower, merkleIndex }, hre)
+      //   // Claim user's NFTs
+      //   await claimNFT({ account: borrower, merkleIndex }, hre)
 
-        // Create and set NFT loan merkle
-        const nftLoanTree = await getLoanMerkleTree(hre)
-        await setLoanMerkle({ loanTree: nftLoanTree }, hre)
-        const proofs = []
+      //   // Create and set NFT loan merkle
+      //   const nftLoanTree = await getLoanMerkleTree(hre)
+      //   await setLoanMerkle({ loanTree: nftLoanTree }, hre)
+      //   const proofs = []
 
-        // Get the sum of loan amount to take out
-        const nft = await contracts.get<TellerNFT>('TellerNFT')
-        const ownedNFTs = await nft
-          .getOwnedTokens(borrower)
-          .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-        const lendingToken = await tokens.get(market.lendingToken)
-        let amount = toBN(0)
-        for (const nftID of ownedNFTs) {
-          const { tier_ } = await nft.getTokenTier(nftID)
-          const baseLoanSize = toBN(
-            tier_.baseLoanSize,
-            await lendingToken.decimals()
-          )
-          amount = amount.add(baseLoanSize)
+      //   // Get the sum of loan amount to take out
+      //   const nft = await contracts.get<TellerNFT>('TellerNFT')
+      //   const ownedNFTs = await nft
+      //     .getOwnedTokens(borrower)
+      //     .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+      //   const lendingToken = await tokens.get(market.lendingToken)
+      //   let amount = toBN(0)
+      //   for (const nftID of ownedNFTs) {
+      //     const { tier_ } = await nft.getTokenTier(nftID)
+      //     const baseLoanSize = toBN(
+      //       tier_.baseLoanSize,
+      //       await lendingToken.decimals()
+      //     )
+      //     amount = amount.add(baseLoanSize)
 
-          // Get the proofs for the NFT loan size
-          proofs.push({
-            id: nftID,
-            baseLoanSize,
-            proof: nftLoanTree.getProof(nftID, baseLoanSize),
-          })
-        }
+      //     // Get the proofs for the NFT loan size
+      //     proofs.push({
+      //       id: nftID,
+      //       baseLoanSize,
+      //       proof: nftLoanTree.getProof(nftID, baseLoanSize),
+      //     })
+      //   }
 
-        await nft
-          .connect(imp.signer)
-          .setApprovalForAll(diamond.address, true)
-          .then(({ wait }) => wait())
-        await diamond
-          .connect(imp.signer)
-          .stakeNFTs(ownedNFTs)
-          .then(({ wait }) => wait())
+      //   await nft
+      //     .connect(imp.signer)
+      //     .setApprovalForAll(diamond.address, true)
+      //     .then(({ wait }) => wait())
+      //   await diamond
+      //     .connect(imp.signer)
+      //     .stakeNFTs(ownedNFTs)
+      //     .then(({ wait }) => wait())
 
-        // Create loan
-        const { getHelpers } = await createLoanRequest({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType: LoanType.OVER_COLLATERALIZED,
-          amountBN: amount,
-          borrower,
-        })
-        const { details } = await getHelpers()
+      //   // Create loan
+      //   const { getHelpers } = await createLoan({
+      //     lendToken: market.lendingToken,
+      //     collToken: market.collateralTokens[0],
+      //     loanType: LoanType.OVER_COLLATERALIZED,
+      //     amountBN: amount,
+      //     borrower,
+      //   })
+      //   const { details } = await getHelpers()
 
-        // Take out loan
-        await diamond
-          .connect(imp.signer)
-          .takeOutLoanWithNFTs(details.loan.id, amount, proofs)
-          .should.emit(diamond, 'LoanTakenOut')
-          .withArgs(details.loan.id, borrower, amount, true)
+      //   // Take out loan
+      //   await diamond
+      //     .connect(imp.signer)
+      //     .takeOutLoanWithNFTs(details.loan.id, amount, proofs)
+      //     .should.emit(diamond, 'LoanTakenOut')
+      //     .withArgs(details.loan.id, borrower, amount, true)
 
-        await details
-          .refresh()
-          .then(({ loan }) => loan.status.should.eq(LoanStatus.Active))
+      //   await details
+      //     .refresh()
+      //     .then(({ loan }) => loan.status.should.eq(LoanStatus.Active))
 
-        await imp.stop()
-      })
+      //   await imp.stop()
+      // })
 
       it('should not be able to take out with invalid debt ratio', async () => {
         // Take snapshot to revert the asset setting
         const revert = await evm.snapshot()
 
         // Create loan
-        const { getHelpers } = await createLoanRequest({
+        const { getHelpers } = await createLoan({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,
@@ -209,7 +239,7 @@ describe('Loans', () => {
 
       it('should be able to withdraw collateral before takeOutLoan', async () => {
         // Create loan with terms without depositing collateral
-        const { getHelpers } = await createLoanRequest({
+        const { getHelpers } = await createLoan({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.OVER_COLLATERALIZED,

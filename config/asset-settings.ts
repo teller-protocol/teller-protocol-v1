@@ -9,7 +9,7 @@ const mainnetAssetSettings: AssetSettings = {
     { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
     { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
     { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
-    { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    { key: 'MaxDebtRatio', value: 10000, type: AssetType.Uint },
   ],
   USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
   WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],

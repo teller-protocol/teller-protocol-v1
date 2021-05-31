@@ -60,6 +60,7 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         nonReentry(LendingLib.ID)
     {
         ITToken tToken = LendingLib.tToken(asset);
+        uint256 tvl = tToken.currentTVL();
         require(
             address(tToken) != address(0),
             "Teller: lending pool not initialized"
