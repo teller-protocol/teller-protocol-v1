@@ -23,13 +23,13 @@ import "./storage.sol" as CompoundStorage;
 
 contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**
-     * @notice it creates the TToken storage and adds it to a hashed slot position
+     * @notice it creates a reference to the TToken storage 
      */
     function() pure returns (TokenStorage.Store storage)
         private constant tokenStore = TokenStorage.store;
 
     /**
-     * @notice it creates the Compound storage and adds it to a hashed slot position
+     * @notice it creates a reference to the Compound storage
      */
     function() pure returns (CompoundStorage.Store storage)
         private constant compoundStore = CompoundStorage.store;

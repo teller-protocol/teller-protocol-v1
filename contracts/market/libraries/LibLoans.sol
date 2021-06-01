@@ -30,14 +30,29 @@ library LibLoans {
         return MarketStorageLib.store();
     }
 
+    /**
+     * @notice it returns the loan
+     * @param loanID the ID of the respective loan
+     * @return l_ the loan 
+     */
     function loan(uint256 loanID) internal view returns (Loan storage l_) {
         l_ = s().loans[loanID];
     }
 
+    /**
+     * @notice it returns the loan debt from a respective loan
+     * @param loanID the ID of the respective loan
+     * @return d_ the loan debt from a respective loan
+     */
     function debt(uint256 loanID) internal view returns (LoanDebt storage d_) {
         d_ = s().loanDebt[loanID];
     }
 
+    /**
+     * @notice it returns the loan terms from a respective loan
+     * @param loanID the ID of the respective loan
+     * @return t_ the loan terms from a respective loan
+     */
     function terms(uint256 loanID)
         internal
         view
@@ -52,7 +67,6 @@ library LibLoans {
      * @return uint256 The total owed amount.
      */
     function getTotalOwed(uint256 loanID) internal view returns (uint256) {
-        //
         if (loan(loanID).status == LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(loanID, terms(loanID).maxLoanAmount);

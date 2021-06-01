@@ -23,6 +23,7 @@ interface ILoansEscrow {
 
     /**
      * @notice it allows user to claim their escrow tokens
+     * @dev only the owner (TellerDiamond) can make this call on behalf of the users
      * @param token address of the respective token contract to claim tokens from
      * @param to address where the tokens should be transferred to
      * @param amount uint256 amount of tokens to be claimed

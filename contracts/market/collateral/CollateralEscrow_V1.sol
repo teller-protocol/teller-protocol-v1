@@ -21,7 +21,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     bool internal _isWETH;
 
     /**
-     * @notice it creates a escrow to store collateral tokens
+     * @notice it initializes an escrow
      * @param tokenAddress the address of the collateral token to be stored
      * @param isWETH check if it's wrapped Ethereum
      */
@@ -63,7 +63,8 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     }
 
     /**
-     * @notice it withdraws an amount of tokens in a respective loanID if the caller is the owner
+     * @notice it withdraws an amount of tokens in a respective loanID on behalf of the borrower
+     * @dev only the TellerDiamond can make this call on behalf of the borrower
      * @param loanID identifier of the loan
      * @param amount number of collateral tokens to send
      * @param receiver payable address to transfer money to
@@ -97,7 +98,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     }
 
     /**
-     * @notice it returns the total supply of our collateral token 
+     * @notice it returns the total supply of the collateral token held by the contract
      * @return supply_ the total amount of collateral
      */
     function totalSupply() external view override returns (uint256 supply_) {

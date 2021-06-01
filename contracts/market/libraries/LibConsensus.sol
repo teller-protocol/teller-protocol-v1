@@ -109,7 +109,7 @@ library LibConsensus {
                 "Teller: consensus response expired"
             );
 
-            // check if the signature of 
+            // check if the signature of hashed response data matches
             require(
                 _signatureValid(
                     response.signature,

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 interface ICollateralEscrow {
     /**
-     * @notice it creates a escrow to store collateral tokens
+     * @notice it initializes an escrow
      * @param tokenAddress the address of the collateral token to be stored
      * @param isWETH check if it's wrapped Ethereum
      */
@@ -17,7 +17,8 @@ interface ICollateralEscrow {
     function deposit(uint256 loanID, uint256 amount) external payable;
 
     /**
-     * @notice it withdraws an amount of tokens in a respective loanID if the caller is the owner
+     * @notice it withdraws an amount of tokens in a respective loanID on behalf of the borrower
+     * @dev only the TellerDiamond can make this call on behalf of the borrower
      * @param loanID identifier of the loan
      * @param amount number of collateral tokens to send
      * @param receiver payable address to transfer money to
@@ -36,7 +37,7 @@ interface ICollateralEscrow {
     function loanSupply(uint256 loanID) external view returns (uint256 supply_);
 
     /**
-     * @notice it returns the total supply of our collateral token
+     * @notice it returns the total supply of the collateral token held by the contract
      * @return supply_ the total amount of collateral
      */
     function totalSupply() external view returns (uint256 supply_);

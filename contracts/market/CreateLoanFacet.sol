@@ -292,7 +292,7 @@ library CreateLoanLib {
     }
 
     /**
-     * @notice creates a new ID for the loan
+     * @notice increments the loanIDCounter
      * @return id_ the new ID requested, which stores it in the loan data
      */
     function newID() internal returns (uint256 id_) {
@@ -303,7 +303,7 @@ library CreateLoanLib {
     }
 
     /**
-     * @notice it creates a new loan escrow for the respective loan to hold it's funds
+     * @notice it creates a new loan escrow contract
      * @param loanID the ID that identifies the loan
      * @return escrow_ the loanEscrow that gets created
      */
