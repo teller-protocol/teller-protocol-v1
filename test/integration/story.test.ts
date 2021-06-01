@@ -12,7 +12,7 @@ describe.only('story test', async () => {
   const args = {
     pass: true,
     type: LOAN_ACTIONS[0],
-    revert: '',
+    // revert: '',
     // description: 'shoud do another stuff',
   }
   before(async () => {

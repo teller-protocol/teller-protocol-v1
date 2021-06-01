@@ -50,6 +50,19 @@ export interface LoanHelpersReturn {
   }
 }
 
+export interface CollateralFunctions {
+  needed: () => ReturnType<typeof collateralNeeded>
+  current: () => ReturnType<typeof collateralCurrent>
+  deposit: (
+    amount: BigNumberish,
+    from?: Signer
+  ) => ReturnType<typeof depositCollateral>
+  withdraw: (
+    amount: BigNumberish,
+    from?: Signer
+  ) => ReturnType<typeof withdrawCollateral>
+}
+
 export const loanHelpers = async (
   loanID: string
 ): Promise<LoanHelpersReturn> => {
@@ -215,7 +228,7 @@ export const takeOut = async (
   return helpers
 }
 
-interface LoanDetailsReturn {
+export interface LoanDetailsReturn {
   lendingToken: ERC20
   collateralToken: ERC20
   loan: PromiseReturnType<typeof ITellerDiamond.prototype.getLoan>
@@ -330,6 +343,12 @@ export const takeOutLoan = async (
   }
 }
 
+// export const liquidateLoan = async (
+//   args: TakeOutLoanArgs
+// ): Promise<ContractTransaction> => {
+
+// }
+
 interface DepositCollateralArgs extends CommonLoanArgs {
   amount?: BigNumberish
 }
@@ -394,11 +413,13 @@ const collateralCurrent = async (
   return await diamond.getLoanCollateral(details.loan.id)
 }
 
-interface RepayLoanArgs extends CommonLoanArgs {
+export interface RepayLoanArgs extends CommonLoanArgs {
   amount: BigNumberish
 }
 
-const repayLoan = async (args: RepayLoanArgs): Promise<ContractTransaction> => {
+export const repayLoan = async (
+  args: RepayLoanArgs
+): Promise<ContractTransaction> => {
   const {
     diamond,
     details: { loan, borrower },
