@@ -41,6 +41,11 @@ contract AssetSettingsFacet is RolesMods {
         CacheType cacheType
     );
 
+    /**
+     * @notice it checks if the settings of an asset is initialized
+     * @param asset the address of the asset
+     * @return bool to check if settings of an asset exists
+     */
     function isAssetSettingInitialized(address asset)
         external
         view
@@ -49,12 +54,19 @@ contract AssetSettingsFacet is RolesMods {
         return CacheLib.exists(s(asset));
     }
 
+    /**
+     * @notice it gets the MaxTVL amount of an asset
+     * @param asset the address of the asset
+     * @return the max TVL amount
+     */
     function getMaxTVLAmount(address asset) external view returns (uint256) {
         return MaxTVLLib.get(asset);
     }
 
     /**
-     * @notice It creates an asset with the given parameters.
+     * @notice It creates an asset settings with the given parameters.
+     * @param asset the address to create settings for
+     * @param requests the multiple settings to update the asset with 
      */
     function createAssetSetting(
         address asset,
@@ -82,7 +94,9 @@ contract AssetSettingsFacet is RolesMods {
     }
 
     /**
-     * @notice It creates an asset with the given parameters.
+     * @notice It updates an asset with the given parameter
+     * @param asset the address of the asset to update
+     * @param request the setting to update the asset with
      */
     function updateAssetSetting(
         address asset,
