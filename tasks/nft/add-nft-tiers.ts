@@ -40,7 +40,10 @@ export const addTiers = async (
   for (let i = 0; i < tiers.length; i++) {
     const tier = await nft.getTier(i)
     if (tier.contributionAsset === NULL_ADDRESS) {
-      await nft.connect(deployer).addTier(tiers[i])
+      await nft
+        .connect(deployer)
+        .addTier(tiers[i])
+        .then(({ wait }) => wait())
 
       log(`Tier ${i} added`, { indent: 3, star: true })
     } else if (hashTier(tier) !== hashTier(tiers[i])) {
