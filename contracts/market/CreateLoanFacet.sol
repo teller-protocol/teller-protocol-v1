@@ -151,6 +151,12 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         __createLoan(request)
     {
+        // Check if collateral token is zero
+        require(
+            collateralToken != address(0x0),
+            "Teller: token addr can't be 0"
+        );
+
         // Verify collateral token is acceptable
         require(
             EnumerableSet.contains(
@@ -163,7 +169,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Get the ID of the newly created loan
-        Loan storage loan = LibLoans.loan(CreateLoanLib.currentID());
+        Loan storage loan = LibLoans.loan(CreateLoanLib.currentID() - 1);
+
         // Save collateral token to loan
         loan.collateralToken = collateralToken;
 
@@ -255,7 +262,7 @@ library CreateLoanLib {
         Counters.increment(counter);
     }
 
-    function currentID() internal returns (uint256 id_) {
+    function currentID() internal view returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);

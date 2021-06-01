@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
+import { defaultMaxListeners } from 'events'
 import hre from 'hardhat'
 
 import { getMarkets, getNFT } from '../../config'
@@ -55,16 +56,22 @@ describe.only('Loans', () => {
           loanType: LoanType.UNDER_COLLATERALIZED,
         })
         helpers = await getHelpers()
+
         await evm.advanceTime(rateLimit)
       })
       it('should create a loan and set its status to Active', () => {
         // get loanStatus from helpers and check if it's equal to 2, which is LoanStatus.Active
         const loanStatus = helpers.details.loan.status
+        console.log(helpers.details.loan)
         expect(loanStatus).to.equal(2)
       })
       it('should have collateral deposited', async () => {
-        // const { collateral } = helpers
-        // const currentCollateral = await collateral.current()
+        const { collateral } = helpers
+        const amount = await collateral.current()
+
+        // loan must have collateral
+        amount.gt(0).should.eq(true, 'Loan must have collateral')
+        console.log(amount._hex)
       })
     })
     describe('create', () => {})

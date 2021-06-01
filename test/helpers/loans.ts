@@ -162,7 +162,7 @@ export const takeOutLoanWithoutNfts = async (
     lendToken,
     collToken,
     loanType,
-    amount = 100,
+    amount = 0,
     amountBN,
     duration = moment.duration(1, 'day'),
   } = args
@@ -199,7 +199,7 @@ export const takeOutLoanWithoutNfts = async (
     .takeOutLoan(
       { request: craReturn.request, responses: craReturn.responses },
       collateralToken.address,
-      '10000'
+      '100000'
     )
   return {
     tx,
@@ -410,7 +410,6 @@ const collateralCurrent = async (
   args: CollateralCurrentArgs
 ): Promise<BigNumber> => {
   const { diamond, details } = args
-  console.log(details)
   return await diamond.getLoanCollateral(details.loan.id)
 }
 interface RepayLoanArgs extends CommonLoanArgs {
