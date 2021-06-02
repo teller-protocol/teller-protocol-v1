@@ -3,6 +3,7 @@ import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import { defaultMaxListeners } from 'events'
 import hre from 'hardhat'
+import { BUILD_INFO_FORMAT_VERSION } from 'hardhat/internal/constants'
 
 import { getMarkets, getNFT } from '../../config'
 import { claimNFT, getPlatformSetting } from '../../tasks'
@@ -16,6 +17,7 @@ import {
   createLoan,
   LoanType,
   takeOut,
+  takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
 } from '../helpers/loans'
 
@@ -42,7 +44,7 @@ describe.only('Loans', () => {
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
-    describe.only('merge create loan', () => {
+    describe('merge create loan', () => {
       var helpers: any = null
       before(async () => {
         // Advance time
@@ -50,6 +52,8 @@ describe.only('Loans', () => {
           'RequestLoanTermsRateLimit',
           hre
         )
+
+        // get helpers
         const { getHelpers } = await takeOutLoanWithoutNfts({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
@@ -59,19 +63,45 @@ describe.only('Loans', () => {
 
         await evm.advanceTime(rateLimit)
       })
-      it('should create a loan and set its status to Active', () => {
-        // get loanStatus from helpers and check if it's equal to 2, which is LoanStatus.Active
-        const loanStatus = helpers.details.loan.status
-        console.log(helpers.details.loan)
-        expect(loanStatus).to.equal(2)
+      it('should create a loan', () => {
+        // check if loan exists
+        expect(helpers.details.loan).to.exist
       })
       it('should have collateral deposited', async () => {
+        // get collateral
         const { collateral } = helpers
         const amount = await collateral.current()
 
-        // loan must have collateral
+        // check if collateral is > 0
         amount.gt(0).should.eq(true, 'Loan must have collateral')
-        console.log(amount._hex)
+      })
+      it('should be an active loan', () => {
+        // get loanStatus from helpers and check if it's equal to 2, which means it's active
+        const loanStatus = helpers.details.loan.status
+        expect(loanStatus).to.equal(2)
+      })
+    })
+    describe.only('merge create loan w/ nfts', () => {
+      var helpers: any = null
+      var deployer: any
+      var borrower: string
+      before(async () => {
+        // Advance time
+        const { value: rateLimit } = await getPlatformSetting(
+          'RequestLoanTermsRateLimit',
+          hre
+        )
+
+        // get helpers
+        const { getHelpers } = await takeOutLoanWithNfts({
+          lendToken: market.lendingToken,
+        })
+        helpers = await getHelpers()
+
+        await evm.advanceTime(rateLimit)
+      })
+      it('creates', async () => {
+        console.log(helpers.loan.details)
       })
     })
     describe('create', () => {})

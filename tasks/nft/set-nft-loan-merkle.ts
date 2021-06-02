@@ -16,7 +16,6 @@ export const setLoanMerkle = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
   const { contracts, network, log } = hre
-
   if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
     log('')
     log('================================================')
