@@ -24,7 +24,7 @@ const {
   toBN,
 } = hre
 
-describe('Lending', () => {
+describe.only('Lending', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
@@ -66,7 +66,7 @@ describe('Lending', () => {
           })
         })
 
-        describe('deposit', () => {
+        describe.only('deposit', () => {
           it('should NOT be able deposit directly on the Teller Token contract', async () => {
             await tToken.connect(deployer).restrict(true)
 
@@ -141,7 +141,7 @@ describe('Lending', () => {
               .should.be.revertedWith('Teller: deposit TVL exceeded')
           })
 
-          it('should be able deposit and receive a Teller Token LP balance', async () => {
+          it.only('should be able deposit and receive a Teller Token LP balance', async () => {
             const tTokenBalBefore = await tToken.balanceOf(
               await lender.getAddress()
             )
@@ -152,11 +152,23 @@ describe('Lending', () => {
                 'Lender should not have a TToken balance before lending'
               )
 
+            console.log({
+              bal: (
+                await lendingToken.balanceOf(await lender.getAddress())
+              ).toString(),
+            })
+
             // Fund the market
             const depositAmount = await fundLender({
               token: lendingToken,
               amount: 1000,
               hre,
+            })
+            console.log({
+              depositAmount: depositAmount.toString(),
+              bal: (
+                await lendingToken.balanceOf(await lender.getAddress())
+              ).toString(),
             })
             await helpers.deposit(lender, depositAmount)
 
