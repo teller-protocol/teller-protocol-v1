@@ -48,9 +48,9 @@ export const fundedMarket = hre.deployments.createFixture(
       hre,
     })
     await lendingToken.connect(funder).approve(diamond.address, amountToFundLP)
-    await diamond
-      .connect(funder)
-      .lendingPoolDeposit(lendingToken.address, amountToFundLP)
+    // await diamond
+    //   .connect(funder)
+    //   .lendingPoolDeposit(lendingToken.address, amountToFundLP)
     return {
       diamond,
       lendingToken,

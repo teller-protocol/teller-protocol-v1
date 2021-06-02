@@ -89,6 +89,7 @@ interface CreateLoanArgs {
   loanType: LoanType
   amount?: BigNumberish
   amountBN?: BigNumberish
+  collAmount?: BigNumberish
   borrower?: string
   duration?: moment.Duration
   nft?: boolean
@@ -173,6 +174,7 @@ export const takeOutLoanWithoutNfts = async (
     amount = 100,
     amountBN,
     duration = moment.duration(1, 'day'),
+    collAmount = 100,
   } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -207,7 +209,7 @@ export const takeOutLoanWithoutNfts = async (
     .takeOutLoan(
       { request: craReturn.request, responses: craReturn.responses },
       collateralToken.address,
-      100
+      collAmount
     )
 
   return {

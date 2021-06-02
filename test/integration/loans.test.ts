@@ -80,30 +80,67 @@ describe.only('Loans', () => {
         const loanStatus = helpers.details.loan.status
         expect(loanStatus).to.equal(2)
       })
-    })
-    describe.only('merge create loan w/ nfts', () => {
-      var helpers: any = null
-      var deployer: any
-      var borrower: string
-      before(async () => {
-        // Advance time
-        const { value: rateLimit } = await getPlatformSetting(
-          'RequestLoanTermsRateLimit',
-          hre
-        )
+      describe('other loan tests', () => {
+        it('should not be able to take out a loan when loan facet is paused', async () => {
+          const LOANS_ID = hre.ethers.utils.id('LOANS')
 
-        // get helpers
-        const { getHelpers } = await takeOutLoanWithNfts({
-          lendToken: market.lendingToken,
+          // Pause lending
+          await diamond
+            .connect(deployer)
+            .pause(LOANS_ID, true)
+            .should.emit(diamond, 'Paused')
+            .withArgs(LOANS_ID, await deployer.getAddress())
+
+          const { tx } = await takeOutLoanWithoutNfts({
+            lendToken: market.lendingToken,
+            collToken: market.collateralTokens[0],
+            loanType: LoanType.UNDER_COLLATERALIZED,
+          })
+
+          await tx.should.be.revertedWith('Pausable: paused')
+
+          // Unpause lending
+          await diamond
+            .connect(deployer)
+            .pause(LOANS_ID, false)
+            .should.emit(diamond, 'UnPaused')
+            .withArgs(LOANS_ID, await deployer.getAddress())
         })
-        helpers = await getHelpers()
+        it('should not be able to take out a loan without enough collateral', async () => {
+          const { tx } = await takeOutLoanWithoutNfts({
+            lendToken: market.lendingToken,
+            collToken: market.collateralTokens[0],
+            loanType: LoanType.OVER_COLLATERALIZED,
+          })
 
-        await evm.advanceTime(rateLimit)
-      })
-      it('creates', async () => {
-        console.log(helpers.loan.details)
+          // Try to take out loan which should fail
+          await tx.should.be.revertedWith('Teller: more collateral required')
+        })
       })
     })
+    // describe.only('merge create loan w/ nfts', () => {
+    //   var helpers: any = null
+    //   var deployer: any
+    //   var borrower: string
+    //   before(async () => {
+    //     // Advance time
+    //     const { value: rateLimit } = await getPlatformSetting(
+    //       'RequestLoanTermsRateLimit',
+    //       hre
+    //     )
+
+    //     // get helpers
+    //     const { getHelpers } = await takeOutLoanWithNfts({
+    //       lendToken: market.lendingToken,
+    //     })
+    //     helpers = await getHelpers()
+
+    //     await evm.advanceTime(rateLimit)
+    //   })
+    //   it('creates', async () => {
+    //     console.log(helpers.loan.details)
+    //   })
+    // })
     describe('create', () => {})
     describe('take out', () => {
       beforeEach(async () => {
