@@ -230,6 +230,7 @@ export const takeOutLoanWithNfts = async (
     amountBN,
     duration = moment.duration(1, 'day'),
   } = args
+
   // local variables
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const lendingToken =
@@ -242,17 +243,17 @@ export const takeOutLoanWithNfts = async (
   const deployer = await ethers.provider.getSigner(
     '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
   )
+  const imp = await evm.impersonate(borrower)
   await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
   // Claim user's NFTs
   await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
   console.log('nfts claimed')
+
   // Create and set NFT loan merkle
   const nftLoanTree = await getLoanMerkleTree(hre)
-  console.log('got merkle tree')
   await setLoanMerkle({ loanTree: nftLoanTree, sendTx: true }, hre)
-  console.log('set loan merkle')
-  // console.log("Loan merkle set");
+
   const proofs = []
   // Get the sum of loan amount to take out
   const nft = await contracts.get<TellerNFT>('TellerNFT')
