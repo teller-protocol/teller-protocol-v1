@@ -30,13 +30,6 @@ describe.only('Loans', () => {
     let diamond: ITellerDiamond
 
     before(async () => {
-      // Get funded market with NFT
-      /* ;({ diamond } = await fundedMarket({
-        assetSym: market.lendingToken,
-        amount: 100000,
-        tags: ['nft'],
-      }))*/
-
       await hre.deployments.fixture(['market'], {
         keepExistingDeployments: true,
       })
@@ -59,8 +52,6 @@ describe.only('Loans', () => {
       })
 
       it('should be able to claim a token and add dictionary data', async () => {
-        //const { merkleTrees } = getNFT(hre.network)
-
         const { borrower, lender } = await getNamedAccounts()
 
         const customMerkleTrees = [
@@ -142,13 +133,6 @@ describe.only('Loans', () => {
             .addMerkle(info.tierIndex, info.merkleRoot)
             .then(({ wait }) => wait())
 
-          /*const borrower = ethers.utils.getAddress(
-            merkleData.balances[0].address
-          )*/
-
-          console.log(`info claims ${JSON.stringify(info.claims[borrower])}`)
-          console.log(`merkle index ${merkleIndex + existingMerkles.length}`)
-
           // Claim user's NFTs
           await nftDistributor
             .connect(deployer)
@@ -161,8 +145,6 @@ describe.only('Loans', () => {
               },
             ])
             .then(({ wait }) => wait())
-
-          //await claimNFT({ account: borrower, merkleIndex:  merkleIndex+existingMerkles.length }, hre)
 
           const nft = await contracts.get<ITellerNFT>('TellerNFT')
 
@@ -177,9 +159,9 @@ describe.only('Loans', () => {
             lastOwnedTokenId
           )
 
-          console.log(`token tier for ${lastOwnedTokenId} is ${tokenTier}`)
+          //console.log(`token tier for ${lastOwnedTokenId} is ${tokenTier}`)
 
-          console.log(`merkleData.tierIndex was ${merkleData.tierIndex}`)
+          //console.log(`merkleData.tierIndex was ${merkleData.tierIndex}`)
 
           tokenTier.should.equal(merkleData.tierIndex)
         }

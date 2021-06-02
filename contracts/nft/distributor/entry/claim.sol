@@ -37,8 +37,6 @@ contract ent_claim_NFTDistributor_v1 is
                 "TellerNFT Distributor: invalid proof"
             );
 
-            ///uint256[] preOwnedTokens = distributorStore().nft.getOwnedTokens(account);
-
             // Mark it claimed and send the token.
             _setClaimed(requests[i].merkleIndex, requests[i].nodeIndex);
             uint256 tierIndex =
@@ -48,6 +46,7 @@ contract ent_claim_NFTDistributor_v1 is
                 distributorStore().nft.mint(tierIndex, account);
             }
 
+            //Find the newly minted tokens and add to memory
             uint256[] memory postOwnedTokens =
                 distributorStore().nft.getOwnedTokens(account);
 
@@ -60,6 +59,7 @@ contract ent_claim_NFTDistributor_v1 is
                 newlyMintedTokenIds[k] = postOwnedTokens[k + offset];
             }
 
+            //For each newly minted token, set the tier index in the Dictionary contract
             distributorStore().dictionary.setTokenTierForTokenIds(
                 newlyMintedTokenIds,
                 tierIndex

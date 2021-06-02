@@ -110,6 +110,13 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @notice Sets the tiers for each tokenId using compressed data.
+     * @param tiersMapping Information about the new tiers to add.
+     *
+     * Requirements:
+     *  - Caller must have the {Admin} role
+     */
     function setAllTokenTierMappings(uint256[] memory tiersMapping)
         public
         onlyAdmin
@@ -122,6 +129,14 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @notice Sets the tiers for each tokenId using compressed data.
+     * @param index the mapping row, each holds data for 32 tokens
+     * @param tierMapping Information about the new tier to add.
+     *
+     * Requirements:
+     *  - Caller must have the {Admin} role
+     */
     function setTokenTierMapping(uint256 index, uint256 tierMapping)
         public
         onlyAdmin
@@ -132,6 +147,14 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @notice Sets a specific tier for a specific tokenId using compressed data.
+     * @param tokenIds the NFT token Ids for which to add data
+     * @param tokenTier the index of the tier that these tokenIds should have
+     *
+     * Requirements:
+     *  - Caller must have the {Admin} role
+     */
     function setTokenTierForTokenIds(
         uint256[] calldata tokenIds,
         uint256 tokenTier
@@ -143,6 +166,14 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @notice Sets a specific tier for a specific tokenId using compressed data.
+     * @param tokenId the NFT token Id for which to add data
+     * @param tokenTier the index of the tier that these tokenIds should have
+     *
+     * Requirements:
+     *  - Caller must have the {Admin} role
+     */
     function setTokenTierForTokenId(uint256 tokenId, uint256 tokenTier)
         public
         onlyAdmin
@@ -191,8 +222,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     */
 
     /**
-     * @notice It returns information about a Tier for a token ID.
-     * @param tokenId ID of the token to get Tier info.
+     * @notice It returns Base Loan Size for a token ID.
+     * @param tokenId ID of the token to get info.
      */
     function tokenBaseLoanSize(uint256 tokenId)
         public
@@ -206,8 +237,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It returns information about a Tier for a token ID.
-     * @param tokenId ID of the token to get Tier info.
+     * @notice It returns Token URI Hash for a token ID.
+     * @param tokenId ID of the token to get info.
      */
     function tokenURIHash(uint256 tokenId)
         public
@@ -222,8 +253,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It returns information about a Tier for a token ID.
-     * @param tokenId ID of the token to get Tier info.
+     * @notice It returns Contribution Asset for a token ID.
+     * @param tokenId ID of the token to get info.
      */
     function tokenContributionAsset(uint256 tokenId)
         public
@@ -237,8 +268,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It returns information about a Tier for a token ID.
-     * @param tokenId ID of the token to get Tier info.
+     * @notice It returns Contribution Size for a token ID.
+     * @param tokenId ID of the token to get info.
      */
     function tokenContributionSize(uint256 tokenId)
         public
@@ -252,8 +283,8 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It returns information about a Tier for a token ID.
-     * @param tokenId ID of the token to get Tier info.
+     * @notice It returns Contribution Multiplier for a token ID.
+     * @param tokenId ID of the token to get info.
      */
     function tokenContributionMultiplier(uint256 tokenId)
         public

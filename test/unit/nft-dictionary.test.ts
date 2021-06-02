@@ -21,22 +21,6 @@ describe('TellerNFTDictionary', async function () {
     )
   })
 
-  /*it("Should bit shift", async function() {
-
-  
-    let results = await dictionaryContract.bitshiftTesting( )
-    // this is not hex-  this is bytes 
-    // 0x0021020100030201000302010003020100030201000302010003020100030201
-
-    //BINARY
-    // 100001000000100000000100000000000000110000001000000001000000000000001100000010000000010000000000000011000000100000000100000000000000110000001000000001000000000000001100000010000000010000000000000011000000100000000100000000000000110000001000000001
-
-    expect(results).to.equal(3);
-  
-
-
-  });*/
-
   it('Should add token tier mappings', async function () {
     // setTokenTierMappingCompressed
 
@@ -103,8 +87,6 @@ describe('TellerNFTDictionary', async function () {
       2, 1,
     ]
 
-    console.log('tokenTiers length', tokenTiers.length)
-
     let tokenTierMappingCompressed = []
 
     let tokenTierMappingLengthMax = tokenTiers.length / 32
@@ -117,7 +99,7 @@ describe('TellerNFTDictionary', async function () {
 
         if (tokenId < tokenTiers.length) {
           let tierLevelHexBytes = tokenTiers[tokenId].toString(16)
-          //console.log('tier level hex bytes', tierLevelHexBytes.padStart(2, '0'))
+
           newRow += tierLevelHexBytes.padStart(2, '0')
         } else {
           newRow += '00'

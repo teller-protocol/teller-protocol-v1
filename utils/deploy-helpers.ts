@@ -44,9 +44,7 @@ export const deploy = async <C extends Contract>(
     const result = await deploy(contractDeployName, {
       ...args,
       contract: contractName,
-      //libraries: args.libraries,
       from: deployer,
-      //args: args.args,
     })
 
     contractAddress = result.address
