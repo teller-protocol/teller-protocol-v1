@@ -51,15 +51,15 @@ library LibConsensus {
     {
         EnumerableSet.AddressSet storage signers =
             s().signers[request.request.assetAddress];
-        // require(
-        //     uint256(
-        //         NumbersLib.ratioOf(
-        //             request.responses.length,
-        //             EnumerableSet.length(signers)
-        //         )
-        //     ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
-        //     "Teller: insufficient signer responses"
-        // );
+        require(
+            uint256(
+                NumbersLib.ratioOf(
+                    request.responses.length,
+                    EnumerableSet.length(signers)
+                )
+            ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
+            "Teller: insufficient signer responses"
+        );
 
         _validateLoanRequest(
             request.request.borrower,
