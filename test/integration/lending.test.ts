@@ -152,24 +152,13 @@ describe.only('Lending', () => {
                 'Lender should not have a TToken balance before lending'
               )
 
-            console.log({
-              bal: (
-                await lendingToken.balanceOf(await lender.getAddress())
-              ).toString(),
-            })
-
             // Fund the market
             const depositAmount = await fundLender({
               token: lendingToken,
               amount: 1,
               hre,
             })
-            console.log({
-              depositAmount: depositAmount.toString(),
-              bal: (
-                await lendingToken.balanceOf(await lender.getAddress())
-              ).toString(),
-            })
+
             await helpers.deposit(lender, depositAmount)
 
             const tTokenBalAfter = await tToken.balanceOf(
