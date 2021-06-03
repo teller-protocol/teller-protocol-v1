@@ -81,7 +81,9 @@ interface ITellerNFTDistributor {
     function revokeRole(bytes32 role, address account) external;
 
     /**
-     * @notice
+     * @notice Grants an address a new role.
+     * @param role the role to revoke for the account
+     * @param account the address of the respective account to revoke
      */
     function renounceRole(bytes32 role, address account) external;
 

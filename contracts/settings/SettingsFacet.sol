@@ -121,7 +121,8 @@ contract SettingsFacet is RolesMods {
     }
 
     /**
-     * @notice 
+     * @notice it stores multiple parameters in the AppStorageLib
+     * @param _args multiple arguments that are stored in the AppStorageLibrary
      */
     function init(InitArgs calldata _args) external {
         AppStorage storage s = AppStorageLib.store();
