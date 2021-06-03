@@ -26,25 +26,25 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.only('Loans', () => {
+describe('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
     let deployer: Signer
     let diamond: ITellerDiamond
+    let borrower: Signer
 
     before(async () => {
-      // Get funded market with NFT
-      ;({ diamond } = await fundedMarket({
-        assetSym: market.lendingToken,
-        amount: 100000,
-        tags: ['nft'],
-      }))
+      await hre.deployments.fixture(['market'], {
+        keepExistingDeployments: true,
+      })
+
+      diamond = await contracts.get('TellerDiamond')
 
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
-    describe('merge create loan', () => {
+    describe.only('merge create loan', () => {
       var helpers: any = null
       before(async () => {
         // Advance time
@@ -53,13 +53,18 @@ describe.only('Loans', () => {
           hre
         )
 
-        // get helpers
+        // get helpers variables after function returns our transaction and
+        // helper variables
         const { getHelpers } = await takeOutLoanWithoutNfts({
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.UNDER_COLLATERALIZED,
+          collAmount: 100,
         })
         helpers = await getHelpers()
+
+        // borrower data from our helpers
+        borrower = helpers.details.borrower.signer
 
         await evm.advanceTime(rateLimit)
       })
@@ -75,8 +80,9 @@ describe.only('Loans', () => {
         // check if collateral is > 0
         amount.gt(0).should.eq(true, 'Loan must have collateral')
       })
-      it('should be an active loan', () => {
-        // get loanStatus from helpers and check if it's equal to 2, which means it's active
+      it('should be taken out', () => {
+        // get loanStatus from helpers and check if it's equal to 2, which means
+        // it's active and taken out
         const loanStatus = helpers.details.loan.status
         expect(loanStatus).to.equal(2)
       })
@@ -91,12 +97,13 @@ describe.only('Loans', () => {
             .should.emit(diamond, 'Paused')
             .withArgs(LOANS_ID, await deployer.getAddress())
 
+          // trying to run the function will revert with the same error message
+          // written in our PausableMods file
           const { tx } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
-
           await tx.should.be.revertedWith('Pausable: paused')
 
           // Unpause lending
@@ -106,52 +113,50 @@ describe.only('Loans', () => {
             .should.emit(diamond, 'UnPaused')
             .withArgs(LOANS_ID, await deployer.getAddress())
         })
-        it('should not be able to take out a loan without enough collateral', async () => {
-          const { tx } = await takeOutLoanWithoutNfts({
-            lendToken: market.lendingToken,
-            collToken: market.collateralTokens[0],
-            loanType: LoanType.OVER_COLLATERALIZED,
-          })
+        // it('should not be able to take out a loan without enough collateral', async () => {
+        //   const { tx } = await takeOutLoanWithoutNfts({
+        //     lendToken: market.lendingToken,
+        //     collToken: market.collateralTokens[0],
+        //     loanType: LoanType.OVER_COLLATERALIZED,
+        //     collAmount: 1
+        //   })
 
-          // Try to take out loan which should fail
-          await tx.should.be.revertedWith('Teller: more collateral required')
-        })
+        //   // Try to take out loan which should fail
+        //   await tx.should.be.revertedWith('Teller: more collateral required')
+        // })
       })
     })
-    // describe.only('merge create loan w/ nfts', () => {
-    //   var helpers: any = null
-    //   var deployer: any
-    //   var borrower: string
-    //   before(async () => {
-    //     // Advance time
-    //     const { value: rateLimit } = await getPlatformSetting(
-    //       'RequestLoanTermsRateLimit',
-    //       hre
-    //     )
-
-    //     // get helpers
-    //     const { getHelpers } = await takeOutLoanWithNfts({
-    //       lendToken: market.lendingToken,
-    //     })
-    //     helpers = await getHelpers()
-
-    //     await evm.advanceTime(rateLimit)
-    //   })
-    //   it('creates', async () => {
-    //     console.log(helpers.loan.details)
-    //   })
-    // })
-    describe('create', () => {})
-    describe('take out', () => {
-      beforeEach(async () => {
+    describe('merge create loan w/ nfts', () => {
+      var helpers: any
+      before(async () => {
         // Advance time
         const { value: rateLimit } = await getPlatformSetting(
           'RequestLoanTermsRateLimit',
           hre
         )
+
+        // get helpers
+        const { getHelpers } = await takeOutLoanWithNfts({
+          lendToken: market.lendingToken,
+        })
+        helpers = await getHelpers()
+
         await evm.advanceTime(rateLimit)
       })
+      it('creates a loan', async () => {
+        console.log(helpers.details.loan)
+        expect(helpers.details.loan).to.exist
+      })
+      it('should be an active loan', () => {
+        // get loanStatus from helpers and check if it's equal to 2, which means it's active
+        const loanStatus = helpers.details.loan.status
+        expect(loanStatus).to.equal(2)
+      })
+    })
 
+    // delete the rest? 🤔
+    describe('create', () => {})
+    describe('take out', () => {
       it('should NOT be able to take out loan when loans facet is paused', async () => {
         const LOANS_ID = hre.ethers.utils.id('LOANS')
 

@@ -5,6 +5,9 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import NftLoanTree from '../../scripts/merkle/nft-loan-tree'
 import { ITellerDiamond, TellerNFT } from '../../types/typechain'
 
+import { getNFT } from '../../config'
+import { evm } from 'hardhat'
+
 interface AddMerklesArgs {
   loanTree?: NftLoanTree
   output?: string
@@ -15,7 +18,7 @@ export const setLoanMerkle = async (
   args: AddMerklesArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network, log } = hre
+  const { contracts, network, log, ethers } = hre
   if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
     log('')
     log('================================================')
@@ -31,7 +34,13 @@ export const setLoanMerkle = async (
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const tree = args.loanTree ?? (await getLoanMerkleTree(hre))
-  await diamond.setNFTMerkleRoot(tree.getHexRoot())
+
+  // get deployer
+  const deployer = await ethers.provider.getSigner(
+    '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
+  )
+
+  await diamond.connect(deployer).setNFTMerkleRoot(tree.getHexRoot())
 
   log(`NFT loan size merkle set: ${tree.getHexRoot()}`, {
     indent: 2,
