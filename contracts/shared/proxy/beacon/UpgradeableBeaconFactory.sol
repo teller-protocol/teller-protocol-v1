@@ -38,6 +38,11 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
         return _implementation;
     }
 
+    /**
+     * @notice it clones the proxy contract at an address
+     * @param initData the data to initialize after the proxy is cloned
+     * @return proxy_ the cloned proxy
+     */
     function cloneProxy(bytes memory initData)
         external
         returns (address payable proxy_)
