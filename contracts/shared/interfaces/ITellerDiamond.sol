@@ -29,6 +29,8 @@ import {
     EscrowClaimTokensFacet
 } from "../../escrow/EscrowClaimTokensFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
+import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
+import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { SushiswapFacet } from "../../escrow/dapps/SushiswapFacet.sol";
 
@@ -48,6 +50,8 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     EscrowClaimTokensFacet,
+    CompoundFacet,
+    UniswapFacet,
     AaveFacet,
     SushiswapFacet,
     IDiamondCut,
