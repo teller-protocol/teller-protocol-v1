@@ -66,13 +66,13 @@ describe.only('Lending', () => {
           })
         })
 
-        describe.only('deposit', () => {
+        describe('deposit', () => {
           it('should NOT be able deposit directly on the Teller Token contract', async () => {
             await tToken.connect(deployer).restrict(true)
 
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 100,
+              amount: 1,
               hre,
             })
             await tToken
@@ -94,7 +94,7 @@ describe.only('Lending', () => {
             // Fund the lender
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 1000,
+              amount: 1,
               hre,
             })
 
@@ -141,7 +141,7 @@ describe.only('Lending', () => {
               .should.be.revertedWith('Teller: deposit TVL exceeded')
           })
 
-          it.only('should be able deposit and receive a Teller Token LP balance', async () => {
+          it('should be able deposit and receive a Teller Token LP balance', async () => {
             const tTokenBalBefore = await tToken.balanceOf(
               await lender.getAddress()
             )
@@ -161,7 +161,7 @@ describe.only('Lending', () => {
             // Fund the market
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 1000,
+              amount: 1,
               hre,
             })
             console.log({
@@ -201,7 +201,7 @@ describe.only('Lending', () => {
           // Fund the lender
           depositAmount1 = await fundLender({
             token: lendingToken,
-            amount: 1000,
+            amount: 1,
             hre,
           })
 
@@ -276,7 +276,7 @@ describe.only('Lending', () => {
 
         it('mint, rebalance - should be able to add an additional lender', async () => {
           // Fund the lender
-          depositAmount2 = toBN(10000, await lendingToken.decimals())
+          depositAmount2 = toBN(1, await lendingToken.decimals())
           await getFunds({
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
