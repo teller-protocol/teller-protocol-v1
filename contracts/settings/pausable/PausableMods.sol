@@ -20,6 +20,7 @@ abstract contract PausableMods {
     /**
      * @dev Checks if the given id is paused.
      * @param id Encoded id of the facet to check if is paused.
+     * @return the bool to tell us if the facet is paused (true) or not (false)
      */
     function __isPaused(bytes32 id) private view returns (bool) {
         return AppStorageLib.store().paused[id];
@@ -28,6 +29,7 @@ abstract contract PausableMods {
     /**
      * @dev Gets the message that should be reverted with given a state it should be in.
      * @param state Boolean that an id should be in.
+     * @return a message stating whether the facet is paused or not
      */
     function __pausedMessage(bool state) private pure returns (string memory) {
         return state ? "Pausable: not paused" : "Pausable: paused";

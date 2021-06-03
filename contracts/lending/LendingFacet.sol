@@ -89,7 +89,7 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     }
 
     /**
-     * @notice Initialized a new lending pool for {asset}
+     * @notice It initializes a new lending pool for the respective token
      * @param asset Token address to initialize the lending pool for.
      */
     function initLendingPool(address asset)
