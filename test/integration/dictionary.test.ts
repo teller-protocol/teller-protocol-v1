@@ -23,6 +23,7 @@ chai.use(solidity)
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
 describe('NFT Dictionary', () => {
+
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -38,6 +39,7 @@ describe('NFT Dictionary', () => {
 
       deployer = await getNamedSigner('deployer')
     })
+
     describe('Dictionary test', () => {
       beforeEach(async () => {
         // Advance time

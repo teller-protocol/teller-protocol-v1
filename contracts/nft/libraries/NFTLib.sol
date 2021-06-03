@@ -31,6 +31,11 @@ library NFTLib {
         nft_ = AppStorageLib.store().nft;
     }
 
+    /**s
+     * @notice it transfers the NFT from the sender to the diamond to stake then adds the NFTID to the list of the owner's stakedNFTs
+     * @param nftID the ID of the NFT to stake
+     * @param owner the owner of the NFT who will stake the NFT
+     */
     function stake(uint256 nftID, address owner) internal {
         // Transfer to diamond
         NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
@@ -38,10 +43,20 @@ library NFTLib {
         EnumerableSet.add(s().stakedNFTs[owner], nftID);
     }
 
+    /**
+     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
+     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
+     * @return the boolean value telling us if the user has unsuccessfully unstaked the NFT
+     */
     function unstake(uint256 nftID) internal returns (bool success_) {
         success_ = EnumerableSet.remove(s().stakedNFTs[msg.sender], nftID);
     }
 
+    /**
+     * @notice it gets the list of staked NFTs from the owner
+     * @param nftOwner the owner of the staked NFTs to pull from
+     * @return staked_ the array of the staked NFTs owned by the user
+     */
     function stakedNFTs(address nftOwner)
         internal
         view
@@ -54,6 +69,10 @@ library NFTLib {
         }
     }
 
+    /**
+     * @notice if the user fails to pay his loan, then we liquidate the all the NFTs associated with the loan
+     * @param loanID the identifier of the loan to liquidate the NFTs from
+     */
     function liquidateNFT(uint256 loanID) internal {
         // Check if NFTs are linked
         EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
@@ -66,6 +85,11 @@ library NFTLib {
         }
     }
 
+    /**
+     * @notice it unstakes an NFT and verifies the proof in order to apply the proof to a loan
+     * @param loanID the identifier of the loan
+     * @param proof the proof to be attached to a loan after verifying the loan size
+     */
     function applyToLoan(uint256 loanID, NftLoanSizeProof calldata proof)
         internal
     {
@@ -79,6 +103,11 @@ library NFTLib {
         EnumerableSet.add(s().loanNFTs[loanID], proof.id);
     }
 
+    /**
+     * @notice it finds the loan's NFTs and adds them back to the owner's list of staked NFTs
+     * @param loanID the identifier of the respective loan to add the NFTs back to the user's staked NFTs
+     * @param owner the owner to add the unstaked NFTs back to the staked pile
+     */
     function restakeLinked(uint256 loanID, address owner) internal {
         // Get linked NFT
         EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
@@ -88,6 +117,11 @@ library NFTLib {
         }
     }
 
+    /**
+     * @notice it verifies the NFT id to base loan size using the merkle proof
+     * @param proof the NFTLoanSizeProof to verify with the nft;s merkle root
+     * @return verified_ tells us if the loan is verified or not
+     */
     function verifyLoanSize(NftLoanSizeProof calldata proof)
         internal
         view
