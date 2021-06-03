@@ -26,6 +26,10 @@ export async function updatePlatformSetting(
     log(settingNames.join('\n'), { indent: 3, star: true })
 
     return
+  } else {
+    log(`>>>>>> Setting name found: ${name} <<<<<<`, { indent: 1 })
+    log(`>>>>>> Updated with value: ${value} <<<<<<`, { indent: 1 })
+    return
   }
 
   const settings = await contracts.get<ITellerDiamond>('TellerDiamond')

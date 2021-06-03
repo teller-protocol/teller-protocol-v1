@@ -6,7 +6,11 @@ import hre from 'hardhat'
 import { BUILD_INFO_FORMAT_VERSION } from 'hardhat/internal/constants'
 
 import { getMarkets, getNFT } from '../../config'
-import { claimNFT, getPlatformSetting } from '../../tasks'
+import {
+  claimNFT,
+  getPlatformSetting,
+  updatePlatformSetting,
+} from '../../tasks'
 import { getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond, TellerNFT } from '../../types/typechain'
@@ -47,11 +51,19 @@ describe('Loans', () => {
     describe.only('merge create loan', () => {
       var helpers: any = null
       before(async () => {
+        // update percentage submission percentage value to 0 for this test
+        const percentageSubmission = {
+          name: 'RequiredSubmissionsPercentage',
+          value: 0,
+        }
+        await updatePlatformSetting(percentageSubmission, hre)
+
         // Advance time
         const { value: rateLimit } = await getPlatformSetting(
           'RequestLoanTermsRateLimit',
           hre
         )
+        await evm.advanceTime(rateLimit)
 
         // get helpers variables after function returns our transaction and
         // helper variables
@@ -65,8 +77,6 @@ describe('Loans', () => {
 
         // borrower data from our helpers
         borrower = helpers.details.borrower.signer
-
-        await evm.advanceTime(rateLimit)
       })
       it('should create a loan', () => {
         // check if loan exists
