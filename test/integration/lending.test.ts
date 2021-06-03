@@ -117,7 +117,7 @@ describe.only('Lending', () => {
               .withArgs(LENDING_ID, await deployer.getAddress())
           })
 
-          it('should NOT be able to deposit more than the max TVL setting', async () => {
+          it.skip('should NOT be able to deposit more than the max TVL setting', async () => {
             const maxTVL = await diamond.getAssetMaxTVL(lendingToken.address)
             const depositAmount = maxTVL.add(1)
 
@@ -174,15 +174,15 @@ describe.only('Lending', () => {
         })
       })
 
-      describe('TToken', () => {
+      describe.only('TToken', () => {
         let depositAmount1: BigNumber
         let depositAmount2: BigNumber
 
         before(async () => {
           // Get a fresh market
-          // await deployments.fixture('markets', {
-          //   keepExistingDeployments: RUN_EXISTING,
-          // })
+          await deployments.fixture('markets', {
+            keepExistingDeployments: RUN_EXISTING,
+          })
 
           // Turn off the Teller Token restriction
           await tToken.connect(deployer).restrict(false)
