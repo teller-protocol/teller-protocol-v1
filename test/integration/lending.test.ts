@@ -24,7 +24,7 @@ const {
   toBN,
 } = hre
 
-describe.only('Lending', () => {
+describe('Lending', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
@@ -174,7 +174,7 @@ describe.only('Lending', () => {
         })
       })
 
-      describe.only('TToken', () => {
+      describe('TToken', () => {
         let depositAmount1: BigNumber
         let depositAmount2: BigNumber
 

@@ -1,6 +1,6 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import hre from 'hardhat'
+import hre, { ethers } from 'hardhat'
 
 import { getMarkets } from '../../../../config'
 import { getPlatformSetting } from '../../../../tasks'
@@ -23,6 +23,11 @@ describe.only('poolTogether Dapp', () => {
       let lendingToken: ERC20
 
       before(async () => {
+        const deployer = await getNamedSigner('deployer')
+        const balance = await hre.ethers.provider.getBalance(
+          await deployer.getAddress()
+        )
+        console.log({ balance: ethers.utils.formatEther(balance) })
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100,
