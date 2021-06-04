@@ -12,14 +12,22 @@ contract DataProviderStorage {
         mapping(address => bool) signer;
     }
 
-    struct MarketConfig {
+    struct MarketProviderConfig {
         uint32 weight;
         uint32 maxAge;
-        uint224 dataProviderId;
+        bytes32 providerId;
+    }
+
+    struct MarketConfig {
+        MarketProviderConfig[4] providerConfigs;
+        mapping(address => bool) admin;
+        function(uint256, uint256, uint256, uint256, uint256, uint256)
+            external
+            returns (uint256, uint256) handler;
     }
 
     struct Storage {
-        mapping(bytes32 => MarketConfig[]) markets;
+        mapping(bytes32 => MarketConfig) markets;
         // mapping(bytes32 => uint256[4]) markets;
         mapping(bytes32 => ProviderConfig) providers;
         mapping(bytes32 => bool) usedCommitments;
@@ -28,6 +36,22 @@ contract DataProviderStorage {
     bytes32 internal constant POS =
         keccak256("teller.finance.provider.storage");
 
+    modifier onlyMarketAdmin(bytes32 marketId) {
+        require(
+            s().markets[marketId].admin[msg.sender],
+            "Teller: not market admin"
+        );
+        _;
+    }
+
+    modifier onlyProviderAdmin(bytes32 providerId) {
+        require(
+            s().providers[providerId].admin[msg.sender],
+            "Teller: not market admin"
+        );
+        _;
+    }
+
     function s() internal pure returns (Storage storage s_) {
         bytes32 pos = POS;
         assembly {
@@ -35,22 +59,34 @@ contract DataProviderStorage {
         }
     }
 
-    // market config functions
-    function storeMarketConfig(
-        bytes32 marketId,
-        uint256 configIndex,
-        MarketConfig memory config
-    ) internal {
-        require(configIndex < 4, "Teller: Up to four providers");
-        s().markets[marketId][configIndex] = config;
+    function handler(bytes32 marketId)
+        external
+        view
+        returns (
+            function(uint256, uint256, uint256, uint256, uint256, uint256)
+                external
+                returns (uint256, uint256) handler_
+        )
+    {
+        handler_ = s().markets[marketId].handler;
     }
 
-    function getMarketConfig(bytes32 marketId)
-        internal
+    function isProviderSigner(bytes32 providerId, address account)
+        external
         view
-        returns (MarketConfig[] storage market_)
+        returns (bool isSigner_)
     {
-        market_ = s().markets[marketId];
+        isSigner_ = s().providers[providerId].signer[account];
+    }
+
+    // market config functions
+    function setMarketProviderConfig(
+        bytes32 marketId,
+        uint256 configIndex,
+        MarketProviderConfig calldata config
+    ) external onlyMarketAdmin(marketId) {
+        require(configIndex < 4, "Teller: Up to four providers");
+        s().markets[marketId].providerConfigs[configIndex] = config;
     }
 
     function weights(bytes32 marketId)
@@ -59,31 +95,35 @@ contract DataProviderStorage {
         returns (uint256[4] memory weights_)
     {
         for (uint256 i = 0; i < 4; i++) {
-            weights_[i] = s().markets[marketId][i].weight;
+            weights_[i] = s().markets[marketId].providerConfigs[i].weight;
         }
-        return weights_;
     }
 
     function verifySignatures(
         bytes32 marketId,
-        bytes32[4] calldata commitment,
+        bytes32[4] calldata commitments,
         Signature[4] calldata signatures,
         uint256[4] calldata signedAt
     ) public {
         for (uint256 i = 0; i < 4; i++) {
             require(
-                signedAt[i] > block.timestamp - s().markets[marketId][i].maxAge,
+                signedAt[i] >
+                    // solhint-disable-next-line
+                    block.timestamp -
+                        s().markets[marketId].providerConfigs[i].maxAge,
                 "Signed at less than max age"
             );
             require(
-                s().usedCommitments[commitment[i]] == false,
+                s().usedCommitments[commitments[i]] == false,
                 "Teller: commitment already used"
             );
-            s().usedCommitments[commitment[i]] = true;
-            _signatureValid(
+
+            s().usedCommitments[commitments[i]] = true;
+
+            _validateSignature(
                 signatures[i],
-                commitment[i],
-                bytes32(bytes28(s().markets[marketId][i].dataProviderId))
+                commitments[i],
+                s().markets[marketId].providerConfigs[i].providerId
             );
         }
     }
@@ -95,31 +135,30 @@ contract DataProviderStorage {
         bytes32 providerId,
         address account,
         bool signerValue
-    ) external {
-        require(
-            s().providers[providerId].admin[msg.sender],
-            "Teller: NOT ADMIN"
-        );
+    ) external onlyProviderAdmin(providerId) {
         s().providers[providerId].signer[account] = signerValue;
     }
 
-    function isSigner(bytes32 providerKey, address account)
-        external
-        view
-        returns (bool isSigner_)
-    {
-        isSigner_ = s().providers[providerKey].signer[account];
+    function setMarketAdmin(
+        bytes32 marketId,
+        address account,
+        bool admin
+    ) external onlyMarketAdmin(marketId) {
+        s().markets[marketId].admin[account] = admin;
     }
 
-    function setAdmin(
+    function setHandler(
+        bytes32 marketId,
+        function(uint256, uint256, uint256, uint256, uint256)
+            external
+            returns (uint256, uint256) handler
+    ) external onlyMarketAdmin(marketId) {}
+
+    function setProviderAdmin(
         bytes32 providerId,
         address account,
         bool admin
-    ) external {
-        require(
-            s().providers[providerId].admin[msg.sender],
-            "Teller: NOT ADMIN"
-        );
+    ) external onlyProviderAdmin(providerId) {
         s().providers[providerId].signer[account] = admin;
     }
 
@@ -133,7 +172,7 @@ contract DataProviderStorage {
      * @param commitment used to recover the signer.
      * @param providerId the expected signer address.
      */
-    function _signatureValid(
+    function _validateSignature(
         Signature memory signature,
         bytes32 commitment,
         bytes32 providerId
