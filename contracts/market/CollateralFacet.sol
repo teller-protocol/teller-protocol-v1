@@ -49,18 +49,28 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         LibCollateral.deposit(loanID, amount);
     }
 
+    /**
+     * @notice it withdraws collateral tokens from a loan
+     * @param amount to wtihdraw from the loan
+     * @param loanID identifier of our loan
+     */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         paused("", false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
     {
+        // check if caller is borrower
         require(
             msg.sender == LibLoans.loan(loanID).borrower,
             "Teller: not borrower"
         );
+
+        // check if amount required to withdraw is more than zero
         require(amount > 0, "Teller: zero withdraw");
 
+        // here, we check if the loan supply minus the needed collateral tokens is still
+        // greater than the amount we want to withdraw
         if (LibLoans.loan(loanID).status == LoanStatus.Active) {
             (, uint256 needed, ) = LibLoans.getCollateralNeededInfo(loanID);
             if (needed > 0) {
@@ -78,6 +88,7 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
 
     /**
      * @notice Adds tokens allowed to be used as collateral for {asset} loans.
+     * @notice it creates an escrow for each collateral token address
      * @param asset Token address to add allowed collateral tokens.
      * @param collateralTokens List of allowed collateral token addresses.
      *
@@ -97,6 +108,11 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         }
     }
 
+    /**
+     * @notice get list of collateral tokens that is allowed to be used on an {asset} loan
+     * @param asset token address to get allowed collateral tokens
+     * @return tokens_ collateral tokens that are accepted
+     */
     function getCollateralTokens(address asset)
         external
         view
@@ -110,6 +126,11 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         }
     }
 
+    /**
+     * @notice get the total collateral tokens in a respective loan
+     * @param loanID the identifier of the respective loan
+     * @return supply_ the total amount of supply in collateral of the loan
+     */
     function getLoanCollateral(uint256 loanID)
         external
         view

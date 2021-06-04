@@ -63,6 +63,7 @@ export const addMerkles = async (
       await nftDistributor
         .connect(deployer)
         .addMerkle(info.tierIndex, info.merkleRoot)
+        .then(({ wait }) => wait())
       log(
         `NEW merkle root for tier ${info.tierIndex} added: ${info.merkleRoot}`,
         {

@@ -12,7 +12,8 @@ contract ent_renounceRole_AccessControl_v1 is
 {
     /**
      * @notice Grants an address a new role.
-     *
+     * @param role the role to revoke for the account
+     * @param account the address of the respective account to revoke
      * Requirements:
      *  - Sender must be role admin.
      */

@@ -22,9 +22,15 @@ import "../../storage.sol" as TokenStorage;
 import "./storage.sol" as CompoundStorage;
 
 contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
+    /**
+     * @dev it creates a reference to the TToken storage
+     */
     function() pure returns (TokenStorage.Store storage)
         private constant tokenStore = TokenStorage.store;
 
+    /**
+     * @dev it creates a reference to the Compound storage
+     */
     function() pure returns (CompoundStorage.Store storage)
         private constant compoundStore = CompoundStorage.store;
 
@@ -32,6 +38,10 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
 
     /* External Functions */
 
+    /**
+     * @notice it returns the total supply of an underlying asset in a Teller token.
+     * @return uint256 the underlying supply
+     */
     function totalUnderlyingSupply() external override returns (uint256) {
         return
             tokenStore().underlying.balanceOf(address(this)) +
@@ -42,8 +52,8 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @notice Rebalances the underlying asset held by the Teller Token.
      *
      * This strategy looks at the ratio of held underlying asset balance and balance deposited into
-     * Compound. Based on the store {balanceRatioMin} and {balanceRatioMax} values, will deposit or
-     * withdraw to keep the ratio within that range.
+     * Compound. Based on the store {balanceRatioMin} and {balanceRatioMax} values, will deposit
+     * (storedRatio > balanceRatioMax) or withdraw to keep the ratio within that range.
      */
     function rebalance() public override {
         (uint256 storedBal, uint256 compoundBal, uint16 storedRatio) =
@@ -63,6 +73,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
                 address(compoundStore().cToken),
                 amountToDeposit
             );
+
             // Deposit tokens into Compound
             compoundStore().cToken.mint(amountToDeposit);
 
@@ -90,7 +101,10 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     }
 
     /**
-     * @dev Gets balances and the current ratio of the underlying asset stored on the TToken.
+     * @notice it gets balances and the current ratio of the underlying asset stored on the TToken.
+     * @return storedBalance_ returns the total stored balance of the current underlying token
+     * @return compoundBalance_ returns the total stored balance
+     * @return storedRatio_ ratio of current storedBalance_ over storedBalance_ and compoundBalance_
      */
     function _getBalanceInfo()
         internal
@@ -111,7 +125,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     }
 
     /**
-     * @dev Rebalances funds stored on the TToken by indicating an extra {amount} to withdraw.
+     * @notice it rebalances funds stored on the TToken by indicating an extra {amount} to withdraw.
      */
     function _withdraw(
         uint256 amount,

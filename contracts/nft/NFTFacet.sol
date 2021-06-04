@@ -15,6 +15,10 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTFacet is RolesMods {
+    /**
+     * @notice it gets the staked NFTs mapped to an owner's address
+     * @return staked_ the returned staked NFTs mapped to an owner's address
+     */
     function getStakedNFTs(address nftOwner)
         public
         view
@@ -23,6 +27,11 @@ contract NFTFacet is RolesMods {
         staked_ = NFTLib.stakedNFTs(nftOwner);
     }
 
+    /**
+     * @notice it returns the NFTs mapped to a loan
+     * @param loanID the identifier of the respective loan to get the loan NFTs from 
+     * @return loanNFTs the loan NFTs mapped to a loan ID
+     */
     function getLoanNFTs(uint256 loanID)
         external
         view
