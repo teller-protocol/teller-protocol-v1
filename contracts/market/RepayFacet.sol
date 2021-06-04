@@ -90,6 +90,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         uint256 balance =
             LibEscrow.balanceOf(loanID, LibLoans.loan(loanID).lendingToken);
         uint256 totalOwed = LibLoans.getTotalOwed(loanID);
+        // if there isn't enough balance in the escrow, then transfer amount needed to the escrow
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded =
                 amount > totalOwed ? totalOwed - (balance) : amount - (balance);
@@ -119,6 +120,14 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         __repayLoan(loanID, amount, msg.sender, false);
     }
 
+    /**
+     * @notice it repays the loan, either from an escrow or from a regular address
+     * @param loanID the identifier of the loan to repay
+     * @param amount the amount to repay the loan
+     * @param address the address of the sender that wants to pay, can also be a loan escrow
+     * @param isLiquidation is this loan being liquidated?
+     * @return leftToPay_ the amount left to pay for the loan
+     */
     function __repayLoan(
         uint256 loanID,
         uint256 amount,
@@ -143,7 +152,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             MarketStorageLib.store().tTokens[
                 LibLoans.loan(loanID).lendingToken
             ];
-        // Transfer funds from account
+        // Transfer funds from an escrow if an escrow is calling it
+        // Otherwise, transfer funds from an account
         if (address(LibEscrow.e(loanID)) == sender) {
             LibEscrow.e(loanID).claimToken(
                 LibLoans.loan(loanID).lendingToken,
@@ -373,11 +383,14 @@ library RepayLib {
         uint256 collateralAmount,
         address payable liquidator
     ) internal {
+        // check if loan is liquidated
         require(
             LibLoans.loan(loanID).status == LoanStatus.Liquidated,
             "Teller: loan not liquidated"
         );
 
+        // if the lending reward is less than the collateral lending tokens, then aggregate
+        // the value for the lending token with the collateral token and send it to the liquidator
         if (rewardInLending <= collateralInLending) {
             uint256 rewardInCollateral =
                 PriceAggLib.valueFor(
@@ -438,6 +451,15 @@ library RepayLib {
         }
     }
 
+    /**
+     * @notice it claims the escrow tokens for the liquidator
+     * @notice it keeps claiming escrow tokens until there aren't anymore tokens or the valueLeftToTransfer is zero
+     * @param loanID the identifier of the escrow loan to claim tokens from
+     * @param token the address of the token asset to claim
+     * @param recipient the address of the recipient to transfer the tokens to
+     * @param valueLeftToTransfer the value left to transfer to the liquidator that is returned back
+     * @
+     */
     function claimEscrowToken(
         uint256 loanID,
         address token,
@@ -485,7 +507,6 @@ library RepayLib {
                 valueLeftToTransfer = 0;
             }
         }
-
         return valueLeftToTransfer;
     }
 }

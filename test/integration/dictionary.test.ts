@@ -38,6 +38,7 @@ describe('NFT Dictionary', () => {
 
       deployer = await getNamedSigner('deployer')
     })
+
     describe('Dictionary test', () => {
       beforeEach(async () => {
         // Advance time

@@ -17,7 +17,7 @@ import {
  */
 abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
-     * @notice This event is emitted when an user deposits tokens into the pool.
+     * @notice This event is emitted when a user deposits tokens into the pool.
      */
     event Mint(
         address indexed sender,
@@ -26,7 +26,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
-     * @notice This event is emitted when an user withdraws tokens from the pool.
+     * @notice This event is emitted when a user withdraws tokens from the pool.
      */
     event Redeem(
         address indexed sender,
@@ -36,12 +36,14 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
+     * @return ERC20 token
      */
     function underlying() external view virtual returns (ERC20);
 
     /**
      * @notice The balance of an {account} denoted in underlying value.
      * @param account Address to calculate the underlying balance.
+     * @return balance_ the balance of the account
      */
     function balanceOfUnderlying(address account)
         external
@@ -55,8 +57,8 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     function exchangeRate() external virtual returns (uint256 rate_);
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
-     * @return totalSupply_ The total value of the underlying token managed by the LP.
+     * @notice It calculates the total supply of the underlying asset.
+     * @return totalSupply_ the total supply denoted in the underlying asset.
      */
     function totalUnderlyingSupply()
         external
@@ -64,7 +66,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 totalSupply_);
 
     /**
-     * @notice It calculates the market state values across a given markets.
+     * @notice It calculates the market state values across a given market.
      * @notice Returns values that represent the global state across the market.
      * @return totalSupplied Total amount of the underlying asset supplied.
      * @return totalBorrowed Total amount borrowed through loans.
@@ -93,7 +95,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
 
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-     * @param newLoanAmount the new loan amount to consider o the StD ratio.
+     * @param newLoanAmount the new loan amount to consider the StD ratio.
      * @return ratio_ Whether debt ratio for lending pool is valid.
      */
     function debtRatioFor(uint256 newLoanAmount)
@@ -104,7 +106,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
      * @param recipient The account to send the funds to.
-     * @param amount Funds requested to fulfil the loan.
+     * @param amount Funds requested to fulfill the loan.
      */
     function fundLoan(address recipient, uint256 amount) external virtual;
 
@@ -118,6 +120,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
      * @notice Increase account supply of specified token amount.
      * @param amount The amount of underlying tokens to use to mint.
+     * @return mintAmount_ the amount minted of the specified token
      */
     function mint(uint256 amount)
         external
@@ -157,13 +160,20 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
 
     /**
      * @notice Gets the strategy used for balancing funds.
+     * @return address of the strategy contract
      */
     function getStrategy() external view virtual returns (address);
 
     /**
      * @notice Sets the restricted state of the platform.
+     * @param state boolean value that resembles the platform's state
      */
     function restrict(bool state) external virtual;
 
+    /**
+     * @notice it initializes the Teller Token
+     * @param admin address of the admin to the respective Teller Token
+     * @param underlying address of the ERC20 token
+     */
     function initialize(address admin, address underlying) external virtual;
 }

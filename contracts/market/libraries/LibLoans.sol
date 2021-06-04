@@ -30,15 +30,30 @@ library LibLoans {
         return MarketStorageLib.store();
     }
 
+    /**
+     * @notice it returns the loan
+     * @param loanID the ID of the respective loan
+     * @return l_ the loan
+     */
     function loan(uint256 loanID) internal view returns (Loan storage l_) {
         l_ = s().loans[loanID];
     }
 
+    /**
+     * @notice it returns the loan debt from a respective loan
+     * @param loanID the ID of the respective loan
+     * @return d_ the loan debt from a respective loan
+     */
     function debt(uint256 loanID) internal view returns (LoanDebt storage d_) {
         d_ = s().loanDebt[loanID];
     }
 
     // DEPRECATED
+    /**
+     * @notice it returns the loan terms from a respective loan
+     * @param loanID the ID of the respective loan
+     * @return t_ the loan terms from a respective loan
+     */
     function terms(uint256 loanID)
         internal
         view
@@ -76,6 +91,11 @@ library LibLoans {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
 
+    /**
+     * @notice it returns the collateral needed in tokens
+     * @param loanID the identifier of the loan to return the collateral from
+     * @return _needed the collateral tokens needed for a loan
+     */
     function getCollateralNeeded(uint256 loanID)
         internal
         view
@@ -84,6 +104,13 @@ library LibLoans {
         (, _needed, ) = getCollateralNeededInfo(loanID);
     }
 
+    /**
+     * @notice it returns the total collateral needed in lending tokens, in collateral tokens and in escrowed loan values
+     * @param loanID the loanID to get the total collateral needed
+     * @return neededInLendingTokens total collateral needed in lending tokens
+     * @return neededInCollateralTokens total collateral needed in collateral tokens
+     * @return escrowLoanValue total collateral needed in loan value
+     */
     function getCollateralNeededInfo(uint256 loanID)
         internal
         view
@@ -97,6 +124,7 @@ library LibLoans {
             loanID
         );
 
+        // check if needed lending tokens is zero. if true, then needed collateral tokens is zero. else,
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
@@ -160,6 +188,10 @@ library LibLoans {
         }
     }
 
+    /**
+     * @notice check if a loan can go to end of auction with a collateral ratio
+     * @return bool checking if collateralRatio is >= the over collateralized buffer value
+     */
     function canGoToEOAWithCollateralRatio(uint256 collateralRatio)
         internal
         view
