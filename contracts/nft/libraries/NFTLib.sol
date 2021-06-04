@@ -46,7 +46,7 @@ library NFTLib {
     /**
      * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
      * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
-     * @return the boolean value telling us if the user has unsuccessfully unstaked the NFT
+     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
      */
     function unstake(uint256 nftID) internal returns (bool success_) {
         success_ = EnumerableSet.remove(s().stakedNFTs[msg.sender], nftID);

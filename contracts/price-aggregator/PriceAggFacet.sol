@@ -48,6 +48,13 @@ contract PriceAggFacet {
         return _valueFor(src, srcAmount, uint256(_priceFor(src, dst)));
     }
 
+    /**
+     * @notice It calculates the value of a token amount into another.
+     * @param src Source token address.
+     * @param amount Amount of the source token to convert into the destination token.
+     * @param exchangeRate The calculated exchange rate between the tokens.
+     * @return uint256 Value of the source token amount given an exchange rate peg.
+     */
     function _valueFor(
         address src,
         uint256 amount,
@@ -213,7 +220,7 @@ contract PriceAggFacet {
     /**
      * @notice it checks if a token is a cToken. If it is, then get the underlying address
      * @param token address of the token
-     * @return isCtoken boolean whether it's a cToken
+     * @return isCToken boolean whether it's a cToken
      * @return underlying the address of the cToken
      */
     function _isCToken(address token)
