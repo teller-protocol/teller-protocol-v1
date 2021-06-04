@@ -12,6 +12,9 @@ jobs:
       ALCHEMY_MAINNET_KEY: ${{ secrets.ALCHEMY_MAINNET_KEY }}
       ALCHEMY_RINKEBY_KEY: ${{ secrets.ALCHEMY_RINKEBY_KEY }}
       ALCHEMY_ROPSTEN_KEY: ${{ secrets.ALCHEMY_ROPSTEN_KEY }}
+      ALCHEMY_KOVAN_KEY: ${{ secrets.ALCHEMY_KOVAN_KEY }}
+      MATIC_MAINNET_KEY: ${{ secrets.MATIC_MAINNET_KEY }}
+      MATIC_MUMBAI_KEY: ${{ secrets.MATIC_MUMBAI_KEY }}
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
       CMC_KEY: ${{ secrets.CMC_KEY }}
@@ -32,4 +35,4 @@ jobs:
           yarn compile
       - name: Executing Tests
         run: |
-          yarn test
+          yarn test mainnet
