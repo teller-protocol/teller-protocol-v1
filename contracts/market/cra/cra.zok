@@ -35,4 +35,3 @@ def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
     endfor
 
     return MARKET_SCORE,commitments
-

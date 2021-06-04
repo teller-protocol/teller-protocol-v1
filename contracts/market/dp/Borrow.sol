@@ -29,7 +29,6 @@ contract BorrowFacet is Verifier {
 
     struct Storage {
         mapping(bytes32 => MarketConfig) markets;
-        // mapping(bytes32 => uint256[4]) markets;
         mapping(bytes32 => ProviderConfig) providers;
         mapping(bytes32 => bool) usedCommitments;
     }
@@ -38,13 +37,14 @@ contract BorrowFacet is Verifier {
         keccak256("teller.finance.provider.storage");
 
     /**
-        Borow from a market. We provide verification functions to make sure that
+        Borrow from a market. We provide verification functions to make sure that
         all data used is not forged or re-used and outsource the calculation of
         terms to the target market. The market uses the CRA's output score and
         the user's desired loan amount and collateral details to determine what
         their own terms are. These terms are encoded as a byte array due to not
         being able to generically express this in solidity.
 
+        @param marketId the ID of the market to borrow from
         @param proof Proof of the CRA.
         @param witness uint256[] list of public input params and output values
         from the CRA. The witness is encoded in the following way in zokrates:
@@ -78,6 +78,7 @@ contract BorrowFacet is Verifier {
         Signature[] calldata signatures,
         uint256[] calldata signedAt,
         uint256 collateralAsset,
+        uint256 collateralAmount,
         uint256 collateralRatio,
         uint256 loanToken,
         uint256 loanAmount,
