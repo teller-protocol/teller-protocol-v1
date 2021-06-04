@@ -28,14 +28,18 @@ contract SampleHandler {
 
     bytes32 internal POS = keccak256("teller.finance.market.handler.storage");
 
+    // Called by teller.
     function repay(
-        uint256[] calldata repaymentAssets,
-        uint256[] calldata repaymentAmounts
-    ) external {
-        // Called by teller.
-    }
+        uint256 loanId,
+        uint256 loanAsset,
+        uint256 repaymentAmount
+    ) external {}
 
-    function loanRequest(
+    // Called by users directly.
+    function liquidate() external {}
+
+    // Called by teller.
+    function borrow(
         address borrower,
         uint256 marketScore,
         uint256[] calldata collateralAssets,
