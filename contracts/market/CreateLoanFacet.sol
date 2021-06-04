@@ -185,6 +185,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 
         bytes32[4] memory commitments = [];
 
+        // Construct the commitments (data which are signed by provider).
         for (uint8 i = 0; i < 4; i++) {
             for (uint8 j = 0; j < 8; j++) {
                 commitments[i] =
@@ -194,15 +195,21 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             commitments[i] ^= signedAt;
         }
 
+        // Verify that the commitment signatures are valid and that the data
+        // is not too old for the market's liking.
         config.verifySignatures(marketId, commitments, signatures, signedAt);
 
+        // The sixth witness item (after identifier and weights) is the market
+        // score
         uint256 marketScore = witness[5];
+
         uint256 interestRate;
 
-        (interestRate, loanAmount) = config.handler()(
+        // Let the market decide what the IR and loan amounts are.
+        (interestRate, loanAmount) = config.handler(marketId)(
             marketScore,
             collateralAsset,
-            collateralAmount,
+            collateralRatio,
             loanToken,
             loanAmount,
             duration
