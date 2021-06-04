@@ -1,6 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
+import { TellerNFTDictionary } from '../types/typechain/TellerNFTDictionary'
 import {
   deploy,
   deployDiamond,
@@ -22,17 +23,51 @@ const deployNFT: DeployFunction = async (hre) => {
     hre,
   })
 
+  /** TODO */
+
+  let proxyMethodName: string | undefined
+  let proxyMethodArgs: Array<any> | undefined
+
+  try {
+    // Try to get deployment of TellerDiamond
+    await contracts.get('TellerNFTDictionary')
+
+    proxyMethodName = undefined
+    proxyMethodArgs = undefined
+  } catch (e) {
+    proxyMethodName = 'initialize' //call this method on deployment
+    proxyMethodArgs = [await deployer.getAddress()]
+  }
+
+  console.log(`deploying dictionary with methodname ${proxyMethodName}`)
+
+  const nftDictionary = await deploy<TellerNFTDictionary>({
+    contract: 'TellerNFTDictionary',
+    hre,
+
+    proxy: {
+      proxyContract: 'OpenZeppelinTransparentProxy',
+      methodName: proxyMethodName,
+    },
+    args: proxyMethodArgs,
+  })
+
+  //call initialize on the dictionary
+
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
     // Try to get deployment of TellerDiamond
     await contracts.get('TellerNFTDistributor')
 
     // If deployment exists execute upgrade function
-    const executeMethod = undefined
+    const executeMethod = 'setNFTDictionaryAddress'
     const upgradeExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-    >['execute'] = undefined
+    >['execute'] = {
+      methodName: executeMethod,
+      args: [nftDictionary.address],
+    }
 
     execute = upgradeExecute
   } catch {
@@ -51,15 +86,36 @@ const deployNFT: DeployFunction = async (hre) => {
   const nftDistributor = await deployDiamond<ITellerNFTDistributor, any>({
     name: 'TellerNFTDistributor',
     facets: [
-      'ent_initialize_NFTDistributor_v1',
-      'ent_addMerkle_NFTDistributor_v1',
-      'ent_moveMerkle_NFTDistributor_v1',
-      'ent_claim_NFTDistributor_v1',
-      'ext_distributor_NFT_v1',
+      {
+        contract: 'ent_initialize_NFTDistributor_v1',
+        skipIfAlreadyDeployed: true,
+      },
+      {
+        contract: 'ent_addMerkle_NFTDistributor_v1',
+        skipIfAlreadyDeployed: true,
+      },
+      {
+        contract: 'ent_moveMerkle_NFTDistributor_v1',
+        skipIfAlreadyDeployed: true,
+      },
+      { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: false },
+      { contract: 'ext_distributor_NFT_v1', skipIfAlreadyDeployed: true },
     ],
     hre,
     execute,
   })
+
+  log(
+    `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
+    { indent: 2, star: true, nl: false }
+  )
+
+  await nftDictionary
+    .connect(deployer)
+    .grantRole(ethers.utils.id('ADMIN'), nftDistributor.address)
+    .then(({ wait }) => wait())
+
+  log('Done.')
 
   log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
 

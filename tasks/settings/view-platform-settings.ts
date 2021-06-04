@@ -54,7 +54,7 @@ export const getPlatformSetting = async (
   return setting
 }
 
-task('view-platform-setting', 'Lists the current platform settings')
+task('view-platform-settings', 'Lists the current platform settings')
   .addOptionalParam(
     'name',
     'Get a specific platform setting',

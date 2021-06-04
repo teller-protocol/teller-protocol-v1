@@ -39,6 +39,14 @@ library LibConsensus {
         return MarketStorageLib.store();
     }
 
+    /**
+     * @notice it processes a loan terms by doing multiple checks on the LoanRequest request and LoanResponse[] responses
+     * @param request LoanRequest is the borrower request object to take out a loan
+     * @param response LoanResponse is the borrower response object to take out a loan
+     * @return interestRate the borrower needs to pay back 
+     * @return collateralRatio the ratio of collateral the borrower needs to put up for the loan with an underlying asset
+     * @return maxLoanAmount the borrower is entitled for
+     */
     function processLoanTerms(
         LoanRequest calldata request,
         LoanResponse[] calldata responses
@@ -51,8 +59,12 @@ library LibConsensus {
             uint256 maxLoanAmount
         )
     {
+        // get the signers from the asset address
         EnumerableSet.AddressSet storage signers =
             s().signers[request.assetAddress];
+
+        // check if the ratio of responses to signers is greater than the required
+        // percentage value of submissions
         require(
             uint256(
                 NumbersLib.ratioOf(
@@ -63,30 +75,41 @@ library LibConsensus {
             "Teller: insufficient signer responses"
         );
 
+        // validate loan request
         _validateLoanRequest(request.borrower, request.requestNonce);
 
         uint32 chainId = _getChainId();
         bytes32 requestHash = _hashRequest(request, chainId);
 
+        // create term submissions for every response ...
         AccruedLoanTerms memory termSubmissions;
 
+        // ... then iterate through the LoanResponses for every response that passes through
+        // the checks, we add interest rate, collateral ratio and and max loan amount
         for (uint256 i = 0; i < responses.length; i++) {
             LoanResponse memory response = responses[i];
 
+            // check if the signers contains the response's signer
             require(
                 EnumerableSet.contains(signers, response.signer),
                 "Teller: invalid signer"
             );
+
+            // check if the request's asset address equates to the response's asset address
             require(
                 response.assetAddress == request.assetAddress,
                 "Teller: consensus address mismatch"
             );
+
+            // check if consensus response has expired
             require(
                 uint256(response.responseTime) >=
                     block.timestamp -
                         PlatformSettingsLib.getTermsExpiryTimeValue(),
                 "Teller: consensus response expired"
             );
+
+            // check if the signature of hashed response data matches
             require(
                 _signatureValid(
                     response.signature,
@@ -109,6 +132,7 @@ library LibConsensus {
             termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
         }
 
+        // get maximum tolerance value in order to receive the interestRate, collateralRatio and maxLoanAmount
         uint16 tolerance =
             uint16(PlatformSettingsLib.getMaximumToleranceValue());
         interestRate = uint16(

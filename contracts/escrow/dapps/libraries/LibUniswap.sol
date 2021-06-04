@@ -22,6 +22,7 @@ library LibUniswap {
      * @param path An array of token addresses.
      * @param sourceAmount amount of source token to swap.
      * @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+     * @return amounts is the resulting number of tokens swapped for
      */
     function swap(
         address[] memory path,
