@@ -1,3 +1,4 @@
+// external packages
 import {
   BigNumber,
   BigNumberish,
@@ -9,6 +10,16 @@ import {
 import hre from 'hardhat'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
+import {
+  initialize,
+  ZoKratesProvider,
+  CompilationArtifacts,
+  ComputationResult,
+  Proof,
+  SetupKeypair,
+} from 'zokrates-js'
+
+// teller files
 import { getNFT } from '../../config'
 import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
@@ -335,6 +346,103 @@ export const takeOutLoanWithNfts = async (
       return await loanHelpers(loanID)
     },
   }
+}
+
+// zkCRA helper functions
+const serializeSecret = (secret: string) => {
+  const serialized = new Array(8)
+  for (let i = 0; i < 8; i++) {
+    const start = 8 * (8 - i) - 8
+    serialized[i] = secret.substr(2).substr(start, start + 8)
+  }
+  return serialized
+}
+
+export const outputCraValues = async () => {
+  // types
+  type PrivateData = {
+    data: Uint32Array[8]
+  }
+
+  // local variables
+  var zokratesProvider: ZoKratesProvider
+  var compilationArtifacts: CompilationArtifacts
+  var keyPair: SetupKeypair
+  var provingKey: Uint8Array
+  var computation: ComputationResult
+  var proof: Proof
+  var privateData: PrivateData
+  initialize().then(async (provider) => {
+    // set provider after initialization
+    zokratesProvider = provider
+
+    // zok file to compile
+    const source = `import "hashes/sha256/256bitPadded.zok" as sha256
+    def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
+      u32[3][8] commitments = data
+      u32 MARKET_SCORE = 0
+      u32 MASK = 0x0000000a
+  
+      for u32 i in 0..3 do
+          MARKET_SCORE = MARKET_SCORE + data[i][0] & MASK
+          commitments[i] = sha256(data[i])
+      endfor
+  
+      return MARKET_SCORE,commitments`
+
+    // compile into circuit
+    compilationArtifacts = zokratesProvider.compile(source)
+
+    // generate keypair
+    keyPair = zokratesProvider.setup(compilationArtifacts.program)
+
+    // TO-DO: generate proving key from our keypair.json file. we don't have a keypair.json file
+
+    // get borrower nonce and identifier
+    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    const borrower = (await getNamedAccounts()).borrower
+    const { length: nonce } = await diamond.getBorrowerLoans(borrower)
+    const identifier = BigNumber.from(borrower).xor(nonce)
+
+    // witness variables
+    var { data } = privateData
+    const score = [10, 10, 10, 10]
+    const secret = [
+      '0x0000000000000000000000000000000000000000000000000000000000000001',
+      '0x0000000000000000000000000000000000000000000000000000000000000002',
+      '0x0000000000000000000000000000000000000000000000000000000000000003',
+      '0x0000000000000000000000000000000000000000000000000000000000000004',
+    ]
+
+    // TODO: pack score and secret into data uint32 array
+    // for (let i = 0; i < 4; i++) {
+    //   data[i][0].push
+    // }
+
+    // TO-DO: serialize data
+    const serializedData = data
+
+    // get computation
+    const computation = zokratesProvider.computeWitness(compilationArtifacts, [
+      data,
+      identifier,
+    ])
+
+    // compute proof
+    const proof = zokratesProvider.generateProof(
+      compilationArtifacts.program,
+      computation.witness,
+      provingKey
+    )
+
+    // return all the values so that we can verify transaction
+    return {
+      output: computation.output,
+      witness: computation.witness,
+      inputs: proof.inputs,
+      proof: proof.proof,
+    }
+  })
 }
 
 export const takeOut = async (

@@ -163,7 +163,7 @@ describe('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-
+    describe('create loan w/ new zkCRA', () => {})
     // delete the rest? 🤔
     describe('create', () => {})
     describe('take out', () => {
