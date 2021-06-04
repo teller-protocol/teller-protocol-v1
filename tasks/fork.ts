@@ -95,5 +95,11 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
       amount: hre.ethers.utils.parseEther('1000'),
       hre,
     })
+    await getFunds({
+      to: deployer,
+      tokenSym: 'MATIC',
+      amount: hre.ethers.utils.parseEther('1000'),
+      hre,
+    })
   }
 })
