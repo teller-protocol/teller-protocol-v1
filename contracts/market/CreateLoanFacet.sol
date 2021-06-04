@@ -1,46 +1,48 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import { Verifier } from "./libraries/Snarks.sol";
+
 // Contracts
-import { PausableMods } from '../settings/pausable/PausableMods.sol';
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
-} from '../contexts2/access-control/reentry/ReentryMods.sol';
-import { RolesMods } from '../contexts2/access-control/roles/RolesMods.sol';
-import { AUTHORIZED } from '../shared/roles.sol';
-import { ERC20 } from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
+import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
+import { AUTHORIZED } from "../shared/roles.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
-import { LibLoans } from './libraries/LibLoans.sol';
-import { LibEscrow } from '../escrow/libraries/LibEscrow.sol';
-import { LibCollateral } from './libraries/LibCollateral.sol';
-import { LibConsensus } from './libraries/LibConsensus.sol';
-import { LendingLib } from '../lending/libraries/LendingLib.sol';
+import { LibLoans } from "./libraries/LibLoans.sol";
+import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
+import { LibCollateral } from "./libraries/LibCollateral.sol";
+import { LibConsensus } from "./libraries/LibConsensus.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
     PlatformSettingsLib
-} from '../settings/platform/libraries/PlatformSettingsLib.sol';
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import {
     MaxDebtRatioLib
-} from '../settings/asset/libraries/MaxDebtRatioLib.sol';
+} from "../settings/asset/libraries/MaxDebtRatioLib.sol";
 import {
     MaxLoanAmountLib
-} from '../settings/asset/libraries/MaxLoanAmountLib.sol';
-import { Counters } from '@openzeppelin/contracts/utils/Counters.sol';
+} from "../settings/asset/libraries/MaxLoanAmountLib.sol";
+import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import {
     EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import { NumbersLib } from '../shared/libraries/NumbersLib.sol';
-import { NFTLib, NftLoanSizeProof } from '../nft/libraries/NFTLib.sol';
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
-import { ILoansEscrow } from '../escrow/escrow/ILoansEscrow.sol';
-import { ITToken } from '../lending/ttoken/ITToken.sol';
+import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Proxy
 import {
     BeaconProxy
-} from '@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol';
-import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
+} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // Storage
 import {
@@ -49,13 +51,15 @@ import {
     LoanTerms,
     Loan,
     MarketStorageLib
-} from '../storage/market.sol';
-import { AppStorageLib } from '../storage/app.sol';
+} from "../storage/market.sol";
+import { AppStorageLib } from "../storage/app.sol";
 
 // Helper functions
-import 'hardhat/console.sol';
+import "hardhat/console.sol";
 
-contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
+contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods, Verifier {
+    using Pairing for *;
+
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -111,7 +115,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         }
         require(
             amount <= allowedLoanSize,
-            'Teller: insufficient NFT loan size'
+            "Teller: insufficient NFT loan size"
         );
 
         // Pull funds from Teller Token LP and transfer to the new loan escrow
@@ -127,7 +131,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             true
         );
     }
-
 
     /**
         Borow from a market. We provide verification functions to make sure that
@@ -170,59 +173,48 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         Signature[] calldata signatures,
         uint256[] calldata signedAt,
         uint256 collateralAsset,
-        uint256 collateralAmount,
         uint256 collateralRatio,
         uint256 loanToken,
-        uint256 loanAmount
-    )
-        external
-        paused(LibLoans.ID, false)
-        nonReentry('')
-        authorized(AUTHORIZED, msg.sender)
-    {
+        uint256 loanAmount,
+        uint256 duration
+    ) external paused(LibLoans.ID, false) nonReentry("") {
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
         witness[0] = uint256(msg.sender) ^ getBorrowerLoans(msg.sender).length;
 
         // Overwrite the weights with the market's weights for the same reason.
-        (witness[1], witness[2], witness[3], witness[4]) = config.weights(marketId);
+        (witness[1], witness[2], witness[3], witness[4]) = config.weights(
+            marketId
+        );
 
         // Verify the snark proof.
-        require(verifyTx(proof, witness), 'BE01');
+        require(verifyTx(proof, witness), "BE01");
 
         bytes32[4] memory commitments = [];
 
-        for (uint8 i = 0; i < 4; i ++) {
-            commitments[i] = (bytes32(witness[5 + i]) << 128) | bytes32(witness[5 + i + 1]) ^ signedAt[i];
+        for (uint8 i = 0; i < 4; i++) {
+            for (uint8 j = 0; j < 8; j++) {
+                commitments[i] =
+                    (commitments[i] << 32) |
+                    bytes32(witness[6 + i + j]);
+            }
+            commitments[i] ^= signedAt;
         }
 
         config.verifySignatures(marketId, commitments, signatures, signedAt);
 
-        bytes32 commitmentHash = (bytes32(input[3]) << 128) | bytes32(input[4]);
-        require(signedAt > now - 5 days, 'SIGNATURE_TOO_OLD');
-        require(!usedCommitmentHashes[commitmentHash], 'COMMITMENT_HASH_USED');
-        usedCommitmentHashes[commitmentHash] = true;
+        uint256 marketScore = witness[5];
+        uint256 interestRate;
 
-        // Verify collateral token is acceptable
-        require(
-            EnumerableSet.contains(
-                MarketStorageLib.store().collateralTokens[asset],
-                collateralToken
-            ),
-            'Teller: collateral token not allowed'
+        (interestRate, loanAmount) = config.handler()(
+            marketScore,
+            collateralAsset,
+            collateralAmount,
+            loanToken,
+            loanAmount,
+            duration
         );
-
-        // Get the ID of the newly created loan
-        Loan storage loan = LibLoans.loan(CreateLoanLib.currentID() - 1);
-
-        // Save collateral token to loan
-        loan.collateralToken = collateralToken;
-
-        // Pay in collateral
-        if (collateralAmount > 0) {
-            LibCollateral.deposit(loan.id, collateralAmount);
-        }
     }
 
     /**
@@ -244,7 +236,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         external
         payable
         paused(LibLoans.ID, false)
-        nonReentry('')
+        nonReentry("")
         authorized(AUTHORIZED, msg.sender)
         __createLoan(request)
     {
@@ -262,7 +254,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
                 ],
                 collateralToken
             ),
-            'Teller: collateral token not allowed'
+            "Teller: collateral token not allowed"
         );
 
         // Get the ID of the newly created loan
@@ -280,7 +272,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         require(
             LibLoans.getCollateralNeeded(loan.id) <=
                 LibCollateral.e(loan.id).loanSupply(loan.id),
-            'Teller: more collateral required'
+            "Teller: more collateral required"
         );
         // Pull funds from Teller token LP and and transfer to the recipient
         ITToken tToken = LendingLib.tToken(request.request.assetAddress);
@@ -305,10 +297,9 @@ library CreateLoanLib {
     ) internal returns (Loan storage loan) {
         require(
             PlatformSettingsLib.getMaximumLoanDurationValue() >= duration,
-            'Teller: max loan duration exceeded'
+            "Teller: max loan duration exceeded"
         );
 
-        uint16 interestRate = 
         // Get consensus values from request
         (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
             LibConsensus.processLoanTerms(request);
@@ -316,13 +307,13 @@ library CreateLoanLib {
         // Perform loan value checks
         require(
             MaxLoanAmountLib.get(request.request.assetAddress) > maxLoanAmount,
-            'Teller: asset max loan amount exceeded'
+            "Teller: asset max loan amount exceeded"
         );
         require(
             LendingLib.tToken(request.request.assetAddress).debtRatioFor(
                 maxLoanAmount
             ) <= MaxDebtRatioLib.get(request.request.assetAddress),
-            'Teller: max supply-to-debt ratio exceeded'
+            "Teller: max supply-to-debt ratio exceeded"
         );
 
         // Get and increment new loan ID
@@ -350,10 +341,6 @@ library CreateLoanLib {
         );
     }
 
-    /**
-     * @notice increments the loanIDCounter
-     * @return id_ the new ID requested, which stores it in the loan data
-     */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
@@ -361,24 +348,15 @@ library CreateLoanLib {
         Counters.increment(counter);
     }
 
-    /**
-     * @notice it returns the current id of the counter
-     * @return id_ the current id
-     */
     function currentID() internal view returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
     }
 
-    /**
-     * @notice it creates a new loan escrow contract
-     * @param loanID the ID that identifies the loan
-     * @return escrow_ the loanEscrow that gets created
-     */
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
-        escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy('');
+        escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");
         ILoansEscrow(escrow_).init();
         // Save escrow address for loan
         MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(escrow_);
