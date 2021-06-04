@@ -22,6 +22,7 @@ contract DataProviderStorage {
         mapping(bytes32 => MarketConfig[]) markets;
         // mapping(bytes32 => uint256[4]) markets;
         mapping(bytes32 => ProviderConfig) providers;
+        mapping(bytes32 => bool) usedCommitments;
     }
 
     bytes32 internal constant POS =
@@ -65,18 +66,23 @@ contract DataProviderStorage {
 
     function verifySignatures(
         bytes32 marketId,
-        bytes32[4] calldata comittment,
+        bytes32[4] calldata commitment,
         Signature[4] calldata signatures,
         uint256[4] calldata signedAt
-    ) public view {
+    ) public {
         for (uint256 i = 0; i < 4; i++) {
             require(
                 signedAt[i] > block.timestamp - s().markets[marketId][i].maxAge,
                 "Signed at less than max age"
             );
+            require(
+                s().usedCommitments[commitment[i]] == false,
+                "Teller: commitment already used"
+            );
+            s().usedCommitments[commitment[i]] = true;
             _signatureValid(
                 signatures[i],
-                comittment[i],
+                commitment[i],
                 bytes32(bytes28(s().markets[marketId][i].dataProviderId))
             );
         }
