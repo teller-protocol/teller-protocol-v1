@@ -124,7 +124,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
      * @notice it repays the loan, either from an escrow or from a regular address
      * @param loanID the identifier of the loan to repay
      * @param amount the amount to repay the loan
-     * @param address the address of the sender that wants to pay, can also be a loan escrow
+     * @param sender the address of the sender that wants to pay, can also be a loan escrow
      * @param isLiquidation is this loan being liquidated?
      * @return leftToPay_ the amount left to pay for the loan
      */
