@@ -133,98 +133,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods, Verifier {
     }
 
     /**
-        Borow from a market. We provide verification functions to make sure that
-        all data used is not forged or re-used and outsource the calculation of
-        terms to the target market. The market uses the CRA's output score and
-        the user's desired loan amount and collateral details to determine what
-        their own terms are. These terms are encoded as a byte array due to not
-        being able to generically express this in solidity.
-
-        @param proof Proof of the CRA.
-        @param witness uint256[] list of public input params and output values
-        from the CRA. The witness is encoded in the following way in zokrates:
-          1. Public input parameters from left to right
-          2. Output values from left to right
-        In the case of our ZK CRA, this comes out to:
-          [
-              identifier,
-              weight1, weight2, weight3, weight4,
-              marketScore,
-              commitment1, commitment2, commitment3, commitment4
-          ]
-        @param signatures Signature[] ordered list of data provider signatures.
-        @param signedAt uint256[] ordered list of data provider signature
-        timestamps.
-        @param collateralAsset uint256 tokenId of the collateral asset the user
-        wants to use.
-        @param collateralAmount uint256 amount of collateralAsset the user
-        wishes to provide as collateral.
-        @param collateralRatio uint256 percentage expressed in bips for how much
-        collateral the user wants to provide to the market for this loan.
-        @param loanToken uint256 tokenId of the loan asset the user wishes to
-        receive the loan in.
-        @param loanAmount uint256 amount of loanToken the user wishes to receive
-        for this loan.
-     */
-    function borrow(
-        bytes32 marketId,
-        Proof calldata proof,
-        uint256[] calldata witness,
-        Signature[] calldata signatures,
-        uint256[] calldata signedAt,
-        uint256 collateralAsset,
-        uint256 collateralRatio,
-        uint256 loanToken,
-        uint256 loanAmount,
-        uint256 duration
-    ) external paused(LibLoans.ID, false) nonReentry("") {
-        // Overwrite the first snark witness item with the on-chain identifier
-        // for the loan (msg.sender ^ nonce). This forces the CRA to have been
-        // run with the proper identifier.
-        witness[0] = uint256(msg.sender) ^ getBorrowerLoans(msg.sender).length;
-
-        // Overwrite the weights with the market's weights for the same reason.
-        (witness[1], witness[2], witness[3], witness[4]) = config.weights(
-            marketId
-        );
-
-        // Verify the snark proof.
-        require(verifyTx(proof, witness), "BE01");
-
-        bytes32[4] memory commitments = [];
-
-        // Construct the commitments (data which are signed by provider).
-        for (uint8 i = 0; i < 4; i++) {
-            for (uint8 j = 0; j < 8; j++) {
-                commitments[i] =
-                    (commitments[i] << 32) |
-                    bytes32(witness[6 + i + j]);
-            }
-            commitments[i] ^= signedAt;
-        }
-
-        // Verify that the commitment signatures are valid and that the data
-        // is not too old for the market's liking.
-        config.verifySignatures(marketId, commitments, signatures, signedAt);
-
-        // The sixth witness item (after identifier and weights) is the market
-        // score
-        uint256 marketScore = witness[5];
-
-        uint256 interestRate;
-
-        // Let the market decide what the IR and loan amounts are.
-        (interestRate, loanAmount) = config.handler(marketId)(
-            marketScore,
-            collateralAsset,
-            collateralRatio,
-            loanToken,
-            loanAmount,
-            duration
-        );
-    }
-
-    /**
      * @notice Take out a loan
      *
      * @dev collateral ratio is a percentage of the loan amount that's required in collateral
@@ -302,27 +210,6 @@ library CreateLoanLib {
         uint256 duration,
         uint256 score
     ) internal returns (Loan storage loan) {
-        require(
-            PlatformSettingsLib.getMaximumLoanDurationValue() >= duration,
-            "Teller: max loan duration exceeded"
-        );
-
-        // Get consensus values from request
-        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
-            LibConsensus.processLoanTerms(request);
-
-        // Perform loan value checks
-        require(
-            MaxLoanAmountLib.get(request.request.assetAddress) > maxLoanAmount,
-            "Teller: asset max loan amount exceeded"
-        );
-        require(
-            LendingLib.tToken(request.request.assetAddress).debtRatioFor(
-                maxLoanAmount
-            ) <= MaxDebtRatioLib.get(request.request.assetAddress),
-            "Teller: max supply-to-debt ratio exceeded"
-        );
-
         // Get and increment new loan ID
         uint256 loanID = CreateLoanLib.newID();
         // Set loan data based on terms
