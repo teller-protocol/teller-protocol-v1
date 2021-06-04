@@ -9,19 +9,15 @@ contract SampleHandler {
     ) external returns (uint256 interestRate) {
         require(duration < 180 days, "ME01");
         require(loanAmount < marketScore, "ME02");
-        // Get consensus values from request
+        require(address(collateralAsset) == YFI, "ME03");
+
         (interestRate, collateralRatio, loanAmount);
 
-        // Perform loan value checks
-        require(
-            MaxLoanAmountLib.get(loanAsset) > maxLoanAmount,
-            "Teller: asset max loan amount exceeded"
-        );
         require(
             LendingLib.tToken(request.request.assetAddress).debtRatioFor(
                 maxLoanAmount
             ) <= MaxDebtRatioLib.get(request.request.assetAddress),
-            "Teller: max supply-to-debt ratio exceeded"
+            "ME04"
         );
     }
 }
