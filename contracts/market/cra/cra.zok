@@ -1,5 +1,4 @@
 import "hashes/sha256/256bitPadded.zok" as sha256
-import "utils/casts/u32_to_field.zok" as toField
 
 /*
     Zero-Knowledge CRA. Each market configures up to 4 data providers used to
@@ -25,12 +24,13 @@ import "utils/casts/u32_to_field.zok" as toField
     @return field MARKET_SCORE - uint256 accumulated markets score.
     @return u32[4][8] commitments - Array of the 4 commitments.
 */
-def main(private u32[4][8] data, public field identifier, public u32[4] weights) -> (field, u32[4][8]):
-    field MARKET_SCORE = 0
-    u32[4][8] commitments = data
+def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
+    u32[3][8] commitments = data
+    u32 MARKET_SCORE = 0
+    u32 MASK = 0x0000000a
 
-    for u32 i in 0..4 do
-        MARKET_SCORE = MARKET_SCORE + toField(data[i][0] * weights[i])
+    for u32 i in 0..3 do
+        MARKET_SCORE = MARKET_SCORE + data[i][0] & MASK
         commitments[i] = sha256(data[i])
     endfor
 
