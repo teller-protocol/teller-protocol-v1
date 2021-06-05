@@ -17,6 +17,7 @@ coverage
 # IDE
 .idea
 .vscode
+.vs
 
 # Build
 build

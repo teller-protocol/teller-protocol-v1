@@ -15,6 +15,9 @@ struct Store {
 
 bytes32 constant POSITION = keccak256("ttoken.storage.position");
 
+/**
+ * @notice it saves the Store struct in a hashed slot
+ */
 function store() pure returns (Store storage s_) {
     bytes32 position = POSITION;
     assembly {

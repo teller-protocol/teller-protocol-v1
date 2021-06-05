@@ -256,6 +256,10 @@ library CreateLoanLib {
         );
     }
 
+    /**
+     * @notice increments the loanIDCounter
+     * @return id_ the new ID requested, which stores it in the loan data
+     */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
@@ -269,6 +273,11 @@ library CreateLoanLib {
         id_ = Counters.current(counter);
     }
 
+    /**
+     * @notice it creates a new loan escrow contract
+     * @param loanID the ID that identifies the loan
+     * @return escrow_ the loanEscrow that gets created
+     */
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
         escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");

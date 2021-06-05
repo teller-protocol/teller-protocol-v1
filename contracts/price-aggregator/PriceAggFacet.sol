@@ -56,12 +56,17 @@ contract PriceAggFacet {
         return (amount * exchangeRate) / _oneToken(src);
     }
 
+    /**
+     * @notice it returns 10^{numberOfDecimals} for a token
+     * @param token the address to calculate the decimals for
+     * @return 10^number of decimals used to calculate the price and value of different token pairs
+     */
     function _oneToken(address token) internal view returns (uint256) {
         return TEN**_decimalsFor(token);
     }
 
     /**
-     * @dev It gets the number of decimals for a given token.
+     * @notice It gets the number of decimals for a given token.
      * @param addr Token address to get decimals for.
      * @return uint8 Number of decimals the given token.
      */
@@ -70,7 +75,11 @@ contract PriceAggFacet {
     }
 
     /**
-     * @dev Tries to calculate a price from Compound and Chainlink.
+     * @notice it tries to calculate a price from Compound and Chainlink.
+     * @dev if no price is found on compound, then calculate it on chainlink
+     * @param src the token address to calculate the price for in dst
+     * @param dst the token address to retrieve the price of src
+     * @return price_ the price of src in dst
      */
     function _priceFor(address src, address dst)
         private
@@ -88,7 +97,11 @@ contract PriceAggFacet {
     }
 
     /**
-     * @dev Tries to get a price from {src} to {dst} by checking if either tokens are from Compound.
+     * @notice Tries to get a price from {src} to {dst} by checking if either tokens are from Compound.
+     * @param src the address of the src token
+     * @param dst the address of the dst token
+     * @return the price of the src token in dst token
+
      */
     function _compoundPriceFor(address src, address dst)
         private
@@ -121,7 +134,11 @@ contract PriceAggFacet {
     }
 
     /**
-     * @dev Tries to get a price from {src} to {dst} and then converts using a rate from Compound.
+     * @notice Tries to get a price from {src} to {dst} and then converts using a rate from Compound.
+     * @param src the source token to calculate price for with chainlink
+     * @param dst the destination token to calculate price for with chainlink
+     * @param cRate the compound rate to multiply with the price of the dst token
+     * @return the price of src in dst after scaling the difference in decimal values
      */
     function _calcPriceFromCompoundRate(
         address src,
@@ -134,7 +151,11 @@ contract PriceAggFacet {
     }
 
     /**
-     * @dev Scales the {value} by the difference in decimal values.
+     * @notice Scales the {value} by the difference in decimal values.
+     * @param value the the value of the src in dst
+     * @param srcDecimals src token decimals
+     * @param dstDecimals dst token decimals
+     * @return the price of src in dst after scaling the difference in decimal values
      */
     function _scale(
         uint256 value,
@@ -149,7 +170,10 @@ contract PriceAggFacet {
     }
 
     /**
-     * @dev Tries to calculate the price of {src} in {dst}
+     * @notice it tries to calculate the price of {src} in {dst}
+     * @param src address of source token
+     * @param dst address of destination token
+     * @return the price of src token in dst
      */
     function _chainlinkPriceFor(address src, address dst)
         private
@@ -186,6 +210,12 @@ contract PriceAggFacet {
         return 0;
     }
 
+    /**
+     * @notice it checks if a token is a cToken. If it is, then get the underlying address
+     * @param token address of the token
+     * @return isCtoken boolean whether it's a cToken
+     * @return underlying the address of the cToken
+     */
     function _isCToken(address token)
         private
         view

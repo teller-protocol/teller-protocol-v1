@@ -60,7 +60,9 @@ library CompoundLib {
 
     /**
      * @notice Tests the {underlying} function on the cToken and assumes its WETH otherwise.
-     * @notice CETH is the only Compound token that does not support the {underlying} function.
+     * @dev CETH is the only Compound token that does not support the {underlying} function.
+     * @param cToken address of the compound token
+     * @return address of the underlying cToken
      */
     function getUnderlying(address cToken) internal view returns (address) {
         (bool success, bytes memory data) =

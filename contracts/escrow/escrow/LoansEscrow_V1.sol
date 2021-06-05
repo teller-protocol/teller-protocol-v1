@@ -33,6 +33,12 @@ contract LoansEscrow_V1 is ILoansEscrow {
         owner = msg.sender;
     }
 
+    /**
+     * @notice it calls a dapp like YearnFinance at a target contract address with specified calldata
+     * @param dappAddress address of the target contract address
+     * @param dappData encoded abi of the function in our contract we want to call
+     * @return resData_ the called data in
+     */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
         override
@@ -46,6 +52,11 @@ contract LoansEscrow_V1 is ILoansEscrow {
         );
     }
 
+    /**
+     * @notice it approves the spender to spend a maximum amount of a respective token from a token address
+     * @param token address of the respective ERC20 token to approve for the spender
+     * @param spender address of the respective spender who is approved by the token contract
+     */
     function setTokenAllowance(address token, address spender)
         external
         override
@@ -54,6 +65,13 @@ contract LoansEscrow_V1 is ILoansEscrow {
         IERC20(token).approve(spender, type(uint256).max);
     }
 
+    /**
+     * @notice it allows user to claim their escrow tokens
+     * @dev only the owner (TellerDiamond) can make this call on behalf of their users
+     * @param token address of the respective token contract to claim tokens from
+     * @param to address where the tokens should be transferred to
+     * @param amount uint256 amount of tokens to be claimed
+     */
     function claimToken(
         address token,
         address to,
