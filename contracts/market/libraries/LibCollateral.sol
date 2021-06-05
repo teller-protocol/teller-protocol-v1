@@ -37,7 +37,7 @@ library LibCollateral {
     /**
      * @notice it gets MarketStorage's collateral escrow using the loanID
      * @param loanID the loanID to be used
-     * @return c_, which is the collateral escrow
+     * @return c_ which is the collateral escrow
      */
     function e(uint256 loanID) internal view returns (ICollateralEscrow c_) {
         c_ = MarketStorageLib.store().collateralEscrows[
