@@ -213,7 +213,7 @@ contract PriceAggFacet {
     /**
      * @notice it checks if a token is a cToken. If it is, then get the underlying address
      * @param token address of the token
-     * @return isCtoken boolean whether it's a cToken
+     * @return isCToken boolean whether it's a cToken
      * @return underlying the address of the cToken
      */
     function _isCToken(address token)

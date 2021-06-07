@@ -126,7 +126,7 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
      * @dev Can be costly if calling within a contract for address with many tokens.
-     * @return owned the array of tokenIDs owned by the address
+     * @return owned_ the array of tokenIDs owned by the address
      */
     function getOwnedTokens(address owner)
         external
