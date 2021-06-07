@@ -174,7 +174,7 @@ describe('Lending', () => {
         })
       })
 
-      describe('TToken', () => {
+      describe.only('TToken', () => {
         let depositAmount1: BigNumber
         let depositAmount2: BigNumber
 
@@ -190,7 +190,7 @@ describe('Lending', () => {
           // Fund the lender
           depositAmount1 = await fundLender({
             token: lendingToken,
-            amount: 1,
+            amount: 10,
             hre,
           })
 
@@ -236,7 +236,6 @@ describe('Lending', () => {
               await contracts.get('ITTokenStrategy', { at: tToken.address }),
               'StrategyRebalanced'
             )
-
           const lendingBalAfter = await lendingToken.balanceOf(tToken.address)
           lendingBalAfter
             .lt(lendingBalBefore)
@@ -263,7 +262,7 @@ describe('Lending', () => {
             .should.eql(true, 'Exchange rate should be greater than 1-1')
         })
 
-        it('mint, rebalance - should be able to add an additional lender', async () => {
+        it.skip('mint, rebalance - should be able to add an additional lender', async () => {
           // Fund the lender
           depositAmount2 = toBN(1, await lendingToken.decimals())
           await getFunds({
@@ -288,7 +287,7 @@ describe('Lending', () => {
           await evm.advanceBlocks(1000)
         })
 
-        it('redeem - should be able to redeem 2nd lender supply for more than deposited', async () => {
+        it.skip('redeem - should be able to redeem 2nd lender supply for more than deposited', async () => {
           // Redeem lenders balance
           const tSupply = await tToken.balanceOf(await lender2.getAddress())
           await tToken.connect(lender2).redeem(tSupply)
@@ -301,7 +300,7 @@ describe('Lending', () => {
             .should.eql(true, 'Lender lost value from their initial deposit')
         })
 
-        it('redeem - should be able to redeem 1st lender supply for more than deposited', async () => {
+        it.skip('redeem - should be able to redeem 1st lender supply for more than deposited', async () => {
           // Redeem lenders balance
           const tSupply = await tToken.balanceOf(await lender.getAddress())
           await tToken.connect(lender).redeem(tSupply)
