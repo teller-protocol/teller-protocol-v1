@@ -32,9 +32,6 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
     function() pure returns (AaveStorage.Store storage)
         private constant aaveStore = AaveStorage.store;
 
-    // Get aave lending pool for polygon
-    IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
-
     string public constant NAME = "AaveStrategy_1";
 
     /* External Functions */
@@ -63,18 +60,20 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
                 NumbersLib.percent(storedBal + aaveBal, medianRatio);
             uint256 amountToDeposit = storedBal - requiredBal;
 
+            IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+
             // Approve Aave lending pool
             SafeERC20.safeIncreaseAllowance(
                 tokenStore().underlying,
-                address(aaveLendingPool),
+                address(lendingPool),
                 amountToDeposit
             );
             // Deposit into Aave
-            aaveLendingPool.deposit(
+            lendingPool.deposit(
                 address(tokenStore().underlying),
                 amountToDeposit,
                 address(this),
-                0
+                0 // TODO get referral code from Aave when applicable
             );
 
             emit StrategyRebalanced(NAME, msg.sender);
@@ -138,7 +137,8 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
             );
         uint256 redeemAmount = requiredBal - storedBal + amount;
         // Withdraw tokens from the Aave lending pool if needed
-        aaveLendingPool.withdraw(
+        IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+        lendingPool.withdraw(
             address(tokenStore().underlying),
             redeemAmount,
             address(this)
