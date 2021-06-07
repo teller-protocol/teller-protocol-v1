@@ -12,9 +12,9 @@ import { AppStorageLib } from "../storage/app.sol";
 library PriceAggLib {
     /**
      * @notice It calculates the value of one token amount into another
-     * @param src
-     * @param dst
-     * @param srcAmount
+     * @param src the source token
+     * @param dst the destination token
+     * @param srcAmount the amount of source token
      * @return value_ the returned value of src in dst
      */
     function valueFor(
@@ -28,7 +28,7 @@ library PriceAggLib {
     /**
      * @notice It returns the price of the token pair as given from Compound.
      * @dev if no compound price is calculated, then it checks Chainlink price Aggregator
-     * @param src the address of the source token 
+     * @param src the address of the source token
      * @param dst the address of the desitnation token
      * @return price_ gets the price of src in dst
      */

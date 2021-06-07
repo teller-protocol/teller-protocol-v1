@@ -27,7 +27,7 @@ interface ITellerNFTDistributor {
      * @notice It checks the merkle root for a tier if it has already been claimed.
      * @param merkleIndex Index of the tier.
      * @param nodeIndex Index of the node in the merkle root.
-     * @return claimed_ returns a boolean to check if the tier has already been claimed
+     * @return _claimed returns a boolean to check if the tier has already been claimed
      */
     function isClaimed(uint256 merkleIndex, uint256 nodeIndex)
         external

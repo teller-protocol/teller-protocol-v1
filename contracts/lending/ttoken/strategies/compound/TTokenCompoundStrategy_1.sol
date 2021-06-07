@@ -23,13 +23,13 @@ import "./storage.sol" as CompoundStorage;
 
 contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**
-     * @notice it creates a reference to the TToken storage 
+     * @dev it creates a reference to the TToken storage
      */
     function() pure returns (TokenStorage.Store storage)
         private constant tokenStore = TokenStorage.store;
 
     /**
-     * @notice it creates a reference to the Compound storage
+     * @dev it creates a reference to the Compound storage
      */
     function() pure returns (CompoundStorage.Store storage)
         private constant compoundStore = CompoundStorage.store;
@@ -103,7 +103,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**
      * @notice it gets balances and the current ratio of the underlying asset stored on the TToken.
      * @return storedBalance_ returns the total stored balance of the current underlying token
-     * @return compoundBalance_ returns the total stored balance 
+     * @return compoundBalance_ returns the total stored balance
      * @return storedRatio_ ratio of current storedBalance_ over storedBalance_ and compoundBalance_
      */
     function _getBalanceInfo()

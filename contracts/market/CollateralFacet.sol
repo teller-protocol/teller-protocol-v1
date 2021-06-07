@@ -110,7 +110,7 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
 
     /**
      * @notice get list of collateral tokens that is allowed to be used on an {asset} loan
-     * @param address token address to get allowed collateral tokens
+     * @param asset token address to get allowed collateral tokens
      * @return tokens_ collateral tokens that are accepted
      */
     function getCollateralTokens(address asset)
