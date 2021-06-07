@@ -12,6 +12,7 @@ import {
   LoanType,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
+  outputCraValues,
 } from '../helpers/loans'
 
 chai.should()
@@ -149,7 +150,9 @@ describe.skip('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe('create loan w/ new zkCRA', () => {})
+    describe.only('create loan w/ new zkCRA', async () => {
+      await outputCraValues()
+    })
     // delete the rest? 🤔
     describe('create', () => {})
     describe('take out', () => {

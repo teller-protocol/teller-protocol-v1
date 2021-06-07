@@ -4,10 +4,18 @@ pragma solidity ^0.8.0;
 // External utilities
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+// Teller Contracts
+import { PausableMods } from "../../settings/pausable/PausableMods.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { Signature } from "../../storage/market.sol";
 import { Verifier } from "./verifier.sol";
 
-contract BorrowFacet is Verifier {
+// Teller libraries
+import { LibLoans } from "../libraries/LibLoans.sol";
+
+contract BorrowFacet is Verifier, PausableMods, ReentryMods {
     struct ProviderConfig {
         mapping(address => bool) admin;
         mapping(address => bool) signer;
@@ -22,8 +30,8 @@ contract BorrowFacet is Verifier {
     struct MarketConfig {
         MarketProviderConfig[4] providerConfigs;
         mapping(address => bool) admin;
-        function(uint256, uint256[], uint256[], uint256, uint256, uint256)
-            external handler;
+        // function(uint256, uint256[], uint256[], uint256, uint256, uint256)
+        //     external handler;
     }
 
     struct Storage {
@@ -59,12 +67,10 @@ contract BorrowFacet is Verifier {
         @param signatures Signature[] ordered list of data provider signatures.
         @param signedAt uint256[] ordered list of data provider signature
         timestamps.
-        @param collateralAsset uint256 tokenId of the collateral asset the user
+        @param collateralAssets uint256 tokenId of the collateral asset the user
         wants to use.
-        @param collateralAmount uint256 amount of collateralAsset the user
+        @param collateralAmounts uint256 amount of collateralAsset the user
         wishes to provide as collateral.
-        @param collateralRatio uint256 percentage expressed in bips for how much
-        collateral the user wants to provide to the market for this loan.
         @param loanToken uint256 tokenId of the loan asset the user wishes to
         receive the loan in.
         @param loanAmount uint256 amount of loanToken the user wishes to receive
@@ -73,11 +79,11 @@ contract BorrowFacet is Verifier {
     function borrow(
         bytes32 marketId,
         Proof calldata proof,
-        uint256[26] calldata witness,
-        Signature[3] calldata signatures,
-        uint256[3] calldata signedAt,
-        uint256[] collateralAssets,
-        uint256[] collateralAmounts,
+        uint256[26] memory witness,
+        Signature[3] memory signatures,
+        uint256[3] memory signedAt,
+        uint256[] memory collateralAssets,
+        uint256[] memory collateralAmounts,
         uint256 loanToken,
         uint256 loanAmount,
         uint256 duration
@@ -85,7 +91,9 @@ contract BorrowFacet is Verifier {
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
-        witness[0] = uint256(msg.sender) ^ getBorrowerLoans(msg.sender).length;
+        witness[0] =
+            uint256(msg.sender) ^
+            LibLoans.s().borrowerLoans[msg.sender];
 
         // Verify the snark proof.
         require(verifyTx(proof, witness), "BE01");

@@ -9,6 +9,7 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
+
 import {
   initialize,
   ZoKratesProvider,
@@ -16,6 +17,7 @@ import {
   ComputationResult,
   Proof,
   SetupKeypair,
+  // @ts-ignore
 } from 'zokrates-js'
 
 // teller files
@@ -356,7 +358,7 @@ const serializeSecret = (secret: string) => {
 export const outputCraValues = async () => {
   // types
   type PrivateData = {
-    data: Uint32Array[8]
+    data: any
   }
 
   // local variables
@@ -391,8 +393,6 @@ export const outputCraValues = async () => {
     // generate keypair
     keyPair = zokratesProvider.setup(compilationArtifacts.program)
 
-    // TO-DO: generate proving key from our keypair.json file. we don't have a keypair.json file
-
     // get borrower nonce and identifier
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
     const borrower = (await getNamedAccounts()).borrower
@@ -401,6 +401,8 @@ export const outputCraValues = async () => {
 
     // witness variables
     var { data } = privateData
+
+    // to-do: array of 4 indices with arrays of 8
     const score = [10, 10, 10, 10]
     const secret = [
       '0x0000000000000000000000000000000000000000000000000000000000000001',
@@ -410,9 +412,12 @@ export const outputCraValues = async () => {
     ]
 
     // TODO: pack score and secret into data uint32 array
-    // for (let i = 0; i < 4; i++) {
-    //   data[i][0].push
-    // }
+    for (let i = 0; i < 4; i++) {
+      data[i][0].push(score[i])
+      data[i].push(secret[i])
+    }
+
+    console.log(data)
 
     // TO-DO: serialize data
     const serializedData = data
