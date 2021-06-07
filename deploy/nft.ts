@@ -54,6 +54,8 @@ const deployNFT: DeployFunction = async (hre) => {
 
   //call initialize on the dictionary
 
+  let nftDistributorAlreadyExists = false
+
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
     // Try to get deployment of TellerDiamond
@@ -72,6 +74,8 @@ const deployNFT: DeployFunction = async (hre) => {
     }
 
     execute = upgradeExecute
+
+    nftDistributorAlreadyExists = true
   } catch {
     const executeMethod = 'initialize'
     const initExecute: DeployDiamondArgs<
@@ -79,7 +83,7 @@ const deployNFT: DeployFunction = async (hre) => {
       typeof executeMethod
     >['execute'] = {
       methodName: executeMethod,
-      args: [nft.address, await deployer.getAddress()],
+      args: [nft.address, nftDictionary.address, await deployer.getAddress()],
     }
 
     execute = initExecute
@@ -111,11 +115,6 @@ const deployNFT: DeployFunction = async (hre) => {
     `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
     { indent: 2, star: true, nl: false }
   )
-
-  await nftDistributor
-    .connect(deployer)
-    .setNFTDictionaryAddress(nftDictionary.address)
-    .then(({ wait }) => wait())
 
   await nftDictionary
     .connect(deployer)
