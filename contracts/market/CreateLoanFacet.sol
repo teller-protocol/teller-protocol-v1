@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Verifier, Pairing } from "./libraries/Snarks.sol";
-
 // Contracts
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {

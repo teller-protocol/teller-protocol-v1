@@ -1018,16 +1018,11 @@ contract Verifier {
         return 0;
     }
 
-    function verifyTx(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[26] memory input
-    ) public view returns (bool r) {
-        Proof memory proof;
-        proof.a = Pairing.G1Point(a[0], a[1]);
-        proof.b = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
-        proof.c = Pairing.G1Point(c[0], c[1]);
+    function verifyTx(Proof calldata proof, uint256[26] memory input)
+        public
+        view
+        returns (bool r)
+    {
         uint256[] memory inputValues = new uint256[](26);
 
         for (uint256 i = 0; i < input.length; i++) {

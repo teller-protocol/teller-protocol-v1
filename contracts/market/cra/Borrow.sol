@@ -30,8 +30,7 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
     struct MarketConfig {
         MarketProviderConfig[4] providerConfigs;
         mapping(address => bool) admin;
-        // function(uint256, uint256[], uint256[], uint256, uint256, uint256)
-        //     external handler;
+        function(bytes memory) external handler;
     }
 
     struct Storage {
@@ -44,7 +43,7 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
     bytes32 internal constant POS =
         keccak256("teller.finance.provider.storage");
 
-    /**
+    /*
         Borow from a market. We provide verification functions to make sure that
         all data used is not forged or re-used and outsource the calculation of
         terms to the target market. The market uses the CRA's output score and
@@ -76,29 +75,37 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
         @param loanAmount uint256 amount of loanToken the user wishes to receive
         for this loan.
      */
+    struct SignatureData {
+        Signature signature;
+        uint256 signedAt;
+    }
+
+    struct LoanRequest {
+        uint256[] collateralAssets;
+        uint256[] collateralAmounts;
+        uint256 loanToken;
+        uint256 loanAmount;
+        uint256 duration;
+    }
+
     function borrow(
         bytes32 marketId,
         Proof calldata proof,
         uint256[26] memory witness,
-        Signature[3] memory signatures,
-        uint256[3] memory signedAt,
-        uint256[] memory collateralAssets,
-        uint256[] memory collateralAmounts,
-        uint256 loanToken,
-        uint256 loanAmount,
-        uint256 duration
+        SignatureData[3] calldata signatureData,
+        LoanRequest calldata request
     ) external paused(LibLoans.ID, false) nonReentry("") {
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
         witness[0] =
-            uint256(msg.sender) ^
-            LibLoans.s().borrowerLoans[msg.sender];
+            uint256(uint160(msg.sender)) ^
+            LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
         require(verifyTx(proof, witness), "BE01");
 
-        bytes32[3] memory commitments = [];
+        bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
         // Construct the commitments (data which are signed by provider).
         for (uint8 i = 0; i < 3; i++) {
@@ -107,26 +114,19 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
                     (commitments[i] << 32) |
                     bytes32(witness[2 + i + j]);
             }
-            commitments[i] ^= signedAt;
+            commitments[i] ^= bytes32(signatureData[i].signedAt);
         }
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
-        _verifySignatures(marketId, commitments, signatures, signedAt);
+        _verifySignatures(marketId, commitments, signatureData);
 
         // The second witness item (after identifier) is the market
         // score
         uint256 marketScore = witness[1];
 
         // Let the market handle the loan request and disperse the loan.
-        s().markets[marketId].handler(
-            marketScore,
-            collateralAssets,
-            collateralAmounts,
-            loanToken,
-            loanAmount,
-            duration
-        );
+        s().markets[marketId].handler(abi.encode(marketScore, request));
     }
 
     function setProviderAdmin(
@@ -165,20 +165,17 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
 
     function setHandler(
         bytes32 marketId,
-        function(uint256, uint256, uint256, uint256, uint256)
-            external
-            returns (uint256, uint256) handler
+        function(bytes memory) external returns (uint256, uint256) handler
     ) external onlyMarketAdmin(marketId) {}
 
     function _verifySignatures(
         bytes32 marketId,
-        bytes32[4] calldata commitments,
-        Signature[4] calldata signatures,
-        uint256[4] calldata signedAt
+        bytes32[3] memory commitments,
+        SignatureData[3] calldata signatureData
     ) private {
         for (uint256 i = 0; i < 4; i++) {
             require(
-                signedAt[i] >
+                signatureData[i].signedAt >
                     // solhint-disable-next-line
                     block.timestamp -
                         s().markets[marketId].providerConfigs[i].maxAge,
@@ -192,7 +189,7 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
             s().usedCommitments[commitments[i]] = true;
 
             _validateSignature(
-                signatures[i],
+                signatureData[i].signature,
                 commitments[i],
                 s().markets[marketId].providerConfigs[i].providerId
             );
