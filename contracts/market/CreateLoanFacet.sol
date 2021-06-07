@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Verifier, Pairing } from "./libraries/Snarks.sol";
-
 // Contracts
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
@@ -57,9 +55,7 @@ import { AppStorageLib } from "../storage/app.sol";
 // Helper functions
 import "hardhat/console.sol";
 
-contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods, Verifier {
-    using Pairing for *;
-
+contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
