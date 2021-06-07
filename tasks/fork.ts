@@ -1,62 +1,65 @@
 import * as fs from 'fs-extra'
-import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
 import { subtask, task, types } from 'hardhat/config'
+import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 import { ActionType, HardhatRuntimeEnvironment } from 'hardhat/types'
 import * as path from 'path'
 
 import { getFunds } from '../test/helpers/get-funds'
 
+const projectPath = path.resolve(__dirname, '..')
+
 interface NetworkArgs {
   chain: string
   block?: number
-  silent?: boolean
-  onlyDeployment?: boolean
+  onlyDeployment: boolean
 }
 
 export const forkNetwork: ActionType<NetworkArgs> = async (
   args: NetworkArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { chain, block, ...remaining } = args
-  const { config, log, run } = hre
+  const { chain, block, onlyDeployment } = args
+  const { log, run, network } = hre
 
-  if (/localhost|hardhat/.test(chain))
-    throw new Error('Cannot fork the Hardhat or localhost network')
-  const availableNetworks = Object.keys(config.networks)
-  if (!availableNetworks.includes(chain)) {
-    throw new Error(`network must be one of ${availableNetworks.join(', ')}`)
+  if (network.name !== HARDHAT_NETWORK_NAME) {
+    throw new Error(`Must use "${HARDHAT_NETWORK_NAME}" network for forking`)
+  }
+
+  if (!('forking' in network.config) || network.config.forking == null) {
+    throw new Error(`Invalid forking config for network: ${chain}`)
   }
 
   log('')
-  log(`Forking ${chain}... `, { star: true })
+  log(`Forking ${chain}... `, { star: true, nl: false })
+
+  const deploymentsDir = path.join(projectPath, 'deployments')
+  const srcDir = path.resolve(deploymentsDir, chain)
+  for (const dir of [HARDHAT_NETWORK_NAME, 'localhost']) {
+    const dstDir = path.resolve(deploymentsDir, dir)
+    await fs.emptyDir(dstDir)
+    await fs.ensureDir(srcDir)
+    await fs.copy(srcDir, dstDir, {
+      overwrite: true,
+      recursive: true,
+      preserveTimestamps: true,
+    })
+    await fs.writeFile(`${dstDir}/.chainId`, '31337')
+    await fs.writeFile(`${dstDir}/.forkingNetwork`, chain)
+  }
+  log('done')
   log('')
 
-  const networkName = 'hardhat'
-  const deploymentsDir = path.resolve(process.cwd(), 'deployments')
-  const srcDir = path.resolve(deploymentsDir, chain)
-  const dstDir = path.resolve(deploymentsDir, networkName)
-  await fs.emptyDirSync(dstDir)
-  await fs.ensureDir(srcDir)
-  await fs.copy(srcDir, dstDir, {
-    overwrite: true,
-    recursive: true,
-    preserveTimestamps: true,
-  })
-  await fs.writeFile(`${dstDir}/.chainId`, '31337')
-  await fs.writeFile(`${dstDir}/.forkingNetwork`, `${chain}`)
-
-  if (block) process.env.FORKING_BLOCK = String(block)
-  process.env.FORKING_NETWORK = String(chain)
-
-  if (!args.onlyDeployment) {
+  // Start a local node for the network
+  if (!onlyDeployment) {
     await run('node', {
-      ...remaining,
+      fork: network.config.forking.url,
+      forkBlockNumber: block ?? network.config.forking.blockNumber,
       noDeploy: true,
       noReset: true,
-      write: false,
     })
-    await run('fork:fund-deployer')
   }
+
+  log('')
 }
 
 task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
@@ -66,18 +69,15 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
     'mainnet',
     types.string
   )
-  .addOptionalParam('silent', 'Silent logs', false, types.boolean)
   .addOptionalParam(
     'block',
     'Fork network at a particular block number',
     undefined,
     types.int
   )
-  .addOptionalPositionalParam(
+  .addFlag(
     'onlyDeployment',
-    'optional flag that just copies the deployment files',
-    true,
-    types.boolean
+    'optional flag that just copies the deployment files'
   )
   .setAction(forkNetwork)
 

@@ -458,7 +458,7 @@ library RepayLib {
      * @param token the address of the token asset to claim
      * @param recipient the address of the recipient to transfer the tokens to
      * @param valueLeftToTransfer the value left to transfer to the liquidator that is returned back
-     * @
+     * @return the value left to transfer
      */
     function claimEscrowToken(
         uint256 loanID,

@@ -1,4 +1,3 @@
-import fs from 'fs-extra'
 import { Network } from 'hardhat/types'
 import path from 'path'
 
@@ -13,15 +12,8 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 
-const deploymentsDir = path.join(__dirname, '../deployments')
-
-const getNetworkName = (network: Network): string =>
-  /localhost|hardhat/.test(network.name)
-    ? fs.readFileSync(
-        path.join(deploymentsDir, network.name, '.forkingNetwork'),
-        'utf-8'
-      )
-    : network.name
+export const getNetworkName = (network: Network): string =>
+  process.env.FORKING_NETWORK ?? network.name
 
 export const getAssetSettings = (network: Network) =>
   assetSettings[getNetworkName(network)]
