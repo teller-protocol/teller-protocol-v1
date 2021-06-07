@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Verifier } from "./libraries/Snarks.sol";
+import { Verifier, Pairing } from "./libraries/Snarks.sol";
 
 // Contracts
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
@@ -212,6 +212,7 @@ library CreateLoanLib {
     ) internal returns (Loan storage loan) {
         // Get and increment new loan ID
         uint256 loanID = CreateLoanLib.newID();
+
         // Set loan data based on terms
         loan = LibLoans.loan(loanID);
         loan.id = uint128(loanID);

@@ -23,6 +23,7 @@ import {
   takeOut,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
+  outputCraValues,
 } from '../helpers/loans'
 
 chai.should()
@@ -48,7 +49,7 @@ describe('Loans', () => {
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
-    describe.only('merge create loan', () => {
+    describe('merge create loan', () => {
       var helpers: any = null
       before(async () => {
         // update percentage submission percentage value to 0 for this test
@@ -163,7 +164,9 @@ describe('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe('create loan w/ new zkCRA', () => {})
+    describe.only('create loan w/ new zkCRA', async () => {
+      await outputCraValues()
+    })
     // delete the rest? 🤔
     describe('create', () => {})
     describe('take out', () => {
