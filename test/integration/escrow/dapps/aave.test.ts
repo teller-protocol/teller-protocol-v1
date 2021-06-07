@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, evm } = hre
 
-describe('AaveDapp', () => {
+describe.only('AaveDapp', () => {
   getMarkets(hre.network).forEach(testAave)
 
   function testAave(market: Market): void {

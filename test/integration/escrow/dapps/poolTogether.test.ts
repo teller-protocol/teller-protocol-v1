@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, evm } = hre
 
-describe('poolTogether Dapp', () => {
+describe.only('poolTogether Dapp', () => {
   getMarkets(hre.network).forEach(testPoolTogether)
 
   function testPoolTogether(market: Market): void {
