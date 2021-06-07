@@ -59,6 +59,8 @@ const deployNFT: DeployFunction = async (hre) => {
     // Try to get deployment of TellerDiamond
     await contracts.get('TellerNFTDistributor')
 
+    console.log('execute setNFTDictionaryAddress on TellerNFTDistributor ')
+
     // If deployment exists execute upgrade function
     const executeMethod = 'setNFTDictionaryAddress'
     const upgradeExecute: DeployDiamondArgs<
@@ -109,6 +111,11 @@ const deployNFT: DeployFunction = async (hre) => {
     `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
     { indent: 2, star: true, nl: false }
   )
+
+  await nftDistributor
+    .connect(deployer)
+    .setNFTDictionaryAddress(nftDictionary.address)
+    .then(({ wait }) => wait())
 
   await nftDictionary
     .connect(deployer)
