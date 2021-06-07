@@ -200,10 +200,10 @@ export default <HardhatUserConfig>{
     }),
     localhost: networkConfig({
       url: 'http://127.0.0.1:8545',
-      timeout: 100000,
+      timeout: 10000000,
     }),
   },
   mocha: {
-    timeout: 100000,
+    timeout: 10000000,
   },
 }

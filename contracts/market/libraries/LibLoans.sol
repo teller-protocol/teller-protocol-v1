@@ -30,36 +30,46 @@ library LibLoans {
         return MarketStorageLib.store();
     }
 
+    /**
+     * @notice it returns the loan
+     * @param loanID the ID of the respective loan
+     * @return l_ the loan
+     */
     function loan(uint256 loanID) internal view returns (Loan storage l_) {
         l_ = s().loans[loanID];
     }
 
+    /**
+     * @notice it returns the loan debt from a respective loan
+     * @param loanID the ID of the respective loan
+     * @return d_ the loan debt from a respective loan
+     */
     function debt(uint256 loanID) internal view returns (LoanDebt storage d_) {
         d_ = s().loanDebt[loanID];
     }
 
+    // DEPRECATED
     function terms(uint256 loanID)
         internal
         view
         returns (LoanTerms storage t_)
     {
-        t_ = s().loanTerms[loanID];
+        t_ = s()._loanTerms[loanID];
     }
 
     /**
      * @notice Returns the total amount owed for a specified loan.
      * @param loanID The loan ID to get the total amount owed.
-     * @return uint256 The total owed amount.
+     * @return owed_ uint256 The total owed amount.
      */
-    function getTotalOwed(uint256 loanID) internal view returns (uint256) {
-        if (loan(loanID).status == LoanStatus.TermsSet) {
-            uint256 interestOwed =
-                getInterestOwedFor(loanID, terms(loanID).maxLoanAmount);
-            return terms(loanID).maxLoanAmount + (interestOwed);
-        } else if (loan(loanID).status == LoanStatus.Active) {
-            return debt(loanID).principalOwed + (debt(loanID).interestOwed);
+    function getTotalOwed(uint256 loanID)
+        internal
+        view
+        returns (uint256 owed_)
+    {
+        if (loan(loanID).status == LoanStatus.Active) {
+            owed_ = debt(loanID).principalOwed + (debt(loanID).interestOwed);
         }
-        return 0;
     }
 
     /**
@@ -76,6 +86,21 @@ library LibLoans {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
 
+    function getCollateralNeeded(uint256 loanID)
+        internal
+        view
+        returns (uint256 _needed)
+    {
+        (, _needed, ) = getCollateralNeededInfo(loanID);
+    }
+
+    /**
+     * @notice it returns the total collateral needed in lending tokens, in collateral tokens and in escrowed loan values
+     * @param loanID the loanID to get the total collateral needed
+     * @return neededInLendingTokens total collateral needed in lending tokens
+     * @return neededInCollateralTokens total collateral needed in collateral tokens
+     * @return escrowLoanValue total collateral needed in loan value
+     */
     function getCollateralNeededInfo(uint256 loanID)
         internal
         view
@@ -89,6 +114,7 @@ library LibLoans {
             loanID
         );
 
+        // check if needed lending tokens is zero. if true, then needed collateral tokens is zero. else,
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
@@ -113,7 +139,7 @@ library LibLoans {
         view
         returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
-        if (!_isActiveOrSet(loanID) || loan(loanID).collateralRatio == 0) {
+        if (loan(loanID).collateralRatio == 0) {
             return (0, 0);
         }
 
@@ -128,10 +154,10 @@ library LibLoans {
         // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         if (loan(loanID).status == LoanStatus.TermsSet) {
-            neededInLendingTokens = _getLoanAmount(loanID).percent(
+            neededInLendingTokens = loan(loanID).borrowedAmount.percent(
                 loan(loanID).collateralRatio
             );
-        } else {
+        } else if (loan(loanID).status == LoanStatus.Active) {
             uint16 requiredRatio =
                 loan(loanID).collateralRatio -
                     getInterestRatio(loanID) -
@@ -152,6 +178,10 @@ library LibLoans {
         }
     }
 
+    /**
+     * @notice check if a loan can go to end of auction with a collateral ratio
+     * @return bool checking if collateralRatio is >= the over collateralized buffer value
+     */
     function canGoToEOAWithCollateralRatio(uint256 collateralRatio)
         internal
         view
@@ -165,7 +195,7 @@ library LibLoans {
     /**
      * @notice Returns the interest ratio based on the loan interest rate for the loan duration.
      * @notice There is a minimum threshold of 1%.
-     * @dev The interest rate on the loan terms is APY.
+     * @dev The interest rate is APY (annual percentage yield).
      * @param loanID The loan ID to get the interest rate for.
      */
     function getInterestRatio(uint256 loanID)
@@ -181,19 +211,5 @@ library LibLoans {
         if (ratio_ == 0) {
             ratio_ = 1;
         }
-    }
-
-    function _getLoanAmount(uint256 loanID) private view returns (uint256) {
-        if (loan(loanID).status == LoanStatus.TermsSet) {
-            return terms(loanID).maxLoanAmount;
-        } else if (loan(loanID).status == LoanStatus.Active) {
-            return loan(loanID).borrowedAmount;
-        }
-        return 0;
-    }
-
-    function _isActiveOrSet(uint256 loanID) private view returns (bool) {
-        LoanStatus status = loan(loanID).status;
-        return status == LoanStatus.Active || status == LoanStatus.TermsSet;
     }
 }

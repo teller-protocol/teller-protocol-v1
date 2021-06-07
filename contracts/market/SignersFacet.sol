@@ -34,12 +34,22 @@ contract SignersFacet {
         }
     }
 
+    /**
+     * @notice it adds an account to a list of signers for an asset
+     * @param asset is the token address to check for signers
+     * @param account is the account address of the signer
+     */
     function _addSigner(address asset, address account) internal {
         if (!isSigner(asset, account)) {
             EnumerableSet.add(MarketStorageLib.store().signers[asset], account);
         }
     }
 
+    /**
+     * @notice it checks if an account is already in the list of the asset's signers
+     * @param asset the asset to check for if the signer exists
+     * @param account the account to check in the list of the asset's signers
+     */
     function isSigner(address asset, address account)
         public
         view

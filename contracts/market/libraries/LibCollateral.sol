@@ -34,6 +34,11 @@ library LibCollateral {
         uint256 amount
     );
 
+    /**
+     * @notice it gets MarketStorage's collateral escrow using the loanID
+     * @param loanID the loanID to be used
+     * @return c_ which is the collateral escrow
+     */
     function e(uint256 loanID) internal view returns (ICollateralEscrow c_) {
         c_ = MarketStorageLib.store().collateralEscrows[
             MarketStorageLib.store().loans[loanID].collateralToken
@@ -44,12 +49,23 @@ library LibCollateral {
         c_ = MarketStorageLib.store().collateralEscrows[token];
     }
 
+    /**
+     * @notice it deposits an amount of collateral into a collateral escrow's address of a respective loan
+     * @param loanID the respective loan ID
+     * @param amount the amount of collateral to deposit
+     */
     function deposit(uint256 loanID, uint256 amount) internal {
         e(loanID).deposit{ value: amount }(loanID, amount);
 
         emit CollateralDeposited(loanID, msg.sender, amount);
     }
 
+    /**
+     * @notice it withdraws an amount from the collateral escrow
+     * @param loanID the respective loanID to withdraw from
+     * @param amount the number of collateral tokens to withdraw
+     * @param receiver the address who receives the withdrawal
+     */
     function withdraw(
         uint256 loanID,
         uint256 amount,
@@ -60,10 +76,19 @@ library LibCollateral {
         emit CollateralWithdrawn(loanID, receiver, amount);
     }
 
+    /**
+     * @notice it withdraws the entire supply in collateral of a respective loan to an address
+     * @param loanID the respective loan's ID
+     * @param receiver the address of the receiver to withdraw tokens from
+     */
     function withdrawAll(uint256 loanID, address payable receiver) internal {
         withdraw(loanID, e(loanID).loanSupply(loanID), receiver);
     }
 
+    /**
+     * @notice it initializes a new escrow collateral to hold collateral tokens
+     * @param token address of the collateral token it holds
+     */
     function createEscrow(address token) internal {
         // Check if collateral escrow exists
         if (address(e(token)) == address(0)) {
