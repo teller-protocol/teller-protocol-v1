@@ -31,7 +31,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('Loans', () => {
+describe.only('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -165,7 +165,10 @@ describe('Loans', () => {
       })
     })
     describe.only('create loan w/ new zkCRA', async () => {
-      await outputCraValues()
+      console.log('zkCRA tests')
+      it('checks if computation and proof are outputted', async () => {
+        await outputCraValues()
+      })
     })
     // delete the rest? 🤔
     describe('create', () => {})
