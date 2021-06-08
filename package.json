@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "format:write": "prettier --write",
     "compile": "COMPILING=true yarn hh compile",
-    "build": "yarn compile && yarn types && yarn tsc --scripts-prepend-node-path",
+    "build": "yarn compile && yarn types && yarn tsc",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
     "coverage": "#yarn hh coverage --solcoverjs ./solcover.js",
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func"
