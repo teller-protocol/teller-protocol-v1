@@ -18,7 +18,7 @@ import {
   Proof,
   SetupKeypair,
   // @ts-ignore
-} from 'zokrates-js'
+} from 'zokrates-js/node'
 
 // teller files
 import { getNFT } from '../../config'
@@ -357,22 +357,23 @@ const serializeSecret = (secret: string) => {
 
 export const outputCraValues = async () => {
   // types
-  type PrivateData = {
-    data: any
-  }
-
+  // type PrivateData = {
+  //   data: Uint32[][]
+  // }
+  console.log('inside output cra values')
   // local variables
-  var zokratesProvider: ZoKratesProvider
-  var compilationArtifacts: CompilationArtifacts
-  var keyPair: SetupKeypair
-  var provingKey: Uint8Array
-  var computation: ComputationResult
-  var proof: Proof
+  var zokratesProvider: typeof ZoKratesProvider
+  var compilationArtifacts: typeof CompilationArtifacts
+  var keyPair: typeof SetupKeypair
+  var provingKey: typeof Uint8Array
+  var computation: typeof ComputationResult
+  var proof: typeof Proof
   var privateData: PrivateData
+  console.log('initialized private variables')
   initialize().then(async (provider) => {
+    console.log('inside initialize')
     // set provider after initialization
     zokratesProvider = provider
-
     // zok file to compile
     const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -388,22 +389,31 @@ export const outputCraValues = async () => {
       return MARKET_SCORE,commitments`
 
     // compile into circuit
+    console.log('about to compile source')
     compilationArtifacts = zokratesProvider.compile(source)
+    console.log('compiled source')
 
     // generate keypair
     keyPair = zokratesProvider.setup(compilationArtifacts.program)
+    console.log('got keypair')
 
     // get borrower nonce and identifier
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    console.log('got diamond')
     const borrower = (await getNamedAccounts()).borrower
+    console.log('got borrower')
     const { length: nonce } = await diamond.getBorrowerLoans(borrower)
+    console.log('got nonce')
     const identifier = BigNumber.from(borrower).xor(nonce)
+    console.log('got identifier')
 
     // witness variables
-    var { data } = privateData
+    // var { data } = privateData
+    // console.log("declared private data")
 
     // to-do: array of 4 indices with arrays of 8
     const score = [10, 10, 10, 10]
+
     const secret = [
       '0x0000000000000000000000000000000000000000000000000000000000000001',
       '0x0000000000000000000000000000000000000000000000000000000000000002',
@@ -411,29 +421,80 @@ export const outputCraValues = async () => {
       '0x0000000000000000000000000000000000000000000000000000000000000004',
     ]
 
-    // TODO: pack score and secret into data uint32 array
-    for (let i = 0; i < 4; i++) {
-      data[i][0].push(score[i])
-      data[i].push(secret[i])
-    }
+    console.log('declared score and secret')
+    console.log('about to pack ')
 
-    console.log(data)
-
-    // TO-DO: serialize data
-    const serializedData = data
+    const data = [
+      [
+        '10',
+        [
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000001',
+        ],
+      ],
+      [
+        '10',
+        [
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000002',
+        ],
+      ],
+      [
+        '10',
+        [
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000003',
+        ],
+      ],
+      [
+        '10',
+        [
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000000',
+          '0x00000004',
+        ],
+      ],
+    ]
 
     // get computation
+    console.log('about to get computation')
     const computation = zokratesProvider.computeWitness(compilationArtifacts, [
       data,
       identifier,
     ])
+    console.log(computation)
 
     // compute proof
+    console.log('about to get proof')
     const proof = zokratesProvider.generateProof(
       compilationArtifacts.program,
       computation.witness,
-      provingKey
+      keyPair
     )
+    console.log(proof)
 
     // return all the values so that we can verify transaction
     return {

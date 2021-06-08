@@ -151,7 +151,10 @@ describe.skip('Loans', () => {
       })
     })
     describe.only('create loan w/ new zkCRA', async () => {
-      await outputCraValues()
+      console.log('zkCRA tests')
+      it('checks if computation and proof are outputted', async () => {
+        await outputCraValues()
+      })
     })
     // delete the rest? 🤔
     describe('create', () => {})
