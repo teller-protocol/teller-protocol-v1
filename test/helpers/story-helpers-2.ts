@@ -23,4 +23,22 @@ interface TestAction {
 }
 //  {domain:'LOAN', actions:[ { actionName:'CREATE', args:{},}, {actionName:'LIQUIDATE', args:{}}   ] }  ,
 
-export const generateTests = async (args: object) => {}
+const generateTests = async (args: TestScenario) => {
+  switch (args.domain) {
+    case value:
+      break
+
+    default:
+      break
+  }
+}
+
+const runActions = async (args: TestAction) => {
+  switch (args.actionName) {
+    case value:
+      break
+
+    default:
+      break
+  }
+}
