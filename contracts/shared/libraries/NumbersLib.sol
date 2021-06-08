@@ -33,6 +33,11 @@ library NumbersLib {
         return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT);
     }
 
+    /**
+     * @notice it returns the absolute number of a specified parameter
+     * @param self the number to be returned in it's absolute
+     * @return the absolute number
+     */
     function abs(int256 self) internal pure returns (uint256) {
         return self >= 0 ? uint256(self) : uint256(-1 * self);
     }

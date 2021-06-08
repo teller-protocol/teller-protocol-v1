@@ -16,9 +16,13 @@ import {
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 
 struct AppStorage {
+    // is it initialized
     bool initialized;
+    // is it platform restricted
     bool platformRestricted;
+    // mapping between contract IDs and if they're paused
     mapping(bytes32 => bool) paused;
+    //p
     mapping(bytes32 => PlatformSetting) platformSettings;
     mapping(address => Cache) assetSettings;
     mapping(string => address) assetAddresses;
