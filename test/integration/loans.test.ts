@@ -30,7 +30,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('Loans', () => {
+describe.only('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {

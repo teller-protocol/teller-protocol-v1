@@ -385,7 +385,7 @@ export const takeOut = async (
   helpers.details.loan.status.should.eq(LoanStatus.Active)
   return helpers
 }
-interface LoanDetailsReturn {
+export interface LoanDetailsReturn {
   lendingToken: ERC20
   collateralToken: ERC20
   loan: PromiseReturnType<typeof ITellerDiamond.prototype.getLoan>

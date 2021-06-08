@@ -3,7 +3,8 @@ import { BigNumber, Signer } from 'ethers'
 import {
   createLoan,
   LoanType,
-  takeOutLoan,
+  takeOutLoanWithoutNfts,
+  takeOutLoanWithNfts,
   TakeOutLoanArgs,
   CreateLoanArgs,
   repayLoan,
@@ -12,6 +13,8 @@ import {
   LoanDetailsReturn,
   CollateralFunctions,
 } from '../helpers/loans'
+
+import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { getFunds } from '../helpers/get-funds'
 import {
   LPHelperArgs,
@@ -25,7 +28,6 @@ import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 let rng = new Prando('teller-v1')
 
 export const LOAN_ACTIONS: string[] = [
-  'CREATE',
   'TAKE_OUT',
   'LP_LEND',
   'REPAY',
@@ -57,7 +59,7 @@ const STORY_TREE: { [id: number]: number } = {
   0: -1,
   1: 0,
   2: 0,
-  3: 1,
+  3: 0,
   4: 1,
 }
 
@@ -108,7 +110,23 @@ export const generateTests = async (args: TestArgs) => {
       try {
         // expect loan args to match loan case
         const createArgs = createLoanArgs()
-        const { tx, getHelpers } = await createLoan(createArgs)
+
+        const percentageSubmission = {
+          name: 'RequiredSubmissionsPercentage',
+          value: 0,
+        }
+        await updatePlatformSetting(percentageSubmission, hre)
+
+        // Advance time
+        const { value: rateLimit } = await getPlatformSetting(
+          'RequestLoanTermsRateLimit',
+          hre
+        )
+        await hre.evm.advanceTime(rateLimit)
+
+        const { tx, getHelpers } = args.nft
+          ? await takeOutLoanWithNfts(createArgs)
+          : await takeOutLoanWithoutNfts(createArgs)
         if (args.pass) {
           // check use cases
           if (tx) console.log(`- Pass`.green)
@@ -146,48 +164,6 @@ export const generateTests = async (args: TestArgs) => {
     }
     case LOAN_ACTIONS[1]: {
       const loanID = 1
-      let takeOutLoanArgs: TakeOutLoanArgs
-      console.log(
-        `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
-          args.pass == true ? 'pass' : 'fail'
-        }`.underline.magenta
-      )
-      try {
-        if (!verifyLoanArgs(args.loanArgs)) break
-        const { diamond, details, amount, collateral, from, nft } =
-          args.loanArgs
-        const neededCollateral = await collateral.needed()
-        if (neededCollateral.gt(0)) {
-          await collateral.deposit(neededCollateral)
-        }
-        takeOutLoanArgs = {
-          amount,
-          from,
-          nft,
-          diamond,
-          details,
-        }
-        await hre.evm.advanceTime(moment.duration(5, 'minutes'))
-        const tx = await takeOutLoan(takeOutLoanArgs)
-        if (args.pass) {
-          // check use cases
-          if (tx) console.log(`- Pass`.green)
-
-          //take snapshot
-          SNAPSHOTS[loanID] = await hre.evm.snapshot()
-          // get children
-          await callChildren(loanID, args)
-        } else {
-          console.log(`- Failed`.red)
-        }
-      } catch (error) {
-        checkError(args, error)
-      }
-
-      break
-    }
-    case LOAN_ACTIONS[2]: {
-      const loanID = 2
       let lpHelperArgs: LPHelperArgs
       console.log(
         `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
@@ -224,8 +200,8 @@ export const generateTests = async (args: TestArgs) => {
       }
       break
     }
-    case LOAN_ACTIONS[3]: {
-      const loanID = 3
+    case LOAN_ACTIONS[2]: {
+      const loanID = 2
       let repayLoanArgs: RepayLoanArgs
       console.log(
         `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
@@ -259,8 +235,8 @@ export const generateTests = async (args: TestArgs) => {
       }
       break
     }
-    case LOAN_ACTIONS[4]: {
-      const loanID = 4
+    case LOAN_ACTIONS[3]: {
+      const loanID = 3
       console.log(
         `${LOAN_ACTIONS[loanID].toLowerCase()} should ${
           args.pass == true ? 'pass' : 'fail'
