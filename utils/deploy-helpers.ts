@@ -48,7 +48,7 @@ export const deploy = async <C extends Contract>(
     })
 
     contractAddress = result.address
-    await onDeployResult({ result, hre, indent })
+    await onDeployResult({ result, name: contractDeployName, hre, indent })
   } else {
     contractAddress = existingContract.address
     await onDeployResult({

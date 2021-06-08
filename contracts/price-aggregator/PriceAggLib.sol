@@ -12,9 +12,9 @@ import { AppStorageLib } from "../storage/app.sol";
 library PriceAggLib {
     /**
      * @notice It calculates the value of one token amount into another
-     * @param src source token address
-     * @param dst destination token address
-     * @param srcAmount amount of source tokens
+     * @param src the source token
+     * @param dst the destination token
+     * @param srcAmount the amount of source token
      * @return value_ the returned value of src in dst
      */
     function valueFor(

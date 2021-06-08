@@ -41,7 +41,7 @@ export const addMerkles = async (
     throw new Error(`No Teller NFT Distributor is deployed for ${network.name}`)
 
   log('')
-  log(' to NFT Distributor', { indent: 2, star: true })
+  log('Adding tier merkles to NFT Distributor', { indent: 2, star: true })
   log('')
 
   const distributions: MerkleDistributorInfo[] = []

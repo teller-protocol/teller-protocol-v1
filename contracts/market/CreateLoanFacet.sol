@@ -74,8 +74,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @notice Creates the loan from requests and validator responses then calling the main function.
      * @param request Struct of the protocol loan request
      */
-    modifier __createLoan(LoanRequest calldata request) {
-        Loan storage loan = CreateLoanLib.createLoan(request);
+    modifier __createLoan(LoanRequest calldata request, bool withNFT) {
+        Loan storage loan = CreateLoanLib.createLoan(request, withNFT);
 
         _;
 
@@ -92,13 +92,10 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     function takeOutLoanWithNFTs(
         LoanRequest calldata request,
         NftLoanSizeProof[] calldata proofs
-    ) external paused(LibLoans.ID, false) __createLoan(request) {
+    ) external paused(LibLoans.ID, false) __createLoan(request, true) {
         // Get the ID of the newly created loan
         uint256 loanID = CreateLoanLib.currentID() - 1;
         uint256 amount = LibLoans.loan(loanID).borrowedAmount;
-
-        // Set the collateral ratio to 0 as linked NFTs are used as the collateral
-        LibLoans.loan(loanID).collateralRatio = 0;
 
         uint256 allowedLoanSize;
         for (uint256 i; i < proofs.length; i++) {
@@ -149,7 +146,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
-        __createLoan(request)
+        __createLoan(request, false)
     {
         // Check if collateral token is zero
         require(
@@ -200,7 +197,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 }
 
 library CreateLoanLib {
-    function createLoan(LoanRequest calldata request)
+    function createLoan(LoanRequest calldata request, bool withNFT)
         internal
         returns (Loan storage loan)
     {
@@ -240,8 +237,11 @@ library CreateLoanLib {
         loan.lendingToken = request.request.assetAddress;
         loan.borrower = request.request.borrower;
         loan.borrowedAmount = maxLoanAmount;
-        loan.interestRate = interestRate;
-        loan.collateralRatio = collateralRatio;
+        // If loan with NFT we do not set the interest rate or collateral ratio (NFT is collateral)
+        if (!withNFT) {
+            loan.interestRate = interestRate;
+            loan.collateralRatio = collateralRatio;
+        }
 
         // Set loan debt
         LibLoans.debt(loanID).principalOwed = maxLoanAmount;

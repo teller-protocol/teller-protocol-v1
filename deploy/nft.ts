@@ -39,12 +39,9 @@ const deployNFT: DeployFunction = async (hre) => {
     proxyMethodArgs = [await deployer.getAddress()]
   }
 
-  console.log(`deploying dictionary with methodname ${proxyMethodName}`)
-
   const nftDictionary = await deploy<TellerNFTDictionary>({
     contract: 'TellerNFTDictionary',
     hre,
-
     proxy: {
       proxyContract: 'OpenZeppelinTransparentProxy',
       methodName: proxyMethodName,
