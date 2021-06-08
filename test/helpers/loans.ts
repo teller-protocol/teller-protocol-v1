@@ -10,7 +10,6 @@ import {
 import hre from 'hardhat'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
-
 import {
   initialize,
   ZoKratesProvider,
@@ -20,6 +19,7 @@ import {
   SetupKeypair,
   // @ts-ignore
 } from 'zokrates-js/node'
+var uint32 = require('uint32')
 
 // teller files
 import { getNFT } from '../../config'
@@ -107,6 +107,12 @@ interface CreateLoanArgs {
   duration?: moment.Duration
   nft?: boolean
 }
+
+interface ZKCRAHelpersReturn {
+  computation: typeof ComputationResult
+  proof: typeof Proof
+}
+
 export interface CreateLoanReturn {
   tx: Promise<ContractTransaction>
   getHelpers: () => Promise<LoanHelpersReturn>
@@ -361,24 +367,19 @@ const serializeSecret = (secret: string) => {
 }
 
 export const outputCraValues = async () => {
-  // types
-  // type PrivateData = {
-  //   data: Uint32[][]
-  // }
   console.log('inside output cra values')
   // local variables
   var zokratesProvider: typeof ZoKratesProvider
   var compilationArtifacts: typeof CompilationArtifacts
   var keyPair: typeof SetupKeypair
-  var provingKey: typeof Uint8Array
   var computation: typeof ComputationResult
   var proof: typeof Proof
-  var privateData: PrivateData
   console.log('initialized private variables')
   initialize().then(async (provider) => {
     console.log('inside initialize')
     // set provider after initialization
     zokratesProvider = provider
+
     // zok file to compile
     const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -412,23 +413,11 @@ export const outputCraValues = async () => {
     const identifier = BigNumber.from(borrower).xor(nonce)
     console.log('got identifier')
 
-    // witness variables
-    // var { data } = privateData
-    // console.log("declared private data")
-
-    // to-do: array of 4 indices with arrays of 8
-    // const score = [10, 10, 10, 10]
-
-    // const secret = [
-    //   '0x0000000000000000000000000000000000000000000000000000000000000001',
-    //   '0x0000000000000000000000000000000000000000000000000000000000000002',
-    //   '0x0000000000000000000000000000000000000000000000000000000000000003',
-    //   '0x0000000000000000000000000000000000000000000000000000000000000004',
-    // ]
-
+    // sample data. first element of each array element is the value (Score).
+    // next 7 elements are the secrets
     const data = [
       [
-        '10',
+        '0x0000000a',
         '0x00000000',
         '0x00000000',
         '0x00000000',
@@ -438,7 +427,7 @@ export const outputCraValues = async () => {
         '0x00000001',
       ],
       [
-        '10',
+        '0x0000000a',
         '0x00000000',
         '0x00000000',
         '0x00000000',
@@ -448,7 +437,7 @@ export const outputCraValues = async () => {
         '0x00000002',
       ],
       [
-        '10',
+        '0x0000000a',
         '0x00000000',
         '0x00000000',
         '0x00000000',
@@ -461,7 +450,7 @@ export const outputCraValues = async () => {
 
     // get computation
     console.log('about to get computation')
-    const computation = zokratesProvider.computeWitness(compilationArtifacts, [
+    computation = zokratesProvider.computeWitness(compilationArtifacts, [
       data,
       identifier.toString(),
     ])
@@ -469,21 +458,19 @@ export const outputCraValues = async () => {
 
     // compute proof
     console.log('about to get proof')
-    const proof = zokratesProvider.generateProof(
+    proof = zokratesProvider.generateProof(
       compilationArtifacts.program,
       computation.witness,
-      keyPair
+      keyPair.pk
     )
     console.log(proof)
-
-    // return all the values so that we can verify transaction
-    return {
-      output: computation.output,
-      witness: computation.witness,
-      inputs: proof.inputs,
-      proof: proof.proof,
-    }
   })
+
+  // return all the values so that we can verify transaction in the tests
+  return {
+    computation: computation,
+    proof: proof,
+  }
 }
 
 export const takeOut = async (
