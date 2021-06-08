@@ -262,9 +262,9 @@ describe('Lending', () => {
             .should.eql(true, 'Exchange rate should be greater than 1-1')
         })
 
-        it.skip('mint, rebalance - should be able to add an additional lender', async () => {
+        it('mint, rebalance - should be able to add an additional lender', async () => {
           // Fund the lender
-          depositAmount2 = toBN(1, await lendingToken.decimals())
+          depositAmount2 = toBN(10, await lendingToken.decimals())
           await getFunds({
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
@@ -281,7 +281,7 @@ describe('Lending', () => {
           await tToken.connect(lender2).mint(depositAmount2)
 
           // Rebalance funds
-          await tToken.rebalance()
+          await tToken.connect(deployer).rebalance()
 
           // Mine blocks to generate interest
           await evm.advanceBlocks(1000)
