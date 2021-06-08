@@ -30,6 +30,8 @@ export const LOAN_ACTIONS: string[] = [
   'LP_LEND',
   'REPAY',
   'LIQUIDATE',
+  'SWAP',
+  'LEND',
 ]
 
 interface LoanArgs {
@@ -272,12 +274,6 @@ export const generateTests = async (args: TestArgs) => {
         // let neededAmount = amount
         const liquidatorAddress = await liquidator.getAddress()
         const tokenBal = await details.lendingToken.balanceOf(liquidatorAddress)
-        // console.log(
-        //   'details.lendingToken: %o | needed_amm: %o',
-        //   await details.lendingToken.symbol(),
-        //   neededAmount.toString(),
-        //   tokenBal.toString()
-        // )
 
         await getFunds({
           to: liquidatorAddress,
@@ -286,15 +282,10 @@ export const generateTests = async (args: TestArgs) => {
           hre,
         })
 
-        // const liquidatorBal = await details.lendingToken.balanceOf(liquidatorAddress)
-        // console.log({ liquidatorBal: ethers.utils.formatEther(liquidatorBal), amount: ethers.utils.formatEther(amount) })
         await details.lendingToken
           .connect(liquidator)
           .approve(diamond.address, BigNumber.from(amount).mul(2))
 
-        // const allowance = await details.lendingToken.allowance(liquidatorAddress, diamond.address)
-
-        // console.log({allowance: ethers.utils.formatEther(allowance)})
         const tx = await diamond
           .connect(liquidator)
           .liquidateLoan(details.loan.id)
