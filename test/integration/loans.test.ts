@@ -151,10 +151,25 @@ describe.skip('Loans', () => {
       })
     })
     describe.only('create loan w/ new zkCRA', async () => {
-      console.log('zkCRA tests')
-      it('checks if computation and proof are outputted', async () => {
-        await outputCraValues()
+      // declare computation and proof variables to be used throughout the test
+      var computation_: any
+      var proof_: any
+      before(async () => {
+        // return computation and proof values and assign them to our variables
+        // created above
+        const { computation, proof } = await outputCraValues()
+        computation_ = computation
+        proof_ = proof
       })
+      // check if computation and proof exist
+      it('checks if computation and proof are returned', async () => {
+        expect(computation_).to.exist
+        expect(proof_).to.exist
+      })
+      // TODO: Complete this test tonight
+      // it('uses witness, output and proof to take out an NFT', async() => {
+
+      // })
     })
     // delete the rest? 🤔
     describe('create', () => {})
