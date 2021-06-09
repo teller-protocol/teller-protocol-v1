@@ -13,4 +13,8 @@ export default class StoryTestDriver {
   ): Array<Test> {
     return []
   }
+
+  static generateTestsForAction(action: TestAction): Array<Test> {
+    return []
+  }
 }

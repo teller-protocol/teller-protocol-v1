@@ -34,16 +34,6 @@ describe.only('story test', async () => {
 
   console.log('Generated tests:', JSON.stringify(allGeneratedTests))
 
-  //https://gist.github.com/cybertk/fff8992e12a7655157ed
-
-  // Run tests for all markets
-  /*const args = {
-    pass: true,
-    type: STORY_ACTIONS.LOAN.TAKE_OUT,
-    // revert: '',
-    // description: 'shoud do another stuff',
-  }*/
-
   let Suite = Mocha.Suite
   var Test = Mocha.Test
   var expect = Chai.expect
@@ -69,11 +59,6 @@ describe.only('story test', async () => {
     )
   })
 
+  //run all of the generated story tests (they are async)
   mochaInstance.run()
-  /*it(`Run story tests`, async () => {
-    // await generateTests(args)
-
-    
-
-  })*/
 })
