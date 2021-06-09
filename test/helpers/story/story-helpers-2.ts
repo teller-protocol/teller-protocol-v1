@@ -1,20 +1,4 @@
-/*export const actions = {
-  LOAN: {
-    TAKE: 'Take out',
-    LEND: 'Lend',
-    REPAY: 'Repay',
-    LIQUIDATE: 'liquidate',
-  },
-  DAPP: {
-    LEND: 'Lend',
-    WITHDRAW: 'Withdraw',
-    SWAP: 'Swap',
-  },
-}
-
-
-*/
-
+import { Test } from 'mocha'
 import { IntegerType } from 'typechain'
 import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 
@@ -47,7 +31,7 @@ export const generateTests = (scenario: TestScenario): Array<Test> => {
       break
   }
 }
-
+/*
 const runActions = async (args: TestAction) => {
   switch (args.actionName) {
     case value:
@@ -56,4 +40,4 @@ const runActions = async (args: TestAction) => {
     default:
       break
   }
-}
+}*/
