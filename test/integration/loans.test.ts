@@ -18,7 +18,6 @@ import { CacheType, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { fundLender, getFunds } from '../helpers/get-funds'
 import {
-  createLoan,
   LoanType,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
@@ -29,7 +28,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.only('Loans', () => {
+describe.skip('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {

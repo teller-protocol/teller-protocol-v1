@@ -1,64 +1,75 @@
-import Chai from 'chai'
-
-import Mocha from 'mocha'
-
-import { solidity } from 'ethereum-waffle'
-import hre from 'hardhat'
-import { updatePlatformSetting } from '../../tasks'
 import {
-  generateTests,
-  STORY_ACTIONS,
-  TestScenario,
-  TestAction,
-} from '../helpers/story/story-helpers-2'
-import { generateStories } from '../helpers/story/generator/story-generator'
+  defineTestSuiteAndAddTests,
+  runMochaTests,
+} from '../helpers/story/test-config'
+;(async () => {
+  defineTestSuiteAndAddTests()
 
-Chai.should()
-Chai.use(solidity)
-
-describe.only('story test', async () => {
-  const allTestStories: Array<TestScenario> = generateStories()
-
-  console.log(
-    'Generating tests for the following stories:',
-    JSON.stringify(allTestStories)
-  )
-
-  var allGeneratedTests: Array<any> = []
-
-  for (let story of allTestStories) {
-    let newTests = generateTests(story)
-
-    allGeneratedTests = allGeneratedTests.concat(newTests)
+  try {
+    const result = await runMochaTests()
+    console.log(result)
+  } catch (e) {
+    console.log(e)
   }
+})()
 
-  console.log('Generated tests:', JSON.stringify(allGeneratedTests))
+// const { runMochaTests } = require('./lib/mocha-setup');
+// const { defineTestSuiteAndAddTests } = require('./programmatic/sample-tests');
 
-  let Suite = Mocha.Suite
-  var Test = Mocha.Test
-  var expect = Chai.expect
+// (async () => {
 
-  var mochaInstance = new Mocha()
-  var suiteInstance = Mocha.Suite.create(
-    mochaInstance.suite,
-    'Story Test Suite'
-  )
+//     defineTestSuiteAndAddTests();
 
-  for (let test of allGeneratedTests) {
-    suiteInstance.addTest(test)
-  }
+//     try {
+//         const result = await runMochaTests()
+//         console.log(result);
+//     }
+//     catch (e) { console.log(e) }
+// })()
 
-  //is this needed ?
-  /*before(async () => {
-    await updatePlatformSetting(
-      {
-        name: 'RequiredSubmissionsPercentage',
-        value: 100,
-      },
-      hre
-    )
-  })*/
+// describe.only('story test', async () => {
+//   const allTestStories: Array<TestScenario> = generateStories()
 
-  //run all of the generated story tests (they are async)
-  mochaInstance.run()
-})
+//   console.log(
+//     'Generating tests for the following stories:',
+//     JSON.stringify(allTestStories)
+//   )
+
+//   var allGeneratedTests: Array<any> = []
+
+//   for (let story of allTestStories) {
+//     let newTests = generateTests(story)
+//     allGeneratedTests = allGeneratedTests.concat(newTests)
+//   }
+
+//   // console.log('Generated tests:', JSON.stringify(allGeneratedTests))
+
+//   let Suite = Mocha.Suite
+//   var Test = Mocha.Test
+//   var expect = Chai.expect
+
+//   var mochaInstance = new Mocha()
+//   var suiteInstance = Mocha.Suite.create(
+//     mochaInstance.suite,
+//     'Story Test Suite'
+//   )
+
+//   for (let test of allGeneratedTests) {
+//     suiteInstance.addTest(test)
+//   }
+
+//   console.log({suiteInstance})
+//   //is this needed ?
+//   /*before(async () => {
+//     await updatePlatformSetting(
+//       {
+//         name: 'RequiredSubmissionsPercentage',
+//         value: 100,
+//       },
+//       hre
+//     )
+//   })*/
+
+//   //run all of the generated story tests (they are async)
+//   var suiteRun = mochaInstance.run()
+// })

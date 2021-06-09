@@ -1,6 +1,5 @@
-import { Test } from 'mocha'
-import { IntegerType } from 'typechain'
 import LoanStoryTestDriver from './drivers/loan-story-test-driver'
+import { suite } from './test-config'
 
 export const STORY_ACTIONS = {
   LOAN: { TAKE_OUT: 0, LP_LEND: 1, REPAY: 2, LIQUIDATE: 3, SWAP: 4, LEND: 5 },
@@ -16,16 +15,29 @@ export interface TestAction {
   actionType: Number
   args?: object
 }
-//  {domain:'LOAN', actions:[ { actionName:'CREATE', args:{},}, {actionName:'LIQUIDATE', args:{}}   ] }  ,
 
-export const generateTests = (scenario: TestScenario): Array<Test> => {
+// export interface LoanArgs {
+//   type: string
+//   amount: BigNumber
+//   from: Signer
+//   nft: boolean
+//   collateral: CollateralFunctions
+//   diamond: ITellerDiamond
+//   details: LoanDetailsReturn
+// }
+//  {domain:'LOAN', actions:[ { actionName:'CREATE', args:{},}, {actionName:'LIQUIDATE', args:{}}   ] }  ,
+// import { expect } from 'chai'
+// const reportValue = require('mochawesome/addContext')
+
+export const generateTests = (scenario: TestScenario): Array<any> => {
+  const parentSuiteName = suite('Story Suite')
   switch (scenario.domain) {
     case 'LOAN':
       return LoanStoryTestDriver.generateDomainSpecificTestsForScenario(
-        scenario
+        scenario,
+        parentSuiteName
       )
       break
-
     default:
       return []
       break

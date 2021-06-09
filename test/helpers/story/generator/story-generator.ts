@@ -1,10 +1,7 @@
 /*
 Use procedural generation and deterministic random number generation to build the array 
-
-
 */
 /*
-
 
 const testScenarios = [
   {
@@ -26,7 +23,6 @@ const testScenarios = [
 */
 
 import { STORY_ACTIONS, TestScenario } from '../story-helpers-2'
-
 export const generateStories = (): Array<TestScenario> => {
   let manualScenarios = [
     {
@@ -36,13 +32,13 @@ export const generateStories = (): Array<TestScenario> => {
         { actionType: STORY_ACTIONS.LOAN.LIQUIDATE, args: {} },
       ],
     },
-    {
-      domain: 'LOAN',
-      actions: [
-        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
-        { actionType: STORY_ACTIONS.LOAN.REPAY, args: {} },
-      ],
-    },
+    // {
+    //   domain: 'LOAN',
+    //   actions: [
+    //     { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
+    //     { actionType: STORY_ACTIONS.LOAN.REPAY, args: {} },
+    //   ],
+    // },
   ]
 
   return manualScenarios

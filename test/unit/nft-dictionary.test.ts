@@ -5,7 +5,7 @@ const { ethers } = require('ethers')
 var dictionaryContract: any
 var signerAccount: any
 
-describe('TellerNFTDictionary', async function () {
+describe.skip('TellerNFTDictionary', async function () {
   it('Should deploy the dictionary', async function () {
     const Dictionary = await ethers.getContractFactory('TellerNFTDictionary')
 

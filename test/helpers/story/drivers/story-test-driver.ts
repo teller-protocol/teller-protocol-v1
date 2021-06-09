@@ -9,12 +9,16 @@ var expect = Chai.expect
 
 export default class StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
-    scenario: TestScenario
+    scenario: TestScenario,
+    parentSuite: Mocha.Suite
   ): Array<Test> {
     return []
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    action: TestAction,
+    testSuite: Mocha.Suite
+  ): Array<Test> {
     return []
   }
 }
