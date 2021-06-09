@@ -165,7 +165,9 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
   static getLoan = async (borrower: Signer): Promise<LoanHelpersReturn> => {
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-    const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+    const allBorrowerLoans = await diamond.getBorrowerLoans(
+      await borrower.getAddress()
+    )
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
     return loanHelpers(loanID)
   }
