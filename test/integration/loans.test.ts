@@ -1,6 +1,11 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
+import {
+  ComputationResult,
+  Proof,
+  // @ts-ignore
+} from 'zokrates-js/node'
 import { defaultMaxListeners } from 'events'
 import hre from 'hardhat'
 import { BUILD_INFO_FORMAT_VERSION } from 'hardhat/internal/constants'
@@ -24,6 +29,7 @@ import {
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
   outputCraValues,
+  fillZKCRAConfigInfo,
 } from '../helpers/loans'
 
 chai.should()
@@ -166,9 +172,11 @@ describe.only('Loans', () => {
     })
     describe.only('create loan w/ new zkCRA', async () => {
       // declare computation and proof variables to be used throughout the test
-      var computation_: any
-      var proof_: any
+      let computation_: ComputationResult
+      let proof_: Proof
       before(async () => {
+        console.log('filling zkCRAConfigInfo')
+        await fillZKCRAConfigInfo()
         // return computation and proof values and assign them to our variables
         // created above
         const { computation, proof } = await outputCraValues()
@@ -181,9 +189,7 @@ describe.only('Loans', () => {
         expect(proof_).to.exist
       })
       // TODO: Complete this test tonight
-      // it('uses witness, output and proof to take out an NFT', async() => {
-
-      // })
+      it('uses witness, output and proof to take out an NFT', async () => {})
     })
     // delete the rest? 🤔
     describe('create', () => {})

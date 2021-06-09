@@ -1,28 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// External utilities
+// external contracts
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-// Teller Contracts
+// Teller contracts
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../../contexts2/access-control/reentry/ReentryMods.sol";
+import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
+import { ADMIN } from "../../shared/roles.sol";
 import { Signature } from "../../storage/market.sol";
 import { Verifier } from "./verifier.sol";
-
-// Teller libraries
 import { LibLoans } from "../libraries/LibLoans.sol";
 
-contract BorrowFacet is Verifier, PausableMods, ReentryMods {
+contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
+    // for testing
+    function initializeConfigAdmins() external authorized(ADMIN, msg.sender) {
+        s().markets[bytes32(uint256(0))].admin[msg.sender] = true;
+        s().providers[bytes32(uint256(0))].admin[msg.sender] = true;
+        s().providers[bytes32(uint256(1))].admin[msg.sender] = true;
+        s().providers[bytes32(uint256(2))].admin[msg.sender] = true;
+    }
+
     struct ProviderConfig {
         mapping(address => bool) admin;
         mapping(address => bool) signer;
     }
 
     struct MarketProviderConfig {
-        uint32 weight;
         uint32 maxAge;
         bytes32 providerId;
     }
@@ -30,7 +37,6 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
     struct MarketConfig {
         MarketProviderConfig[4] providerConfigs;
         mapping(address => bool) admin;
-        function(bytes memory) external handler;
     }
 
     struct Storage {
@@ -43,47 +49,84 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
     bytes32 internal constant POS =
         keccak256("teller.finance.provider.storage");
 
-    /*
-        Borow from a market. We provide verification functions to make sure that
-        all data used is not forged or re-used and outsource the calculation of
-        terms to the target market. The market uses the CRA's output score and
-        the user's desired loan amount and collateral details to determine what
-        their own terms are. These terms are encoded as a byte array due to not
-        being able to generically express this in solidity.
+    function s() private pure returns (Storage storage s_) {
+        bytes32 pos = POS;
+        assembly {
+            s_.slot := pos
+        }
+    }
 
-        @param proof Proof of the CRA.
-        @param witness uint256[] list of public input params and output values
-        from the CRA. The witness is encoded in the following way in zokrates:
-          1. Public input parameters from left to right
-          2. Output values from left to right
-        In the case of our ZK CRA, this comes out to:
-          [
-              identifier,
-              weight1, weight2, weight3, weight4,
-              marketScore,
-              commitment1, commitment2, commitment3, commitment4
-          ]
-        @param signatures Signature[] ordered list of data provider signatures.
-        @param signedAt uint256[] ordered list of data provider signature
-        timestamps.
-        @param collateralAssets uint256 tokenId of the collateral asset the user
-        wants to use.
-        @param collateralAmounts uint256 amount of collateralAsset the user
-        wishes to provide as collateral.
-        @param loanToken uint256 tokenId of the loan asset the user wishes to
-        receive the loan in.
-        @param loanAmount uint256 amount of loanToken the user wishes to receive
-        for this loan.
-     */
+    function setProviderAdmin(
+        bytes32 providerId,
+        address account,
+        bool admin
+    ) external onlyProviderAdmin(providerId) {
+        s().providers[providerId].signer[account] = admin;
+    }
+
+    function getProviderAdmin(bytes32 providerId)
+        external
+        view
+        returns (bool admin)
+    {
+        admin = s().providers[providerId].signer[msg.sender];
+    }
+
+    function setProviderSigner(
+        bytes32 providerId,
+        address account,
+        bool signerValue
+    ) external onlyProviderAdmin(providerId) {
+        s().providers[providerId].signer[account] = signerValue;
+    }
+
+    function setMarketAdmin(
+        bytes32 marketId,
+        address account,
+        bool admin
+    ) external onlyMarketAdmin(marketId) {
+        s().markets[marketId].admin[account] = admin;
+    }
+
+    // market config functions
+    function setMarketProviderConfig(
+        bytes32 marketId,
+        uint256 configIndex,
+        MarketProviderConfig calldata config
+    ) external onlyMarketAdmin(marketId) {
+        require(configIndex < 4, "Teller: Up to four providers");
+        s().markets[marketId].providerConfigs[configIndex] = config;
+    }
+
+    function setHandler(
+        bytes32 marketId,
+        function(bytes memory) external returns (uint256, uint256) handler
+    ) external onlyMarketAdmin(marketId) {}
+
+    modifier onlyMarketAdmin(bytes32 marketId) {
+        require(
+            s().markets[marketId].admin[msg.sender],
+            "Teller: not market admin"
+        );
+        _;
+    }
+
+    modifier onlyProviderAdmin(bytes32 providerId) {
+        require(
+            s().providers[providerId].admin[msg.sender],
+            "Teller: not provider admin"
+        );
+        _;
+    }
     struct SignatureData {
         Signature signature;
         uint256 signedAt;
     }
 
     struct LoanRequest {
-        uint256[] collateralAssets;
+        address[] collateralAssets;
+        address loanToken;
         uint256[] collateralAmounts;
-        uint256 loanToken;
         uint256 loanAmount;
         uint256 duration;
     }
@@ -126,47 +169,8 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
         uint256 marketScore = witness[1];
 
         // Let the market handle the loan request and disperse the loan.
-        s().markets[marketId].handler(abi.encode(marketScore, request));
+        // s().markets[marketId].handler(abi.encode(marketScore, request));
     }
-
-    function setProviderAdmin(
-        bytes32 providerId,
-        address account,
-        bool admin
-    ) external onlyProviderAdmin(providerId) {
-        s().providers[providerId].signer[account] = admin;
-    }
-
-    function setProviderSigner(
-        bytes32 providerId,
-        address account,
-        bool signerValue
-    ) external onlyProviderAdmin(providerId) {
-        s().providers[providerId].signer[account] = signerValue;
-    }
-
-    function setMarketAdmin(
-        bytes32 marketId,
-        address account,
-        bool admin
-    ) external onlyMarketAdmin(marketId) {
-        s().markets[marketId].admin[account] = admin;
-    }
-
-    // market config functions
-    function setMarketProviderConfig(
-        bytes32 marketId,
-        uint256 configIndex,
-        MarketProviderConfig calldata config
-    ) external onlyMarketAdmin(marketId) {
-        require(configIndex < 4, "Teller: Up to four providers");
-        s().markets[marketId].providerConfigs[configIndex] = config;
-    }
-
-    function setHandler(
-        bytes32 marketId,
-        function(bytes memory) external returns (uint256, uint256) handler
-    ) external onlyMarketAdmin(marketId) {}
 
     function _verifySignatures(
         bytes32 marketId,
@@ -225,36 +229,13 @@ contract BorrowFacet is Verifier, PausableMods, ReentryMods {
         );
     }
 
-    function _weights(bytes32 marketId)
-        private
-        view
-        returns (uint256[4] memory weights_)
-    {
-        for (uint256 i = 0; i < 4; i++) {
-            weights_[i] = s().markets[marketId].providerConfigs[i].weight;
-        }
-    }
-
-    modifier onlyMarketAdmin(bytes32 marketId) {
-        require(
-            s().markets[marketId].admin[msg.sender],
-            "Teller: not market admin"
-        );
-        _;
-    }
-
-    modifier onlyProviderAdmin(bytes32 providerId) {
-        require(
-            s().providers[providerId].admin[msg.sender],
-            "Teller: not market admin"
-        );
-        _;
-    }
-
-    function s() private pure returns (Storage storage s_) {
-        bytes32 pos = POS;
-        assembly {
-            s_.slot := pos
-        }
-    }
+    // function _weights(bytes32 marketId)
+    //     private
+    //     view
+    //     returns (uint256[4] memory weights_)
+    // {
+    //     for (uint256 i = 0; i < 4; i++) {
+    //         weights_[i] = s().markets[marketId].providerConfigs[i].weight;
+    //     }
+    // }
 }
