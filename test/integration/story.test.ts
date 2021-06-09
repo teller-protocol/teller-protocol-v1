@@ -49,7 +49,7 @@ describe.only('story test', async () => {
   }
 
   //is this needed ?
-  before(async () => {
+  /*before(async () => {
     await updatePlatformSetting(
       {
         name: 'RequiredSubmissionsPercentage',
@@ -57,7 +57,7 @@ describe.only('story test', async () => {
       },
       hre
     )
-  })
+  })*/
 
   //run all of the generated story tests (they are async)
   mochaInstance.run()
