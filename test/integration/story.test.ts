@@ -1,21 +1,55 @@
-import chai from 'chai'
+import Chai from 'chai'
+
+import Mocha from 'mocha'
+
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 import { updatePlatformSetting } from '../../tasks'
-import { generateTests, LOAN_ACTIONS } from '../helpers/story-helpers'
+import {
+  generateTests,
+  STORY_ACTIONS,
+  TestScenario,
+  TestAction,
+} from '../helpers/story/story-helpers-2'
+import { generateStories } from '../helpers/story/generator/story-generator'
 
-chai.should()
-chai.use(solidity)
+Chai.should()
+Chai.use(solidity)
 
 describe.only('story test', async () => {
-  // Run tests for all markets
-  const args = {
-    pass: true,
-    type: LOAN_ACTIONS[0],
-    // revert: '',
-    // description: 'shoud do another stuff',
+  const allTestStories: Array<TestScenario> = generateStories()
+
+  console.log(
+    'Generating tests for the following stories:',
+    JSON.stringify(allTestStories)
+  )
+
+  var allGeneratedTests: Array<any> = []
+
+  for (let story of allTestStories) {
+    let newTests = generateTests(story)
+
+    allGeneratedTests = allGeneratedTests.concat(newTests)
   }
-  before(async () => {
+
+  console.log('Generated tests:', JSON.stringify(allGeneratedTests))
+
+  let Suite = Mocha.Suite
+  var Test = Mocha.Test
+  var expect = Chai.expect
+
+  var mochaInstance = new Mocha()
+  var suiteInstance = Mocha.Suite.create(
+    mochaInstance.suite,
+    'Story Test Suite'
+  )
+
+  for (let test of allGeneratedTests) {
+    suiteInstance.addTest(test)
+  }
+
+  //is this needed ?
+  /*before(async () => {
     await updatePlatformSetting(
       {
         name: 'RequiredSubmissionsPercentage',
@@ -23,8 +57,8 @@ describe.only('story test', async () => {
       },
       hre
     )
-  })
-  it(`Run story tests`, async () => {
-    await generateTests(args)
-  })
+  })*/
+
+  //run all of the generated story tests (they are async)
+  mochaInstance.run()
 })

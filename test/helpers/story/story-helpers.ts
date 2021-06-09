@@ -12,29 +12,29 @@ import {
   LoanHelpersReturn,
   LoanDetailsReturn,
   CollateralFunctions,
-} from '../helpers/loans'
+} from '../loans'
 
-import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
-import { getFunds } from '../helpers/get-funds'
+import { getPlatformSetting, updatePlatformSetting } from '../../../tasks'
+import { getFunds } from '../get-funds'
 import {
   LPHelperArgs,
   depositWithArgs,
   withdrawWithArgs,
-} from '../helpers/lending-pool'
-import { getMarkets } from '../../config'
+} from '../lending-pool'
+import { getMarkets } from '../../../config'
 import Prando from 'prando'
 import moment from 'moment'
-import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import { ERC20, ITellerDiamond, TellerNFT } from '../../../types/typechain'
 let rng = new Prando('teller-v1')
 
-export const LOAN_ACTIONS: string[] = [
-  'TAKE_OUT',
-  'LP_LEND',
-  'REPAY',
-  'LIQUIDATE',
-  'SWAP',
-  'LEND',
-]
+export const LOAN_ACTIONS = {
+  TAKE_OUT: 0,
+  LP_LEND: 1,
+  REPAY: 2,
+  LIQUIDATE: 3,
+  SWAP: 4,
+  LEND: 5,
+}
 
 interface LoanArgs {
   type: string
