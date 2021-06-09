@@ -1,18 +1,23 @@
 import Chai from 'chai'
 
 import Mocha from 'mocha'
+import { Signer, BigNumber } from 'ethers'
+import moment from 'moment'
 
 import { Test } from 'mocha'
 import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers-2'
 import StoryTestDriver from './story-test-driver'
 
-import hre, { contracts, ethers } from 'hardhat'
-import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
+import hre, { contracts, getNamedSigner } from 'hardhat'
 
+import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
+import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { getMarkets } from '../../../../config'
+import { getFunds } from '../../get-funds'
 import {
   createLoan,
   LoanType,
+  loanHelpers,
   takeOutLoanWithoutNfts,
   takeOutLoanWithNfts,
   TakeOutLoanArgs,
@@ -23,10 +28,16 @@ import {
   LoanDetailsReturn,
   CollateralFunctions,
 } from '../../loans'
+import {
+  LPHelperArgs,
+  depositWithArgs,
+  withdrawWithArgs,
+} from '../../lending-pool'
 import Prando from 'prando'
 let rng = new Prando('teller-v1')
 
 var expect = Chai.expect
+const LoanSnapshots: { [name: number]: Function } = {}
 
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
@@ -62,26 +73,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
-          //Two of these tests get created and are executed by the Mocha Suite
-          // One of them passes and the next one fails - maybe this is because I am not rewinding HRE state properly or something
-
-          await updatePlatformSetting(
-            {
-              name: 'RequiredSubmissionsPercentage',
-              value: 100,
-            },
-            hre
-          )
-
-          await updatePlatformSetting(
-            {
-              name: 'RequiredSubmissionsPercentage',
-              value: 0,
-            },
-            hre
-          )
-
-          // Advance time
           const { value: rateLimit } = await getPlatformSetting(
             'RequestLoanTermsRateLimit',
             hre
@@ -89,6 +80,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           await hre.evm.advanceTime(rateLimit)
 
           const createArgs = LoanStoryTestDriver.createLoanArgs()
+          // LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
 
           /*const { tx, getHelpers } = args.nft
                    ? await takeOutLoanWithNfts(createArgs)
@@ -100,7 +92,79 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         console.log('push new story test ! ')
         tests.push(newTest)
         break
-      } //STORY_ACTIONS.LOAN.TAKE_OUT
+      }
+      case STORY_ACTIONS.LOAN.LEND: {
+        let newTest = new Test('Lend to loan', async function () {
+          // const borrower = await getNamedSigner('borrower')
+          // const loan = await LoanStoryTestDriver.getLoan(borrower)
+          // const { details, diamond } = loan
+          // const tToken = await hre.contracts.get('ITToken', {
+          //   at: await diamond.getTTokenFor(details.lendingToken.address),
+          // })
+
+          // const lpHelperArgs: LPHelperArgs = {
+          //   diamond: diamond,
+          //   lendingToken: details.lendingToken,
+          //   tToken: tToken,
+          // }
+          // await depositWithArgs(lpHelperArgs)
+          expect(1).to.equal(1)
+        })
+
+        console.log('push new story test ! ')
+        tests.push(newTest)
+        break
+      }
+      case STORY_ACTIONS.LOAN.REPAY: {
+        let newTest = new Test('Repay loan', async function () {
+          // const borrower = await getNamedSigner('borrower')
+          // const loan = await LoanStoryTestDriver.getLoan(borrower)
+          // const { details, diamond } = loan
+          // const borrowedAmount = details.terms.maxLoanAmount
+          // const repayLoanArgs: RepayLoanArgs = {
+          //   amount: borrowedAmount,
+          //   from: details.borrower.signer,
+          //   diamond,
+          //   details,
+          // }
+          // await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+          // const tx = await repayLoan(repayLoanArgs)
+          expect(1).to.equal(1)
+        })
+
+        console.log('push new story test ! ')
+        tests.push(newTest)
+        break
+      }
+      case STORY_ACTIONS.LOAN.LIQUIDATE: {
+        let newTest = new Test('Liquidate loan', async function () {
+          // const borrower = await getNamedSigner('borrower')
+          // const loan = await LoanStoryTestDriver.getLoan(borrower)
+          // const { details, diamond, collateral } = loan
+          // await hre.evm.advanceTime(details.loan.duration)
+          // const liquidator = await hre.getNamedSigner('liquidator')
+          // let borrowedAmount = details.terms.maxLoanAmount
+          // const liquidatorAddress = await liquidator.getAddress()
+          // const tokenBal = await details.lendingToken.balanceOf(liquidatorAddress)
+          // await getFunds({
+          //   to: liquidatorAddress,
+          //   tokenSym: await details.lendingToken.symbol(),
+          //   amount: BigNumber.from(borrowedAmount).mul(2),
+          //   hre,
+          // })
+          // await details.lendingToken
+          //   .connect(liquidator)
+          //   .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
+          // const tx = await diamond
+          //   .connect(liquidator)
+          //   .liquidateLoan(details.loan.id)
+          // expect(1).to.equal(1)
+        })
+
+        console.log('push new story test ! ')
+        tests.push(newTest)
+        break
+      }
     }
 
     return tests
@@ -111,7 +175,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const markets = getMarkets(network)
     const randomMarket = rng.nextInt(0, markets.length - 1)
     const market = markets[randomMarket]
-    console.log({ markets })
+    // console.log({ markets })
     const randomCollateralToken = rng.nextInt(
       0,
       market.collateralTokens.length - 1
@@ -125,5 +189,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       collToken: market.collateralTokens[randomCollateralToken],
       loanType: randomLoanType,
     }
+  }
+
+  static getLoan = async (borrower: Signer): Promise<LoanHelpersReturn> => {
+    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+    const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+    return loanHelpers(loanID)
   }
 }

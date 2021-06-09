@@ -32,15 +32,15 @@ export const generateStories = (): Array<TestScenario> => {
     {
       domain: 'LOAN',
       actions: [
-        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
-        { actionType: STORY_ACTIONS.LOAN.LIQUIDATE, args: {} },
+        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, suiteName: '', args: {} },
+        { actionType: STORY_ACTIONS.LOAN.LIQUIDATE, suiteName: '', args: {} },
       ],
     },
     {
       domain: 'LOAN',
       actions: [
-        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
-        { actionType: STORY_ACTIONS.LOAN.REPAY, args: {} },
+        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, suiteName: '', args: {} },
+        { actionType: STORY_ACTIONS.LOAN.REPAY, suiteName: '', args: {} },
       ],
     },
   ]

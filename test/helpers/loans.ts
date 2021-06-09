@@ -425,10 +425,12 @@ const collateralCurrent = async (
   const { diamond, details } = args
   return await diamond.getLoanCollateral(details.loan.id)
 }
-interface RepayLoanArgs extends CommonLoanArgs {
+export interface RepayLoanArgs extends CommonLoanArgs {
   amount: BigNumberish
 }
-const repayLoan = async (args: RepayLoanArgs): Promise<ContractTransaction> => {
+export const repayLoan = async (
+  args: RepayLoanArgs
+): Promise<ContractTransaction> => {
   const {
     diamond,
     details: { loan, borrower },
@@ -437,7 +439,7 @@ const repayLoan = async (args: RepayLoanArgs): Promise<ContractTransaction> => {
   } = args
   return await diamond.connect(from).repayLoan(loan.id, amount)
 }
-const escrowRepayLoan = async (
+export const escrowRepayLoan = async (
   args: RepayLoanArgs
 ): Promise<ContractTransaction> => {
   const {
