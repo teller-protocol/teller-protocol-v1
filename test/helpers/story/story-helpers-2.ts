@@ -1,4 +1,4 @@
-export const actions = {
+/*export const actions = {
   LOAN: {
     TAKE: 'Take out',
     LEND: 'Lend',
@@ -12,20 +12,31 @@ export const actions = {
   },
 }
 
-interface TestScenario {
+
+*/
+
+import { IntegerType } from 'typechain'
+import LoanStoryTestDriver from './drivers/loan-story-test-driver'
+
+export const STORY_ACTIONS = {
+  LOAN: { TAKE_OUT: 0, LP_LEND: 1, REPAY: 2, LIQUIDATE: 3, SWAP: 4, LEND: 5 },
+  DAPP: { LEND: 0, WITHDRAW: 1, SWAP: 2 },
+}
+
+export interface TestScenario {
   domain: string
   actions: TestAction[]
 }
 
-interface TestAction {
-  actionName: string
+export interface TestAction {
+  actionType: Number
   args?: object
 }
 //  {domain:'LOAN', actions:[ { actionName:'CREATE', args:{},}, {actionName:'LIQUIDATE', args:{}}   ] }  ,
 
-const generateTests = async (args: TestScenario) => {
+export const generateTests = async (args: TestScenario) => {
   switch (args.domain) {
-    case value:
+    case 'LOAN':
       break
 
     default:
