@@ -2,7 +2,8 @@ import { Test } from 'mocha'
 import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 
 export const STORY_ACTIONS = {
-  LOAN: { TAKE_OUT: 0, LEND: 1, REPAY: 2, LIQUIDATE: 3 },
+  LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
+  LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
   DAPP: { LEND: 0, WITHDRAW: 1, SWAP: 2 },
 }
 

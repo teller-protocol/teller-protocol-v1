@@ -1,5 +1,4 @@
 import Chai from 'chai'
-
 import Mocha from 'mocha'
 import { Signer, BigNumber } from 'ethers'
 import moment from 'moment'
@@ -11,7 +10,7 @@ import StoryTestDriver from './story-test-driver'
 import hre, { contracts, getNamedSigner } from 'hardhat'
 
 import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
-import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import { ITellerDiamond } from '../../../../types/typechain'
 import { getMarkets } from '../../../../config'
 import { getFunds } from '../../get-funds'
 import {
@@ -28,11 +27,6 @@ import {
   LoanDetailsReturn,
   CollateralFunctions,
 } from '../../loans'
-import {
-  LPHelperArgs,
-  depositWithArgs,
-  withdrawWithArgs,
-} from '../../lending-pool'
 import Prando from 'prando'
 let rng = new Prando('teller-v1')
 
@@ -86,28 +80,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
                    ? await takeOutLoanWithNfts(createArgs)
                    : await takeOutLoanWithoutNfts(createArgs)*/
 
-          expect(1).to.equal(1)
-        })
-
-        console.log('push new story test ! ')
-        tests.push(newTest)
-        break
-      }
-      case STORY_ACTIONS.LOAN.LEND: {
-        let newTest = new Test('Lend to loan', async function () {
-          // const borrower = await getNamedSigner('borrower')
-          // const loan = await LoanStoryTestDriver.getLoan(borrower)
-          // const { details, diamond } = loan
-          // const tToken = await hre.contracts.get('ITToken', {
-          //   at: await diamond.getTTokenFor(details.lendingToken.address),
-          // })
-
-          // const lpHelperArgs: LPHelperArgs = {
-          //   diamond: diamond,
-          //   lendingToken: details.lendingToken,
-          //   tToken: tToken,
-          // }
-          // await depositWithArgs(lpHelperArgs)
           expect(1).to.equal(1)
         })
 
