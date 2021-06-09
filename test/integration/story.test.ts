@@ -13,25 +13,8 @@ import {
 } from '../helpers/story/story-helpers-2'
 import { generateStories } from '../helpers/story/generator/story-generator'
 
-chai.should()
-chai.use(solidity)
-
-const testScenarios = [
-  {
-    domain: 'LOAN',
-    actions: [
-      { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
-      { actionName: STORY_ACTIONS.LOAN.LIQUIDATE, args: {} },
-    ],
-  },
-  {
-    domain: 'LOAN',
-    actions: [
-      { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
-      { actionName: STORY_ACTIONS.LOAN.REPAY, args: {} },
-    ],
-  },
-]
+Chai.should()
+Chai.use(solidity)
 
 describe.only('story test', async () => {
   const allTestStories: Array<TestScenario> = generateStories()
@@ -66,14 +49,16 @@ describe.only('story test', async () => {
   var expect = Chai.expect
 
   var mochaInstance = new Mocha()
-  var suiteInstance = Mocha.Suite.create(mochaInstance.suite, 'Test Suite')
-
-  suiteInstance.addTest(
-    new Test('testing tests', function () {
-      expect(2).to.equal(2)
-    })
+  var suiteInstance = Mocha.Suite.create(
+    mochaInstance.suite,
+    'Story Test Suite'
   )
 
+  for (let test of allGeneratedTests) {
+    suiteInstance.addTest(test)
+  }
+
+  //is this needed ?
   before(async () => {
     await updatePlatformSetting(
       {
@@ -85,8 +70,10 @@ describe.only('story test', async () => {
   })
 
   mochaInstance.run()
-
-  it(`Run story tests`, async () => {
+  /*it(`Run story tests`, async () => {
     // await generateTests(args)
-  })
+
+    
+
+  })*/
 })

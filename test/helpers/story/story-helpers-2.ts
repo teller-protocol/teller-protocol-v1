@@ -34,12 +34,16 @@ export interface TestAction {
 }
 //  {domain:'LOAN', actions:[ { actionName:'CREATE', args:{},}, {actionName:'LIQUIDATE', args:{}}   ] }  ,
 
-export const generateTests = async (args: TestScenario) => {
-  switch (args.domain) {
+export const generateTests = (scenario: TestScenario): Array<Test> => {
+  switch (scenario.domain) {
     case 'LOAN':
+      return LoanStoryTestDriver.generateDomainSpecificTestsForScenario(
+        scenario
+      )
       break
 
     default:
+      return []
       break
   }
 }

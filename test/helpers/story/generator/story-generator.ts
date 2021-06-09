@@ -3,11 +3,32 @@ Use procedural generation and deterministic random number generation to build th
 
 
 */
+/*
+
+
+const testScenarios = [
+  {
+    domain: 'LOAN',
+    actions: [
+      { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
+      { actionName: STORY_ACTIONS.LOAN.LIQUIDATE, args: {} },
+    ],
+  },
+  {
+    domain: 'LOAN',
+    actions: [
+      { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, args: {} },
+      { actionName: STORY_ACTIONS.LOAN.REPAY, args: {} },
+    ],
+  },
+]
+
+*/
 
 import { STORY_ACTIONS, TestScenario } from '../story-helpers-2'
 
 export const generateStories = (): Array<TestScenario> => {
-  return [
+  let manualScenarios = [
     {
       domain: 'LOAN',
       actions: [
@@ -23,4 +44,6 @@ export const generateStories = (): Array<TestScenario> => {
       ],
     },
   ]
+
+  return manualScenarios
 }
