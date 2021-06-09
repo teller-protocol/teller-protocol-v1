@@ -3,7 +3,7 @@ import Chai from 'chai'
 import Mocha from 'mocha'
 
 import { Test } from 'mocha'
-import { TestScenario } from '../story-helpers-2'
+import { TestAction, TestScenario } from '../story-helpers-2'
 
 var expect = Chai.expect
 
