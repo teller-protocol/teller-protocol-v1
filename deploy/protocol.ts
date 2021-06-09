@@ -35,11 +35,14 @@ const deployProtocol: DeployFunction = async (hre) => {
     await contracts.get('TellerDiamond')
 
     // If deployment exists execute upgrade function
-    const executeMethod = undefined
+    const executeMethod = 'setNFTDictionary'
     const upgradeExecute: DeployDiamondArgs<
       ITellerDiamond,
       typeof executeMethod
-    >['execute'] = undefined
+    >['execute'] = {
+      methodName: executeMethod,
+      args: [(await contracts.get('TellerNFTDictionary')).address],
+    }
 
     execute = upgradeExecute
   } catch {
