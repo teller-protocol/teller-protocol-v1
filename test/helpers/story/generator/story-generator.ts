@@ -42,11 +42,11 @@ export const generateStories = (): Array<TestScenario> => {
           suiteName: '',
           args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
         },
-        {
-          actionType: STORY_ACTIONS.LOAN.REPAY,
-          suiteName: '',
-          args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
-        },
+        // {
+        //   actionType: STORY_ACTIONS.LOAN.REPAY,
+        //   suiteName: '',
+        //   args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
+        // },
       ],
     },
     // {
