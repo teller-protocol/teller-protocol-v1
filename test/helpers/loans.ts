@@ -381,7 +381,7 @@ const serializeSecret = (secret: string) => {
   return serialized
 }
 
-export const outputCraValues = async () => {
+export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('inside output cra values')
   // local variables
   var zokratesProvider: typeof ZoKratesProvider
@@ -390,13 +390,14 @@ export const outputCraValues = async () => {
   var computation: typeof ComputationResult
   var proof: typeof Proof
   console.log('initialized private variables')
-  initialize().then(async (provider: typeof ZoKratesProvider) => {
-    console.log('inside initialize')
-    // set provider after initialization
+  // set provider after initialization
+  await initialize().then((provider: typeof ZoKratesProvider) => {
+    console.log('getting stuff')
     zokratesProvider = provider
-
-    // zok file to compile
-    const source = `import "hashes/sha256/256bitPadded.zok" as sha256
+  })
+  console.log('after getting stuff')
+  // zok file to compile
+  const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
       u32[3][8] commitments = data
       u32 MARKET_SCORE = 0
@@ -409,79 +410,75 @@ export const outputCraValues = async () => {
   
       return MARKET_SCORE,commitments`
 
-    // compile into circuit
-    console.log('about to compile source')
-    compilationArtifacts = zokratesProvider.compile(source)
-    console.log('compiled source')
+  // compile into circuit
+  console.log('about to compile source')
+  compilationArtifacts = zokratesProvider.compile(source)
+  console.log('compiled source')
 
-    // generate keypair
-    keyPair = zokratesProvider.setup(compilationArtifacts.program)
-    console.log('got keypair')
+  // generate keypair
+  keyPair = zokratesProvider.setup(compilationArtifacts.program)
+  console.log('got keypair')
 
-    // get borrower nonce and identifier
-    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-    console.log('got diamond')
-    const borrower = (await getNamedAccounts()).borrower
-    console.log('got borrower')
-    const { length: nonce } = await diamond.getBorrowerLoans(borrower)
-    console.log('got nonce')
-    const identifier = BigNumber.from(borrower).xor(nonce)
-    console.log('got identifier')
+  // get borrower nonce and identifier
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+  console.log('got diamond')
+  const borrower = (await getNamedAccounts()).borrower
+  console.log('got borrower')
+  const { length: nonce } = await diamond.getBorrowerLoans(borrower)
+  console.log('got nonce')
+  const identifier = BigNumber.from(borrower).xor(nonce)
+  console.log('got identifier')
 
-    // sample data. first element of each array element is the value (Score).
-    // next 7 elements are the secrets
-    const data = [
-      [
-        '0x0000000a',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000001',
-      ],
-      [
-        '0x0000000a',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000002',
-      ],
-      [
-        '0x0000000a',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000000',
-        '0x00000003',
-      ],
-    ]
+  // sample data. first element of each array element is the value (Score).
+  // next 7 elements are the secrets
+  const data = [
+    [
+      '0x0000000a',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000001',
+    ],
+    [
+      '0x0000000a',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000002',
+    ],
+    [
+      '0x0000000a',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000003',
+    ],
+  ]
 
-    // get computation
-    console.log('about to get computation')
-    computation = zokratesProvider.computeWitness(compilationArtifacts, [
-      data,
-      identifier.toString(),
-    ])
-    console.log(computation.witness)
+  // get computation
+  console.log('about to get computation')
+  computation = zokratesProvider.computeWitness(compilationArtifacts, [
+    data,
+    identifier.toString(),
+  ])
 
-    // compute proof
-    console.log('about to get proof')
-    proof = zokratesProvider.generateProof(
-      compilationArtifacts.program,
-      computation.witness,
-      keyPair.pk
-    )
-    console.log(proof)
-  })
-
-  // return all the values so that we can verify transaction in the tests
+  // compute proof
+  console.log('about to get proof')
+  proof = zokratesProvider.generateProof(
+    compilationArtifacts.program,
+    computation.witness,
+    keyPair.pk
+  )
+  console.log('proof')
   return {
     computation: computation,
     proof: proof,
@@ -552,13 +549,14 @@ export const fillZKCRAConfigInfo = async () => {
 
 // take out function with zkcra implemented
 export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
+  console.log('borrowing with zkcra')
   // get proof and witness from args
   const { proof, computation } = args
   // computation.witness.output[2-10]
   // computation.witnes
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-
+  console.log('getting signers')
   // signers
   const signerOne = ethers.provider.getSigner(
     '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
@@ -569,26 +567,55 @@ export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
   const signerThree = ethers.provider.getSigner(
     '0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA'
   )
+  console.log('got signers')
 
   // first signature
   const timestampOne = moment().unix()
-  const messageOne = BigNumber.from(computation.witness.output.slice(10, 18))
+  const messageOne = BigNumber.from(
+    '0x' +
+      computation.witness
+        .slice(2, 10)
+        .map((str: string) => {
+          console.log(str)
+          str.substr(2)
+        })
+        .join('')
+  )
     .xor(timestampOne)
     .toString()
   const credentialsSignerOne = await signerOne.signMessage(messageOne)
+  console.log(credentialsSignerOne)
 
   // marketId
   const timestampTwo = moment().unix()
-  const messageTwo = BigNumber.from(computation.witness.output.slice(10, 18))
+  const messageTwo = BigNumber.from(
+    '0x' +
+      computation.witness
+        .slice(10, 18)
+        .map((str: string) => {
+          console.log(str)
+          str.substr(2)
+        })
+        .join('')
+  )
     .xor(timestampTwo)
     .toString()
-  const credentialsSignerTwo = await signerOne.signMessage(messageOne)
+  const credentialsSignerTwo = await signerTwo.signMessage(messageTwo)
+  console.log(credentialsSignerTwo)
 
   const timestampThree = moment().unix()
-  const messageThree = BigNumber.from(computation.witness.output.slice(18, 26))
-    .xor(timestampThree)
-    .toString()
-  const credentialsSignerThree = await signerOne.signMessage(messageOne)
+  const messageThree = BigNumber.from(
+    '0x' +
+      computation.witness
+        .slice(10, 18)
+        .map((str: string) => {
+          console.log(str)
+          str.substr(2)
+        })
+        .join('')
+  )
+  const credentialsSignerThree = await signerThree.signMessage(messageThree)
+  console.log(credentialsSignerThree)
 
   // sign then store
   const signatureData = {}

@@ -30,6 +30,7 @@ import {
   takeOutLoanWithoutNfts,
   outputCraValues,
   fillZKCRAConfigInfo,
+  borrowWithZKCRA,
 } from '../helpers/loans'
 
 chai.should()
@@ -179,17 +180,15 @@ describe.only('Loans', () => {
         await fillZKCRAConfigInfo()
         // return computation and proof values and assign them to our variables
         // created above
-        const { computation, proof } = await outputCraValues()
-        computation_ = computation
-        proof_ = proof
       })
       // check if computation and proof exist
       it('checks if computation and proof are returned', async () => {
-        expect(computation_).to.exist
-        expect(proof_).to.exist
+        const { computation, proof } = await outputCraValues()
+        console.log('about to borrow with zkcra')
+        await borrowWithZKCRA({ proof, computation })
       })
       // TODO: Complete this test tonight
-      it('uses witness, output and proof to take out an NFT', async () => {})
+      it('uses witness, output and proof to take out a loan', async () => {})
     })
     // delete the rest? 🤔
     describe('create', () => {})
