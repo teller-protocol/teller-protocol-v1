@@ -21,7 +21,6 @@ import {
   SetupKeypair,
   // @ts-ignore
 } from 'zokrates-js/node'
-var uint32 = require('uint32')
 
 // teller files
 import { getNFT } from '../../config'
@@ -110,13 +109,13 @@ export interface CreateLoanArgs {
 }
 
 interface CreateLoanWithZKCRA {
-  proof: typeof Proof
-  computation: typeof ComputationResult
+  proof: Proof
+  computation: ComputationResult
 }
 
 interface ZKCRAHelpersReturn {
-  computation: typeof ComputationResult
-  proof: typeof Proof
+  computation: ComputationResult
+  proof: Proof
 }
 export interface CreateLoanReturn {
   tx: Promise<ContractTransaction>
@@ -379,17 +378,14 @@ const serializeSecret = (secret: string) => {
 export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('inside output cra values')
   // local variables
-  var zokratesProvider: typeof ZoKratesProvider
-  var compilationArtifacts: typeof CompilationArtifacts
-  var keyPair: typeof SetupKeypair
-  var computation: typeof ComputationResult
-  var proof: typeof Proof
+  let zokratesProvider: ZoKratesProvider
+  let compilationArtifacts: CompilationArtifacts
+  let keyPair: SetupKeypair
+  let computation: ComputationResult
+  let proof: Proof
   console.log('initialized private variables')
   // set provider after initialization
-  await initialize().then((provider: typeof ZoKratesProvider) => {
-    console.log('getting stuff')
-    zokratesProvider = provider
-  })
+  const provider: ZoKratesProvider = await initialize()
   console.log('after getting stuff')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
@@ -407,11 +403,11 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   // compile into circuit
   console.log('about to compile source')
-  compilationArtifacts = zokratesProvider.compile(source)
+  compilationArtifacts = provider.compile(source)
   console.log('compiled source')
 
   // generate keypair
-  keyPair = zokratesProvider.setup(compilationArtifacts.program)
+  keyPair = provider.setup(compilationArtifacts.program)
   console.log('got keypair')
 
   // get borrower nonce and identifier
@@ -461,14 +457,14 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   // get computation
   console.log('about to get computation')
-  computation = zokratesProvider.computeWitness(compilationArtifacts, [
+  computation = provider.computeWitness(compilationArtifacts, [
     data,
     identifier.toString(),
   ])
 
   // compute proof
   console.log('about to get proof')
-  proof = zokratesProvider.generateProof(
+  proof = provider.generateProof(
     compilationArtifacts.program,
     computation.witness,
     keyPair.pk
@@ -549,7 +545,6 @@ export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
   const { proof, computation } = args
   // computation.witness.output[2-10]
   // computation.witnes
-  console.log(computation.witness)
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   console.log('getting signers')
@@ -571,72 +566,78 @@ export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
 
   console.log('about to do first signature')
   const timestampOne = moment().unix()
-  console.log('0x' + (computation.witness.slice(2, 10) ^ timestampOne))
-  const messageOne = '0x' + (computation.witness.slice(2, 10) ^ timestampOne)
-  console.log('message one done')
-  const credentialsSignerOne = await deployer.signMessage(messageOne)
-  const signatureDataOne = {
-    signature: {
-      v: JSON.parse(credentialsSignerOne).v,
-      r: JSON.parse(credentialsSignerOne).r,
-      s: JSON.parse(credentialsSignerOne).s,
-    },
-    signedAt: timestampOne,
-  }
-  console.log(signatureDataOne)
-  console.log(credentialsSignerOne)
+  console.log({
+    output: computation.output,
+    witness: computation.witness,
+    proof,
+  })
+  console.log(Object.keys(computation.witness), Object.keys(proof))
+  // console.log('0x' + (computation.witness.slice(2, 10) ^ timestampOne))
+  // const messageOne = '0x' + (computation.witness.slice(2, 10) ^ timestampOne)
+  // console.log('message one done')
+  // const credentialsSignerOne = await deployer.signMessage(messageOne)
+  // const signatureDataOne = {
+  //   signature: {
+  //     v: JSON.parse(credentialsSignerOne).v,
+  //     r: JSON.parse(credentialsSignerOne).r,
+  //     s: JSON.parse(credentialsSignerOne).s,
+  //   },
+  //   signedAt: timestampOne,
+  // }
+  // console.log(signatureDataOne)
+  // console.log(credentialsSignerOne)
 
-  // marketId
-  const timestampTwo = moment().unix()
-  console.log('0x' + (computation.witness.slice(10, 18) ^ timestampTwo))
-  const messageTwo = '0x' + (computation.witness.slice(10, 118) ^ timestampTwo)
-  console.log('message one done')
-  const credentialsSignerTwo = await deployer.signMessage(messageTwo)
-  const signatureDataTwo = {
-    signature: {
-      v: JSON.parse(credentialsSignerTwo).v,
-      r: JSON.parse(credentialsSignerTwo).r,
-      s: JSON.parse(credentialsSignerTwo).s,
-    },
-    signedAt: timestampTwo,
-  }
-  console.log(credentialsSignerTwo)
+  // // marketId
+  // const timestampTwo = moment().unix()
+  // console.log('0x' + (computation.witness.slice(10, 18) ^ timestampTwo))
+  // const messageTwo = '0x' + (computation.witness.slice(10, 118) ^ timestampTwo)
+  // console.log('message one done')
+  // const credentialsSignerTwo = await deployer.signMessage(messageTwo)
+  // const signatureDataTwo = {
+  //   signature: {
+  //     v: JSON.parse(credentialsSignerTwo).v,
+  //     r: JSON.parse(credentialsSignerTwo).r,
+  //     s: JSON.parse(credentialsSignerTwo).s,
+  //   },
+  //   signedAt: timestampTwo,
+  // }
+  // console.log(credentialsSignerTwo)
 
-  const timestampThree = moment().unix()
-  console.log('0x' + (computation.witness.slice(18, 26) ^ timestampThree))
-  const messageThree =
-    '0x' + (computation.witness.slice(18, 26) ^ timestampThree)
-  console.log('message one done')
-  const credentialsSignerThree = await deployer.signMessage(messageThree)
-  const signatureDataThree = {
-    signature: {
-      v: JSON.parse(credentialsSignerThree).v,
-      r: JSON.parse(credentialsSignerThree).r,
-      s: JSON.parse(credentialsSignerThree).s,
-    },
-    signedAt: timestampThree,
-  }
-  console.log(credentialsSignerThree)
+  // const timestampThree = moment().unix()
+  // console.log('0x' + (computation.witness.slice(18, 26) ^ timestampThree))
+  // const messageThree =
+  //   '0x' + (computation.witness.slice(18, 26) ^ timestampThree)
+  // console.log('message one done')
+  // const credentialsSignerThree = await deployer.signMessage(messageThree)
+  // const signatureDataThree = {
+  //   signature: {
+  //     v: JSON.parse(credentialsSignerThree).v,
+  //     r: JSON.parse(credentialsSignerThree).r,
+  //     s: JSON.parse(credentialsSignerThree).s,
+  //   },
+  //   signedAt: timestampThree,
+  // }
+  // console.log(credentialsSignerThree)
 
-  // all borrow variables
-  const marketId_ =
-    '0x0000000000000000000000000000000000000000000000000000000000000000'
-  const proof_ = proof
-  const witness_ = computation.witness
-  const signatureData = [signatureDataOne, signatureDataTwo, signatureDataThree]
-  const request = {
-    collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
-    loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    collateralAmounts: [10],
-    loanAmount: 100,
-    duration: moment.duration(1, 'day').asSeconds(),
-  }
+  // // all borrow variables
+  // const marketId_ =
+  //   '0x0000000000000000000000000000000000000000000000000000000000000000'
+  // const proof_ = proof
+  // const witness_ = computation.witness
+  // const signatureData = [signatureDataOne, signatureDataTwo, signatureDataThree]
+  // const request = {
+  //   collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
+  //   loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+  //   collateralAmounts: [10],
+  //   loanAmount: 100,
+  //   duration: moment.duration(1, 'day').asSeconds(),
+  // }
 
-  const borrower = (await getNamedAccounts()).borrower
-  await diamond
-    .connect(borrower)
-    .borrow(marketId_, proof_, witness_, signatureData, request)
-  //
+  // const borrower = (await getNamedAccounts()).borrower
+  // await diamond
+  //   .connect(borrower)
+  //   .borrow(marketId_, proof_, witness_, signatureData, request)
+  // //
 }
 
 export const takeOut = async (
