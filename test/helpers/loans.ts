@@ -554,71 +554,94 @@ export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
   const { proof, computation } = args
   // computation.witness.output[2-10]
   // computation.witnes
+  console.log(computation.witness)
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   console.log('getting signers')
   // signers
   const signerOne = ethers.provider.getSigner(
-    '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
+    ethers.utils.getAddress('0x592000b2c8c590531d490893C16AfC4b9cbbe6B9')
   )
   const signerTwo = ethers.provider.getSigner(
-    '0xd59e99927018b995ee9Ad6b9003677f1e7393F8A'
+    ethers.utils.getAddress('0xd59e99927018b995ee9Ad6b9003677f1e7393F8A')
   )
   const signerThree = ethers.provider.getSigner(
-    '0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA'
+    ethers.utils.getAddress('0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA')
   )
   console.log('got signers')
 
+  const deployer = await getNamedSigner('deployer')
+
   // first signature
+
+  console.log('about to do first signature')
   const timestampOne = moment().unix()
-  const messageOne = BigNumber.from(
-    '0x' +
-      computation.witness
-        .slice(2, 10)
-        .map((str: string) => {
-          console.log(str)
-          str.substr(2)
-        })
-        .join('')
-  )
-    .xor(timestampOne)
-    .toString()
-  const credentialsSignerOne = await signerOne.signMessage(messageOne)
+  console.log('0x' + (computation.witness.slice(2, 10) ^ timestampOne))
+  const messageOne = '0x' + (computation.witness.slice(2, 10) ^ timestampOne)
+  console.log('message one done')
+  const credentialsSignerOne = await deployer.signMessage(messageOne)
+  const signatureDataOne = {
+    signature: {
+      v: JSON.parse(credentialsSignerOne).v,
+      r: JSON.parse(credentialsSignerOne).r,
+      s: JSON.parse(credentialsSignerOne).s,
+    },
+    signedAt: timestampOne,
+  }
+  console.log(signatureDataOne)
   console.log(credentialsSignerOne)
 
   // marketId
   const timestampTwo = moment().unix()
-  const messageTwo = BigNumber.from(
-    '0x' +
-      computation.witness
-        .slice(10, 18)
-        .map((str: string) => {
-          console.log(str)
-          str.substr(2)
-        })
-        .join('')
-  )
-    .xor(timestampTwo)
-    .toString()
-  const credentialsSignerTwo = await signerTwo.signMessage(messageTwo)
+  console.log('0x' + (computation.witness.slice(10, 18) ^ timestampTwo))
+  const messageTwo = '0x' + (computation.witness.slice(10, 118) ^ timestampTwo)
+  console.log('message one done')
+  const credentialsSignerTwo = await deployer.signMessage(messageTwo)
+  const signatureDataTwo = {
+    signature: {
+      v: JSON.parse(credentialsSignerTwo).v,
+      r: JSON.parse(credentialsSignerTwo).r,
+      s: JSON.parse(credentialsSignerTwo).s,
+    },
+    signedAt: timestampTwo,
+  }
   console.log(credentialsSignerTwo)
 
   const timestampThree = moment().unix()
-  const messageThree = BigNumber.from(
-    '0x' +
-      computation.witness
-        .slice(10, 18)
-        .map((str: string) => {
-          console.log(str)
-          str.substr(2)
-        })
-        .join('')
-  )
-  const credentialsSignerThree = await signerThree.signMessage(messageThree)
+  console.log('0x' + (computation.witness.slice(18, 26) ^ timestampThree))
+  const messageThree =
+    '0x' + (computation.witness.slice(18, 26) ^ timestampThree)
+  console.log('message one done')
+  const credentialsSignerThree = await deployer.signMessage(messageThree)
+  const signatureDataThree = {
+    signature: {
+      v: JSON.parse(credentialsSignerThree).v,
+      r: JSON.parse(credentialsSignerThree).r,
+      s: JSON.parse(credentialsSignerThree).s,
+    },
+    signedAt: timestampThree,
+  }
   console.log(credentialsSignerThree)
 
-  // sign then store
-  const signatureData = {}
+  // all borrow variables
+  const marketId_ =
+    '0x0000000000000000000000000000000000000000000000000000000000000000'
+  const proof_ = proof
+  const witness_ = computation.witness
+  const signatureData = [signatureDataOne, signatureDataTwo, signatureDataThree]
+  const request = {
+    collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
+    loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    collateralAmounts: [10],
+    loanAmount: 100,
+    duration: moment.duration(1, 'day').asSeconds(),
+  }
+
+  const borrower = (await getNamedAccounts()).borrower
+  await diamond
+    .connect(borrower)
+    .borrow(marketId_, proof_, witness_, signatureData, request)
+  //
 }
 
 export const takeOut = async (
