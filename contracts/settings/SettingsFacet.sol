@@ -32,7 +32,7 @@ struct InitArgs {
     address collateralEscrowBeacon;
     address tTokenBeacon;
     address nftLiquidationController;
-    address baseNetworkToken;
+    address wrappedNativeToken;
 }
 
 contract SettingsFacet is RolesMods {
@@ -148,6 +148,6 @@ contract SettingsFacet is RolesMods {
         );
         s.tTokenBeacon = UpgradeableBeaconFactory(_args.tTokenBeacon);
         s.nftLiquidationController = _args.nftLiquidationController;
-        s.baseNetworkToken = _args.baseNetworkToken;
+        s.wrappedNativeToken = _args.wrappedNativeToken;
     }
 }

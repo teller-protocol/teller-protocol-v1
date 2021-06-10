@@ -98,7 +98,7 @@ library LibCollateral {
             ICollateralEscrow(escrow).init(
                 token,
                 // Check if collateral token is the base network token
-                token == AppStorageLib.store().baseNetworkToken
+                token == AppStorageLib.store().wrappedNativeToken
             );
 
             // Set max allowance

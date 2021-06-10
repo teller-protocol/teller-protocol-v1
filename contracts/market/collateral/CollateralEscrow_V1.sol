@@ -18,14 +18,17 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     mapping(uint256 => uint256) internal _balances; // loanID -> collateral
     address public collateralToken;
-    bool internal _isWETH; // Should this be renamed to _isNetworkToken? more agnostic in cases of WMATIC
+    bool internal _isWrappedNativeToken; // Should this be renamed to _isNetworkToken? more agnostic in cases of WMATIC
 
     /**
      * @notice it initializes an escrow
      * @param tokenAddress the address of the collateral token to be stored
-     * @param isWETH check if it's wrapped Ethereum/MATIC
+     * @param isWrappedNativeToken check if it's wrapped Ethereum/MATIC
      */
-    function init(address tokenAddress, bool isWETH) external override {
+    function init(address tokenAddress, bool isWrappedNativeToken)
+        external
+        override
+    {
         require(
             tokenAddress != address(0),
             "Teller escrow: collateral token address 0"
@@ -33,7 +36,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
 
         OwnableUpgradeable.__Ownable_init();
         collateralToken = tokenAddress;
-        _isWETH = isWETH;
+        _isWrappedNativeToken = isWrappedNativeToken;
     }
 
     /**
@@ -47,7 +50,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
         override
         onlyOwner
     {
-        if (_isWETH && msg.value > 0) {
+        if (_isWrappedNativeToken && msg.value > 0) {
             require(msg.value == amount, "Teller: incorrect eth deposit");
             IWETH(collateralToken).deposit{ value: msg.value }();
         } else {

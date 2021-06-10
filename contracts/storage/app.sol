@@ -32,7 +32,7 @@ struct AppStorage {
     UpgradeableBeaconFactory collateralEscrowBeacon;
     address nftLiquidationController;
     UpgradeableBeaconFactory tTokenBeacon;
-    address baseNetworkToken;
+    address wrappedNativeToken;
 }
 
 library AppStorageLib {
