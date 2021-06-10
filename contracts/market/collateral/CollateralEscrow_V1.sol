@@ -18,12 +18,12 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     mapping(uint256 => uint256) internal _balances; // loanID -> collateral
     address public collateralToken;
-    bool internal _isWETH;
+    bool internal _isWETH; // Should this be renamed to _isNetworkToken? more agnostic in cases of WMATIC
 
     /**
      * @notice it initializes an escrow
      * @param tokenAddress the address of the collateral token to be stored
-     * @param isWETH check if it's wrapped Ethereum
+     * @param isWETH check if it's wrapped Ethereum/MATIC
      */
     function init(address tokenAddress, bool isWETH) external override {
         require(

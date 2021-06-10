@@ -29,7 +29,7 @@ const mainnetMarkets: Market[] = [
 const polygonMarkets: Market[] = [
   {
     lendingToken: 'DAI',
-    collateralTokens: ['WETH'],
+    collateralTokens: ['WETH', 'WMATIC'],
     strategy: {
       name: 'TTokenAaveStrategy_1',
       initArgs: [
