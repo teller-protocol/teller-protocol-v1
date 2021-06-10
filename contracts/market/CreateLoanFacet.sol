@@ -200,36 +200,34 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 }
 
 library CreateLoanLib {
-    function createLoan(
-        uint256 amount,
-        uint256 collateralRatio,
-        uint256 duration,
-        uint256 score
-    ) internal returns (Loan storage loan) {
-        // Get and increment new loan ID
-        uint256 loanID = CreateLoanLib.newID();
-
-        // Set loan data based on terms
-        loan = LibLoans.loan(loanID);
-        loan.id = uint128(loanID);
-        loan.status = LoanStatus.TermsSet;
-        loan.lendingToken = request.request.assetAddress;
-        loan.borrower = request.request.borrower;
-        loan.borrowedAmount = maxLoanAmount;
-        loan.interestRate = interestRate;
-        loan.collateralRatio = collateralRatio;
-
-        // Set loan debt
-        LibLoans.debt(loanID).principalOwed = maxLoanAmount;
-        LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
-            uint256(loanID),
-            maxLoanAmount
-        );
-
-        // Add loanID to borrower list
-        MarketStorageLib.store().borrowerLoans[loan.borrower].push(
-            uint128(loanID)
-        );
+    function createLoan(LoanRequest memory request)
+        internal
+        returns (Loan storage loan)
+    {
+        // // Get and increment new loan ID
+        // uint256 loanID = CreateLoanLib.newID();
+        // // Set loan data based on terms
+        // loan = LibLoans.loan(loanID);
+        // loan.id = uint128(loanID);
+        // loan.status = LoanStatus.TermsSet;
+        // loan.lendingToken = request.request.assetAddress;
+        // loan.borrower = request.request.borrower;
+        // loan.borrowedAmount = amount;
+        // loan.interestRate = interestRate;
+        // loan.collateralRatio = collateralRatio;
+        // // Set loan debt
+        // LibLoans.debt(loanID).principalOwed = amount;
+        // LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
+        //     uint256(loanID),
+        //     amount
+        // );
+        // // Add loanID to borrower list
+        // MarketStorageLib.store().borrowerLoans[loan.borrower].push(
+        //     uint128(loanID)
+        // );
+        assembly {
+            loan.slot := 0
+        }
     }
 
     function newID() internal returns (uint256 id_) {
