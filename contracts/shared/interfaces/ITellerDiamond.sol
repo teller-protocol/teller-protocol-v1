@@ -29,6 +29,11 @@ import {
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 
+// When adding a new Facet, kindly make sure to order the inherited contracts around so
+// that it's consistent with all the Facets' inheritance order. For example, if all the
+// Facets import the mods such as `is ReentryMods, PausableMods`, but a new facet imports
+// the mod as `is PausableMods, ReentryMods`, we will get an error called `Linearization of inheritance
+// impossible`. Kindly order the Inheritances around in the same order to pass this error.
 abstract contract ITellerDiamond is
     SettingsFacet,
     PlatformSettingsFacet,
@@ -48,4 +53,6 @@ abstract contract ITellerDiamond is
     PoolTogetherFacet,
     IDiamondCut,
     IDiamondLoupe
-{}
+{
+
+}
