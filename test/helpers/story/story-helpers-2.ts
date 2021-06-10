@@ -14,7 +14,11 @@ export interface TestScenario {
 
 export interface TestAction {
   actionType: Number
-  args?: object
+  args: TestArgs
+}
+
+export interface TestArgs {
+  dapp?: number
 }
 
 export const generateTests = (scenario: TestScenario): Array<Test> => {

@@ -8,21 +8,6 @@ import { Test } from 'mocha'
 import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers-2'
 import StoryTestDriver from './story-test-driver'
 
-import hre, { contracts, getNamedSigner } from 'hardhat'
-
-import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
-import { ERC20, ITellerDiamond, TellerNFT } from '../../../../types/typechain'
-import { getMarkets } from '../../../../config'
-import { getFunds } from '../../get-funds'
-import {
-  LPHelperArgs,
-  depositWithArgs,
-  withdrawWithArgs,
-} from '../../lending-pool'
-import LoanStoryTestDriver from './loan-story-test-driver'
-import Prando from 'prando'
-let rng = new Prando('teller-v1')
-
 var expect = Chai.expect
 
 export const DAPPS = {
@@ -56,12 +41,12 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     let tests: Array<Test> = []
 
     let actionType = action.actionType
-    // let arguments:?object = action.args
+    let args = action.args
 
     switch (actionType) {
       case STORY_ACTIONS.DAPP.LEND: {
         let newTest = new Test('Lend DAPP', async function () {
-          await DappStoryTestDriver.generateTestsForLend(action.args.dapp)
+          await DappStoryTestDriver.generateTestsForLend(args.dapp)
         })
 
         console.log('push new story test ! ')
@@ -70,7 +55,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.DAPP.SWAP: {
         let newTest = new Test('Swap DAPP', async function () {
-          await DappStoryTestDriver.generateTestsForSwap(action.args.dapp)
+          await DappStoryTestDriver.generateTestsForSwap(args.dapp)
         })
         console.log('push new story test ! ')
         tests.push(newTest)
@@ -81,7 +66,8 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static async generateTestsForLend(dapp: number) {
+  static async generateTestsForLend(dapp: number | undefined) {
+    dapp = dapp ? dapp : 0
     switch (dapp) {
       case DAPPS.LEND.AAVE:
         expect(1).to.equal(1)
@@ -97,7 +83,8 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     }
   }
 
-  static async generateTestsForSwap(dapp: number) {
+  static async generateTestsForSwap(dapp: number | undefined) {
+    dapp = dapp ? dapp : 0
     switch (dapp) {
       case DAPPS.SWAP.UNISWAP:
         expect(1).to.equal(1)

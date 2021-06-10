@@ -11,7 +11,7 @@ import StoryTestDriver from './story-test-driver'
 import hre, { contracts, getNamedSigner } from 'hardhat'
 
 import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
-import { ERC20, ITellerDiamond, TellerNFT } from '../../../../types/typechain'
+import { ITellerDiamond } from '../../../../types/typechain'
 import { getMarkets } from '../../../../config'
 import { getFunds } from '../../get-funds'
 import {
@@ -20,12 +20,7 @@ import {
   withdrawWithArgs,
 } from '../../lending-pool'
 import LoanStoryTestDriver from './loan-story-test-driver'
-import Prando from 'prando'
-let rng = new Prando('teller-v1')
-
 var expect = Chai.expect
-const LoanSnapshots: { [name: number]: Function } = {}
-
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
 Then we will expect that 
@@ -50,8 +45,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
   }
 
   static generateTestsForAction(action: TestAction): Array<Test> {
-    // SNAPSHOTS.revert = await hre.evm.snapshot()
-
     let tests: Array<Test> = []
 
     let actionType = action.actionType
