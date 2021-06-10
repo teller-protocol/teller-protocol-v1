@@ -110,6 +110,10 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     // Loans
     {
+      contract: 'BorrowFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
       contract: 'CollateralFacet',
       skipIfAlreadyDeployed: false,
     },
