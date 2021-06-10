@@ -10,7 +10,7 @@ import {
   STORY_ACTIONS,
   TestScenario,
   TestAction,
-} from '../helpers/story/story-helpers-2'
+} from '../helpers/story/story-helpers'
 import { generateStories } from '../helpers/story/generator/story-generator'
 
 Chai.should()
@@ -19,10 +19,10 @@ Chai.use(solidity)
 describe.only('story test', async () => {
   const allTestStories: Array<TestScenario> = generateStories()
 
-  console.log(
-    'Generating tests for the following stories:',
-    JSON.stringify(allTestStories)
-  )
+  // console.log(
+  //   'Generating tests for the following stories:',
+  //   JSON.stringify(allTestStories)
+  // )
 
   var allGeneratedTests: Array<any> = []
 
@@ -32,7 +32,7 @@ describe.only('story test', async () => {
     allGeneratedTests = allGeneratedTests.concat(newTests)
   }
 
-  console.log('Generated tests:', JSON.stringify(allGeneratedTests))
+  // console.log('Generated tests:', JSON.stringify(allGeneratedTests))
 
   let Suite = Mocha.Suite
   var Test = Mocha.Test

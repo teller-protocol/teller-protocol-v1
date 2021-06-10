@@ -5,7 +5,7 @@ import { Signer, BigNumber } from 'ethers'
 import moment from 'moment'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers-2'
+import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
 var expect = Chai.expect

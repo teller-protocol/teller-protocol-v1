@@ -1,10 +1,10 @@
 import Chai from 'chai'
 import Mocha from 'mocha'
-import { Signer, BigNumber } from 'ethers'
+import { Signer, BigNumber, ContractTransaction } from 'ethers'
 import moment from 'moment'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers-2'
+import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
 import hre, { contracts, getNamedSigner } from 'hardhat'
@@ -61,79 +61,76 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
     let tests: Array<Test> = []
 
-    let actionType = action.actionType
-    // let arguments:?object = action.args
-
+    const { actionType, args } = action
     switch (actionType) {
       case STORY_ACTIONS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
+          const percentageSubmission = {
+            name: 'RequiredSubmissionsPercentage',
+            value: 1,
+          }
+          await updatePlatformSetting(percentageSubmission, hre)
           const { value: rateLimit } = await getPlatformSetting(
             'RequestLoanTermsRateLimit',
             hre
           )
           await hre.evm.advanceTime(rateLimit)
-
-          const createArgs = LoanStoryTestDriver.createLoanArgs()
-          // LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
-
-          /*const { tx, getHelpers } = args.nft
-                   ? await takeOutLoanWithNfts(createArgs)
-                   : await takeOutLoanWithoutNfts(createArgs)*/
-
-          expect(1).to.equal(1)
+          const borrowerAddress = (await hre.getNamedAccounts()).borrower
+          const createArgs = LoanStoryTestDriver.createLoanArgs(borrowerAddress)
+          const funcToRun =
+            args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
+          if (args.pass) {
+            const { tx, getHelpers } = await funcToRun(createArgs)
+            console.log(await tx)
+            expect(tx).to.exist
+            LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
+              await hre.evm.snapshot()
+          } else {
+            expect(await funcToRun(createArgs)).to.throw()
+          }
         })
-
-        console.log('push new story test ! ')
+        console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
         tests.push(newTest)
         break
       }
       case STORY_ACTIONS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
-          // const borrower = await getNamedSigner('borrower')
-          // const loan = await LoanStoryTestDriver.getLoan(borrower)
-          // const { details, diamond } = loan
-          // const borrowedAmount = details.terms.maxLoanAmount
-          // const repayLoanArgs: RepayLoanArgs = {
-          //   amount: borrowedAmount,
-          //   from: details.borrower.signer,
-          //   diamond,
-          //   details,
-          // }
-          // await hre.evm.advanceTime(moment.duration(5, 'minutes'))
-          // const tx = await repayLoan(repayLoanArgs)
-          expect(1).to.equal(1)
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(borrower)
+          console.log({ loan })
+          const { details, diamond } = loan
+          const borrowedAmount = details.terms.maxLoanAmount
+          const repayLoanArgs: RepayLoanArgs = {
+            amount: borrowedAmount,
+            from: details.borrower.signer,
+            diamond,
+            details,
+          }
+          await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+          console.log('got here')
+          if (args.pass) {
+            const tx = await repayLoan(repayLoanArgs)
+            expect(tx).to.exist
+          } else {
+            expect(await repayLoan(repayLoanArgs)).to.throw()
+          }
         })
 
-        console.log('push new story test ! ')
+        console.log('push STORY_ACTIONS.LOAN.REPAY test ! ')
         tests.push(newTest)
         break
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
-          // const borrower = await getNamedSigner('borrower')
-          // const loan = await LoanStoryTestDriver.getLoan(borrower)
-          // const { details, diamond, collateral } = loan
-          // await hre.evm.advanceTime(details.loan.duration)
-          // const liquidator = await hre.getNamedSigner('liquidator')
-          // let borrowedAmount = details.terms.maxLoanAmount
-          // const liquidatorAddress = await liquidator.getAddress()
-          // const tokenBal = await details.lendingToken.balanceOf(liquidatorAddress)
-          // await getFunds({
-          //   to: liquidatorAddress,
-          //   tokenSym: await details.lendingToken.symbol(),
-          //   amount: BigNumber.from(borrowedAmount).mul(2),
-          //   hre,
-          // })
-          // await details.lendingToken
-          //   .connect(liquidator)
-          //   .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
-          // const tx = await diamond
-          //   .connect(liquidator)
-          //   .liquidateLoan(details.loan.id)
-          // expect(1).to.equal(1)
+          if (args.pass) {
+            const tx = await LoanStoryTestDriver.liquidateLoan()
+            expect(tx).to.exist
+          } else {
+            expect(await LoanStoryTestDriver.liquidateLoan()).to.throw()
+          }
         })
 
-        console.log('push new story test ! ')
+        console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
         break
       }
@@ -142,7 +139,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static createLoanArgs = (): CreateLoanArgs => {
+  static createLoanArgs = (borrower: string): CreateLoanArgs => {
     const { network } = hre
     const markets = getMarkets(network)
     const randomMarket = rng.nextInt(0, markets.length - 1)
@@ -159,6 +156,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     return {
       lendToken: market.lendingToken,
       collToken: market.collateralTokens[randomCollateralToken],
+      borrower,
       loanType: randomLoanType,
     }
   }
@@ -168,7 +166,34 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const allBorrowerLoans = await diamond.getBorrowerLoans(
       await borrower.getAddress()
     )
+    console.log({ allBorrowerLoans })
+    expect(allBorrowerLoans.length).to.be.greaterThan(0)
+    if (allBorrowerLoans.length == 0) throw Error('No borrower loans')
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
     return loanHelpers(loanID)
+  }
+
+  static liquidateLoan = async (): Promise<ContractTransaction> => {
+    const borrowerAddress = (await hre.getNamedAccounts()).borrower
+    const borrower = await hre.ethers.provider.getSigner(borrowerAddress)
+    // console.log(borrower.)
+    const loan = await LoanStoryTestDriver.getLoan(borrower)
+    const { details, diamond, collateral } = loan
+    await hre.evm.advanceTime(details.loan.duration)
+    const liquidator = await hre.getNamedSigner('liquidator')
+    let borrowedAmount = details.terms.maxLoanAmount
+    const liquidatorAddress = await liquidator.getAddress()
+    // const tokenBal = await details.lendingToken.balanceOf(liquidatorAddress)
+    await getFunds({
+      to: liquidatorAddress,
+      tokenSym: await details.lendingToken.symbol(),
+      amount: BigNumber.from(borrowedAmount).mul(2),
+      hre,
+    })
+    await details.lendingToken
+      .connect(liquidator)
+      .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
+    const tx = await diamond.connect(liquidator).liquidateLoan(details.loan.id)
+    return tx
   }
 }

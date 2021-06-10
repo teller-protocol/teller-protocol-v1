@@ -73,7 +73,7 @@ interface CreateLoanWithNftArgs {
   amountBN?: BigNumberish
   duration?: moment.Duration
 }
-interface CreateLoanArgs {
+export interface CreateLoanArgs {
   lendToken: string | ERC20
   collToken: string | ERC20
   loanType: LoanType

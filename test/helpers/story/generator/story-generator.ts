@@ -25,24 +25,37 @@ const testScenarios = [
 
 */
 
-import { STORY_ACTIONS, TestScenario } from '../story-helpers-2'
+import { STORY_ACTIONS, TestScenario } from '../story-helpers'
 
 export const generateStories = (): Array<TestScenario> => {
-  let manualScenarios = [
+  let manualScenarios: TestScenario[] = [
     {
       domain: 'LOAN',
       actions: [
-        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, suiteName: '', args: {} },
-        { actionType: STORY_ACTIONS.LOAN.LIQUIDATE, suiteName: '', args: {} },
+        {
+          actionType: STORY_ACTIONS.LOAN.TAKE_OUT,
+          suiteName: '',
+          args: { pass: true, parent: null },
+        },
+        {
+          actionType: STORY_ACTIONS.LOAN.LIQUIDATE,
+          suiteName: '',
+          args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
+        },
+        {
+          actionType: STORY_ACTIONS.LOAN.REPAY,
+          suiteName: '',
+          args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
+        },
       ],
     },
-    {
-      domain: 'LOAN',
-      actions: [
-        { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, suiteName: '', args: {} },
-        { actionType: STORY_ACTIONS.LOAN.REPAY, suiteName: '', args: {} },
-      ],
-    },
+    // {
+    //   domain: 'LOAN',
+    //   actions: [
+    //     { actionType: STORY_ACTIONS.LOAN.TAKE_OUT, suiteName: '', args: {pass: true, parent: null} },
+    //     { actionType: STORY_ACTIONS.LOAN.REPAY, suiteName: '', args: {pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT} },
+    //   ],
+    // },
   ]
 
   return manualScenarios
