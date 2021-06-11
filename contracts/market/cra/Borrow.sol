@@ -14,6 +14,7 @@ import { ADMIN } from "../../shared/roles.sol";
 import { Signature } from "../../storage/market.sol";
 import { Verifier } from "./verifier.sol";
 import { LibLoans } from "../libraries/LibLoans.sol";
+import "hardhat/console.sol";
 
 contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
     // for testing
@@ -211,6 +212,8 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
         bytes32 commitment,
         bytes32 providerId
     ) private view {
+        console.log("commitmentXXXX");
+        console.log(uint256(commitment));
         require(
             s().providers[providerId].signer[
                 ECDSA.recover(
