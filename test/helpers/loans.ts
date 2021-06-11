@@ -29,6 +29,8 @@ import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 const {
   getNamedSigner,
   getNamedAccounts,
@@ -523,11 +525,17 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   ])
 
   // compute proof
+  const provingKey = new Uint8Array(
+    readFileSync(
+      join(__dirname, '../../contracts/market/cra/proving.key')
+    ).buffer
+  )
+
   console.log('about to get proof')
   proof = provider.generateProof(
     compilationArtifacts.program,
     computation.witness,
-    keyPair.pk
+    provingKey
   )
   console.log('proof')
   return {
@@ -540,6 +548,7 @@ export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
 ): Promise<ContractTransaction> => {
   console.log('borrowing with zkcra')
+
   // get proof and witness from args
   const { proof, computation } = args
 
