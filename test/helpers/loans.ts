@@ -2,6 +2,7 @@
 import { isBytesLike } from '@ethersproject/bytes'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { time, timeStamp } from 'console'
+import { createSign } from 'crypto'
 import {
   BigNumber,
   BigNumberish,
@@ -20,7 +21,7 @@ import {
   ComputationResult,
   Proof,
   SetupKeypair,
-  // @ts-ignore
+  //@ts-ignore
 } from 'zokrates-js/node'
 
 // teller files
@@ -398,12 +399,12 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
       u32[3][8] commitments = data
       u32 MARKET_SCORE = 0
       u32 MASK = 0x0000000a
-  
+
       for u32 i in 0..3 do
           MARKET_SCORE = MARKET_SCORE + data[i][0] & MASK
           commitments[i] = sha256(data[i])
       endfor
-  
+
       return MARKET_SCORE,commitments`
 
   // compile into circuit
@@ -485,11 +486,8 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 export const fillZKCRAConfigInfo = async () => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
-  // get signers
-  const signerOne = '0x592000b2c8c590531d490893C16AfC4b9cbbe6B9'
-  const signerTwo = '0xd59e99927018b995ee9Ad6b9003677f1e7393F8A'
-  const signerThree = '0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA'
-  console.log('got signers')
+  // get signers (providers)
+  const { craSigner } = await getNamedAccounts()
 
   console.log('about to initialize config admin')
   const deployer = await getNamedSigner('deployer')
@@ -502,21 +500,21 @@ export const fillZKCRAConfigInfo = async () => {
     .connect(deployer)
     .setProviderSigner(
       '0x0000000000000000000000000000000000000000000000000000000000000000',
-      signerOne,
+      craSigner,
       true
     )
   await diamond
     .connect(deployer)
     .setProviderSigner(
       '0x0000000000000000000000000000000000000000000000000000000000000001',
-      signerTwo,
+      craSigner,
       true
     )
   await diamond
     .connect(deployer)
     .setProviderSigner(
       '0x0000000000000000000000000000000000000000000000000000000000000002',
-      signerThree,
+      craSigner,
       true
     )
   console.log('set signers on 3 provider ids')
@@ -544,105 +542,129 @@ export const fillZKCRAConfigInfo = async () => {
 }
 
 // take out function with zkcra implemented
-export const borrowWithZKCRA = async (args: CreateLoanWithZKCRA) => {
+export const borrowWithZKCRA = async (
+  args: CreateLoanWithZKCRA
+): Promise<ContractTransaction> => {
   console.log('borrowing with zkcra')
   // get proof and witness from args
   const { proof, computation } = args
-  // computation.witness.output[2-10]
-  // computation.witnes
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   console.log('getting signers')
-  // signers
-  const signerOne = ethers.provider.getSigner(
-    ethers.utils.getAddress('0x592000b2c8c590531d490893C16AfC4b9cbbe6B9')
-  )
-  const signerTwo = ethers.provider.getSigner(
-    ethers.utils.getAddress('0xd59e99927018b995ee9Ad6b9003677f1e7393F8A')
-  )
-  const signerThree = ethers.provider.getSigner(
-    ethers.utils.getAddress('0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA')
-  )
-  console.log('got signers')
 
-  const deployer = await getNamedSigner('deployer')
+  // variables to concatenate with proof inputs
+  let firstInput: any = '0x'
+  let secondInput: any = '0x'
+  let thirdInput: any = '0x'
 
-  // first signature
+  // cutting the proof inputs and concatenating them into our input variables
+  proof.inputs
+    .slice(2, 10)
+    .map((input: string) => {
+      firstInput += input.substr(2).substr(56)
+    })
+    .join('')
+  proof.inputs
+    .slice(10, 18)
+    .map((input: string) => {
+      secondInput += input.substr(2).substr(56)
+    })
+    .join('')
+  proof.inputs
+    .slice(18, 26)
+    .map((input: string) => {
+      thirdInput += input.substr(2).substr(56)
+    })
+    .join('')
 
-  console.log('about to do first signature')
+  console.log('input one: ' + firstInput)
+  console.log('input two: ' + secondInput)
+  console.log('input three: ' + thirdInput)
+  // get the signer
+  const signer = await getNamedSigner('craSigner')
+  // get the time stamp
   const timestampOne = moment().unix()
-  console.log({
-    output: computation.output,
-    witness: computation.witness,
-    proof,
-  })
-  console.log(Object.keys(computation.witness), Object.keys(proof))
-  // console.log('0x' + (computation.witness.slice(2, 10) ^ timestampOne))
-  // const messageOne = '0x' + (computation.witness.slice(2, 10) ^ timestampOne)
-  // console.log('message one done')
-  // const credentialsSignerOne = await deployer.signMessage(messageOne)
-  // const signatureDataOne = {
-  //   signature: {
-  //     v: JSON.parse(credentialsSignerOne).v,
-  //     r: JSON.parse(credentialsSignerOne).r,
-  //     s: JSON.parse(credentialsSignerOne).s,
-  //   },
-  //   signedAt: timestampOne,
-  // }
-  // console.log(signatureDataOne)
-  // console.log(credentialsSignerOne)
+  // create our message
+  const messageOne = (firstInput ^ timestampOne).toString()
 
-  // // marketId
-  // const timestampTwo = moment().unix()
-  // console.log('0x' + (computation.witness.slice(10, 18) ^ timestampTwo))
-  // const messageTwo = '0x' + (computation.witness.slice(10, 118) ^ timestampTwo)
-  // console.log('message one done')
-  // const credentialsSignerTwo = await deployer.signMessage(messageTwo)
-  // const signatureDataTwo = {
-  //   signature: {
-  //     v: JSON.parse(credentialsSignerTwo).v,
-  //     r: JSON.parse(credentialsSignerTwo).r,
-  //     s: JSON.parse(credentialsSignerTwo).s,
-  //   },
-  //   signedAt: timestampTwo,
-  // }
-  // console.log(credentialsSignerTwo)
+  // signing first message
+  const credentialsSignerOne = await signer.signMessage(messageOne)
+  // split our signature
+  const sigOne = ethers.utils.splitSignature(credentialsSignerOne)
 
-  // const timestampThree = moment().unix()
-  // console.log('0x' + (computation.witness.slice(18, 26) ^ timestampThree))
-  // const messageThree =
-  //   '0x' + (computation.witness.slice(18, 26) ^ timestampThree)
-  // console.log('message one done')
-  // const credentialsSignerThree = await deployer.signMessage(messageThree)
-  // const signatureDataThree = {
-  //   signature: {
-  //     v: JSON.parse(credentialsSignerThree).v,
-  //     r: JSON.parse(credentialsSignerThree).r,
-  //     s: JSON.parse(credentialsSignerThree).s,
-  //   },
-  //   signedAt: timestampThree,
-  // }
-  // console.log(credentialsSignerThree)
+  // construct our signature data to pass onchain
+  const signatureDataOne = {
+    signature: {
+      v: sigOne.v,
+      r: sigOne.r,
+      s: sigOne.s,
+    },
+    signedAt: timestampOne,
+  }
+  console.log(signatureDataOne)
 
-  // // all borrow variables
-  // const marketId_ =
-  //   '0x0000000000000000000000000000000000000000000000000000000000000000'
-  // const proof_ = proof
-  // const witness_ = computation.witness
-  // const signatureData = [signatureDataOne, signatureDataTwo, signatureDataThree]
-  // const request = {
-  //   collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
-  //   loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
-  //   collateralAmounts: [10],
-  //   loanAmount: 100,
-  //   duration: moment.duration(1, 'day').asSeconds(),
-  // }
+  // second signature
+  const timestampTwo = moment().unix()
+  const messageTwo = (secondInput ^ timestampTwo).toString()
+  const credentialsSignerTwo = await signer.signMessage(messageTwo)
+  const sigTwo = ethers.utils.splitSignature(credentialsSignerTwo)
+  const signatureDataTwo = {
+    signature: {
+      v: sigTwo.v,
+      r: sigTwo.r,
+      s: sigTwo.s,
+    },
+    signedAt: timestampTwo,
+  }
+  console.log(signatureDataTwo)
 
-  // const borrower = (await getNamedAccounts()).borrower
-  // await diamond
-  //   .connect(borrower)
-  //   .borrow(marketId_, proof_, witness_, signatureData, request)
-  // //
+  // third signature
+  const timestampThree = moment().unix()
+  const messageThree = (thirdInput ^ timestampThree).toString()
+  const credentialsSignerThree = await signer.signMessage(messageThree)
+  console.log('message three done')
+  console.log('credentials')
+  const sigThree = ethers.utils.splitSignature(credentialsSignerThree)
+  const signatureDataThree = {
+    signature: {
+      v: sigThree.v,
+      r: sigThree.r,
+      s: sigThree.s,
+    },
+    signedAt: timestampThree,
+  }
+  console.log(signatureDataThree)
+
+  console.log('all our signature data created')
+
+  // all borrow variables
+  const marketId_ =
+    '0x0000000000000000000000000000000000000000000000000000000000000000'
+  const proof_ = proof
+  console.log(proof_)
+  const witness_ = proof.inputs
+  console.log('got witness')
+  const request = {
+    collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
+    loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    collateralAmounts: [10],
+    loanAmount: 100,
+    duration: moment.duration(1, 'day').asSeconds(),
+  }
+  console.log('created request')
+  console.log('got deployer')
+  const deployer = await getNamedSigner('deployer')
+  // await diamond.connect(deployer).initializeConfigAdmins()
+  const tx = await diamond
+    .connect(deployer)
+    .borrow(
+      marketId_,
+      proof_.proof,
+      witness_,
+      [signatureDataOne, signatureDataTwo, signatureDataThree],
+      request
+    )
+  return tx
 }
 
 export const takeOut = async (

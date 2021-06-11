@@ -176,19 +176,26 @@ describe.only('Loans', () => {
       let computation_: ComputationResult
       let proof_: Proof
       before(async () => {
+        // we fill the necessary config information (admins mostly) into our providers
+        // and market
         console.log('filling zkCRAConfigInfo')
         await fillZKCRAConfigInfo()
-        // return computation and proof values and assign them to our variables
-        // created above
       })
+
       // check if computation and proof exist
       it('checks if computation and proof are returned', async () => {
         const { computation, proof } = await outputCraValues()
-        console.log('about to borrow with zkcra')
-        await borrowWithZKCRA({ proof, computation })
+        computation_ = computation
+        proof_ = proof
       })
       // TODO: Complete this test tonight
-      it('uses witness, output and proof to take out a loan', async () => {})
+      it('uses witness, output and proof to take out a loan', async () => {
+        const tx = await borrowWithZKCRA({
+          proof: proof_,
+          computation: computation_,
+        })
+        tx.should.exist
+      })
     })
     // delete the rest? 🤔
     describe('create', () => {})
