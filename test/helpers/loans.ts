@@ -376,6 +376,65 @@ const serializeSecret = (secret: string) => {
   return serialized
 }
 
+// we fill zkCRAConfigInfo before we sign
+export const fillZKCRAConfigInfo = async () => {
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+
+  // get signers (providers)
+  const { craSigner } = await getNamedAccounts()
+
+  console.log('about to initialize config admin')
+  const deployer = await getNamedSigner('deployer')
+  await diamond.connect(deployer).initializeConfigAdmins()
+  console.log('initialized config admin')
+
+  // set signers for the providerIds
+  console.log('setting provider signers')
+  await diamond
+    .connect(deployer)
+    .setProviderSigner(
+      '0x0000000000000000000000000000000000000000000000000000000000000000',
+      craSigner,
+      true
+    )
+  await diamond
+    .connect(deployer)
+    .setProviderSigner(
+      '0x0000000000000000000000000000000000000000000000000000000000000001',
+      craSigner,
+      true
+    )
+  await diamond
+    .connect(deployer)
+    .setProviderSigner(
+      '0x0000000000000000000000000000000000000000000000000000000000000002',
+      craSigner,
+      true
+    )
+  console.log('set signers on 3 provider ids')
+
+  // create config
+  console.log('setting market config')
+  const maxAge_ = moment.duration(10, 'hours').asSeconds()
+  for (let i = 0; i < 3; i++) {
+    const providerConfig = {
+      maxAge: maxAge_,
+      providerId:
+        '0x000000000000000000000000000000000000000000000000000000000000000' +
+        i.toString(),
+    }
+    // set market provider config in a loop
+    await diamond
+      .connect(deployer)
+      .setMarketProviderConfig(
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        i,
+        providerConfig
+      )
+    console.log('provider config #' + i + ' set.')
+  }
+}
+
 export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('inside output cra values')
   // local variables
@@ -476,66 +535,6 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
     proof: proof,
   }
 }
-
-// we fill zkCRAConfigInfo before we sign
-export const fillZKCRAConfigInfo = async () => {
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-
-  // get signers (providers)
-  const { craSigner } = await getNamedAccounts()
-
-  console.log('about to initialize config admin')
-  const deployer = await getNamedSigner('deployer')
-  await diamond.connect(deployer).initializeConfigAdmins()
-  console.log('initialized config admin')
-
-  // set signers for the providerIds
-  console.log('setting provider signers')
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000000',
-      craSigner,
-      true
-    )
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-      craSigner,
-      true
-    )
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000002',
-      craSigner,
-      true
-    )
-  console.log('set signers on 3 provider ids')
-
-  // create config
-  console.log('setting market config')
-  const maxAge_ = moment.duration(10, 'hours').asSeconds()
-  for (let i = 0; i < 3; i++) {
-    const providerConfig = {
-      maxAge: maxAge_,
-      providerId:
-        '0x000000000000000000000000000000000000000000000000000000000000000' +
-        i.toString(),
-    }
-    // set market provider config in a loop
-    await diamond
-      .connect(deployer)
-      .setMarketProviderConfig(
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        i,
-        providerConfig
-      )
-    console.log('provider config #' + i + ' set.')
-  }
-}
-
 // take out function with zkcra implemented
 export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
@@ -647,14 +646,13 @@ export const borrowWithZKCRA = async (
     duration: moment.duration(1, 'day').asSeconds(),
   }
   console.log('created request')
-  console.log('got deployer')
-  const deployer = await getNamedSigner('deployer')
+  const borrower = (await getNamedAccounts()).borrower
   // await diamond.connect(deployer).initializeConfigAdmins()
   const tx = await diamond
-    .connect(deployer)
+    .connect(borrower)
     .borrow(
       marketId_,
-      proof_.proof,
+      { a: proof_.proof.a, b: proof_.proof.b, c: proof_.proof.c },
       witness_,
       [signatureDataOne, signatureDataTwo, signatureDataThree],
       request
