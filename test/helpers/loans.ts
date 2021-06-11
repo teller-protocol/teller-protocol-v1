@@ -556,9 +556,9 @@ export const borrowWithZKCRA = async (
   console.log('getting signers')
 
   // variables to concatenate with proof inputs
-  let firstInput: any = '0x'
-  let secondInput: any = '0x'
-  let thirdInput: any = '0x'
+  let firstInput: string = '0x'
+  let secondInput: string = '0x'
+  let thirdInput: string = '0x'
 
   // cutting the proof inputs and concatenating them into our input variables
   proof.inputs
@@ -588,8 +588,10 @@ export const borrowWithZKCRA = async (
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
-  const messageOne = (firstInput ^ timestampOne).toString()
-
+  const messageOne = ethers.BigNumber.from(firstInput)
+    .xor(timestampOne)
+    .toHexString()
+  console.log({ messageOne: BigNumber.from(messageOne).toString() })
   // signing first message
   const credentialsSignerOne = await signer.signMessage(messageOne)
   // split our signature
@@ -608,7 +610,9 @@ export const borrowWithZKCRA = async (
 
   // second signature
   const timestampTwo = moment().unix()
-  const messageTwo = (secondInput ^ timestampTwo).toString()
+  const messageTwo = ethers.BigNumber.from(secondInput)
+    .xor(timestampTwo)
+    .toHexString()
   const credentialsSignerTwo = await signer.signMessage(messageTwo)
   const sigTwo = ethers.utils.splitSignature(credentialsSignerTwo)
   const signatureDataTwo = {
@@ -623,7 +627,9 @@ export const borrowWithZKCRA = async (
 
   // third signature
   const timestampThree = moment().unix()
-  const messageThree = (thirdInput ^ timestampThree).toString()
+  const messageThree = ethers.BigNumber.from(thirdInput)
+    .xor(timestampThree)
+    .toHexString()
   const credentialsSignerThree = await signer.signMessage(messageThree)
   console.log('message three done')
   console.log('credentials')
