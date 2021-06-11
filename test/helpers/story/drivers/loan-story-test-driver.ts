@@ -45,7 +45,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
         LoanStoryTestDriver.generateTestsForAction(action)
-
       allTests = allTests.concat(testsForAction)
     }
 
@@ -79,10 +78,9 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             const { tx, getHelpers } = await funcToRun(createArgs)
             const result = await tx
             console.log('done here: %o', result.hash)
-            expect(0).to.equal(0)
-            // expect(result.hash)
-            // LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
-            //   await hre.evm.snapshot()
+            expect(result.hash)
+            LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
+              await hre.evm.snapshot()
           } else {
             expect(await funcToRun(createArgs)).to.throw()
           }
