@@ -1,7 +1,6 @@
 import Chai from 'chai'
 
 import Mocha from 'mocha'
-
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 import { updatePlatformSetting } from '../../tasks'
@@ -12,7 +11,6 @@ import {
   TestAction,
 } from '../helpers/story/story-helpers'
 import { generateStories } from '../helpers/story/generator/story-generator'
-
 Chai.should()
 Chai.use(solidity)
 
