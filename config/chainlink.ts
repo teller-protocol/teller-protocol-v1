@@ -142,6 +142,26 @@ export const chainlink: Record<string, Chainlink> = {
       quoteTokenName: 'USDC',
       address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD
     },
+    AAVE_ETH: {
+      baseTokenName: 'AAVE',
+      quoteTokenName: 'WETH',
+      address: '0xbE23a3AA13038CfC28aFd0ECe4FdE379fE7fBfc4',
+    },
+    MATIC_ETH: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'WETH',
+      address: '0x327e23A4855b6F663a28c5161541d69Af8973302',
+    },
+    MATIC_USD: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'USDC',
+      address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',
+    },
+    SUSHI_USD: {
+      baseTokenName: 'SUSHI',
+      quoteTokenName: 'USDC',
+      address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
+    },
   },
   polygon_mumbai: {
     USDC_ETH: {
@@ -163,6 +183,11 @@ export const chainlink: Record<string, Chainlink> = {
       baseTokenName: 'LINK',
       quoteTokenName: 'USDC',
       address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD MAINNET
+    },
+    MATIC_USD: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'USDC',
+      address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
     },
   },
   hardhat: mainnetChainlink,
