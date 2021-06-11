@@ -28,6 +28,10 @@ const deployProtocol: DeployFunction = async (hre) => {
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
 
+  const tokens = getTokens(network)
+  const wrappedNativeToken =
+    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
+
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
   try {
@@ -44,8 +48,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute = upgradeExecute
   } catch {
     // Else execute initialize function
-
-    const tokens = getTokens(network)
     const executeMethod = 'init'
     const initExecute: DeployDiamondArgs<
       ITellerDiamond,
@@ -67,6 +69,7 @@ const deployProtocol: DeployFunction = async (hre) => {
           // Teller Gnosis Safe contract
           nftLiquidationController:
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
+          wrappedNativeToken: wrappedNativeToken,
         },
       ],
     }
