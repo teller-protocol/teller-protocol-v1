@@ -1,7 +1,6 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
-import { evm } from 'hardhat'
 
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 
@@ -29,7 +28,8 @@ export const getLPHelpers = (args: LPHelperArgs) => ({
  * state changes.
  * @param args {LPHelperArgs}
  */
-export const depositWithArgs = (args: LPHelperArgs) =>
+export const depositWithArgs =
+  (args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the deposit functionality.
    *  - Approves the lending token amount for the lender.
@@ -57,7 +57,8 @@ export const depositWithArgs = (args: LPHelperArgs) =>
  * state changes.
  * @param args {LPHelperArgs}
  */
-export const withdrawWithArgs = (args: LPHelperArgs) =>
+export const withdrawWithArgs =
+  (args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the withdraw functionality.
    *  - Estimates the exact amount of tokens to be withdrawn/burned.

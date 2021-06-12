@@ -1,13 +1,16 @@
 import Chai from 'chai'
-import Mocha from 'mocha'
-import { Signer, BigNumber, ContractTransaction } from 'ethers'
-import moment from 'moment'
 
 import { Test } from 'mocha'
 import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
+/*
+import Mocha from 'mocha'
+import { Signer, BigNumber, ContractTransaction } from 'ethers'
+import moment from 'moment'
 
-import hre, { contracts, getNamedSigner } from 'hardhat'
+ import  
+ 
+ { contracts, getNamedSigner } from 'hardhat'
 
 import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
 import { ITellerDiamond } from '../../../../types/typechain'
@@ -23,7 +26,12 @@ import {
   RepayLoanArgs,
   LoanHelpersReturn,
 } from '../../loans'
+
+
+*/
+
 import Prando from 'prando'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 let rng = new Prando('teller-v1')
 
 var expect = Chai.expect
@@ -36,6 +44,7 @@ Then we will expect that
 
 export default class LoanStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
+    hre: HardhatRuntimeEnvironment,
     scenario: TestScenario
   ): Array<Test> {
     let allTests: Array<Test> = []
@@ -44,14 +53,17 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        LoanStoryTestDriver.generateTestsForAction(action)
+        LoanStoryTestDriver.generateTestsForAction(hre, action)
       allTests = allTests.concat(testsForAction)
     }
 
     return allTests
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    hre: HardhatRuntimeEnvironment,
+    action: TestAction
+  ): Array<Test> {
     // SNAPSHOTS.revert = await hre.evm.snapshot()
 
     let tests: Array<Test> = []
@@ -59,6 +71,14 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const { actionType, args } = action
     switch (actionType) {
       case STORY_ACTIONS.LOAN.TAKE_OUT: {
+        let newTest = new Test('take out loan', async function () {
+          expect(2).to.equal(1)
+        })
+
+        tests.push(newTest)
+      }
+
+      /*   case STORY_ACTIONS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
           const percentageSubmission = {
             name: 'RequiredSubmissionsPercentage',
@@ -71,7 +91,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           )
           await hre.evm.advanceTime(rateLimit)
           const borrowerAddress = (await hre.getNamedAccounts()).borrower
-          const createArgs = LoanStoryTestDriver.createLoanArgs(borrowerAddress)
+          const createArgs = LoanStoryTestDriver.createLoanArgs(hre,borrowerAddress)
           const funcToRun =
             args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
           // if (args.pass) {
@@ -132,13 +152,13 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
         break
-      }
+      }*/
     }
 
     return tests
   }
-
-  static createLoanArgs = (borrower: string): CreateLoanArgs => {
+  /*
+  static createLoanArgs = (hre:HardhatRuntimeEnvironment, borrower: string): CreateLoanArgs => {
     const { network } = hre
     const markets = getMarkets(network)
     const randomMarket = rng.nextInt(0, markets.length - 1)
@@ -175,7 +195,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     return loanHelpers(loanID)
   }
 
-  static liquidateLoan = async (): Promise<ContractTransaction> => {
+  static liquidateLoan = async (hre:HardhatRuntimeEnvironment): Promise<ContractTransaction> => {
     const borrowerAddress = (await hre.getNamedAccounts()).borrower
     const borrower = await hre.ethers.provider.getSigner(borrowerAddress)
     // console.log(borrower.)
@@ -197,5 +217,5 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
     const tx = await diamond.connect(liquidator).liquidateLoan(details.loan.id)
     return tx
-  }
+  }*/
 }

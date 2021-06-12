@@ -7,6 +7,7 @@ import moment from 'moment'
 import { Test } from 'mocha'
 import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 var expect = Chai.expect
 
@@ -21,6 +22,7 @@ Then we will expect that
 
 export default class DappStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
+    hre: HardhatRuntimeEnvironment,
     scenario: TestScenario
   ): Array<Test> {
     let allTests: Array<Test> = []
@@ -29,7 +31,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        DappStoryTestDriver.generateTestsForAction(action)
+        DappStoryTestDriver.generateTestsForAction(hre, action)
 
       allTests = allTests.concat(testsForAction)
     }
@@ -37,7 +39,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return allTests
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    hre: HardhatRuntimeEnvironment,
+    action: TestAction
+  ): Array<Test> {
     let tests: Array<Test> = []
 
     let actionType = action.actionType

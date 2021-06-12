@@ -90,6 +90,8 @@ export const addTiers = async (
     }
   }
 
+  return
+
   log('')
   log(`Setting NFT token tier mapping...`, { indent: 2, star: true, nl: false })
 
