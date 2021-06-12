@@ -587,6 +587,8 @@ export const borrowWithZKCRA = async (
   console.log('input three: ' + thirdInput)
   // get the signer
   const signer = await getNamedSigner('craSigner')
+  const signerAddress = await signer.getAddress()
+  console.log("signer's address: " + signerAddress)
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
@@ -594,6 +596,7 @@ export const borrowWithZKCRA = async (
   const messageOne = ethers.BigNumber.from(firstInput)
     .xor(timestampOne)
     .toHexString()
+
   console.log({ messageOne: BigNumber.from(messageOne).toString() })
   // signing first message
   const credentialsSignerOne = await signer.signMessage(
@@ -655,7 +658,6 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampThree,
   }
-  console.log(signatureDataThree)
 
   console.log('all our signature data created')
 
@@ -663,9 +665,7 @@ export const borrowWithZKCRA = async (
   const marketId_ =
     '0x0000000000000000000000000000000000000000000000000000000000000000'
   const proof_ = proof
-  console.log(proof_)
   const witness_ = proof.inputs
-  console.log('got witness')
   const request = {
     collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
     loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
@@ -673,11 +673,10 @@ export const borrowWithZKCRA = async (
     loanAmount: 100,
     duration: moment.duration(1, 'day').asSeconds(),
   }
-  console.log('created request')
   const borrower = (await getNamedAccounts()).borrower
-  // await diamond.connect(deployer).initializeConfigAdmins()
+  const signerBorrower = await ethers.provider.getSigner(borrower)
   const tx = await diamond
-    .connect(borrower)
+    .connect(signerBorrower)
     .borrow(
       marketId_,
       { a: proof_.proof.a, b: proof_.proof.b, c: proof_.proof.c },

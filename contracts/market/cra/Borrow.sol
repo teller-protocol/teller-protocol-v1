@@ -151,19 +151,6 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
-        // Construct the commitments (data which are signed by provider).
-        // uint256[8] memory cache = witness[2:10];
-        // cache[7] = cache[7] ^= signatureData[0].signedAt;
-        // commitments[0] = abi.encodePacked(cache);
-
-        // cache = witness[10:18];
-        // cache[7] = cache[7] ^= signatureData[1].signedAt;
-        // commitments[1] = abi.encodePacked(cache);
-
-        // cache = witness[18:26];
-        // cache[7] = cache[7] ^= signatureData[2].signedAt;
-        // commitments[2] = abi.encodePacked(cache);
-
         // But we already know both commitments are even? So it must be a signing issue.
 
         for (uint8 i = 0; i < 3; i++) {
@@ -226,10 +213,6 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
         bytes32 commitment,
         bytes32 providerId
     ) private view {
-        console.log("commitmentXXXX");
-        console.log(uint256(commitment));
-        console.log("providerIdXXXX");
-        console.log(uint256(providerId));
         address recoveredSigner =
             ECDSA.recover(
                 keccak256(
@@ -242,7 +225,6 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
                 signature.r,
                 signature.s
             );
-        console.log(recoveredSigner);
         require(
             s().providers[providerId].signer[recoveredSigner],
             "Teller: not valid signature"
