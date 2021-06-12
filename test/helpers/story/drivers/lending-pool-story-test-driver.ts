@@ -58,10 +58,9 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             expect(await depositWithArgs(lpArgs)).to.throw()
           }
-          expect(1).to.equal(1)
         })
 
-        console.log('push new story test ! ')
+        console.log('push new story test !')
         tests.push(newTest)
         break
       }
@@ -73,14 +72,12 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             expect(await withdrawWithArgs(lpArgs)).to.throw()
           }
-          expect(1).to.equal(1)
         })
-        console.log('push new story test ! ')
+        console.log('push new story test !')
         tests.push(newTest)
         break
       }
     }
-
     return tests
   }
 
@@ -91,7 +88,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const tToken = await hre.contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
-
     const lpHelperArgs: LPHelperArgs = {
       diamond: diamond,
       lendingToken: details.lendingToken,

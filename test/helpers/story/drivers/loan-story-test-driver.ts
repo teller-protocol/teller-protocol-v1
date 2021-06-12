@@ -95,35 +95,36 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.repayLoan()
             expect(tx).to.exist
           } else {
             expect(await LoanStoryTestDriver.repayLoan()).to.throw()
           }
-          expect(1).to.equal(1)
         })
-
         console.log('push STORY_ACTIONS.LOAN.REPAY test ! ')
         tests.push(newTest)
         break
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
+          // if (args.parent) LoanSnapshots[args.parent]()
+          const snapshot = await LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT]()
+          console.log({ snapshot })
           if (args.pass) {
             const tx = await LoanStoryTestDriver.liquidateLoan()
             expect(tx).to.exist
           } else {
             expect(await LoanStoryTestDriver.liquidateLoan()).to.throw()
           }
-          expect(1).to.equal(1)
+          // expect(1).to.equal(1)
         })
         console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
         break
       }
     }
-
     return tests
   }
 

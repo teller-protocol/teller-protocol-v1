@@ -43,10 +43,11 @@ describe.only('story test', async () => {
     mochaInstance.suite,
     'Story Test Suite'
   )
-
-  for (let test of allGeneratedTests) {
-    suiteInstance.addTest(test)
-  }
+  console.log({ tests: allGeneratedTests.length })
+  // for (let test of allGeneratedTests) {
+  //   suiteInstance.addTest(test)
+  // }
+  allGeneratedTests.map((test) => suiteInstance.addTest(test))
 
   //is this needed ?
   /*before(async () => {

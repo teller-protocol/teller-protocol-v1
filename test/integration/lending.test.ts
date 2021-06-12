@@ -24,7 +24,7 @@ const {
   toBN,
 } = hre
 
-describe('Lending', () => {
+describe.only('Lending', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
