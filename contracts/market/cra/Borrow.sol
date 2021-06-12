@@ -151,20 +151,25 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
-        // Construct the commitments (data which are signed by provider).
-        // uint256[8] memory cache = witness[2:10];
-        // witness[7] = witness[7] ^= signedAt[0];
-        // commitments[0] = abi.encodePacked(cache);
-        // But we already know both commitments are even? So it must be a signing issue.
+        uint32[24] memory witness32 = new uint32[24](0);
 
-        for (uint8 i = 0; i < 3; i++) {
-            for (uint8 j = 0; j < 8; j++) {
-                commitments[i] =
-                    (commitments[i] << 32) |
-                    bytes32(witness[2 + i + j]);
-            }
-            commitments[i] ^= bytes32(signatureData[i].signedAt);
+        for (uint8 i = 2; i < witness.length; i++) {
+            witness32[i - 2] = uint32(witness[i]);
         }
+
+        uint256[8] memory cache = witness32[0:8];
+        cache[7] = cache[7] ^= signatureData[0].signedAt;
+        commitments[0] = abi.decode(abi.encodePacked(cache), (bytes32));
+
+        cache = witness32[8:16];
+        cache[7] = cache[7] ^= signatureData[1].signedAt;
+        commitments[1] = abi.decode(abi.encodePacked(cache), (bytes32));
+
+        cache = witness[16:24];
+        cache[7] = cache[7] ^= signatureData[2].signedAt;
+        commitments[2] = abi.decode(abi.encodePacked(cache), (bytes32));
+
+        // But we already know both commitments are even? So it must be a signing issue.
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
@@ -183,7 +188,7 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
         bytes32[3] memory commitments,
         SignatureData[3] calldata signatureData
     ) private {
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 3; i++) {
             require(
                 signatureData[i].signedAt >
                     // solhint-disable-next-line
