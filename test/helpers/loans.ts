@@ -469,8 +469,8 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('compiled source')
 
   // generate keypair
-  keyPair = provider.setup(compilationArtifacts.program)
-  console.log('got keypair')
+  // keyPair = provider.setup(compilationArtifacts.program)
+  // console.log('got keypair')
 
   // get borrower nonce and identifier
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -555,29 +555,22 @@ export const borrowWithZKCRA = async (
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   console.log('getting signers')
 
-  // variables to concatenate with proof inputs
-  let firstInput: string = '0x'
-  let secondInput: string = '0x'
-  let thirdInput: string = '0x'
-
   // cutting the proof inputs and concatenating them into our input variables
-  proof.inputs
-    .slice(2, 10)
-    .map((input: string) => {
-      firstInput += input.substr(2).substr(56)
-    })
-    .join('')
-  proof.inputs
+  const firstInput =
+    '0x' +
+    proof.inputs
+      .slice(2, 10)
+      .map((input: string) => input.substr(2).substr(56))
+      .join('')
+
+  const secondInput = proof.inputs
     .slice(10, 18)
-    .map((input: string) => {
-      secondInput += input.substr(2).substr(56)
-    })
+    .map((input: string) => input.substr(2).substr(56))
     .join('')
-  proof.inputs
+
+  const thirdInput = proof.inputs
     .slice(18, 26)
-    .map((input: string) => {
-      thirdInput += input.substr(2).substr(56)
-    })
+    .map((input: string) => input.substr(2).substr(56))
     .join('')
 
   console.log('input one: ' + firstInput)
@@ -588,12 +581,32 @@ export const borrowWithZKCRA = async (
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
+
+  ethers.utils.solidityPack(
+    [
+      'uint32',
+      'uint32',
+      'uint32',
+      'uint32',
+      'uint32',
+      'uint32',
+      'uint32',
+      'uint32',
+    ],
+    proof.inputs
+      .slice(2, 8)
+      .map((val: string, i: number) =>
+        i == 7 ? BigNumber.from(val).xor(timestampOne) : val
+      )
+  )
   const messageOne = ethers.BigNumber.from(firstInput)
     .xor(timestampOne)
     .toHexString()
   console.log({ messageOne: BigNumber.from(messageOne).toString() })
   // signing first message
-  const credentialsSignerOne = await signer.signMessage(messageOne)
+  const credentialsSignerOne = await signer.signMessage(
+    ethers.utils.arrayify(messageOne)
+  )
   // split our signature
   const sigOne = ethers.utils.splitSignature(credentialsSignerOne)
 
@@ -613,7 +626,9 @@ export const borrowWithZKCRA = async (
   const messageTwo = ethers.BigNumber.from(secondInput)
     .xor(timestampTwo)
     .toHexString()
-  const credentialsSignerTwo = await signer.signMessage(messageTwo)
+  const credentialsSignerTwo = await signer.signMessage(
+    ethers.utils.arrayify(messageTwo)
+  )
   const sigTwo = ethers.utils.splitSignature(credentialsSignerTwo)
   const signatureDataTwo = {
     signature: {
@@ -630,7 +645,9 @@ export const borrowWithZKCRA = async (
   const messageThree = ethers.BigNumber.from(thirdInput)
     .xor(timestampThree)
     .toHexString()
-  const credentialsSignerThree = await signer.signMessage(messageThree)
+  const credentialsSignerThree = await signer.signMessage(
+    ethers.utils.arrayify(messageThree)
+  )
   console.log('message three done')
   console.log('credentials')
   const sigThree = ethers.utils.splitSignature(credentialsSignerThree)
