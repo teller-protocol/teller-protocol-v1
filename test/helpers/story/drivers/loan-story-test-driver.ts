@@ -4,7 +4,12 @@ import { Signer, BigNumber, ContractTransaction } from 'ethers'
 import moment from 'moment'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
+import {
+  TestScenario,
+  STORY_ACTIONS,
+  TestAction,
+  LoanSnapshots,
+} from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
 import hre, { contracts, getNamedSigner, ethers } from 'hardhat'
@@ -27,7 +32,6 @@ import Prando from 'prando'
 let rng = new Prando('teller-v1')
 
 var expect = Chai.expect
-const LoanSnapshots: { [name: number]: Function } = {}
 
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
@@ -95,7 +99,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
+          if (args.parent) await LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.repayLoan()
             expect(tx).to.exist
@@ -109,9 +113,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
-          // if (args.parent) LoanSnapshots[args.parent]()
-          const snapshot = await LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT]()
-          console.log({ snapshot })
+          if (args.parent) await LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.liquidateLoan()
             expect(tx).to.exist
@@ -202,7 +204,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       diamond,
       details,
     }
-    await hre.evm.advanceTime(moment.duration(5, 'minutes'))
+    await hre.evm.advanceTime(moment.duration(10, 'minutes'))
     const borrowerAddress = await borrower.getAddress()
     await getFunds({
       to: borrowerAddress,
@@ -214,7 +216,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       .connect(borrower)
       .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
     const tx = await repayLoan(repayLoanArgs)
-    console.log({ tx, approve })
     return tx
   }
 }

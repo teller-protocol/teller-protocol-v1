@@ -1,13 +1,16 @@
 import Chai from 'chai'
-
-import Mocha from 'mocha'
-import { Signer, BigNumber } from 'ethers'
-import moment from 'moment'
-
+import { ICErc20 } from '../../../../types/typechain'
+import hre, { getNamedSigner, contracts, tokens } from 'hardhat'
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
+import {
+  TestScenario,
+  STORY_ACTIONS,
+  TestAction,
+  TestArgs,
+  LoanSnapshots,
+} from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
-
+import LoanStoryTestDriver from './loan-story-test-driver'
 var expect = Chai.expect
 
 export const DAPPS = {
@@ -45,11 +48,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case STORY_ACTIONS.DAPP.LEND: {
-        DappStoryTestDriver.generateTestsForLend(args.dapp, tests)
+        DappStoryTestDriver.generateTestsForLend(args, tests)
         break
       }
       case STORY_ACTIONS.DAPP.SWAP: {
-        DappStoryTestDriver.generateTestsForSwap(args.dapp, tests)
+        DappStoryTestDriver.generateTestsForSwap(args, tests)
         break
       }
     }
@@ -57,8 +60,8 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static generateTestsForLend(dapp: number | undefined, tests: Array<Test>) {
-    dapp = dapp ? dapp : 0
+  static generateTestsForLend(args: TestArgs, tests: Array<Test>) {
+    const dapp = args.dapp ? args.dapp : 0
     switch (dapp) {
       case DAPPS.LEND.AAVE: {
         let newTest = new Test('AAVE Lend DAPP', async function () {
@@ -70,9 +73,29 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case DAPPS.LEND.COMPOUND: {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
-          expect(1).to.equal(1)
+          if (args.parent) await LoanSnapshots[args.parent]()
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(borrower)
+          const { details, diamond } = loan
+          const cToken = await contracts.get<ICErc20>('ICErc20', {
+            at: await diamond.getAssetCToken(details.lendingToken.address),
+          })
+          await diamond
+            .connect(details.borrower.signer)
+            .compoundLend(
+              details.loan.id,
+              details.loan.lendingToken,
+              details.loan.borrowedAmount
+            )
+          const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+          let cDaiBalance = await cToken.balanceOf(escrowAddress)
+          cDaiBalance.eq(0).should.eql(false, '')
+
+          let tokenAddresses: string[]
+          tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+          tokenAddresses.should.include(cToken.address)
         })
-        console.log('push new story test ! ')
+        console.log('push COMPOUND Lend test ! ')
         tests.push(newTest)
         break
       }
@@ -89,17 +112,59 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     }
   }
 
-  static async generateTestsForSwap(
-    dapp: number | undefined,
-    tests: Array<Test>
-  ) {
-    dapp = dapp ? dapp : 0
+  static async generateTestsForSwap(args: TestArgs, tests: Array<Test>) {
+    const dapp = args.dapp ? args.dapp : 0
     switch (dapp) {
       case DAPPS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
-          expect(1).to.equal(1)
+          if (args.parent) await LoanSnapshots[args.parent]()
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(borrower)
+          const { details, diamond } = loan
+          const link = await tokens.get('LINK')
+          const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+          const lendingBalBefore = await details.lendingToken.balanceOf(
+            escrowAddress
+          )
+          lendingBalBefore
+            .gt(0)
+            .should.eql(true, 'Loan escrow should have a lending token balance')
+
+          const swapBalBefore = await link.balanceOf(escrowAddress)
+          swapBalBefore
+            .eq(0)
+            .should.eql(
+              true,
+              'Loan escrow should not have a token balance before swap'
+            )
+
+          await diamond
+            .connect(details.borrower.signer)
+            .uniswapSwap(
+              details.loan.id,
+              [details.lendingToken.address, link.address],
+              lendingBalBefore,
+              '0'
+            )
+            .should.emit(diamond, 'UniswapSwapped')
+
+          const swapBalAfter = await link.balanceOf(escrowAddress)
+          swapBalAfter
+            .gt(0)
+            .should.eql(true, 'Swap token balance not positive after swap')
+
+          const lendingBalAfter = await details.lendingToken.balanceOf(
+            escrowAddress
+          )
+          lendingBalAfter
+            .eq(0)
+            .should.eql(
+              true,
+              'Loan escrow has lending token balance after swapping full amount'
+            )
         })
-        console.log('push new story test ! ')
+        console.log('push UNISWAP Swap test ! ')
         tests.push(newTest)
         break
       }

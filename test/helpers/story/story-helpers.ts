@@ -27,6 +27,8 @@ export interface TestArgs {
   nft?: boolean
 }
 
+export const LoanSnapshots: { [name: number]: Function } = {}
+
 export const generateTests = (scenario: TestScenario): Array<Test> => {
   switch (scenario.domain) {
     case 'LOAN':
