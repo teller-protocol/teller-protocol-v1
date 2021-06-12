@@ -1,6 +1,9 @@
 import { task, types } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
-import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
+import {
+  TASK_TEST_GET_TEST_FILES,
+  TASK_TEST_RUN_MOCHA_TESTS,
+} from 'hardhat/builtin-tasks/task-names'
 import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
@@ -118,20 +121,54 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     //custom code
     const allStoryTests = generateAllStoryTests(hre)
 
+    // const files = await run(TASK_TEST_GET_TEST_FILES, { testFiles });
+
+    let storyTestFiles: string[] = []
+
     for (let test of allStoryTests) {
       console.log('add test', test)
       suiteInstance.addTest(test)
+
+      // storyTestFiles.push(  convertMochaTestToFile(test)  )
     }
+
+    console.log('\n\n\n\n')
+
+    /*const Test = Mocha.Test;
+    const Suite = Mocha.Suite;
+    const mocha = new Mocha();
+    for (let s in tests) {
+      let suite = Suite.create(mocha.suite, s);
+      tests[s].forEach((test) => {
+        console.log('add test', test.name)
+        suite.addTest(new Test(test.name, () => {
+          expect(1+1).to.equal(2);
+      }));
+      });
+    }
+    mocha.run();*/
 
     /*
     For some reason, the tests in the suite instance are not running !! 
     */
 
+    /* testFiles.forEach((file)=> console.log('running standard test file ',JSON.stringify(file)))
+     
+
     testFiles.forEach((file) => mochaInstance.addFile(file))
+
+
+      
+
+    storyTestFiles.forEach((file)=> console.log('running story test file ',JSON.stringify(file)))
+
+    storyTestFiles.forEach((file)=> mochaInstance.addFile(file))*/
 
     const testFailures = await new Promise<number>((resolve, _) => {
       mochaInstance.run(resolve)
     })
+
+    // suiteInstance.run()
 
     console.log('Completed all tests.')
     return testFailures
