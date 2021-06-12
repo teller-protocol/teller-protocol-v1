@@ -151,23 +151,25 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
-        uint32[24] memory witness32 = new uint32[24](0);
+        uint32[24] memory witness32;
 
         for (uint8 i = 2; i < witness.length; i++) {
             witness32[i - 2] = uint32(witness[i]);
         }
 
-        uint256[8] memory cache = witness32[0:8];
-        cache[7] = cache[7] ^= signatureData[0].signedAt;
+        uint32[8] memory cache;
+
+        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 0];
         commitments[0] = abi.decode(abi.encodePacked(cache), (bytes32));
+        commitments[0] ^= bytes32(signatureData[0].signedAt);
 
-        cache = witness32[8:16];
-        cache[7] = cache[7] ^= signatureData[1].signedAt;
+        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 8];
         commitments[1] = abi.decode(abi.encodePacked(cache), (bytes32));
+        commitments[1] ^= bytes32(signatureData[1].signedAt);
 
-        cache = witness[16:24];
-        cache[7] = cache[7] ^= signatureData[2].signedAt;
+        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 16];
         commitments[2] = abi.decode(abi.encodePacked(cache), (bytes32));
+        commitments[2] ^= bytes32(signatureData[2].signedAt);
 
         // But we already know both commitments are even? So it must be a signing issue.
 
