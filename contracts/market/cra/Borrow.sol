@@ -152,6 +152,11 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
         // Construct the commitments (data which are signed by provider).
+        // uint256[8] memory cache = witness[2:10];
+        // witness[7] = witness[7] ^= signedAt[0];
+        // commitments[0] = abi.encodePacked(cache);
+        // But we already know both commitments are even? So it must be a signing issue.
+
         for (uint8 i = 0; i < 3; i++) {
             for (uint8 j = 0; j < 8; j++) {
                 commitments[i] =
@@ -214,31 +219,24 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
     ) private view {
         console.log("commitmentXXXX");
         console.log(uint256(commitment));
+        console.log("providerIdXXXX");
+        console.log(uint256(providerId));
+        address recoveredSigner =
+            ECDSA.recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        uint256(commitment)
+                    )
+                ),
+                signature.v,
+                signature.r,
+                signature.s
+            );
+        console.log(recoveredSigner);
         require(
-            s().providers[providerId].signer[
-                ECDSA.recover(
-                    keccak256(
-                        abi.encodePacked(
-                            "\x19Ethereum Signed Message:\n32",
-                            commitment
-                        )
-                    ),
-                    signature.v,
-                    signature.r,
-                    signature.s
-                )
-            ],
+            s().providers[providerId].signer[recoveredSigner],
             "Teller: not valid signature"
         );
     }
-
-    // function _weights(bytes32 marketId)
-    //     private
-    //     view
-    //     returns (uint256[4] memory weights_)
-    // {
-    //     for (uint256 i = 0; i < 4; i++) {
-    //         weights_[i] = s().markets[marketId].providerConfigs[i].weight;
-    //     }
-    // }
 }
