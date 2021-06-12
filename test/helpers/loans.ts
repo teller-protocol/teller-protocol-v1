@@ -568,15 +568,19 @@ export const borrowWithZKCRA = async (
       .map((input: string) => input.substr(2).substr(56))
       .join('')
 
-  const secondInput = proof.inputs
-    .slice(10, 18)
-    .map((input: string) => input.substr(2).substr(56))
-    .join('')
+  const secondInput =
+    '0x' +
+    proof.inputs
+      .slice(10, 18)
+      .map((input: string) => input.substr(2).substr(56))
+      .join('')
 
-  const thirdInput = proof.inputs
-    .slice(18, 26)
-    .map((input: string) => input.substr(2).substr(56))
-    .join('')
+  const thirdInput =
+    '0x' +
+    proof.inputs
+      .slice(18, 26)
+      .map((input: string) => input.substr(2).substr(56))
+      .join('')
 
   console.log('input one: ' + firstInput)
   console.log('input two: ' + secondInput)
@@ -587,23 +591,6 @@ export const borrowWithZKCRA = async (
   const timestampOne = moment().unix()
   // create our message
 
-  ethers.utils.solidityPack(
-    [
-      'uint32',
-      'uint32',
-      'uint32',
-      'uint32',
-      'uint32',
-      'uint32',
-      'uint32',
-      'uint32',
-    ],
-    proof.inputs
-      .slice(2, 8)
-      .map((val: string, i: number) =>
-        i == 7 ? BigNumber.from(val).xor(timestampOne) : val
-      )
-  )
   const messageOne = ethers.BigNumber.from(firstInput)
     .xor(timestampOne)
     .toHexString()
@@ -624,13 +611,14 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampOne,
   }
-  console.log(signatureDataOne)
+  console.log({ signatureDataOne })
 
   // second signature
   const timestampTwo = moment().unix()
   const messageTwo = ethers.BigNumber.from(secondInput)
     .xor(timestampTwo)
     .toHexString()
+  console.log({ messageTwo: BigNumber.from(messageTwo.toString()).toString() })
   const credentialsSignerTwo = await signer.signMessage(
     ethers.utils.arrayify(messageTwo)
   )
@@ -650,6 +638,9 @@ export const borrowWithZKCRA = async (
   const messageThree = ethers.BigNumber.from(thirdInput)
     .xor(timestampThree)
     .toHexString()
+  console.log({
+    messageThree: BigNumber.from(messageThree.toString()).toString(),
+  })
   const credentialsSignerThree = await signer.signMessage(
     ethers.utils.arrayify(messageThree)
   )
