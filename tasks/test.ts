@@ -9,6 +9,13 @@ import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
 import Mocha from 'mocha'
 
+import fs from 'fs'
+import path from 'path'
+import { glob } from '../internal/util/glob'
+
+const { EVENT_FILE_PRE_REQUIRE, EVENT_FILE_POST_REQUIRE, EVENT_FILE_REQUIRE } =
+  Mocha.Suite.constants
+
 import {
   HardhatArguments,
   HttpNetworkConfig,
@@ -121,7 +128,7 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     //custom code
     const allStoryTests = generateAllStoryTests(hre)
 
-    // const files = await run(TASK_TEST_GET_TEST_FILES, { testFiles });
+    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
     let storyTestFiles: string[] = []
 
@@ -133,6 +140,18 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     }
 
     console.log('\n\n\n\n')
+
+    tsFiles.forEach(function (file: string) {
+      let testContents = fs.readFileSync(path.resolve(file))
+
+      console.log('add std test', testContents)
+      suiteInstance.addTest(file)
+
+      /*
+      suiteInstance.emit(EVENT_FILE_PRE_REQUIRE, global, file, self);
+      suiteInstance.emit(EVENT_FILE_REQUIRE, require(file), file, self);
+      suiteInstance.emit(EVENT_FILE_POST_REQUIRE, global, file, self);*/
+    })
 
     /*const Test = Mocha.Test;
     const Suite = Mocha.Suite;
