@@ -45,20 +45,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case STORY_ACTIONS.DAPP.LEND: {
-        let newTest = new Test('Lend DAPP', async function () {
-          await DappStoryTestDriver.generateTestsForLend(args.dapp)
-        })
-
-        console.log('push new story test ! ')
-        tests.push(newTest)
+        DappStoryTestDriver.generateTestsForLend(args.dapp, tests)
         break
       }
       case STORY_ACTIONS.DAPP.SWAP: {
-        let newTest = new Test('Swap DAPP', async function () {
-          await DappStoryTestDriver.generateTestsForSwap(args.dapp)
-        })
-        console.log('push new story test ! ')
-        tests.push(newTest)
+        DappStoryTestDriver.generateTestsForSwap(args.dapp, tests)
         break
       }
     }
@@ -66,32 +57,60 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static async generateTestsForLend(dapp: number | undefined) {
+  static generateTestsForLend(dapp: number | undefined, tests: Array<Test>) {
     dapp = dapp ? dapp : 0
     switch (dapp) {
-      case DAPPS.LEND.AAVE:
-        expect(1).to.equal(1)
+      case DAPPS.LEND.AAVE: {
+        let newTest = new Test('AAVE Lend DAPP', async function () {
+          expect(1).to.equal(1)
+        })
+        console.log('push new story test ! ')
+        tests.push(newTest)
         break
-      case DAPPS.LEND.COMPOUND:
-        expect(1).to.equal(1)
+      }
+      case DAPPS.LEND.COMPOUND: {
+        let newTest = new Test('COMPOUND Lend DAPP', async function () {
+          expect(1).to.equal(1)
+        })
+        console.log('push new story test ! ')
+        tests.push(newTest)
         break
-      case DAPPS.LEND.POOL_TOGETHER:
-        expect(1).to.equal(1)
+      }
+      case DAPPS.LEND.POOL_TOGETHER: {
+        let newTest = new Test('POOL_TOGETHER Lend DAPP', async function () {
+          expect(1).to.equal(1)
+        })
+        console.log('push new story test ! ')
+        tests.push(newTest)
         break
+      }
       default:
         break
     }
   }
 
-  static async generateTestsForSwap(dapp: number | undefined) {
+  static async generateTestsForSwap(
+    dapp: number | undefined,
+    tests: Array<Test>
+  ) {
     dapp = dapp ? dapp : 0
     switch (dapp) {
-      case DAPPS.SWAP.UNISWAP:
-        expect(1).to.equal(1)
+      case DAPPS.SWAP.UNISWAP: {
+        let newTest = new Test('UNISWAP Swap DAPP', async function () {
+          expect(1).to.equal(1)
+        })
+        console.log('push new story test ! ')
+        tests.push(newTest)
         break
-      case DAPPS.SWAP.SUSHISWAP:
-        expect(1).to.equal(1)
+      }
+      case DAPPS.SWAP.SUSHISWAP: {
+        let newTest = new Test('SUSHISWAP Swap DAPP', async function () {
+          expect(1).to.equal(1)
+        })
+        console.log('push new story test ! ')
+        tests.push(newTest)
         break
+      }
       default:
         break
     }

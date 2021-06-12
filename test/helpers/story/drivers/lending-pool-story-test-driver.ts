@@ -52,12 +52,12 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LENDING_POOL.LEND: {
         let newTest = new Test('Lend to loan', async function () {
-          // const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
-          // if (args.pass) {
-          //   expect(await depositWithArgs(lpArgs)).to.not.throw()
-          // } else {
-          //   expect(await depositWithArgs(lpArgs)).to.throw()
-          // }
+          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
+          if (args.pass) {
+            expect(await depositWithArgs(lpArgs)).to.not.throw()
+          } else {
+            expect(await depositWithArgs(lpArgs)).to.throw()
+          }
           expect(1).to.equal(1)
         })
 
@@ -66,13 +66,13 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_ACTIONS.LENDING_POOL.WITHDRAW: {
-        let newTest = new Test('Lend to loan', async function () {
-          // const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
-          // if (args.pass) {
-          //   expect(await withdrawWithArgs(lpArgs)).to.not.throw()
-          // } else {
-          //   expect(await withdrawWithArgs(lpArgs)).to.throw()
-          // }
+        let newTest = new Test('withdraw loan', async function () {
+          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
+          if (args.pass) {
+            expect(await withdrawWithArgs(lpArgs)).to.not.throw()
+          } else {
+            expect(await withdrawWithArgs(lpArgs)).to.throw()
+          }
           expect(1).to.equal(1)
         })
         console.log('push new story test ! ')

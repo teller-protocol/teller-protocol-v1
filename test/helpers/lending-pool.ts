@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
-import { evm } from 'hardhat'
+import { evm, getNamedSigner } from 'hardhat'
 
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 
@@ -11,6 +11,7 @@ export interface LPHelperArgs {
   diamond: ITellerDiamond
   lendingToken: ERC20
   tToken: ITToken
+  amount: BigNumber | null
 }
 
 /**
@@ -29,7 +30,8 @@ export const getLPHelpers = (args: LPHelperArgs) => ({
  * state changes.
  * @param args {LPHelperArgs}
  */
-export const depositWithArgs = (args: LPHelperArgs) =>
+export const depositWithArgs =
+  (args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the deposit functionality.
    *  - Approves the lending token amount for the lender.
@@ -39,8 +41,14 @@ export const depositWithArgs = (args: LPHelperArgs) =>
    * @param lender {Signer} Signer to call the LP as.
    * @param amount {BigNumber} An amount of tokens to deposit.
    */
-  async (lender: Signer, amount: BigNumber): Promise<void> => {
+  async (): Promise<void> => {
+    const lender = await getNamedSigner('lender')
+    const lenderAddress = await lender.getAddress()
     // Approve amount to loan
+    const amount =
+      args.amount == null
+        ? await args.lendingToken.balanceOf(lenderAddress)
+        : args.amount
     await args.lendingToken
       .connect(lender)
       .approve(args.diamond.address, amount)
@@ -57,7 +65,8 @@ export const depositWithArgs = (args: LPHelperArgs) =>
  * state changes.
  * @param args {LPHelperArgs}
  */
-export const withdrawWithArgs = (args: LPHelperArgs) =>
+export const withdrawWithArgs =
+  (args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the withdraw functionality.
    *  - Estimates the exact amount of tokens to be withdrawn/burned.
@@ -67,11 +76,12 @@ export const withdrawWithArgs = (args: LPHelperArgs) =>
    * @param lender {Signer} Signer to call the LP as.
    * @param amount {BigNumber} Optional amount to withdraw. Defaults to withdraw all.
    */
-  async (lender: Signer, amount?: BigNumber): Promise<void> => {
+  async (): Promise<void> => {
+    const lender = await getNamedSigner('lender')
     const lenderAddress = await lender.getAddress()
 
     // Withdraw
-    if (amount == null) {
+    if (args.amount == null) {
       await args.tToken
         .connect(lender)
         .redeem(await args.tToken.balanceOf(lenderAddress))
@@ -79,7 +89,7 @@ export const withdrawWithArgs = (args: LPHelperArgs) =>
     } else {
       await args.tToken
         .connect(lender)
-        .redeemUnderlying(amount)
+        .redeemUnderlying(args.amount)
         .should.emit(args.tToken, 'Redeem')
     }
   }

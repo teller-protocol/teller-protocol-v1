@@ -70,17 +70,12 @@ export const generateStories = (): Array<TestScenario> => {
         {
           actionType: STORY_ACTIONS.DAPP.LEND,
           suiteName: '',
-          args: { pass: true, parent: null },
-        },
-        {
-          actionType: STORY_ACTIONS.DAPP.WITHDRAW,
-          suiteName: '',
-          args: { pass: true, parent: STORY_ACTIONS.DAPP.LEND },
+          args: { pass: true, parent: null, dapp: 0 },
         },
         {
           actionType: STORY_ACTIONS.DAPP.SWAP,
           suiteName: '',
-          args: { pass: true, parent: null },
+          args: { pass: true, parent: null, dapp: 0 },
         },
       ],
     },

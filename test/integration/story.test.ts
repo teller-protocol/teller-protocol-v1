@@ -36,7 +36,9 @@ describe.only('story test', async () => {
   var Test = Mocha.Test
   var expect = Chai.expect
 
-  var mochaInstance = new Mocha()
+  var mochaInstance = new Mocha({
+    timeout: 10000,
+  })
   var suiteInstance = Mocha.Suite.create(
     mochaInstance.suite,
     'Story Test Suite'
