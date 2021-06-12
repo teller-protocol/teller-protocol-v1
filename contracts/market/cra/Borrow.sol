@@ -151,27 +151,29 @@ contract BorrowFacet is RolesMods, ReentryMods, PausableMods, Verifier {
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
-        uint32[24] memory witness32;
+        // Construct the commitments (data which are signed by provider).
+        // uint256[8] memory cache = witness[2:10];
+        // cache[7] = cache[7] ^= signatureData[0].signedAt;
+        // commitments[0] = abi.encodePacked(cache);
 
-        for (uint8 i = 2; i < witness.length; i++) {
-            witness32[i - 2] = uint32(witness[i]);
-        }
+        // cache = witness[10:18];
+        // cache[7] = cache[7] ^= signatureData[1].signedAt;
+        // commitments[1] = abi.encodePacked(cache);
 
-        uint32[8] memory cache;
-
-        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 0];
-        commitments[0] = abi.decode(abi.encodePacked(cache), (bytes32));
-        commitments[0] ^= bytes32(signatureData[0].signedAt);
-
-        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 8];
-        commitments[1] = abi.decode(abi.encodePacked(cache), (bytes32));
-        commitments[1] ^= bytes32(signatureData[1].signedAt);
-
-        for (uint8 i = 0; i < 8; i++) cache[i] = witness32[i + 16];
-        commitments[2] = abi.decode(abi.encodePacked(cache), (bytes32));
-        commitments[2] ^= bytes32(signatureData[2].signedAt);
+        // cache = witness[18:26];
+        // cache[7] = cache[7] ^= signatureData[2].signedAt;
+        // commitments[2] = abi.encodePacked(cache);
 
         // But we already know both commitments are even? So it must be a signing issue.
+
+        for (uint8 i = 0; i < 3; i++) {
+            for (uint8 j = 0; j < 8; j++) {
+                commitments[i] =
+                    (commitments[i] << 32) ^
+                    bytes32(witness[2 + i * 8 + j]);
+            }
+            commitments[i] ^= bytes32(signatureData[i].signedAt);
+        }
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
