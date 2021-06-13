@@ -201,11 +201,12 @@ contract PriceAggFacet {
                     (_scale(price, resDecimals, _decimalsFor(dst)))
                 );
         } else {
-            address WETH = AppStorageLib.store().assetAddresses["WETH"];
-            if (dst != WETH) {
-                int256 price1 = _priceFor(src, WETH);
+            address wrappedNativeToken =
+                AppStorageLib.store().wrappedNativeToken;
+            if (dst != wrappedNativeToken) {
+                int256 price1 = _priceFor(src, wrappedNativeToken);
                 if (price1 > 0) {
-                    int256 price2 = _priceFor(dst, WETH);
+                    int256 price2 = _priceFor(dst, wrappedNativeToken);
                     if (price2 > 0) {
                         uint256 dstFactor = TEN**_decimalsFor(dst);
                         return (price1 * int256(dstFactor)) / price2;

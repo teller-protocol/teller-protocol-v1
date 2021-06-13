@@ -157,11 +157,11 @@ export const chainlink: Record<string, Chainlink> = {
       quoteTokenName: 'USDC',
       address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',
     },
-    SUSHI_USD: {
-      baseTokenName: 'SUSHI',
-      quoteTokenName: 'USDC',
-      address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
-    },
+    // SUSHI_USD: {
+    //   baseTokenName: 'SUSHI',
+    //   quoteTokenName: 'USDC',
+    //   address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
+    // },
   },
   polygon_mumbai: {
     USDC_ETH: {

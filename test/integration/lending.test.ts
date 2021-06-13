@@ -174,7 +174,7 @@ describe('Lending', () => {
         })
       })
 
-      describe.only('TToken', () => {
+      describe('TToken', () => {
         let depositAmount1: BigNumber
         let depositAmount2: BigNumber
 

@@ -26,7 +26,7 @@ describe.only('AaveDapp', () => {
       before(async () => {
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
-          amount: 100000,
+          amount: 100,
         }))
 
         aToken = await contracts.get<IAToken>('IAToken', {
@@ -44,7 +44,7 @@ describe.only('AaveDapp', () => {
       })
 
       describe('lend, redeemAll', () => {
-        it('Should be able to lend and then redeem successfully from Aave', async () => {
+        it.only('Should be able to lend and then redeem successfully from Aave', async () => {
           const { details } = await takeOut({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
