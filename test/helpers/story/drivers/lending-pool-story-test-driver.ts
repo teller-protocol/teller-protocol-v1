@@ -5,7 +5,12 @@ import { Signer, BigNumber } from 'ethers'
 import moment from 'moment'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
+import {
+  TestScenario,
+  STORY_ACTIONS,
+  TestAction,
+  LoanSnapshots,
+} from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
 import hre, { contracts, getNamedSigner } from 'hardhat'
@@ -52,6 +57,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LENDING_POOL.LEND: {
         let newTest = new Test('Lend to loan', async function () {
+          if (args.parent) await LoanSnapshots[args.parent]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
           if (args.pass) {
             expect(await depositWithArgs(lpArgs)).to.not.throw()

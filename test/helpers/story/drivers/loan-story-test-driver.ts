@@ -99,7 +99,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
-          if (args.parent) await LoanSnapshots[args.parent]()
+          // if (args.parent) await LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.repayLoan()
             expect(tx).to.exist
