@@ -63,6 +63,7 @@ describe.only('Lending', () => {
             diamond,
             lendingToken,
             tToken,
+            amount: null,
           })
         })
 
@@ -158,7 +159,7 @@ describe.only('Lending', () => {
               amount: 1000,
               hre,
             })
-            await helpers.deposit(lender, depositAmount)
+            await helpers.deposit()
 
             const tTokenBalAfter = await tToken.balanceOf(
               await lender.getAddress()

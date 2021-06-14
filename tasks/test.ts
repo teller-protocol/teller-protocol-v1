@@ -1,5 +1,4 @@
 import { task, types } from 'hardhat/config'
-
 task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
 
@@ -7,7 +6,6 @@ task('test').setAction(async (args, hre, runSuper) => {
   if (chain == null) {
     throw new Error(`Invalid network to fork and run tests on: ${chain}`)
   }
-
   // Fork the deployment files into the 'hardhat' network
   await run('fork', {
     chain,
