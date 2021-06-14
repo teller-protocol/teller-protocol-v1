@@ -123,7 +123,7 @@ describe('Loans', () => {
         await setLoanMerkle({ loanTree: nftLoanTree }, hre)
         const proofs = []
 
-        // Get the sum of loan amount to take out
+        // Get the sum of loan amount to take
         const nft = await contracts.get<TellerNFT>('TellerNFT')
         const ownedNFTs = await nft
           .getOwnedTokens(borrower)
