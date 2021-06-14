@@ -35,6 +35,11 @@ export const generateAllStoryTests = (
 
   return allGeneratedTests
 }
+
+export const readTestsFromFile = (contents: string): Mocha.Test => {
+  return ''
+}
+
 /*
 export const convertMochaTestToFile = (test:Mocha.Test):string => {
 

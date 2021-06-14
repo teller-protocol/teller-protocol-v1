@@ -6,12 +6,15 @@ import {
 } from 'hardhat/builtin-tasks/task-names'
 import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 
-import { generateAllStoryTests } from '../test/integration/story-test-manager'
+import {
+  generateAllStoryTests,
+  readTestsFromFile,
+} from '../test/integration/story-test-manager'
 import Mocha from 'mocha'
 
 import fs from 'fs'
 import path from 'path'
-import { glob } from '../internal/util/glob'
+import { glob } from 'hardhat/internal/util/glob'
 
 const { EVENT_FILE_PRE_REQUIRE, EVENT_FILE_POST_REQUIRE, EVENT_FILE_REQUIRE } =
   Mocha.Suite.constants
@@ -142,11 +145,18 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     console.log('\n\n\n\n')
 
     tsFiles.forEach(function (file: string) {
-      let testContents = fs.readFileSync(path.resolve(file))
+      //   mochaInstance.addFile(file )
+      /*let testContents:string = fs.readFileSync(path.resolve(file), "utf8")
 
-      console.log('add std test', testContents)
-      suiteInstance.addTest(file)
+      let testsArray:Mocha.Test[] = readTestsFromFile( testContents )
 
+ 
+
+      for(let t of testsArray){
+        console.log('add std test', t)
+
+        suiteInstance.addTest(t)
+      }*/
       /*
       suiteInstance.emit(EVENT_FILE_PRE_REQUIRE, global, file, self);
       suiteInstance.emit(EVENT_FILE_REQUIRE, require(file), file, self);
@@ -187,10 +197,19 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
       mochaInstance.run(resolve)
     })
 
-    // suiteInstance.run()
+    mochaInstance = new Mocha()
+    mochaInstance.timeout(19000)
+
+    tsFiles.forEach(function (file: string) {
+      mochaInstance.addFile(file)
+    })
+
+    const fileTestFailures = await new Promise<number>((resolve, _) => {
+      mochaInstance.run(resolve)
+    })
 
     console.log('Completed all tests.')
-    return testFailures
+    return fileTestFailures
   })
 
 /*
