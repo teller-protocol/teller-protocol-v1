@@ -1,7 +1,6 @@
 import { STORY_ACTIONS, TestScenario } from '../story-helpers'
 
 export const generateStories = (): Array<TestScenario> => {
-  let testScenarios: TestScenario[]
   let manualScenarios: TestScenario[] = [
     {
       domain: 'LOAN',
@@ -54,15 +53,6 @@ export const generateStories = (): Array<TestScenario> => {
       ],
     },
   ]
-
-  const domains: number = Object.keys(STORY_ACTIONS).length
-  // const testScenario: TestScenario = {}
-
-  // domains.map((domain) => {
-  //   console.log({domain})
-  //   // const testScenario: TestScenario = { domain }
-  //   const actions = Object.values(STORY_ACTIONS['LOAN']).length
-  // })
 
   return manualScenarios
 }
