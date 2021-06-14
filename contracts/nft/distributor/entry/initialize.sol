@@ -11,6 +11,7 @@ import { ADMIN } from "../data.sol";
 
 // Interfaces
 import "../../ITellerNFT.sol";
+import "../../TellerNFTDictionary.sol";
 
 contract ent_initialize_NFTDistributor_v1 is
     sto_NFTDistributor,
@@ -22,8 +23,13 @@ contract ent_initialize_NFTDistributor_v1 is
      * @param _nft The address of the TellerNFT.
      * @param admin The address of an admin.
      */
-    function initialize(address _nft, address admin) external initializer {
+    function initialize(
+        address _nft,
+        address _dictionary,
+        address admin
+    ) external initializer {
         distributorStore().nft = ITellerNFT(_nft);
+        distributorStore().dictionary = TellerNFTDictionary(_dictionary);
 
         _grantRole(ADMIN, admin);
     }
