@@ -107,7 +107,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
-          if (args.parent) await LoanSnapshots[args.parent]()
+          // if (args.parent) await LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.liquidateLoan()
             expect(tx).to.exist
