@@ -144,58 +144,11 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
 
     console.log('\n\n\n\n')
 
-    tsFiles.forEach(function (file: string) {
-      //   mochaInstance.addFile(file )
-      /*let testContents:string = fs.readFileSync(path.resolve(file), "utf8")
-
-      let testsArray:Mocha.Test[] = readTestsFromFile( testContents )
-
- 
-
-      for(let t of testsArray){
-        console.log('add std test', t)
-
-        suiteInstance.addTest(t)
-      }*/
-      /*
-      suiteInstance.emit(EVENT_FILE_PRE_REQUIRE, global, file, self);
-      suiteInstance.emit(EVENT_FILE_REQUIRE, require(file), file, self);
-      suiteInstance.emit(EVENT_FILE_POST_REQUIRE, global, file, self);*/
-    })
-
-    /*const Test = Mocha.Test;
-    const Suite = Mocha.Suite;
-    const mocha = new Mocha();
-    for (let s in tests) {
-      let suite = Suite.create(mocha.suite, s);
-      tests[s].forEach((test) => {
-        console.log('add test', test.name)
-        suite.addTest(new Test(test.name, () => {
-          expect(1+1).to.equal(2);
-      }));
-      });
-    }
-    mocha.run();*/
-
-    /*
-    For some reason, the tests in the suite instance are not running !! 
-    */
-
-    /* testFiles.forEach((file)=> console.log('running standard test file ',JSON.stringify(file)))
-     
-
-    testFiles.forEach((file) => mochaInstance.addFile(file))
-
-
-      
-
-    storyTestFiles.forEach((file)=> console.log('running story test file ',JSON.stringify(file)))
-
-    storyTestFiles.forEach((file)=> mochaInstance.addFile(file))*/
-
     const testFailures = await new Promise<number>((resolve, _) => {
       mochaInstance.run(resolve)
     })
+
+    console.log('\n\n\n\n')
 
     mochaInstance = new Mocha()
     mochaInstance.timeout(19000)
@@ -209,6 +162,11 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     })
 
     console.log('Completed all tests.')
+
+    /*if(testFailures > 0){
+      return testFailures
+    }*/
+
     return fileTestFailures
   })
 
