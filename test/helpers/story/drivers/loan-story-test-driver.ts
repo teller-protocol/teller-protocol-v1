@@ -86,12 +86,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           } else {
             expect(await funcToRun(createArgs)).to.throw()
           }
-          // expect(1).to.equal(1)
-          // const result = await tx
-
-          // console.log('done here: %o', result.hash)
-          // LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
-          // done()
         })
         console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
         tests.push(newTest)
@@ -120,7 +114,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           } else {
             expect(await LoanStoryTestDriver.liquidateLoan()).to.throw()
           }
-          // expect(1).to.equal(1)
         })
         console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
@@ -178,7 +171,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     let borrowedAmount = details.loan.borrowedAmount
     console.log({ borrowedAmount: borrowedAmount.toString() })
     const liquidatorAddress = await liquidator.getAddress()
-    // const tokenBal = await details.lendingToken.balanceOf(liquidatorAddress)
     await getFunds({
       to: liquidatorAddress,
       tokenSym: await details.lendingToken.symbol(),
@@ -197,7 +189,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const loan = await LoanStoryTestDriver.getLoan(borrower)
     const { details, diamond } = loan
     const borrowedAmount = 100
-    // console.log({ borrowedAmount: borrowedAmount.toString() })
     const repayLoanArgs: RepayLoanArgs = {
       amount: details.loan.borrowedAmount,
       from: details.borrower.signer,
