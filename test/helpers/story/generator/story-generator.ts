@@ -1,4 +1,9 @@
-import { STORY_ACTIONS, TestScenario } from '../story-helpers'
+import {
+  STORY_ACTIONS,
+  DAPP_ACTIONS,
+  TestScenario,
+  TestAction,
+} from '../story-helpers'
 
 export const generateStories = (): Array<TestScenario> => {
   let manualScenarios: TestScenario[] = [
@@ -53,6 +58,50 @@ export const generateStories = (): Array<TestScenario> => {
       ],
     },
   ]
+
+  const domains: string[] = Object.keys(STORY_ACTIONS)
+  const proceduralScenarios = domains.map((domain) => {
+    const actionTypes: [string, number][] = Object.entries(
+      STORY_ACTIONS[domain]
+    )
+    const actions: TestAction[] = []
+    actionTypes.map((actionType) => {
+      let action: TestAction[]
+      switch (domain) {
+        case 'DAPP':
+          const dappActionTypes: [string, number][] =
+            Object.entries(DAPP_ACTIONS)
+          dappActionTypes.map((dappActionType) => {
+            const dappTypes: [string, number][] = Object.entries(
+              DAPP_ACTIONS[dappActionType]
+            )
+            dappActionTypes.map((dappActionType) => {})
+          })
+          break
+        default:
+          action = [
+            {
+              actionType: actionType[1],
+              suiteName: `${actionType[0]} true test`,
+              args: {
+                pass: true,
+                parent: actionType[1] == 0 ? null : actionType[1],
+              },
+            },
+            {
+              actionType: actionType[1],
+              suiteName: `${actionType[0]} false test`,
+              args: { pass: false, parent: null },
+            },
+          ]
+          break
+      }
+      actions.concat(action)
+    })
+    return { domain, actions }
+  })
+
+  console.log('procedural tests: %o', proceduralScenarios)
 
   return manualScenarios
 }

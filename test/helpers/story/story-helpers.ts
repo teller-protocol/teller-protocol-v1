@@ -8,6 +8,15 @@ export const STORY_ACTIONS = {
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
+export const DAPP_ACTIONS = {
+  LEND: {
+    COMPOUND: 0,
+  },
+  SWAP: {
+    UNISWAP: 0,
+  },
+}
+
 export interface TestScenario {
   domain: string
   actions: TestAction[]
