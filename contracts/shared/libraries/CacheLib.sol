@@ -62,6 +62,13 @@ library CacheLib {
         return cache.bools[INITIALIZED];
     }
 
+    /**
+     * @notice it updates the cache with a key, value and cache type
+     * @param cache cache to update
+     * @param key the memory reference to the value in bytes32
+     * @param value the value to update at the key
+     * @param cacheType the enum type of cache to update
+     */
     function update(
         Cache storage cache,
         bytes32 key,
@@ -103,6 +110,10 @@ library CacheLib {
     }
 
     /**
+     * @notice it deletes the cache values at the specified key
+     * @param cache the cache to delete keys from
+     * @param keysToClear the keys to delete
+     * @param keyTypes the types of keys to target different parts of the cache
      */
     function clearCache(
         Cache storage cache,

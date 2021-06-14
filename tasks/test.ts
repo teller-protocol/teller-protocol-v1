@@ -1,31 +1,24 @@
-import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
-import { subtask, task, types } from 'hardhat/config'
-import { ActionType } from 'hardhat/types'
+import { task, types } from 'hardhat/config'
 
-interface TestForkArgs {
-  chain: string
-}
-
-const testTask: ActionType<TestForkArgs> = async (
-  args,
-  hre,
-  runSuper
-): Promise<void> => {
+task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
-  const { chain } = args
 
-  await run('fork', { chain, onlyDeployments: true })
-  await runSuper({ ...args })
-}
+  const chain = process.env.FORKING_NETWORK
+  if (chain == null) {
+    throw new Error(`Invalid network to fork and run tests on: ${chain}`)
+  }
 
-task<TestForkArgs>('test', testTask).addOptionalParam(
-  'chain',
-  'An ETH network name to fork',
-  'mainnet',
-  types.string
-)
+  // Fork the deployment files into the 'hardhat' network
+  await run('fork', {
+    chain,
+    onlyDeployment: true,
+  })
 
-subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(async (args, hre, runSuper) => {
-  await hre.run('fork:fund-deployer')
-  await runSuper(args)
+  // Disable logging
+  // process.env.DISABLE_LOGS = 'true'
+
+  // Run the actual test task
+  await runSuper({
+    deployFixture: true,
+  })
 })

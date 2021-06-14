@@ -8,6 +8,10 @@ import {
 } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 
 abstract contract DappMods {
+    /**
+     * @notice it checks if the caller to a respective loan escrow is the borrower
+     * @param loanID uint256 of the respective loan escrow
+     */
     modifier onlyBorrower(uint256 loanID) {
         require(
             msg.sender == LibLoans.loan(loanID).borrower,
@@ -15,7 +19,11 @@ abstract contract DappMods {
         );
         _;
     }
-
+    
+    /**
+     * @notice checks if the respective loan escrow is secure
+     * @param loanID uint256 of the respective loan escrow
+     */
     modifier onlySecured(uint256 loanID) {
         require(
             LibLoans.loan(loanID).collateralRatio >=

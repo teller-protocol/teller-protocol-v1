@@ -81,6 +81,7 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
     /**
      * @notice It returns information about a Tier for a token ID.
      * @param index Tier index to get info.
+     * @return tier_ the tier which belongs to the respective index
      */
     function getTier(uint256 index)
         external
@@ -94,6 +95,8 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
     /**
      * @notice It returns information about a Tier for a token ID.
      * @param tokenId ID of the token to get Tier info.
+     * @return index_ the index of the tier the tokenID belongs in
+     * @return tier_ the tier where the tokenID belongs in
      */
     function getTokenTier(uint256 tokenId)
         external
@@ -106,9 +109,9 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It returns an array of token IDs owned by an address.
-     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
-     * @dev Can be costly if calling within a contract for address with many tokens.
+     * @notice It returns an array of hashes in a tier
+     * @param tierIndex the tier index to get the tier hashes
+     * @return hashes_ all the tokenID hashes
      */
     function getTierHashes(uint256 tierIndex)
         external
@@ -123,6 +126,7 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
      * @dev Can be costly if calling within a contract for address with many tokens.
+     * @return owned_ the array of tokenIDs owned by the address
      */
     function getOwnedTokens(address owner)
         external
@@ -139,6 +143,7 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice The contract metadata URI.
+     * @return the contract URI hash
      */
     function contractURI() external view override returns (string memory) {
         return _contractURIHash;
@@ -146,6 +151,8 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice The token URI is based on the token ID.
+     * @param tokenId the token identifier that returns the hash of the baseURI and the tokenURI hash
+     * @return the tokenURI
      */
     function tokenURI(uint256 tokenId)
         public
@@ -207,10 +214,18 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
         _tierCounter.increment();
     }
 
+    /**
+     * @notice it removes the minter by revoking the role of the address assigned to MINTER
+     * @param minter the address of the minter
+     */
     function removeMinter(address minter) external onlyMinter {
         revokeRole(MINTER, minter);
     }
 
+    /**
+     * @notice it adds the minter to the rule
+     * @param minter the address of the minter to add to the role of MINTER
+     */
     function addMinter(address minter) public onlyMinter {
         _setupRole(MINTER, minter);
     }
@@ -247,6 +262,11 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
         _contractURIHash = "QmWAfQFFwptzRUCdF2cBFJhcB2gfHJMd7TQt64dZUysk3R";
     }
 
+    /**
+     * @notice checks if an interface is supported by ITellerNFT, ERC721Upgradeable or AccessControlUpgradeable
+     * @param interfaceId the identifier of the interface
+     * @return bool stating whether or not our interface is supported
+     */
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -261,6 +281,8 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice It returns the hash to use for the token URI.
+     * @param tokenId the tokenId to get the tokenURI hash
+     * @return the tokenURIHash of our NFT
      */
     function _tokenURIHash(uint256 tokenId)
         internal
@@ -273,7 +295,8 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice The base URI path where the token media is hosted.
-     * @dev Base URI for computing {tokenURI}.
+     * @dev Base URI for computing {tokenURI}
+     * @return our metadata URI
      */
     function _baseURI() internal view override returns (string memory) {
         return _metadataBaseURI;
@@ -281,6 +304,9 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice Moves token to new owner set and then transfers.
+     * @param from address to transfer from
+     * @param to address to transfer to
+     * @param tokenId tokenID to transfer
      */
     function _transfer(
         address from,
@@ -293,6 +319,8 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice It removes the token from the current owner set and adds to new owner.
+     * @param newOwner the new owner of the tokenID
+     * @param tokenId the ID of the NFT
      */
     function _setOwner(address newOwner, uint256 tokenId) internal {
         address currentOwner = ownerOf(tokenId);
