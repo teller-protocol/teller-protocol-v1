@@ -1,30 +1,16 @@
 import Chai from 'chai'
 
-import Mocha from 'mocha'
-import { Signer, BigNumber } from 'ethers'
-import moment from 'moment'
-
 import { Test } from 'mocha'
-import {
-  TestScenario,
-  STORY_ACTIONS,
-  TestAction,
-  LoanSnapshots,
-} from '../story-helpers'
+import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
-
-import hre, { contracts, getNamedSigner } from 'hardhat'
-
-import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
-import { ITellerDiamond } from '../../../../types/typechain'
-import { getMarkets } from '../../../../config'
-import { getFunds } from '../../get-funds'
+import LoanStoryTestDriver from './loan-story-test-driver'
 import {
   LPHelperArgs,
   depositWithArgs,
   withdrawWithArgs,
 } from '../../lending-pool'
-import LoanStoryTestDriver from './loan-story-test-driver'
+
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 var expect = Chai.expect
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
@@ -33,6 +19,7 @@ Then we will expect that
 
 export default class LPStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
+    hre: HardhatRuntimeEnvironment,
     scenario: TestScenario
   ): Array<Test> {
     let allTests: Array<Test> = []
@@ -41,7 +28,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        LPStoryTestDriver.generateTestsForAction(action)
+        LPStoryTestDriver.generateTestsForAction(hre, action)
 
       allTests = allTests.concat(testsForAction)
     }
@@ -49,7 +36,10 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     return allTests
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    hre: HardhatRuntimeEnvironment,
+    action: TestAction
+  ): Array<Test> {
     let tests: Array<Test> = []
 
     const { actionType, args } = action
@@ -57,8 +47,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LENDING_POOL.LEND: {
         let newTest = new Test('Lend to loan', async function () {
-          if (args.parent) await LoanSnapshots[args.parent]()
-          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
+          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
             expect(await depositWithArgs(lpArgs)).to.not.throw()
           } else {
@@ -72,7 +61,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LENDING_POOL.WITHDRAW: {
         let newTest = new Test('withdraw loan', async function () {
-          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs()
+          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
             expect(await withdrawWithArgs(lpArgs)).to.not.throw()
           } else {
@@ -87,11 +76,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static createLPArgs = async (): Promise<LPHelperArgs> => {
+  static createLPArgs = async (
+    hre: HardhatRuntimeEnvironment
+  ): Promise<LPHelperArgs> => {
+    const { getNamedSigner, contracts } = hre
     const borrower = await getNamedSigner('borrower')
     const loan = await LoanStoryTestDriver.getLoan(borrower)
     const { details, diamond } = loan
-    const tToken = await hre.contracts.get('ITToken', {
+    const tToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
     const lpHelperArgs: LPHelperArgs = {

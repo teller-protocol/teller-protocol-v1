@@ -1,18 +1,53 @@
-import Chai from 'chai'
+//import Chai from 'chai'
 
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import Mocha from 'mocha'
-import { solidity } from 'ethereum-waffle'
-import hre from 'hardhat'
-import { updatePlatformSetting } from '../../tasks'
+//import { solidity } from 'ethereum-waffle'
+
+//import { updatePlatformSetting } from '../../tasks'
 import {
   generateTests,
-  STORY_ACTIONS,
+  //STORY_ACTIONS,
   TestScenario,
-  TestAction,
+  // TestAction,
 } from '../helpers/story/story-helpers'
 import { generateStories } from '../helpers/story/generator/story-generator'
-Chai.should()
-Chai.use(solidity)
+
+//Chai.should()
+//Chai.use(solidity)
+
+export const generateAllStoryTests = (
+  hre: HardhatRuntimeEnvironment
+): Array<Mocha.Test> => {
+  // console.log('run all story tests', mocha )
+
+  const allTestStories: Array<TestScenario> = generateStories()
+
+  var allGeneratedTests: Array<Mocha.Test> = []
+
+  for (let story of allTestStories) {
+    let newTests = generateTests(hre, story)
+
+    allGeneratedTests = allGeneratedTests.concat(newTests)
+  }
+
+  //  console.log('subtask to comandeer mocha tests ', allGeneratedTests)
+
+  return allGeneratedTests
+}
+
+export const readTestsFromFile = (contents: string): Mocha.Test => {
+  return ''
+}
+
+/*
+export const convertMochaTestToFile = (test:Mocha.Test):string => {
+
+
+  return JSON.stringify(test )
+}*/
+
+/*
 
 describe.only('story test', async () => {
   const allTestStories: Array<TestScenario> = generateStories()
@@ -49,17 +84,8 @@ describe.only('story test', async () => {
   // }
   allGeneratedTests.map((test) => suiteInstance.addTest(test))
 
-  //is this needed ?
-  /*before(async () => {
-    await updatePlatformSetting(
-      {
-        name: 'RequiredSubmissionsPercentage',
-        value: 100,
-      },
-      hre
-    )
-  })*/
-
+ 
   //run all of the generated story tests (they are async)
   mochaInstance.run()
 })
+*/

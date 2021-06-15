@@ -1,16 +1,16 @@
 import Chai from 'chai'
 import { ICErc20 } from '../../../../types/typechain'
-import hre, { getNamedSigner, contracts, tokens } from 'hardhat'
 import { Test } from 'mocha'
 import {
   TestScenario,
   STORY_ACTIONS,
   TestAction,
   TestArgs,
-  LoanSnapshots,
 } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
 var expect = Chai.expect
 
 export const DAPPS = {
@@ -24,6 +24,7 @@ Then we will expect that
 
 export default class DappStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
+    hre: HardhatRuntimeEnvironment,
     scenario: TestScenario
   ): Array<Test> {
     let allTests: Array<Test> = []
@@ -32,7 +33,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        DappStoryTestDriver.generateTestsForAction(action)
+        DappStoryTestDriver.generateTestsForAction(hre, action)
 
       allTests = allTests.concat(testsForAction)
     }
@@ -40,7 +41,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return allTests
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    hre: HardhatRuntimeEnvironment,
+    action: TestAction
+  ): Array<Test> {
     let tests: Array<Test> = []
 
     let actionType = action.actionType
@@ -48,11 +52,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case STORY_ACTIONS.DAPP.LEND: {
-        DappStoryTestDriver.generateTestsForLend(args, tests)
+        DappStoryTestDriver.generateTestsForLend(hre, args, tests)
         break
       }
       case STORY_ACTIONS.DAPP.SWAP: {
-        DappStoryTestDriver.generateTestsForSwap(args, tests)
+        DappStoryTestDriver.generateTestsForSwap(hre, args, tests)
         break
       }
     }
@@ -60,7 +64,12 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static generateTestsForLend(args: TestArgs, tests: Array<Test>) {
+  static generateTestsForLend(
+    hre: HardhatRuntimeEnvironment,
+    args: TestArgs,
+    tests: Array<Test>
+  ) {
+    const { getNamedSigner, contracts } = hre
     const dapp = args.dapp ? args.dapp : 0
     switch (dapp) {
       case DAPPS.LEND.AAVE: {
@@ -73,7 +82,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case DAPPS.LEND.COMPOUND: {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
-          if (args.parent) await LoanSnapshots[args.parent]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(borrower)
           const { details, diamond } = loan
@@ -112,12 +120,16 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     }
   }
 
-  static async generateTestsForSwap(args: TestArgs, tests: Array<Test>) {
+  static async generateTestsForSwap(
+    hre: HardhatRuntimeEnvironment,
+    args: TestArgs,
+    tests: Array<Test>
+  ) {
+    const { getNamedSigner, tokens } = hre
     const dapp = args.dapp ? args.dapp : 0
     switch (dapp) {
       case DAPPS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
-          if (args.parent) await LoanSnapshots[args.parent]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(borrower)
           const { details, diamond } = loan
