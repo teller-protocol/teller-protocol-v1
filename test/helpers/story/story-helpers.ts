@@ -2,6 +2,7 @@ import { Test } from 'mocha'
 import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 import LPStoryTestDriver from './drivers/lending-pool-story-test-driver'
 import DappStoryTestDriver from './drivers/dapp-story-test-driver'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 export const STORY_ACTIONS = {
   LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
   LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
@@ -36,20 +37,26 @@ export interface TestArgs {
   nft?: boolean
 }
 
-export const LoanSnapshots: { [name: number]: Function } = {}
-
-export const generateTests = (scenario: TestScenario): Array<Test> => {
+export const generateTests = (
+  hre: HardhatRuntimeEnvironment,
+  scenario: TestScenario
+): Array<Test> => {
   switch (scenario.domain) {
     case 'LOAN':
       return LoanStoryTestDriver.generateDomainSpecificTestsForScenario(
+        hre,
         scenario
       )
       break
     case 'LENDING_POOL':
-      return LPStoryTestDriver.generateDomainSpecificTestsForScenario(scenario)
+      return LPStoryTestDriver.generateDomainSpecificTestsForScenario(
+        hre,
+        scenario
+      )
       break
     case 'DAPP':
       return DappStoryTestDriver.generateDomainSpecificTestsForScenario(
+        hre,
         scenario
       )
       break

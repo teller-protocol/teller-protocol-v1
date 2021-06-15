@@ -1,8 +1,8 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
-import { evm, getNamedSigner } from 'hardhat'
-
+// import { evm, getNamedSigner } from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 
 chai.use(solidity)
@@ -18,9 +18,12 @@ export interface LPHelperArgs {
  * Creates all LP test helper functions.
  * @param args {LPHelperArgs}
  */
-export const getLPHelpers = (args: LPHelperArgs) => ({
-  deposit: depositWithArgs(args),
-  withdraw: withdrawWithArgs(args),
+export const getLPHelpers = (
+  hre: HardhatRuntimeEnvironment,
+  args: LPHelperArgs
+) => ({
+  deposit: depositWithArgs(hre, args),
+  withdraw: withdrawWithArgs(hre, args),
   // createLoan: creatLoanWithArgs(args),
   // repay: repayWithArgs(args),
 })
@@ -31,7 +34,7 @@ export const getLPHelpers = (args: LPHelperArgs) => ({
  * @param args {LPHelperArgs}
  */
 export const depositWithArgs =
-  (args: LPHelperArgs) =>
+  (hre: HardhatRuntimeEnvironment, args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the deposit functionality.
    *  - Approves the lending token amount for the lender.
@@ -42,6 +45,7 @@ export const depositWithArgs =
    * @param amount {BigNumber} An amount of tokens to deposit.
    */
   async (): Promise<void> => {
+    const { getNamedSigner } = hre
     const lender = await getNamedSigner('lender')
     const lenderAddress = await lender.getAddress()
     // Approve amount to loan
@@ -66,7 +70,7 @@ export const depositWithArgs =
  * @param args {LPHelperArgs}
  */
 export const withdrawWithArgs =
-  (args: LPHelperArgs) =>
+  (hre: HardhatRuntimeEnvironment, args: LPHelperArgs) =>
   /**
    * LendingPool helper function for testing the withdraw functionality.
    *  - Estimates the exact amount of tokens to be withdrawn/burned.
@@ -77,6 +81,7 @@ export const withdrawWithArgs =
    * @param amount {BigNumber} Optional amount to withdraw. Defaults to withdraw all.
    */
   async (): Promise<void> => {
+    const { getNamedSigner } = hre
     const lender = await getNamedSigner('lender')
     const lenderAddress = await lender.getAddress()
 

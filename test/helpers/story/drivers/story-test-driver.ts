@@ -1,20 +1,19 @@
-import Chai from 'chai'
-
-import Mocha from 'mocha'
-
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 import { TestAction, TestScenario } from '../story-helpers'
 
-var expect = Chai.expect
-
 export default class StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
+    hre: HardhatRuntimeEnvironment,
     scenario: TestScenario
   ): Array<Test> {
     return []
   }
 
-  static generateTestsForAction(action: TestAction): Array<Test> {
+  static generateTestsForAction(
+    hre: HardhatRuntimeEnvironment,
+    action: TestAction
+  ): Array<Test> {
     return []
   }
 }
