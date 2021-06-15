@@ -1,7 +1,12 @@
 import Chai from 'chai'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
+import {
+  TestScenario,
+  STORY_ACTIONS,
+  TestAction,
+  LoanSnapshots,
+} from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
 import { Signer, BigNumber, ContractTransaction } from 'ethers'
@@ -82,8 +87,8 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
           if (args.pass) {
             const { tx, getHelpers } = await funcToRun(hre, createArgs)
-            // LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
-            //   await hre.evm.snapshot()
+            LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
+              await hre.evm.snapshot()
             expect(tx)
           } else {
             expect(await funcToRun(hre, createArgs)).to.throw()
@@ -94,6 +99,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_ACTIONS.LOAN.REPAY: {
+        if (args.parent) LoanSnapshots[args.parent]()
         let newTest = new Test('Repay loan', async function () {
           if (args.pass) {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
@@ -107,6 +113,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
+        if (args.parent) LoanSnapshots[args.parent]()
         let newTest = new Test('Liquidate loan', async function () {
           if (args.pass) {
             const tx = await LoanStoryTestDriver.liquidateLoan(hre)
