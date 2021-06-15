@@ -29,7 +29,7 @@ contract NFTFacet is RolesMods {
 
     /**
      * @notice it returns the NFTs mapped to a loan
-     * @param loanID the identifier of the respective loan to get the loan NFTs from 
+     * @param loanID the identifier of the respective loan to get the loan NFTs from
      * @return loanNFTs the loan NFTs mapped to a loan ID
      */
     function getLoanNFTs(uint256 loanID)

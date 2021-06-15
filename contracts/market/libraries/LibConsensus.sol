@@ -6,7 +6,8 @@ import {
     MarketStorageLib,
     MarketStorage,
     LoanRequest,
-    LoanResponse,
+    LoanUserRequest,
+    LoanConsensusResponse,
     Signature
 } from "../../storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
@@ -42,15 +43,11 @@ library LibConsensus {
     /**
      * @notice it processes a loan terms by doing multiple checks on the LoanRequest request and LoanResponse[] responses
      * @param request LoanRequest is the borrower request object to take out a loan
-     * @param responses LoanResponse is the borrower response object to take out a loan
      * @return interestRate the borrower needs to pay back
      * @return collateralRatio the ratio of collateral the borrower needs to put up for the loan with an underlying asset
      * @return maxLoanAmount the borrower is entitled for
      */
-    function processLoanTerms(
-        LoanRequest calldata request,
-        LoanResponse[] calldata responses
-    )
+    function processLoanTerms(LoanRequest calldata request)
         internal
         view
         returns (
@@ -61,33 +58,31 @@ library LibConsensus {
     {
         // get the signers from the asset address
         EnumerableSet.AddressSet storage signers =
-            s().signers[request.assetAddress];
+            s().signers[request.request.assetAddress];
 
-        // check if the ratio of responses to signers is greater than the required
-        // percentage value of submissions
         require(
             uint256(
                 NumbersLib.ratioOf(
-                    responses.length,
+                    request.responses.length,
                     EnumerableSet.length(signers)
                 )
             ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
 
-        // validate loan request
-        _validateLoanRequest(request.borrower, request.requestNonce);
+        _validateLoanRequest(
+            request.request.borrower,
+            request.request.requestNonce
+        );
 
         uint32 chainId = _getChainId();
-        bytes32 requestHash = _hashRequest(request, chainId);
+        bytes32 requestHash = _hashRequest(request.request, chainId);
 
         // create term submissions for every response ...
         AccruedLoanTerms memory termSubmissions;
 
-        // ... then iterate through the LoanResponses for every response that passes through
-        // the checks, we add interest rate, collateral ratio and and max loan amount
-        for (uint256 i = 0; i < responses.length; i++) {
-            LoanResponse memory response = responses[i];
+        for (uint256 i = 0; i < request.responses.length; i++) {
+            LoanConsensusResponse memory response = request.responses[i];
 
             // check if the signers contains the response's signer
             require(
@@ -97,7 +92,7 @@ library LibConsensus {
 
             // check if the request's asset address equates to the response's asset address
             require(
-                response.assetAddress == request.assetAddress,
+                response.assetAddress == request.request.assetAddress,
                 "Teller: consensus address mismatch"
             );
 
@@ -122,7 +117,7 @@ library LibConsensus {
             // TODO: use a local AddressArrayLib instead to save gas
             for (uint8 j = 0; j < i; j++) {
                 require(
-                    response.signer != responses[j].signer,
+                    response.signer != request.responses[j].signer,
                     "Teller: dup signer response"
                 );
             }
@@ -193,7 +188,7 @@ library LibConsensus {
      * @param request Struct of the protocol loan request
      * @return bytes32 Hash of the loan request
      */
-    function _hashRequest(LoanRequest memory request, uint32 chainId)
+    function _hashRequest(LoanUserRequest memory request, uint32 chainId)
         private
         pure
         returns (bytes32)
@@ -220,7 +215,7 @@ library LibConsensus {
      */
     function _hashResponse(
         bytes32 requestHash,
-        LoanResponse memory response,
+        LoanConsensusResponse memory response,
         uint32 chainId
     ) internal pure returns (bytes32) {
         return

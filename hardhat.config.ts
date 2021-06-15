@@ -176,16 +176,16 @@ export default <HardhatUserConfig>{
       chainId: 1,
       live: true,
     }),
-    polygon: networkConfig({
-      url: networkUrls.polygon,
-      chainId: 137,
-      live: true,
-    }),
-    polygon_mumbai: networkConfig({
-      url: networkUrls.polygon_mumbai,
-      chainId: 80001,
-      live: true,
-    }),
+    // polygon: networkConfig({
+    //   url: networkUrls.polygon,
+    //   chainId: 137,
+    //   live: true,
+    // }),
+    // polygon_mumbai: networkConfig({
+    //   url: networkUrls.polygon_mumbai,
+    //   chainId: 80001,
+    //   live: true,
+    // }),
     hardhat: networkConfig({
       chainId: 31337,
       live: false,
@@ -200,10 +200,10 @@ export default <HardhatUserConfig>{
     }),
     localhost: networkConfig({
       url: 'http://127.0.0.1:8545',
-      timeout: 100000,
+      timeout: 10000000,
     }),
   },
   mocha: {
-    timeout: 100000,
+    timeout: 10000000,
   },
 }
