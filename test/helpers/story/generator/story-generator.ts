@@ -48,12 +48,12 @@ export const generateStories = (): Array<TestScenario> => {
         {
           actionType: STORY_ACTIONS.DAPP.LEND,
           suiteName: '',
-          args: { pass: true, parent: null, dapp: 1 },
+          args: { pass: true, parent: null, dapp: STORY_ACTIONS.LOAN.TAKE_OUT },
         },
         {
           actionType: STORY_ACTIONS.DAPP.SWAP,
           suiteName: '',
-          args: { pass: true, parent: null, dapp: 0 },
+          args: { pass: true, parent: null, dapp: STORY_ACTIONS.LOAN.TAKE_OUT },
         },
       ],
     },
