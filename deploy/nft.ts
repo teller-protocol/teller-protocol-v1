@@ -74,7 +74,7 @@ const deployNFT: DeployFunction = async (hre) => {
       typeof executeMethod
     >['execute'] = {
       methodName: executeMethod,
-      args: [nft.address, await deployer.getAddress()],
+      args: [nft.address, nftDictionary.address, await deployer.getAddress()],
     }
 
     execute = initExecute
