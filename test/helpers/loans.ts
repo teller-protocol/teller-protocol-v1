@@ -7,6 +7,7 @@ import {
 } from 'ethers'
 import hre from 'hardhat'
 import moment from 'moment'
+
 import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { mockCRAResponse } from './mock-cra-response'
@@ -262,7 +263,7 @@ export const takeOutLoanWithNfts = async (
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
 
   // amount in loan
-  const loanAmount = amount
+  const loanAmount = toBN(amount, await lendingToken.decimals())
 
   // get the borrower, deployer and borrower's signer
   const deployer = await getNamedSigner('deployer')

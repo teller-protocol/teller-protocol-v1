@@ -32,12 +32,11 @@ describe('Loans', () => {
       })
 
       diamond = await contracts.get('TellerDiamond')
-
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
     describe.only('merge create loan', () => {
-      var helpers: any = null
+      let helpers: any = null
       before(async () => {
         // update percentage submission percentage value to 0 for this test
         const percentageSubmission = {
@@ -125,7 +124,7 @@ describe('Loans', () => {
       })
 
       describe('with NFT', () => {
-        var helpers: any
+        let helpers: any
         before(async () => {
           // Advance time
           const { value: rateLimit } = await getPlatformSetting(
@@ -137,7 +136,7 @@ describe('Loans', () => {
         it('creates a loan', async () => {
           // get helpers
           const { getHelpers } = await takeOutLoanWithNfts({
-            amount: 5000,
+            amount: 100,
             lendToken: market.lendingToken,
           })
           helpers = await getHelpers()

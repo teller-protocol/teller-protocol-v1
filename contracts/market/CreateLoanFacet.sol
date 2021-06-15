@@ -96,20 +96,18 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         // Get the ID of the newly created loan
         uint256 loanID = CreateLoanLib.currentID() - 1;
         uint256 amount = LibLoans.loan(loanID).borrowedAmount;
+        uint8 lendingDecimals = ERC20(request.request.assetAddress).decimals();
 
-        uint256 allowedLoanSize;
+        uint256 allowedBaseLoanSize;
         for (uint256 i; i < nftIDs.length; i++) {
             NFTLib.applyToLoan(loanID, nftIDs[i]);
 
-            allowedLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
+            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
                 nftIDs[i]
             );
-            if (allowedLoanSize >= amount) {
-                break;
-            }
         }
         require(
-            amount <= allowedLoanSize,
+            amount <= allowedBaseLoanSize * (10**lendingDecimals),
             "Teller: insufficient NFT loan size"
         );
 
