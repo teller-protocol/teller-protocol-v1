@@ -59,7 +59,7 @@ describe.only('Lending', () => {
         let helpers: ReturnType<typeof getLPHelpers>
 
         before(async () => {
-          helpers = getLPHelpers({
+          helpers = getLPHelpers(hre, {
             diamond,
             lendingToken,
             tToken,

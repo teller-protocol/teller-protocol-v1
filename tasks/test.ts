@@ -48,54 +48,6 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 })
 
-/**
- * Merges GasReporter defaults with user's GasReporter config
- * @param  {HardhatRuntimeEnvironment} hre
- * @return {any}
- */
-function getOptions(hre: HardhatRuntimeEnvironment): any {
-  return { ...getDefaultOptions(hre), ...(hre.config as any).gasReporter }
-}
-
-/**
- * Sets reporter options to pass to eth-gas-reporter:
- * > url to connect to client with
- * > artifact format (hardhat)
- * > solc compiler info
- * @param  {HardhatRuntimeEnvironment} hre
- * @return {EthGasReporterConfig}
- */
-function getDefaultOptions(
-  hre: HardhatRuntimeEnvironment
-): EthGasReporterConfig {
-  const defaultUrl = 'http://localhost:8545'
-  const defaultCompiler = hre.config.solidity.compilers[0]
-
-  let url: any
-  // Resolve URL
-  if ((<HttpNetworkConfig>hre.network.config).url) {
-    url = (<HttpNetworkConfig>hre.network.config).url
-  } else {
-    url = defaultUrl
-  }
-
-  return {
-    enabled: true,
-    url: <string>url,
-    metadata: {
-      compiler: {
-        version: defaultCompiler.version,
-      },
-      settings: {
-        optimizer: {
-          enabled: defaultCompiler.settings.optimizer.enabled,
-          runs: defaultCompiler.settings.optimizer.runs,
-        },
-      },
-    },
-  }
-}
-
 //https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
 /**
  * Overrides TASK_TEST_RUN_MOCHA_TEST to (conditionally) use eth-gas-reporter as
@@ -128,7 +80,6 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     let storyTestFiles: string[] = []
 
     for (let test of allStoryTests) {
-      console.log('add test', test)
       suiteInstance.addTest(test)
 
       // storyTestFiles.push(  convertMochaTestToFile(test)  )
@@ -161,85 +112,3 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
 
     return fileTestFailures
   })
-
-/*
- subtask(TASK_TEST_RUN_MOCHA_TESTS)
-  
- .setAction(async (args: any, hre, runSuper) => {
- 
-
-   const { default: Mocha } = await import("mocha");
-
-  // let mochaOptions:MochaOptions = { cleanReferencesAfterRun: false }
-
-   const mocha = new Mocha(  ); 
-   
- 
-   //testFiles.forEach((file) => mocha.addFile(file));
-
-   const testFailures = await new Promise<number>((resolve, _) => {
-    // mocha.run(resolve);
-   });
-
-   const allStoryTests = generateAllStoryTests(hre, mocha);
- 
-    var suiteInstance = Mocha.Suite.create(
-      mocha.suite,
-      'Story Test Suite'
-    )
-
-    for (let test of allStoryTests) {
-      suiteInstance.addTest(test)
-    }
-
-    const storyTestFailures = await new Promise<number>((resolve, _) => {
-      mocha.run(resolve);
-    });   
-
-    console.log('story test failures ', storyTestFailures)
-
-    return storyTestFailures
- 
-
-   //return runSuper()
- })*/
-
-/*
-subtask(TASK_TEST_RUN_MOCHA_TESTS)
-  .setAction(async (args: any, hre, runSuper) => {
-    const options = getOptions(hre)
-    //options.getContracts = getContracts.bind(null, hre.artifacts, options.excludeContracts);
-
-  if (options.enabled) {
-      mochaConfig = hre.config.mocha || {};
-      mochaConfig.reporter = "eth-gas-reporter";
-      mochaConfig.reporterOptions = options;
-
-      if (hre.network.name === HARDHAT_NETWORK_NAME || options.fast){
-        const wrappedDataProvider= new EGRDataCollectionProvider(hre.network.provider,mochaConfig);
-        hre.network.provider = new BackwardsCompatibilityProviderAdapter(wrappedDataProvider);
-
-        const asyncProvider = new EGRAsyncApiProvider(hre.network.provider);
-        resolvedRemoteContracts = await getResolvedRemoteContracts(
-          asyncProvider,
-          options.remoteContracts
-        );
-
-        mochaConfig.reporterOptions.provider = asyncProvider;
-        mochaConfig.reporterOptions.blockLimit = (<any>hre.network.config).blockGasLimit as number;
-        mochaConfig.attachments = {};
-      }
-
-      hre.config.mocha = mochaConfig;
-      resolvedQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames();
-    }
-
-    console.log('subtask to comandeer mocha tests ')
-
-    console.log( hre.config.mocha )
-
-    return runSuper()
-  }
-)
-
-*/

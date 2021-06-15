@@ -6,7 +6,7 @@ import NftLoanTree from '../../scripts/merkle/nft-loan-tree'
 import { ITellerDiamond, TellerNFT } from '../../types/typechain'
 
 import { getNFT } from '../../config'
-import { evm } from 'hardhat'
+// import { evm } from 'hardhat'
 
 interface AddMerklesArgs {
   loanTree?: NftLoanTree

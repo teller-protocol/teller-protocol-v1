@@ -49,9 +49,9 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         let newTest = new Test('Lend to loan', async function () {
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
-            expect(await depositWithArgs(lpArgs)).to.not.throw()
+            expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
           } else {
-            expect(await depositWithArgs(lpArgs)).to.throw()
+            expect(await depositWithArgs(hre, lpArgs)).to.throw()
           }
         })
 
@@ -63,9 +63,9 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         let newTest = new Test('withdraw loan', async function () {
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
-            expect(await withdrawWithArgs(lpArgs)).to.not.throw()
+            expect(await withdrawWithArgs(hre, lpArgs)).to.not.throw()
           } else {
-            expect(await withdrawWithArgs(lpArgs)).to.throw()
+            expect(await withdrawWithArgs(hre, lpArgs)).to.throw()
           }
         })
         console.log('push new story test !')
@@ -81,7 +81,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
   ): Promise<LPHelperArgs> => {
     const { getNamedSigner, contracts } = hre
     const borrower = await getNamedSigner('borrower')
-    const loan = await LoanStoryTestDriver.getLoan(borrower)
+    const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
     const { details, diamond } = loan
     const tToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),

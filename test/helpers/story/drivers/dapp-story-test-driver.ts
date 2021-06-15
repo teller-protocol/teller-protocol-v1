@@ -83,7 +83,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       case DAPPS.LEND.COMPOUND: {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
           const borrower = await getNamedSigner('borrower')
-          const loan = await LoanStoryTestDriver.getLoan(borrower)
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
           const cToken = await contracts.get<ICErc20>('ICErc20', {
             at: await diamond.getAssetCToken(details.lendingToken.address),
@@ -131,7 +131,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       case DAPPS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
           const borrower = await getNamedSigner('borrower')
-          const loan = await LoanStoryTestDriver.getLoan(borrower)
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
           const link = await tokens.get('LINK')
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
