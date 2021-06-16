@@ -62,8 +62,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     action: TestAction
   ): Array<Test> {
-    // SNAPSHOTS.revert = await hre.evm.snapshot()
-
     let tests: Array<Test> = []
 
     const { actionType, args } = action
@@ -71,11 +69,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       case STORY_ACTIONS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
           if (args.pass) {
-            expect(
-              await LoanStoryTestDriver.takeOutLoan(hre, args)
-            ).to.not.throw()
+            expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
           } else {
-            expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.throw()
+            expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.not
+              .exist
           }
         })
         console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
@@ -143,11 +140,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     args: TestArgs
   ): Promise<ContractTransaction> => {
-    // const percentageSubmission = {
-    //   name: 'RequiredSubmissionsPercentage',
-    //   value: 0,
-    // }
-    // await updatePlatformSetting(percentageSubmission, hre)
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',
       hre
