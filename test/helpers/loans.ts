@@ -267,7 +267,8 @@ export const takeOutLoanWithNfts = async (
 
   // get the borrower, deployer and borrower's signer
   const deployer = await getNamedSigner('deployer')
-  const borrower = await deployer.getAddress()
+  const borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
+  const { signer: borrowerSigner } = await hre.evm.impersonate(borrower)
 
   // Claim user's NFT as borrower
   await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
@@ -281,10 +282,10 @@ export const takeOutLoanWithNfts = async (
     .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
 
   // Set NFT approval
-  await nft.connect(deployer).setApprovalForAll(diamond.address, true)
+  await nft.connect(borrowerSigner).setApprovalForAll(diamond.address, true)
 
   // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
-  await diamond.connect(deployer).stakeNFTs(ownedNFTs)
+  await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
 
   // Create mockCRAResponse
   const craReturn = await mockCRAResponse({
@@ -298,7 +299,7 @@ export const takeOutLoanWithNfts = async (
 
   // plug it in the takeOutLoanWithNfts function along with the proofs to apply to the loan!
   const tx = diamond
-    .connect(ethers.provider.getSigner(borrower))
+    .connect(borrowerSigner)
     .takeOutLoanWithNFTs(
       { request: craReturn.request, responses: craReturn.responses },
       ownedNFTs
