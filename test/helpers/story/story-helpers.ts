@@ -6,7 +6,21 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 export const STORY_ACTIONS = {
   LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
   LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
-  DAPP: { LEND: 0, WITHDRAW: 1, SWAP: 2 },
+  DAPP: { LEND: 0, SWAP: 1 },
+}
+
+export const LoanSnapshots: { [key: number]: Function } = {}
+
+export const DAPP_ACTIONS = {
+  LEND: {
+    COMPOUND: 0,
+    AAVE: 1,
+    POOL_TOGETHER: 2,
+  },
+  SWAP: {
+    UNISWAP: 0,
+    SUSHISWAP: 1,
+  },
 }
 
 export interface TestScenario {
@@ -22,6 +36,7 @@ export interface TestAction {
 
 export interface TestArgs {
   dapp?: number
+  dappAction?: number
   parent: number | null
   pass: boolean
   nft?: boolean
