@@ -6,6 +6,7 @@ import {
   STORY_ACTIONS,
   TestAction,
   LoanSnapshots,
+  TestArgs,
 } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 
@@ -25,6 +26,7 @@ import {
   takeOutLoanWithoutNfts,
   takeOutLoanWithNfts,
   repayLoan,
+  CreateLoanReturn,
 } from '../../loans'
 
 import Prando from 'prando'
@@ -68,30 +70,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
-          const percentageSubmission = {
-            name: 'RequiredSubmissionsPercentage',
-            value: 0,
-          }
-          await updatePlatformSetting(percentageSubmission, hre)
-          const { value: rateLimit } = await getPlatformSetting(
-            'RequestLoanTermsRateLimit',
-            hre
-          )
-          await hre.evm.advanceTime(rateLimit)
-          const borrowerAddress = (await hre.getNamedAccounts()).borrower
-          const createArgs = LoanStoryTestDriver.createLoanArgs(
-            hre,
-            borrowerAddress
-          )
-          const funcToRun =
-            args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
           if (args.pass) {
-            const { tx, getHelpers } = await funcToRun(hre, createArgs)
-            LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] =
-              await hre.evm.snapshot()
-            expect(tx)
+            expect(
+              await LoanStoryTestDriver.takeOutLoan(hre, args)
+            ).to.not.throw()
           } else {
-            expect(await funcToRun(hre, createArgs)).to.throw()
+            expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.throw()
           }
         })
         console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
@@ -99,8 +83,8 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_ACTIONS.LOAN.REPAY: {
-        if (args.parent) LoanSnapshots[args.parent]()
         let newTest = new Test('Repay loan', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
             expect(tx).to.exist
@@ -113,8 +97,8 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_ACTIONS.LOAN.LIQUIDATE: {
-        if (args.parent) LoanSnapshots[args.parent]()
         let newTest = new Test('Liquidate loan', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           if (args.pass) {
             const tx = await LoanStoryTestDriver.liquidateLoan(hre)
             expect(tx).to.exist
@@ -153,6 +137,29 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       borrower,
       loanType: randomLoanType,
     }
+  }
+
+  static takeOutLoan = async (
+    hre: HardhatRuntimeEnvironment,
+    args: TestArgs
+  ): Promise<ContractTransaction> => {
+    // const percentageSubmission = {
+    //   name: 'RequiredSubmissionsPercentage',
+    //   value: 0,
+    // }
+    // await updatePlatformSetting(percentageSubmission, hre)
+    const { value: rateLimit } = await getPlatformSetting(
+      'RequestLoanTermsRateLimit',
+      hre
+    )
+    await hre.evm.advanceTime(rateLimit)
+    const borrowerAddress = (await hre.getNamedAccounts()).borrower
+    const createArgs = LoanStoryTestDriver.createLoanArgs(hre, borrowerAddress)
+    const funcToRun =
+      args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
+    const { tx, getHelpers } = await funcToRun(hre, createArgs)
+    LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
+    return tx
   }
 
   static getLoan = async (
