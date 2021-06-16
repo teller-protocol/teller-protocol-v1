@@ -30,7 +30,7 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
-import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -87,27 +87,27 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice Creates a loan with the loan request and NFTs without any collateral
      * @param request Struct of the protocol loan request
-     * @param proofs Merkle proofs for validating NFT base loan size
+     * @param nftIDs IDs of TellerNFTs to use for the loan
      */
     function takeOutLoanWithNFTs(
         LoanRequest calldata request,
-        NftLoanSizeProof[] calldata proofs
+        uint16[] calldata nftIDs
     ) external paused(LibLoans.ID, false) __createLoan(request, true) {
         // Get the ID of the newly created loan
         uint256 loanID = CreateLoanLib.currentID() - 1;
         uint256 amount = LibLoans.loan(loanID).borrowedAmount;
+        uint8 lendingDecimals = ERC20(request.request.assetAddress).decimals();
 
-        uint256 allowedLoanSize;
-        for (uint256 i; i < proofs.length; i++) {
-            NFTLib.applyToLoan(loanID, proofs[i]);
+        uint256 allowedBaseLoanSize;
+        for (uint256 i; i < nftIDs.length; i++) {
+            NFTLib.applyToLoan(loanID, nftIDs[i]);
 
-            allowedLoanSize += proofs[i].baseLoanSize;
-            if (allowedLoanSize >= amount) {
-                break;
-            }
+            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
+                nftIDs[i]
+            );
         }
         require(
-            amount <= allowedLoanSize,
+            amount <= allowedBaseLoanSize * (10**lendingDecimals),
             "Teller: insufficient NFT loan size"
         );
 
