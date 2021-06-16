@@ -6,7 +6,7 @@ import {
   PayableOverrides,
   Signer,
 } from 'ethers'
-import hre from 'hardhat'
+// import hre from 'hardhat'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
 import { getNFT } from '../../config'
@@ -15,7 +15,8 @@ import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
 import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
-const { getNamedAccounts, contracts, tokens, ethers, toBN, evm } = hre
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+// const { getNamedAccounts, contracts, tokens, ethers, toBN, evm } = hre
 export enum LoanType {
   ZERO_COLLATERAL,
   UNDER_COLLATERALIZED,
@@ -43,10 +44,12 @@ export interface LoanHelpersReturn {
   }
 }
 export const loanHelpers = async (
+  hre: HardhatRuntimeEnvironment,
   loanID: string
 ): Promise<LoanHelpersReturn> => {
+  const { contracts } = hre
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  const details = await loanDetails(loanID)
+  const details = await loanDetails(hre, loanID)
   return {
     diamond,
     details,
@@ -58,7 +61,7 @@ export const loanHelpers = async (
       needed: () => collateralNeeded({ diamond, details }),
       current: () => collateralCurrent({ diamond, details }),
       deposit: (amount: BigNumberish, from?: Signer) =>
-        depositCollateral({ diamond, details, amount, from }),
+        depositCollateral(hre, { diamond, details, amount, from }),
       withdraw: (amount: BigNumberish, from?: Signer) =>
         withdrawCollateral({ diamond, details, amount, from }),
     },
@@ -89,6 +92,7 @@ export interface CreateLoanReturn {
   getHelpers: () => Promise<LoanHelpersReturn>
 }
 export const createLoan = async (
+  hre: HardhatRuntimeEnvironment,
   args: CreateLoanArgs
 ): Promise<CreateLoanReturn> => {
   const {
@@ -99,6 +103,7 @@ export const createLoan = async (
     amountBN,
     duration = moment.duration(1, 'day'),
   } = args
+  const { contracts, tokens, getNamedAccounts, toBN } = hre
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const lendingToken =
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
@@ -121,7 +126,7 @@ export const createLoan = async (
       break
   }
   // Get mock cra request and response
-  const craReturn = await mockCRAResponse({
+  const craReturn = await mockCRAResponse(hre, {
     lendingToken: lendingToken.address,
     loanAmount,
     loanTermLength: duration.asSeconds(),
@@ -144,7 +149,7 @@ export const createLoan = async (
       await tx
       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(loanID)
+      return await loanHelpers(hre, loanID)
     },
   }
 }
@@ -160,6 +165,7 @@ export const createLoan = async (
  * @returns: Promise<CreateLoanReturn> helper variables to help run our tests
  */
 export const takeOutLoanWithoutNfts = async (
+  hre: HardhatRuntimeEnvironment,
   args: CreateLoanArgs
 ): Promise<CreateLoanReturn> => {
   const {
@@ -171,7 +177,7 @@ export const takeOutLoanWithoutNfts = async (
     duration = moment.duration(1, 'day'),
     collAmount = 100,
   } = args
-
+  const { contracts, tokens, getNamedAccounts } = hre
   // define diamond contract
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
@@ -201,7 +207,7 @@ export const takeOutLoanWithoutNfts = async (
   }
 
   // create our mock CRA response
-  const craReturn = await mockCRAResponse({
+  const craReturn = await mockCRAResponse(hre, {
     lendingToken: lendingToken.address,
     loanAmount,
     loanTermLength: duration.asSeconds(),
@@ -226,7 +232,7 @@ export const takeOutLoanWithoutNfts = async (
       await tx
       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(loanID)
+      return await loanHelpers(hre, loanID)
     },
   }
 }
@@ -237,8 +243,10 @@ export const takeOutLoanWithoutNfts = async (
  * @returns Promise<CreateLoanReturn> that gives us data to help run our tests
  */
 export const takeOutLoanWithNfts = async (
+  hre: HardhatRuntimeEnvironment,
   args: CreateLoanWithNftArgs
 ): Promise<CreateLoanReturn> => {
+  const { contracts, tokens, toBN } = hre
   const { lendToken, amount = 100, duration = moment.duration(1, 'day') } = args
 
   // diamond contract
@@ -300,7 +308,7 @@ export const takeOutLoanWithNfts = async (
   await diamond.connect(signerBorrower).stakeNFTs(ownedNFTs)
 
   // Create mockCRAResponse
-  const craReturn = await mockCRAResponse({
+  const craReturn = await mockCRAResponse(hre, {
     lendingToken: lendingToken.address,
     loanAmount,
     loanTermLength: duration.asSeconds(),
@@ -324,7 +332,7 @@ export const takeOutLoanWithNfts = async (
       await tx
       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(loanID)
+      return await loanHelpers(hre, loanID)
     },
   }
 }
@@ -343,8 +351,10 @@ interface LoanDetailsReturn {
   refresh: () => ReturnType<typeof loanDetails>
 }
 const loanDetails = async (
+  hre: HardhatRuntimeEnvironment,
   loanID: BigNumberish
 ): Promise<LoanDetailsReturn> => {
+  const { contracts, tokens } = hre
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const loan = await diamond.getLoan(loanID)
   const lendingToken = await tokens.get(loan.lendingToken)
@@ -361,7 +371,7 @@ const loanDetails = async (
     totalOwed,
     terms,
     borrower: { address: loan.borrower, signer },
-    refresh: () => loanDetails(loanID),
+    refresh: () => loanDetails(hre, loanID),
   }
 }
 
@@ -376,6 +386,7 @@ interface DepositCollateralArgs extends CommonLoanArgs {
 }
 
 const depositCollateral = async (
+  hre: HardhatRuntimeEnvironment,
   args: DepositCollateralArgs
 ): Promise<ContractTransaction> => {
   const {
@@ -384,6 +395,7 @@ const depositCollateral = async (
     amount = await collateralNeeded({ diamond, details }),
     from = details.borrower.signer,
   } = args
+  const { tokens } = hre
   const weth = await tokens.get('WETH')
   const collateralToken = await tokens.get(details.loan.collateralToken)
   const options: PayableOverrides = {}

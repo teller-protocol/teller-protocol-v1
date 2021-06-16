@@ -66,7 +66,7 @@ describe('Loans', () => {
 
         // get helpers variables after function returns our transaction and
         // helper variables
-        const { getHelpers } = await takeOutLoanWithoutNfts({
+        const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
           lendToken: market.lendingToken,
           collToken: market.collateralTokens[0],
           loanType: LoanType.UNDER_COLLATERALIZED,
@@ -108,7 +108,7 @@ describe('Loans', () => {
 
           // trying to run the function will revert with the same error message
           // written in our PausableMods file
-          const { tx } = await takeOutLoanWithoutNfts({
+          const { tx } = await takeOutLoanWithoutNfts(hre, {
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
@@ -145,7 +145,7 @@ describe('Loans', () => {
         )
 
         // get helpers
-        const { getHelpers } = await takeOutLoanWithNfts({
+        const { getHelpers } = await takeOutLoanWithNfts(hre, {
           lendToken: market.lendingToken,
         })
         helpers = await getHelpers()
