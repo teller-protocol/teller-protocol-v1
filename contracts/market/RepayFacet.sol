@@ -204,10 +204,15 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             // if the loan is now fully paid, close it and withdraw borrower collateral
             if (leftToPay_ == 0) {
                 LibLoans.loan(loanID).status = LoanStatus.Closed;
-                LibCollateral.withdrawAll(
-                    loanID,
-                    LibLoans.loan(loanID).borrower
-                );
+
+                // Check if the loan has a collateral token
+                if (LibLoans.loan(loanID).collateralToken != address(0)) {
+                    LibCollateral.withdrawAll(
+                        loanID,
+                        LibLoans.loan(loanID).borrower
+                    );
+                }
+
                 // Restake any NFTs linked to loan for borrower
                 NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
             }
