@@ -44,15 +44,14 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
     /* State Variables */
 
     mapping(uint256 => uint256) public _tokenTierMappingCompressed;
+    bool public _tokenTierMappingCompressedSet;
 
     /* Modifiers */
 
     modifier onlyAdmin() {
-        require(hasRole(ADMIN, _msgSender()), "TellerNFT: not admin");
+        require(hasRole(ADMIN, _msgSender()), "TellerNFTDictionary: not admin");
         _;
     }
-
-    constructor() {}
 
     function initialize(address initialAdmin) public {
         _setupRole(ADMIN, initialAdmin);
@@ -86,6 +85,14 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         uint8 tierIndex = uint8((compressedRegister >> offset));
 
         return tierIndex;
+    }
+
+    function getTierHashes(uint256 tierIndex)
+        external
+        view
+        returns (string[] memory)
+    {
+        return hashes[tierIndex];
     }
 
     /**
@@ -122,10 +129,15 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
         onlyAdmin
         returns (bool)
     {
+        require(
+            !_tokenTierMappingCompressedSet,
+            "TellerNFTDictionary: token tier mapping already set"
+        );
         for (uint256 i = 0; i < tiersMapping.length; i++) {
             _tokenTierMappingCompressed[i] = tiersMapping[i];
         }
 
+        _tokenTierMappingCompressedSet = true;
         return true;
     }
 

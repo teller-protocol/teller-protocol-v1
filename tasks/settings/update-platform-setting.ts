@@ -24,7 +24,6 @@ export async function updatePlatformSetting(
     log('')
     log('Choose from the following list:', { indent: 2 })
     log(settingNames.join('\n'), { indent: 3, star: true })
-
     return
   }
 

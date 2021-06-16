@@ -43,7 +43,7 @@ export interface CRAResponse {
 
 export interface CRAReturn {
   request: CRARequest
-  response: CRAResponse
+  responses: CRAResponse[]
 }
 
 export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
@@ -114,7 +114,8 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const responseHashArray = ethers.utils.arrayify(responseHash)
   const signedMessage = await signer.signMessage(responseHashArray)
   const sig = ethers.utils.splitSignature(signedMessage)
-  const response: CRAResponse = {
+  const responses: CRAResponse[] = []
+  responses.push({
     signer: await signer.getAddress(),
     assetAddress: args.lendingToken,
     responseTime,
@@ -126,10 +127,10 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
       r: sig.r,
       s: sig.s,
     },
-  }
+  })
 
   return {
     request,
-    response,
+    responses,
   }
 }

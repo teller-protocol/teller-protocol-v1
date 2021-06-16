@@ -51,12 +51,13 @@ const initializeMarkets: DeployFunction = async (hre) => {
         return arr
       }, [])
     )
-    if (signersToAdd.length > 0)
+    if (signersToAdd.length > 0) {
       await waitAndLog(
         'Signers added',
         diamond.addSigners(lendingTokenAddress, signersToAdd),
         hre
       )
+    }
 
     // Add collateral tokens
     const existingCollateralTokens = await diamond.getCollateralTokens(

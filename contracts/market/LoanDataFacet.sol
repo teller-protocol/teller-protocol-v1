@@ -23,6 +23,7 @@ contract LoanDataFacet {
     }
 
     /**
+     * @notice DEPRECATED
      * @notice Returns the terms for a specified loan.
      * @param loanID The loan ID to get the total amount owed.
      * @return LoanTerms The terms that the loan weer created with.
