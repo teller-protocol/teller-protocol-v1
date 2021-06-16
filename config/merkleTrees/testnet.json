@@ -5989,5 +5989,55 @@
       { "address": "0x5a9bd3e84376d2961d64e7088d0aa60cab148100", "count": 1 },
       { "address": "0xe5a3f1e72d1dfa5c361516ac2779e9602106fea6", "count": 1 }
     ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
+      { "address": "0xb2986Fd5aC1B4F82C51A05cb07250D4D4a8f9F7F", "count": 2 },
+      { "address": "0xE4369C93E3E02529a11FC3F2d92b33D1c8efF2fc", "count": 2 },
+      { "address": "0x56EE5F76aC69eC57c3cc927C9fE6F55156E09689", "count": 2 },
+      { "address": "0xE1534865F30cE4829DC4A365B7006E5bb30488ea", "count": 2 },
+      { "address": "0xdce59E0a0F6a1546bB6df4c124D81E37C7E7DC8A", "count": 2 }
+    ]
+  },
+  {
+    "tierIndex": 10,
+    "balances": [
+      { "address": "0x8905469bFc17b82c7DE1B04d3AfeAdf4becB4dA0", "count": 2 },
+      { "address": "0xB732ee8358661E2C38505D0dA6E60990cC18FFac", "count": 2 },
+      { "address": "0xDA3cf4d66FCe5B0e454CF176985b49E9441Eb853", "count": 2 },
+      { "address": "0x580c2e2D85BCF99DD25517F181D22D00c2977960", "count": 2 },
+      { "address": "0x1aF9c1492A27e504CECaBA6A056cFF546ed6BAA4", "count": 2 }
+    ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
+      { "address": "0xA6c35B68B53AC162926a0b3C1d283bdb286C6313", "count": 2 },
+      { "address": "0x5bDfb7C2Ab54C39665d54a1CB255B0dA5F5CcEbd", "count": 2 },
+      { "address": "0xDEB8bFd019e84C141A01e192A73701B9BCa9059C", "count": 2 },
+      { "address": "0x1BbbcA5ec8754991dBBC782b906D460e121DfC8a", "count": 2 },
+      { "address": "0x5BC675Bb420b36848fA497dEc37d23dC1213Ae1e", "count": 2 },
+      { "address": "0x73FBb872BbfE6a2ece48aFb9cD4A07Aa2e30Bc91", "count": 2 },
+      { "address": "0x45b2466EF8ED0EB95CC6f68913e305e5c8b3F619", "count": 2 }
+    ]
+  },
+  {
+    "tierIndex": 10,
+    "balances": [
+      { "address": "0x520531a6AEe34468a3503d3d3E03e245FbfAaC73", "count": 2 },
+      { "address": "0x0b48b16F3596C467fB79c8Ff3336Cab6d59a7a43", "count": 2 },
+      { "address": "0xE8dFfeB0b0aDC10180ef032889e9b33191D6392D", "count": 2 },
+      { "address": "0xB8542E6e91B417AE0fe8B3bf9Aa930181DafEDb1", "count": 2 },
+      { "address": "0x9F17aB623bcdb937FfC13Ea01F1FD8939e72Bbdd", "count": 2 },
+      { "address": "0x4CefA0c65153A30fDAe1efb420D948D11117B997", "count": 2 },
+      { "address": "0x3A8b8dEE36009D41c916F0Fb1795A3bAcc956Aa6", "count": 2 }
+    ]
+  },
+  {
+    "tierIndex": 10,
+    "balances": [
+      { "address": "0xc756Be144729EcDBE51f49073D295ABd318f0048", "count": 5 }
+    ]
   }
 ]
