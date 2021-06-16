@@ -2,6 +2,12 @@
 pragma solidity ^0.8.0;
 
 /**
+        @dev The setting name for loans taken out with an NFT.
+        @dev This is the interest rate value that will be applied to loans taken out with an NFT.
+     */
+bytes32 constant NFT_INTEREST_RATE = keccak256("NFTInterestRate");
+
+/**
         @dev The setting name for the required subsmission settings.
         @dev This is the minimum percentage of node responses that will be required by the platform to either take out a loan, and to claim accrued interest. If the number of node responses are less than the ones specified here, the loan or accrued interest claim request will be rejected by the platform
      */
