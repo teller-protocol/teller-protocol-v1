@@ -237,8 +237,9 @@ library CreateLoanLib {
         loan.lendingToken = request.request.assetAddress;
         loan.borrower = request.request.borrower;
         loan.borrowedAmount = maxLoanAmount;
-        // If loan with NFT we do not set the interest rate or collateral ratio (NFT is collateral)
-        if (!withNFT) {
+        if (withNFT) {
+            loan.interestRate = PlatformSettingsLib.getNFTInterestRate();
+        } else {
             loan.interestRate = interestRate;
             loan.collateralRatio = collateralRatio;
         }
