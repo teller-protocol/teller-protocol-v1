@@ -5,11 +5,6 @@ pragma solidity ^0.8.0;
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
 
 // Interfaces
-import { ILoansEscrow } from "./escrow/ILoansEscrow.sol";
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -18,13 +13,13 @@ import {
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
 
 // Libraries
-import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../market/libraries/LibLoans.sol";
 import { LibEscrow } from "./libraries/LibEscrow.sol";
-import { PriceAggLib } from "../price-aggregator/PriceAggLib.sol";
 
-contract EscrowClaimTokensFacet is PausableMods {
-    using SafeERC20 for IERC20;
+/**
+ * @notice Contains functionality to claim tokens that are in an escrow contract for a loan.
+ */
+contract EscrowClaimTokens is PausableMods {
     /**
      * @notice Notifies when the Escrow's tokens have been claimed.
      * @param recipient address where the tokens where sent to.
@@ -45,20 +40,29 @@ contract EscrowClaimTokensFacet is PausableMods {
             "Teller: loan not closed"
         );
 
+        __claimEscrowTokens(loanID);
+    }
+
+    function __claimEscrowTokens(uint256 loanID) internal {
+        __claimToken(loanID, LibLoans.loan(loanID).lendingToken);
+
         EnumerableSet.AddressSet storage tokens =
             MarketStorageLib.store().escrowTokens[loanID];
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-            uint256 balance =
-                LibEscrow.balanceOf(loanID, EnumerableSet.at(tokens, i));
-            if (balance > 0) {
-                LibEscrow.e(loanID).claimToken(
-                    EnumerableSet.at(tokens, i),
-                    msg.sender,
-                    balance
-                );
-            }
+            __claimToken(loanID, EnumerableSet.at(tokens, i));
         }
 
         emit TokensClaimed(msg.sender);
+    }
+
+    function __claimToken(uint256 loanID, address token) private {
+        uint256 balance = LibEscrow.balanceOf(loanID, token);
+        if (balance > 0) {
+            LibEscrow.e(loanID).claimToken(
+                token,
+                LibLoans.loan(loanID).borrower,
+                balance
+            );
+        }
     }
 }
