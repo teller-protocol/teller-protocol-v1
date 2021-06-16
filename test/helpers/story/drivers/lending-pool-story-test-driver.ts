@@ -1,7 +1,12 @@
 import Chai from 'chai'
 
 import { Test } from 'mocha'
-import { TestScenario, STORY_ACTIONS, TestAction } from '../story-helpers'
+import {
+  TestScenario,
+  STORY_ACTIONS,
+  TestAction,
+  LoanSnapshots,
+} from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import {
@@ -47,6 +52,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_ACTIONS.LENDING_POOL.LEND: {
         let newTest = new Test('Lend to loan', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
             expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
@@ -61,6 +67,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       }
       case STORY_ACTIONS.LENDING_POOL.WITHDRAW: {
         let newTest = new Test('withdraw loan', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
           if (args.pass) {
             expect(await withdrawWithArgs(hre, lpArgs)).to.not.throw()

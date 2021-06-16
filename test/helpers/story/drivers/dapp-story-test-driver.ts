@@ -6,6 +6,7 @@ import {
   STORY_ACTIONS,
   TestAction,
   TestArgs,
+  LoanSnapshots,
 } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
@@ -82,6 +83,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case DAPPS.LEND.COMPOUND: {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -130,6 +132,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     switch (dapp) {
       case DAPPS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
+          if (args.parent) LoanSnapshots[args.parent]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan

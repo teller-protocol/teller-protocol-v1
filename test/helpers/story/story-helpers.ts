@@ -9,6 +9,20 @@ export const STORY_ACTIONS = {
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
+export const LoanSnapshots: { [key: number]: Function } = {}
+
+export const DAPP_ACTIONS = {
+  LEND: {
+    COMPOUND: 0,
+    AAVE: 1,
+    POOL_TOGETHER: 2,
+  },
+  SWAP: {
+    UNISWAP: 0,
+    SUSHISWAP: 1,
+  },
+}
+
 export interface TestScenario {
   domain: string
   actions: TestAction[]
