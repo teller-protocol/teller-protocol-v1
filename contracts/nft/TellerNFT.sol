@@ -93,19 +93,6 @@ contract TellerNFT is ITellerNFT, ERC721Upgradeable, AccessControlUpgradeable {
     }
 
     /**
-     * @notice it returns the current token index to use as a counter
-     * @return counter_ the current token index
-     */
-    function getCurrentTokenIndex()
-        external
-        view
-        override
-        returns (uint256 counter_)
-    {
-        counter_ = _tokenCounter.current();
-    }
-
-    /**
      * @notice It returns information about a Tier for a token ID.
      * @param tokenId ID of the token to get Tier info.
      * @return index_ the index of the tier the tokenID belongs in
