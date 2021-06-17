@@ -12,6 +12,9 @@ jobs:
       ALCHEMY_MAINNET_KEY: ${{ secrets.ALCHEMY_MAINNET_KEY }}
       ALCHEMY_RINKEBY_KEY: ${{ secrets.ALCHEMY_RINKEBY_KEY }}
       ALCHEMY_ROPSTEN_KEY: ${{ secrets.ALCHEMY_ROPSTEN_KEY }}
+      ALCHEMY_KOVAN_KEY: ${{ secrets.ALCHEMY_KOVAN_KEY }}
+      MATIC_MAINNET_KEY: ${{ secrets.MATIC_MAINNET_KEY }}
+      MATIC_MUMBAI_KEY: ${{ secrets.MATIC_MUMBAI_KEY }}
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
       CMC_KEY: ${{ secrets.CMC_KEY }}
@@ -21,15 +24,13 @@ jobs:
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: '14.15.x'
+          node-version: '14'
+          registry-url: 'https://registry.npmjs.org/'
       - name: Install dependencies
         run: |
-          yarn
-      - name: Compiling Smart Contracts
+          yarn --network-concurrency 1
+      - name: Compiling and Executing Tests
         run: |
-          yarn compile
-      - name: Executing Tests
-        run: |
-          yarn test
+          yarn test mainnet
