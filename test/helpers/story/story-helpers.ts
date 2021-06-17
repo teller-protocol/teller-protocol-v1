@@ -3,15 +3,16 @@ import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 import LPStoryTestDriver from './drivers/lending-pool-story-test-driver'
 import DappStoryTestDriver from './drivers/dapp-story-test-driver'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-export const STORY_ACTIONS = {
+
+export const LoanSnapshots: { [key: number]: Function } = {}
+
+export const STORY_DOMAINS = {
   LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
   LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
-export const LoanSnapshots: { [key: number]: Function } = {}
-
-export const DAPP_ACTIONS = {
+export const DAPP_ACTION_TARGETS = {
   LEND: {
     COMPOUND: 0,
     AAVE: 1,
@@ -35,10 +36,10 @@ export interface TestAction {
 }
 
 export interface TestArgs {
-  dapp?: number
+  actionTarget?: number
   dappAction?: number
-  parent: number | null
-  pass: boolean
+  rewindStateTo: number | null
+  //shouldPass: boolean
   nft?: boolean
 }
 

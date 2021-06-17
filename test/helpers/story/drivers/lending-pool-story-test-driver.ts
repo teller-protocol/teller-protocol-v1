@@ -3,7 +3,7 @@ import Chai from 'chai'
 import { Test } from 'mocha'
 import {
   TestScenario,
-  STORY_ACTIONS,
+  STORY_DOMAINS,
   TestAction,
   LoanSnapshots,
 } from '../story-helpers'
@@ -50,11 +50,15 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const { actionType, args } = action
 
     switch (actionType) {
-      case STORY_ACTIONS.LENDING_POOL.LEND: {
+      case STORY_DOMAINS.LENDING_POOL.LEND: {
         let newTest = new Test('Lend to loan', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
-          if (args.pass) {
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
           } else {
             expect(await depositWithArgs(hre, lpArgs)).to.throw()
@@ -65,11 +69,15 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_ACTIONS.LENDING_POOL.WITHDRAW: {
+      case STORY_DOMAINS.LENDING_POOL.WITHDRAW: {
         let newTest = new Test('withdraw loan', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
-          if (args.pass) {
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             expect(await withdrawWithArgs(hre, lpArgs)).to.not.throw()
           } else {
             expect(await withdrawWithArgs(hre, lpArgs)).to.throw()
