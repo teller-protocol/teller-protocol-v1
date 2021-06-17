@@ -9,6 +9,7 @@ import {
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
+import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
 // Libraries
 import {
@@ -41,7 +42,7 @@ import {
     LoanStatus
 } from "../storage/market.sol";
 
-contract RepayFacet is RolesMods, ReentryMods, PausableMods {
+contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
@@ -204,10 +205,18 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             // if the loan is now fully paid, close it and withdraw borrower collateral
             if (leftToPay_ == 0) {
                 LibLoans.loan(loanID).status = LoanStatus.Closed;
-                LibCollateral.withdrawAll(
-                    loanID,
-                    LibLoans.loan(loanID).borrower
-                );
+
+                // Check if the loan has a collateral token
+                if (LibLoans.loan(loanID).collateralToken != address(0)) {
+                    LibCollateral.withdrawAll(
+                        loanID,
+                        LibLoans.loan(loanID).borrower
+                    );
+                }
+
+                // Claim tokens in the escrow for the loan if any
+                __claimEscrowTokens(loanID);
+
                 // Restake any NFTs linked to loan for borrower
                 NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
             }

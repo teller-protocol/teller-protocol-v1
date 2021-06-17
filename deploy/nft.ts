@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
-import { TellerNFTDictionary } from '../types/typechain/TellerNFTDictionary'
+import { TellerNFTDictionary } from '../types/typechain'
 import {
   deploy,
   deployDiamond,
@@ -9,7 +9,7 @@ import {
 } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, run, log, contracts } = hre
+  const { getNamedSigner, run, log, contracts, ethers } = hre
   const deployer = await getNamedSigner('deployer')
   // Make sure contracts are compiled
   await run('compile')
@@ -26,7 +26,7 @@ const deployNFT: DeployFunction = async (hre) => {
   /** TODO */
 
   let proxyMethodName: string | undefined
-  let proxyMethodArgs: Array<any> | undefined
+  let proxyMethodArgs: any[] | undefined
 
   try {
     // Try to get deployment of TellerDiamond
@@ -57,14 +57,11 @@ const deployNFT: DeployFunction = async (hre) => {
     await contracts.get('TellerNFTDistributor')
 
     // If deployment exists execute upgrade function
-    const executeMethod = 'setNFTDictionaryAddress'
+    const executeMethod = undefined
     const upgradeExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-    >['execute'] = {
-      methodName: executeMethod,
-      args: [nftDictionary.address],
-    }
+    >['execute'] = undefined
 
     execute = upgradeExecute
   } catch {
@@ -102,17 +99,24 @@ const deployNFT: DeployFunction = async (hre) => {
     execute,
   })
 
-  log(
-    `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
-    { indent: 2, star: true, nl: false }
+  const adminRole = ethers.utils.id('ADMIN')
+  const distributorIsDictAdmin = await nftDictionary.hasRole(
+    adminRole,
+    nftDistributor.address
   )
+  if (!distributorIsDictAdmin) {
+    log(
+      `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
+      { indent: 2, star: true, nl: false }
+    )
 
-  await nftDictionary
-    .connect(deployer)
-    .grantRole(ethers.utils.id('ADMIN'), nftDistributor.address)
-    .then(({ wait }) => wait())
+    await nftDictionary
+      .connect(deployer)
+      .grantRole(adminRole, nftDistributor.address)
+      .then(({ wait }) => wait())
 
-  log('Done.')
+    log('Done.')
+  }
 
   log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
 

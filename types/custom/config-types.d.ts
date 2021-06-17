@@ -77,6 +77,7 @@ export interface Uniswap {
 }
 
 export interface PlatformSettings {
+  NFTInterestRate: PlatformSetting
   RequiredSubmissionsPercentage: PlatformSetting
   MaximumTolerance: PlatformSetting
   ResponseExpiryLength: PlatformSetting
