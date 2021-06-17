@@ -49,6 +49,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
     let scenarioActions = scenario.actions
 
+    // const percentageSubmission = {
+    //   name: 'RequiredSubmissionsPercentage',
+    //   value: 0,
+    // }
+    // updatePlatformSetting(percentageSubmission, hre).then(console.log)
+
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
         LoanStoryTestDriver.generateTestsForAction(hre, action)
