@@ -7,7 +7,7 @@ import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
 import { ERC20, IAToken, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
-import { LoanType, takeOut } from '../../../helpers/loans'
+import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -26,7 +26,6 @@ describe.only('AaveDapp', () => {
       before(async () => {
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
-          amount: 100,
         }))
 
         aToken = await contracts.get<IAToken>('IAToken', {
@@ -45,11 +44,12 @@ describe.only('AaveDapp', () => {
 
       describe('lend, redeemAll', () => {
         it.only('Should be able to lend and then redeem successfully from Aave', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           await diamond
             .connect(details.borrower.signer)
@@ -81,11 +81,12 @@ describe.only('AaveDapp', () => {
         })
 
         it('Should not be able to lend into Aave as not the loan borrower', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           const rando = await getNamedSigner('lender')
           await diamond

@@ -141,10 +141,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     // // Dapps
-    // {
-    //   contract: 'AaveFacet',
-    //   skipIfAlreadyDeployed: true,
-    // },
+    {
+      contract: 'AaveFacet',
+      skipIfAlreadyDeployed: true,
+    },
   ]
 
   // Network specify Facets

@@ -1,7 +1,7 @@
-// import chai from 'chai'
-// import { solidity } from 'ethereum-waffle'
-// import hre from 'hardhat'
-//
+import chai from 'chai'
+import { solidity } from 'ethereum-waffle'
+import hre from 'hardhat'
+
 // import { getMarkets } from '../../../../config'
 // import { getPlatformSetting } from '../../../../tasks'
 // import { Market } from '../../../../types/custom/config-types'
@@ -101,13 +101,12 @@
 //     })
 //   }
 // })
-
 import { getMarkets } from '../../../../config'
 import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
 import { ERC20, ICErc20, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
-import { LoanType, takeOut } from '../../../helpers/loans'
+import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -145,11 +144,12 @@ describe.skip('CompoundDapp', () => {
 
       describe('lend, redeemAll', () => {
         it('Should be able to lend and then redeem successfully from Compound', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           await diamond
             .connect(details.borrower.signer)
@@ -181,11 +181,12 @@ describe.skip('CompoundDapp', () => {
         })
 
         it('Should not be able to lend into Compound as not the loan borrower', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           const rando = await getNamedSigner('lender')
           await diamond

@@ -7,7 +7,7 @@ import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
 import { ERC20, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
-import { LoanType, takeOut } from '../../../helpers/loans'
+import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -43,11 +43,12 @@ describe('SushiswapDapp', () => {
 
       describe('swap', () => {
         it('Should be able to swap using Sushiswap', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
@@ -89,12 +90,13 @@ describe('SushiswapDapp', () => {
         })
 
         it('Should NOT be able to swap using Sushiswap as not the loan borrower', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
             amount: 100,
           })
+          const { details } = await getHelpers()
 
           await diamond
             .connect(await getNamedSigner('deployer'))
@@ -108,12 +110,13 @@ describe('SushiswapDapp', () => {
         })
 
         it('Should NOT be able to swap using Sushiswap with an unsecured loan', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.ZERO_COLLATERAL,
             amount: 100,
           })
+          const { details } = await getHelpers()
 
           await diamond
             .connect(details.borrower.signer)

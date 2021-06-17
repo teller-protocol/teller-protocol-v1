@@ -7,7 +7,7 @@ import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
 import { ERC20, IAToken, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
-import { LoanType, takeOut } from '../../../helpers/loans'
+import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -46,12 +46,13 @@ describe('poolTogether Dapp', () => {
 
       describe('deposit, withdrawAll', () => {
         it('Should be able to deposit and then withdraw successfully from poolTogether', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
-          console.log('details: %o', details)
+          const { details } = await getHelpers()
+
           await diamond
             .connect(details.borrower.signer)
             .poolTogetherDepositTicket(
@@ -82,11 +83,12 @@ describe('poolTogether Dapp', () => {
         })
 
         it('Should not be able to deposit into pooltogether as not the loan borrower', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
+          const { details } = await getHelpers()
 
           const rando = await getNamedSigner('lender')
           await diamond
