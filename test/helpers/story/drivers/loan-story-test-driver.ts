@@ -3,7 +3,7 @@ import Chai from 'chai'
 import { Test } from 'mocha'
 import {
   TestScenario,
-  STORY_ACTIONS,
+  STORY_DOMAINS,
   TestAction,
   LoanSnapshots,
   TestArgs,
@@ -66,9 +66,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
     const { actionType, args } = action
     switch (actionType) {
-      case STORY_ACTIONS.LOAN.TAKE_OUT: {
+      case STORY_DOMAINS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
-          if (args.pass) {
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
           } else {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.not
@@ -79,10 +82,14 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_ACTIONS.LOAN.REPAY: {
+      case STORY_DOMAINS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
-          if (args.pass) {
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
             expect(tx).to.exist
           } else {
@@ -93,10 +100,14 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_ACTIONS.LOAN.LIQUIDATE: {
+      case STORY_DOMAINS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
-          if (args.pass) {
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             const tx = await LoanStoryTestDriver.liquidateLoan(hre)
             expect(tx).to.exist
           } else {
@@ -150,7 +161,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const funcToRun =
       args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
     const { tx, getHelpers } = await funcToRun(hre, createArgs)
-    LoanSnapshots[STORY_ACTIONS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
+    LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] = await hre.evm.snapshot()
     return tx
   }
 

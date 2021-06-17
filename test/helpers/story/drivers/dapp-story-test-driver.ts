@@ -3,7 +3,8 @@ import { ICErc20 } from '../../../../types/typechain'
 import { Test } from 'mocha'
 import {
   TestScenario,
-  STORY_ACTIONS,
+  STORY_DOMAINS,
+  DAPP_ACTION_TARGETS,
   TestAction,
   TestArgs,
   LoanSnapshots,
@@ -13,11 +14,12 @@ import LoanStoryTestDriver from './loan-story-test-driver'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 var expect = Chai.expect
-
+/*
 export const DAPPS = {
   LEND: { AAVE: 0, COMPOUND: 1, POOL_TOGETHER: 2 },
   SWAP: { UNISWAP: 0, SUSHISWAP: 1 },
-}
+}*/
+
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
 Then we will expect that 
@@ -52,11 +54,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     let args = action.args
 
     switch (actionType) {
-      case STORY_ACTIONS.DAPP.LEND: {
+      case STORY_DOMAINS.DAPP.LEND: {
         DappStoryTestDriver.generateTestsForLend(hre, args, tests)
         break
       }
-      case STORY_ACTIONS.DAPP.SWAP: {
+      case STORY_DOMAINS.DAPP.SWAP: {
         DappStoryTestDriver.generateTestsForSwap(hre, args, tests)
         break
       }
@@ -71,9 +73,9 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     tests: Array<Test>
   ) {
     const { getNamedSigner, contracts } = hre
-    const dapp = args.dapp ? args.dapp : 0
+    const dapp = args.actionTarget ? args.actionTarget : 0
     switch (dapp) {
-      case DAPPS.LEND.AAVE: {
+      case DAPP_ACTION_TARGETS.LEND.AAVE: {
         let newTest = new Test('AAVE Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
@@ -81,9 +83,9 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPPS.LEND.COMPOUND: {
+      case DAPP_ACTION_TARGETS.LEND.COMPOUND: {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -109,7 +111,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPPS.LEND.POOL_TOGETHER: {
+      case DAPP_ACTION_TARGETS.LEND.POOL_TOGETHER: {
         let newTest = new Test('POOL_TOGETHER Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
@@ -128,11 +130,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     tests: Array<Test>
   ) {
     const { getNamedSigner, tokens } = hre
-    const dapp = args.dapp ? args.dapp : 0
+    const dapp = args.actionTarget ? args.actionTarget : 0
     switch (dapp) {
-      case DAPPS.SWAP.UNISWAP: {
+      case DAPP_ACTION_TARGETS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
-          if (args.parent) LoanSnapshots[args.parent]()
+          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -183,7 +185,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPPS.SWAP.SUSHISWAP: {
+      case DAPP_ACTION_TARGETS.SWAP.SUSHISWAP: {
         let newTest = new Test('SUSHISWAP Swap DAPP', async function () {
           expect(1).to.equal(1)
         })
