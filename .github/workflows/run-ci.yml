@@ -34,4 +34,4 @@ jobs:
       - name: Run Tests
       - uses: borales/actions-yarn@v2.0.0
         with: 
-          cmd: test mainnet # will run `yarn install` command
+          cmd: test mainnet # will run `yarn test mainnet` command
