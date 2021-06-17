@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
-import { LibEscrow } from "../libraries/LibEscrow.sol";
+import { LibEscrow, ILoansEscrow } from "../libraries/LibEscrow.sol";
 import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import { IAaveLendingPool } from "../../shared/interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -56,9 +56,11 @@ contract AaveFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
+        ILoansEscrow escrow = LibEscrow.e(loanID);
+
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
         IAToken aToken = LibDapps.getAToken(tokenAddress);
-        uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(escrow));
         IERC20(tokenAddress).safeApprove(address(aaveLendingPool), amount);
 
         bytes memory callData =
@@ -66,15 +68,12 @@ contract AaveFacet is PausableMods, DappMods {
                 IAaveLendingPool.deposit.selector,
                 tokenAddress,
                 amount,
-                address(this),
+                address(escrow),
                 0
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(
-            address(aaveLendingPool),
-            callData
-        );
+        escrow.callDapp(address(aaveLendingPool), callData);
 
-        uint256 aTokenBalanceAfterDeposit = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceAfterDeposit = aToken.balanceOf(address(escrow));
         require(
             aTokenBalanceAfterDeposit > aTokenBalanceBeforeDeposit,
             "AAVE_BALANCE_NOT_INCREASED"
@@ -103,9 +102,11 @@ contract AaveFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
+        ILoansEscrow escrow = LibEscrow.e(loanID);
+
         IAToken aToken = LibDapps.getAToken(tokenAddress);
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
-        uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(escrow));
         require(
             aTokenBalanceBeforeWithdraw >= amount,
             "NO_BALANCE_TO_WITHDRAW"
@@ -116,14 +117,14 @@ contract AaveFacet is PausableMods, DappMods {
                 IAaveLendingPool.withdraw.selector,
                 tokenAddress,
                 amount,
-                address(this)
+                address(escrow)
             );
         LibDapps.s().loanEscrows[loanID].callDapp(
             address(aaveLendingPool),
             callData
         );
 
-        uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(escrow));
         require(
             aTokenBalanceAfterWithdraw < aTokenBalanceBeforeWithdraw,
             "AAVE_WITHDRAWAL_ERROR"
@@ -151,9 +152,10 @@ contract AaveFacet is PausableMods, DappMods {
         paused("", false)
         onlyBorrower(loanID)
     {
+        ILoansEscrow escrow = LibEscrow.e(loanID);
         IAToken aToken = LibDapps.getAToken(tokenAddress);
 
-        uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(escrow));
         require(aTokenBalanceBeforeWithdraw >= 0, "NO_BALANCE_TO_WITHDRAW");
 
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
@@ -163,14 +165,11 @@ contract AaveFacet is PausableMods, DappMods {
                 IAaveLendingPool.withdraw.selector,
                 tokenAddress,
                 aTokenBalanceBeforeWithdraw,
-                address(this)
+                address(escrow)
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(
-            address(aaveLendingPool),
-            callData
-        );
+        escrow.callDapp(address(aaveLendingPool), callData);
 
-        uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
+        uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(escrow));
         require(aTokenBalanceAfterWithdraw == 0, "AAVE_WITHDRAWAL_ERROR");
 
         LibEscrow.tokenUpdated(loanID, address(aToken));
