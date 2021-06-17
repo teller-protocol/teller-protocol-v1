@@ -30,7 +30,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
       - name: Install dependencies
         run: |
-          yarn --network-concurrency 8
+          yarn --network-concurrency 1
       - name: Compiling and Executing Tests
         run: |
           yarn test mainnet
