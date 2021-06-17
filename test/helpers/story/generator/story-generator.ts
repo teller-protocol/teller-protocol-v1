@@ -7,91 +7,10 @@ import {
 
 export const generateStories = (): Array<TestScenario> => {
   const domains: string[] = Object.keys(STORY_DOMAINS)
-
-  /*
-
-  let manualScenarios: TestScenario[] = [
-    {
-      domain: 'LOAN',
-      actions: [
-        {
-          actionType: STORY_DOMAINS.LOAN.TAKE_OUT,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: null },
-        },
-        {
-          actionType: STORY_DOMAINS.LOAN.LIQUIDATE,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT },
-        },
-        {
-          actionType: STORY_DOMAINS.LOAN.REPAY,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT },
-        },
-      ],
-    },
-    {
-      domain: 'LOAN',
-      actions: [
-        {
-          actionType: STORY_DOMAINS.LOAN.TAKE_OUT,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: null },
-        },
-        {
-          actionType: STORY_DOMAINS.LOAN.LIQUIDATE,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT },
-        },
-        {
-          actionType: STORY_DOMAINS.LOAN.REPAY,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT },
-        },
-      ],
-    },
-
-
-    {
-      domain: 'LENDING_POOL',
-      actions: [
-        {
-          actionType: STORY_DOMAINS.LENDING_POOL.LEND,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: null },
-        },
-        {
-          actionType: STORY_DOMAINS.LENDING_POOL.WITHDRAW,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LENDING_POOL.LEND },
-        },
-      ],
-    },
-    {
-      domain: 'DAPP',
-      actions: [
-        {
-          actionType: STORY_DOMAINS.DAPP.LEND,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT, actionTarget: DAPP_ACTION_TARGETS.SWAP.UNISWAP },
-        },
-        {
-          actionType: STORY_DOMAINS.DAPP.SWAP,
-          suiteName: '',
-          args: { shouldPass: true, rewindStateTo: STORY_DOMAINS.LOAN.TAKE_OUT, actionTarget: DAPP_ACTION_TARGETS.SWAP.SUSHISWAP },
-        },
-      ],
-     },
-  ]*/
-
   const proceduralScenarios = domains.map((domain) => {
     const actions: TestAction[] = []
     switch (domain) {
       case 'DAPP':
-        /*const storyActionTypes: [string, number][] = Object.entries(
-          STORY_DOMAINS[domain]
-        )*/
         const storyActionTypeKeys: string[] = Object.keys(STORY_DOMAINS[domain])
 
         storyActionTypeKeys.map((storyActionTypeKey) => {
@@ -105,10 +24,6 @@ export const generateStories = (): Array<TestScenario> => {
           const dappTypes: [string, number][] = Object.entries(
             DAPP_ACTION_TARGETS[storyActionTypeKey]
           )
-
-          /* const dappTypes:  string[]  = Object.values(
-            DAPP_ACTION_TARGETS[storyActionType]
-          )*/
 
           console.log('story gen dappTypes', dappTypes)
 
@@ -139,7 +54,6 @@ export const generateStories = (): Array<TestScenario> => {
           })
         })
         break
-
       default:
         const actionTypes: [string, number][] = Object.entries(
           STORY_DOMAINS[domain]
@@ -156,7 +70,7 @@ export const generateStories = (): Array<TestScenario> => {
           let falseTest: TestAction = {
             actionType: actionType[1],
             suiteName: `${actionType[0]} false test`,
-            args: { shouldPass: false, rewindStateTo: null },
+            args: { rewindStateTo: null },
           }
           actions.push(trueTest, falseTest)
         })
