@@ -27,11 +27,9 @@ jobs:
       - uses: borales/actions-yarn@v2.0.0
         with:
           node-version: '14.15.4'
-      - name: Install dependencies
       - uses: borales/actions-yarn@v2.0.0
         with: 
           run: install # will run `yarn install` command
-      - name: Run Tests
       - uses: borales/actions-yarn@v2.0.0
         with: 
           run: test mainnet # will run `yarn test mainnet` command
