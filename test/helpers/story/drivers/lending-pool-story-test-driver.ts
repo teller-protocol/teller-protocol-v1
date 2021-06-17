@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai'
+import { BigNumber } from 'ethers'
 import { solidity } from 'ethereum-waffle'
 import { Test } from 'mocha'
 import {
@@ -13,9 +14,11 @@ import {
   LPHelperArgs,
   depositWithArgs,
   withdrawWithArgs,
+  getLPHelpers,
 } from '../../lending-pool'
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { fundLender, getFunds } from '../../get-funds'
 chai.should()
 chai.use(solidity)
 /*
@@ -54,15 +57,18 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       case STORY_DOMAINS.LENDING_POOL.LEND: {
         let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
-          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
+          const helpers: ReturnType<typeof getLPHelpers> =
+            await LPStoryTestDriver.createLPArgs(hre)
 
           const shouldPass = true
           //read the state and determine if this should pass
 
           if (shouldPass) {
-            expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
+            // expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
+            expect(await helpers.deposit()).to.not.throw()
+            await helpers.deposit()
           } else {
-            expect(await depositWithArgs(hre, lpArgs)).to.throw()
+            expect(await helpers.deposit()).to.be.reverted
           }
         })
 
@@ -73,15 +79,16 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       case STORY_DOMAINS.LENDING_POOL.WITHDRAW: {
         let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
-          const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
+          const helpers: ReturnType<typeof getLPHelpers> =
+            await LPStoryTestDriver.createLPArgs(hre)
 
           const shouldPass = true
           //read the state and determine if this should pass
 
           if (shouldPass) {
-            expect(await withdrawWithArgs(hre, lpArgs)).to.not.throw()
+            expect(await helpers.withdraw()).to.not.throw()
           } else {
-            expect(await withdrawWithArgs(hre, lpArgs)).to.throw()
+            expect(await helpers.withdraw()).to.be.reverted
           }
         })
         console.log('push new story test !')
@@ -94,7 +101,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
   static createLPArgs = async (
     hre: HardhatRuntimeEnvironment
-  ): Promise<LPHelperArgs> => {
+  ): Promise<ReturnType<typeof getLPHelpers>> => {
     const { getNamedSigner, contracts } = hre
     const borrower = await getNamedSigner('borrower')
     const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
@@ -102,11 +109,32 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const tToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
-    const lpHelperArgs: LPHelperArgs = {
-      diamond: diamond,
+    const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
+    const depositAmount = maxTVL.div(2)
+    await fundLender({
+      token: details.lendingToken,
+      amount: depositAmount,
+      hre,
+    })
+    const helpers = getLPHelpers(hre, {
+      diamond,
       lendingToken: details.lendingToken,
       tToken: tToken,
-    }
-    return lpHelperArgs
+      amount: depositAmount,
+    })
+    return helpers
+    // const depositAmount = BigNumber.from(details.loan.borrowedAmount)
+    // await fundLender({
+    //   token: details.lendingToken,
+    //   amount: depositAmount,
+    //   hre,
+    // })
+
+    // const lpHelperArgs: LPHelperArgs = {
+    //   diamond: diamond,
+    //   lendingToken: details.lendingToken,
+    //   tToken: tToken,
+    // }
+    // return lpHelperArgs
   }
 }

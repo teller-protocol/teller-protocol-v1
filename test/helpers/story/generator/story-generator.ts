@@ -31,7 +31,7 @@ export const generateStories = (): Array<TestScenario> => {
             const dappTypeName = dappType[0]
             const dappTypeIndex = dappType[1]
 
-            let trueTest: TestAction = {
+            let test: TestAction = {
               actionType: storyActionType,
               suiteName: `${dappTypeName} true test`,
               args: {
@@ -40,17 +40,8 @@ export const generateStories = (): Array<TestScenario> => {
                 actionTarget: dappTypeIndex,
               },
             }
-            let falseTest: TestAction = {
-              actionType: storyActionType,
-              suiteName: `${dappTypeName} false test`,
-              args: {
-                //   shouldPass: false,
-                rewindStateTo: null,
-                actionTarget: dappTypeIndex,
-              },
-            }
 
-            actions.push(trueTest, falseTest)
+            actions.push(test)
           })
         })
         break
@@ -59,7 +50,7 @@ export const generateStories = (): Array<TestScenario> => {
           STORY_DOMAINS[domain]
         )
         actionTypes.map((actionType) => {
-          let trueTest: TestAction = {
+          let test: TestAction = {
             actionType: actionType[1],
             suiteName: `${actionType[0]} true test`,
             args: {
@@ -67,12 +58,7 @@ export const generateStories = (): Array<TestScenario> => {
               rewindStateTo: actionType[1] == 0 ? null : 0,
             },
           }
-          let falseTest: TestAction = {
-            actionType: actionType[1],
-            suiteName: `${actionType[0]} false test`,
-            args: { rewindStateTo: null },
-          }
-          actions.push(trueTest, falseTest)
+          actions.push(test)
         })
         break
     }

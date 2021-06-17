@@ -1,7 +1,9 @@
 import chai, { expect } from 'chai'
+import { BigNumber } from 'ethers'
 import { solidity } from 'ethereum-waffle'
 import { ICErc20 } from '../../../../types/typechain'
 import { Test } from 'mocha'
+import { getFunds } from '../../get-funds'
 import {
   TestScenario,
   STORY_DOMAINS,
@@ -91,6 +93,19 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
+
+          await getFunds({
+            to: await borrower.getAddress(),
+            tokenSym: await details.lendingToken.symbol(),
+            amount: BigNumber.from(details.loan.borrowedAmount).mul(2),
+            hre,
+          })
+          await details.lendingToken
+            .connect(borrower)
+            .approve(
+              diamond.address,
+              BigNumber.from(details.loan.borrowedAmount).mul(2)
+            )
           const cToken = await contracts.get<ICErc20>('ICErc20', {
             at: await diamond.getAssetCToken(details.lendingToken.address),
           })
@@ -147,19 +162,19 @@ export default class DappStoryTestDriver extends StoryTestDriver {
             escrowAddress
           )
           console.log({ lendingBalBefore })
-          expect(lendingBalBefore).to.equal(0)
-          // lendingBalBefore
-          //   .(0)
-          //   .should.eql(true, 'Loan escrow should have a lending token balance')
+          // expect(lendingBalBefore).to.greaterThan(0)
+          lendingBalBefore
+            .gt(0)
+            .should.eql(true, 'Loan escrow should have a lending token balance')
 
           const swapBalBefore = await link.balanceOf(escrowAddress)
-          expect(swapBalBefore).to.equal(0)
-          // swapBalBefore
-          //   .eq(0)
-          //   .should.eql(
-          //     true,
-          //     'Loan escrow should not have a token balance before swap'
-          //   )
+          // expect(swapBalBefore).to.equal(0)
+          swapBalBefore
+            .eq(0)
+            .should.eql(
+              true,
+              'Loan escrow should not have a token balance before swap'
+            )
 
           await diamond
             .connect(details.borrower.signer)

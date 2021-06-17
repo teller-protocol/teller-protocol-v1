@@ -26,6 +26,7 @@ export const DAPP_ACTION_TARGETS = {
 
 export interface TestScenario {
   domain: string
+  //shouldPass: boolean
   actions: TestAction[]
 }
 
