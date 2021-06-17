@@ -24,12 +24,12 @@ jobs:
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
       - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: borales/actions-yarn@v2.3.0
         with:
           node-version: '14.15.x'
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: borales/actions-yarn@v2.3.0
         with: 
           cmd: install # will run `yarn install` command
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: borales/actions-yarn@v2.3.0
         with: 
           cmd: test mainnet # will run `yarn test mainnet` command
