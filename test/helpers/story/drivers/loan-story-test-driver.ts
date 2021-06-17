@@ -68,7 +68,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case STORY_DOMAINS.LOAN.TAKE_OUT: {
         let newTest = new Test('take out loan', async function () {
-          if (args.shouldPass) {
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
           } else {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.not
@@ -82,7 +85,11 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       case STORY_DOMAINS.LOAN.REPAY: {
         let newTest = new Test('Repay loan', async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
-          if (args.shouldPass) {
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
             expect(tx).to.exist
           } else {
@@ -96,7 +103,11 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       case STORY_DOMAINS.LOAN.LIQUIDATE: {
         let newTest = new Test('Liquidate loan', async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
-          if (args.shouldPass) {
+
+          const shouldPass = false
+          //read the state and determine if this should pass
+
+          if (shouldPass) {
             const tx = await LoanStoryTestDriver.liquidateLoan(hre)
             expect(tx).to.exist
           } else {

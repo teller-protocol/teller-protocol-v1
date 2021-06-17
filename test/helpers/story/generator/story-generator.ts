@@ -120,7 +120,7 @@ export const generateStories = (): Array<TestScenario> => {
               actionType: storyActionType,
               suiteName: `${dappTypeName} true test`,
               args: {
-                shouldPass: true,
+                //  shouldPass: true,
                 rewindStateTo: dappTypeIndex == 0 ? null : dappTypeIndex,
                 actionTarget: dappTypeIndex,
               },
@@ -129,7 +129,7 @@ export const generateStories = (): Array<TestScenario> => {
               actionType: storyActionType,
               suiteName: `${dappTypeName} false test`,
               args: {
-                shouldPass: false,
+                //   shouldPass: false,
                 rewindStateTo: null,
                 actionTarget: dappTypeIndex,
               },
@@ -149,7 +149,7 @@ export const generateStories = (): Array<TestScenario> => {
             actionType: actionType[1],
             suiteName: `${actionType[0]} true test`,
             args: {
-              shouldPass: true,
+              // shouldPass: true,
               rewindStateTo: actionType[1] == 0 ? null : actionType[1],
             },
           }

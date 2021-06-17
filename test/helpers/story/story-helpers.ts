@@ -39,7 +39,7 @@ export interface TestArgs {
   actionTarget?: number
   dappAction?: number
   rewindStateTo: number | null
-  shouldPass: boolean
+  //shouldPass: boolean
   nft?: boolean
 }
 
