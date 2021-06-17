@@ -1,4 +1,5 @@
-import Chai from 'chai'
+import chai, { expect } from 'chai'
+import { solidity } from 'ethereum-waffle'
 import { ICErc20 } from '../../../../types/typechain'
 import { Test } from 'mocha'
 import {
@@ -13,7 +14,8 @@ import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-var expect = Chai.expect
+chai.should()
+chai.use(solidity)
 /*
 export const DAPPS = {
   LEND: { AAVE: 0, COMPOUND: 1, POOL_TOGETHER: 2 },
@@ -144,17 +146,20 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           const lendingBalBefore = await details.lendingToken.balanceOf(
             escrowAddress
           )
-          lendingBalBefore
-            .gt(0)
-            .should.eql(true, 'Loan escrow should have a lending token balance')
+          console.log({ lendingBalBefore })
+          expect(lendingBalBefore).to.equal(0)
+          // lendingBalBefore
+          //   .(0)
+          //   .should.eql(true, 'Loan escrow should have a lending token balance')
 
           const swapBalBefore = await link.balanceOf(escrowAddress)
-          swapBalBefore
-            .eq(0)
-            .should.eql(
-              true,
-              'Loan escrow should not have a token balance before swap'
-            )
+          expect(swapBalBefore).to.equal(0)
+          // swapBalBefore
+          //   .eq(0)
+          //   .should.eql(
+          //     true,
+          //     'Loan escrow should not have a token balance before swap'
+          //   )
 
           await diamond
             .connect(details.borrower.signer)

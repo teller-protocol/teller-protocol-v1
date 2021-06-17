@@ -64,7 +64,7 @@ export const generateStories = (): Array<TestScenario> => {
             suiteName: `${actionType[0]} true test`,
             args: {
               // shouldPass: true,
-              rewindStateTo: actionType[1] == 0 ? null : actionType[1],
+              rewindStateTo: actionType[1] == 0 ? null : 0,
             },
           }
           let falseTest: TestAction = {
@@ -78,6 +78,6 @@ export const generateStories = (): Array<TestScenario> => {
     }
     return { domain, actions }
   })
-
+  console.log('procedural scenes: %o', proceduralScenarios)
   return proceduralScenarios
 }

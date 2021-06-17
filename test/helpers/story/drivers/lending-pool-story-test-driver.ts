@@ -1,5 +1,5 @@
-import Chai from 'chai'
-
+import chai, { expect } from 'chai'
+import { solidity } from 'ethereum-waffle'
 import { Test } from 'mocha'
 import {
   TestScenario,
@@ -16,7 +16,8 @@ import {
 } from '../../lending-pool'
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-var expect = Chai.expect
+chai.should()
+chai.use(solidity)
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
 Then we will expect that 
@@ -51,11 +52,11 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case STORY_DOMAINS.LENDING_POOL.LEND: {
-        let newTest = new Test('Lend to loan', async function () {
+        let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
 
-          const shouldPass = false
+          const shouldPass = true
           //read the state and determine if this should pass
 
           if (shouldPass) {
@@ -70,11 +71,11 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         break
       }
       case STORY_DOMAINS.LENDING_POOL.WITHDRAW: {
-        let newTest = new Test('withdraw loan', async function () {
+        let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const lpArgs: LPHelperArgs = await LPStoryTestDriver.createLPArgs(hre)
 
-          const shouldPass = false
+          const shouldPass = true
           //read the state and determine if this should pass
 
           if (shouldPass) {

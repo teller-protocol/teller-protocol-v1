@@ -2,7 +2,7 @@ import { task, types } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
 import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
-
+import { updatePlatformSetting } from '../tasks'
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
 import Mocha from 'mocha'
 
@@ -87,6 +87,12 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     }
 
     console.log('\n\n\n\n')
+
+    const percentageSubmission = {
+      name: 'RequiredSubmissionsPercentage',
+      value: 0,
+    }
+    await updatePlatformSetting(percentageSubmission, hre)
 
     const testFailures = await new Promise<number>((resolve, _) => {
       mochaInstance.run(resolve)
