@@ -1,6 +1,12 @@
 import { PlatformSettings } from '../types/custom/config-types'
 
 const mainnetPlatformSettings: PlatformSettings = {
+  NFTInterestRate: {
+    processOnDeployment: true,
+    value: 0,
+    min: 0,
+    max: 10000,
+  },
   RequiredSubmissionsPercentage: {
     processOnDeployment: true,
     value: 8000,
@@ -17,15 +23,13 @@ const mainnetPlatformSettings: PlatformSettings = {
     processOnDeployment: true,
     value: 900,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
   TermsExpiryTime: {
     processOnDeployment: true,
     value: 3600,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
   LiquidateRewardPercent: {
     processOnDeployment: true,
@@ -37,8 +41,7 @@ const mainnetPlatformSettings: PlatformSettings = {
     processOnDeployment: true,
     value: 5184000,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
   CollateralBuffer: {
     processOnDeployment: true,
@@ -56,13 +59,18 @@ const mainnetPlatformSettings: PlatformSettings = {
     processOnDeployment: true,
     value: 3600,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
 }
 
 export const platformSettings: Record<string, PlatformSettings> = {
   rinkeby: {
+    NFTInterestRate: {
+      processOnDeployment: true,
+      value: 0,
+      min: 0,
+      max: 10000,
+    },
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
       value: 100,
@@ -79,15 +87,13 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 300,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     TermsExpiryTime: {
       processOnDeployment: true,
       value: 3600,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     LiquidateRewardPercent: {
       processOnDeployment: true,
@@ -99,8 +105,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 5184000,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     CollateralBuffer: {
       processOnDeployment: true,
@@ -118,11 +123,16 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 30,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
   },
   kovan: {
+    NFTInterestRate: {
+      processOnDeployment: true,
+      value: 0,
+      min: 0,
+      max: 10000,
+    },
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
       value: 100,
@@ -139,15 +149,13 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 300,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     TermsExpiryTime: {
       processOnDeployment: true,
       value: 3600,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     LiquidateRewardPercent: {
       processOnDeployment: true,
@@ -159,8 +167,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 5184000,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     CollateralBuffer: {
       processOnDeployment: true,
@@ -178,11 +185,16 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 30,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
   },
   ropsten: {
+    NFTInterestRate: {
+      processOnDeployment: true,
+      value: 0,
+      min: 0,
+      max: 10000,
+    },
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
       value: 100,
@@ -199,15 +211,13 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 300,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     TermsExpiryTime: {
       processOnDeployment: true,
       value: 3600,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     LiquidateRewardPercent: {
       processOnDeployment: true,
@@ -219,8 +229,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 5184000,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     CollateralBuffer: {
       processOnDeployment: true,
@@ -238,8 +247,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 30,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
   },
   hardhat: mainnetPlatformSettings,

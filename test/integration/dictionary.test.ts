@@ -6,7 +6,6 @@ import hre, { getNamedAccounts } from 'hardhat'
 import { getMarkets, getNFT } from '../../config'
 import { generateMerkleDistribution } from '../../scripts/merkle/root'
 import { claimNFT, getPlatformSetting } from '../../tasks'
-import { getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import {
   DistributorEvents,
@@ -22,7 +21,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('Loans', () => {
+describe('NFT Dictionary', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -38,10 +37,7 @@ describe('Loans', () => {
 
       deployer = await getNamedSigner('deployer')
     })
-
-    describe('create', () => {})
-
-    describe('take out', () => {
+    describe('Dictionary test', () => {
       beforeEach(async () => {
         // Advance time
         const { value: rateLimit } = await getPlatformSetting(

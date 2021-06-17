@@ -18,11 +18,18 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
   args: NetworkArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { chain, block, onlyDeployment } = args
+  const { block, onlyDeployment } = args
   const { log, run, network } = hre
 
   if (network.name !== HARDHAT_NETWORK_NAME) {
     throw new Error(`Must use "${HARDHAT_NETWORK_NAME}" network for forking`)
+  }
+
+  const chain = process.env.FORKING_NETWORK
+  if (!chain) {
+    throw new Error(
+      `Forking network must be set in the ENV parameter FORKING_NETWORK`
+    )
   }
 
   if (!('forking' in network.config) || network.config.forking == null) {
@@ -63,12 +70,6 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
 }
 
 task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
-  .addOptionalPositionalParam(
-    'chain',
-    'An ETH network name to fork',
-    'mainnet',
-    types.string
-  )
   .addOptionalParam(
     'block',
     'Fork network at a particular block number',

@@ -28,6 +28,14 @@ library PlatformSettingsLib {
     }
 
     /**
+     * @notice It gets the current "NFTInterestRate" setting's value
+     * @return value_ the current value.
+     */
+    function getNFTInterestRate() internal view returns (uint16 value_) {
+        value_ = uint16(s(NAMES.NFT_INTEREST_RATE).value);
+    }
+
+    /**
      * @notice It gets the current "RequiredSubmissionsPercentage" setting's value
      * @return value_ the current value.
      */

@@ -60,7 +60,7 @@ const networkUrls: { [network: string]: string } = {
 }
 
 const networkForkingBlock: { [network: string]: number } = {
-  mainnet: 12480795,
+  mainnet: 12648380,
   // polygon: 14891625,
   // polygon_mumbai: 14244031,
 }
@@ -200,10 +200,10 @@ export default <HardhatUserConfig>{
     }),
     localhost: networkConfig({
       url: 'http://127.0.0.1:8545',
-      timeout: 100000,
+      timeout: 10000000,
     }),
   },
   mocha: {
-    timeout: 100000,
+    timeout: 10000000,
   },
 }

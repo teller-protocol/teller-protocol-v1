@@ -58,7 +58,7 @@
     "fs-extra": "^10.0.0",
     "hardhat": "^2.3.0",
     "hardhat-contract-sizer": "^2.0.2",
-    "hardhat-deploy": "git://github.com/teller-protocol/hardhat-deploy#91a7fc4cb5a243c1d7912559b623411a8c875e51",
+    "hardhat-deploy": "git://github.com/teller-protocol/hardhat-deploy#d502d73e8aa8546a778ac99cef188c1ab0d0cd8e",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-shorthand": "^1.0.0",
     "husky": "^4.2.3",
