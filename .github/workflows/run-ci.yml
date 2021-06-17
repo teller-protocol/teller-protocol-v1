@@ -24,15 +24,14 @@ jobs:
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: borales/actions-yarn@v2.0.0
         with:
           node-version: '14.15.4'
-      - name: Clear Cache
-        run: |
-          yarn cache clean
       - name: Install dependencies
-        run: |
-          yarn
-      - name: Compiling and Executing Tests
-        run: |
-          yarn test mainnet
+      - uses: borales/actions-yarn@v2.0.0
+        with: 
+          cmd: install # will run `yarn install` command
+      - name: Run Tests
+      - uses: borales/actions-yarn@v2.0.0
+        with: 
+          cmd: test mainnet # will run `yarn install` command
