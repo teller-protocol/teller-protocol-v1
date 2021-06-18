@@ -24,15 +24,13 @@ jobs:
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: '14'
+          registry-url: 'https://registry.npmjs.org/'
       - name: Install dependencies
         run: |
-          yarn --network-timeout 600000
-      - name: Compiling Smart Contracts
-        run: |
-          yarn compile
-      - name: Executing Tests
+          yarn --network-concurrency 1
+      - name: Compiling and Executing Tests
         run: |
           yarn test mainnet
