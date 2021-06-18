@@ -2,7 +2,7 @@ import colors from 'colors'
 import { makeNodeDisklet } from 'disklet'
 import { Contract } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { DeployOptions, DeployResult } from 'hardhat-deploy/dist/types'
+import { DeployOptions, DeployResult } from 'hardhat-deploy/types'
 import { Libraries } from 'hardhat-deploy/types'
 
 interface CommonDeployArgs extends Omit<DeployOptions, 'from'> {
@@ -30,8 +30,6 @@ export const deploy = async <C extends Contract>(
     ethers,
   } = hre
 
-  const log = args.log === false ? (...args: any[]) => {} : args.hre.log
-
   const { deployer } = await getNamedAccounts()
   const contractDeployName = args.name ?? args.contract
   const existingContract = await getOrNull(contractDeployName)
@@ -53,6 +51,7 @@ export const deploy = async <C extends Contract>(
     contractAddress = existingContract.address
     await onDeployResult({
       result: { ...existingContract, newlyDeployed: false },
+      name: contractDeployName,
       hre,
       indent,
     })
