@@ -21,8 +21,11 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
 
   const funder = await getNamedSigner('funder')
 
+  // Tokens
+  const { all: tokenAddresses } = getTokens(args.hre.network)
+
   let routerAddress: string
-  let pathZero: string
+  const path: string[] = []
   // If the forked network is polygon (or something other than L1 eth)
   // Use the Sushiswap router Polygon address instead of Mainnet Uniswap
   switch (process.env.FORKING_NETWORK) {
@@ -31,12 +34,13 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     case 'rinkeby':
     case 'ropsten':
       routerAddress = UNISWAP_ROUTER_V2_ADDRESS
-      pathZero = 'WETH'
+      path.push(tokenAddresses.WETH)
       break
     case 'polygon':
     case 'polygon_mumbai':
       routerAddress = SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON
-      pathZero = 'WMATIC'
+      path.push(tokenAddresses.WMATIC)
+      path.push(tokenAddresses.WETH)
       break
     default:
       throw new Error(
@@ -49,9 +53,6 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     at: routerAddress,
     from: funder,
   })
-
-  // Tokens
-  const { all: tokenAddresses } = getTokens(args.hre.network)
 
   const toAddress = Signer.isSigner(args.to)
     ? await args.to.getAddress()
@@ -72,7 +73,7 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     // Swap ETH/WMATIC for given token
     await swapper.swapETHForExactTokens(
       args.amount,
-      [tokenAddresses[pathZero], tokenAddresses[args.tokenSym]],
+      [...path, tokenAddresses[args.tokenSym]],
       toAddress,
       Date.now() + 10000,
       { value: balanceToSend }

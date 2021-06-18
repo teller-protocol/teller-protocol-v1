@@ -26,6 +26,7 @@ describe.only('AaveDapp', () => {
       before(async () => {
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
+          amount: 100000,
         }))
 
         aToken = await contracts.get<IAToken>('IAToken', {
