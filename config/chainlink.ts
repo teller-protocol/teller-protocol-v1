@@ -122,10 +122,20 @@ export const chainlink: Record<string, Chainlink> = {
     },
   },
   polygon: {
+    MATIC_ETH: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'WETH',
+      address: '0x327e23A4855b6F663a28c5161541d69Af8973302',
+    },
+    MATIC_DAI: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'DAI',
+      address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',
+    },
     USDC_ETH: {
       baseTokenName: 'USDC',
       quoteTokenName: 'WETH',
-      address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7',
+      address: '0xefb7e6be8356cCc6827799B6A7348eE674A80EaE',
     },
     DAI_ETH: {
       baseTokenName: 'DAI',
@@ -147,16 +157,6 @@ export const chainlink: Record<string, Chainlink> = {
       quoteTokenName: 'WETH',
       address: '0xbE23a3AA13038CfC28aFd0ECe4FdE379fE7fBfc4',
     },
-    MATIC_ETH: {
-      baseTokenName: 'WMATIC',
-      quoteTokenName: 'WETH',
-      address: '0x327e23A4855b6F663a28c5161541d69Af8973302',
-    },
-    MATIC_USD: {
-      baseTokenName: 'WMATIC',
-      quoteTokenName: 'USDC',
-      address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',
-    },
     // SUSHI_USD: {
     //   baseTokenName: 'SUSHI',
     //   quoteTokenName: 'USDC',
@@ -164,30 +164,25 @@ export const chainlink: Record<string, Chainlink> = {
     // },
   },
   polygon_mumbai: {
+    USDC_MATIC: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'USDC',
+      address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada', // MATIC-USD
+    },
+    DAI_MATIC: {
+      baseTokenName: 'WMATIC',
+      quoteTokenName: 'DAI',
+      address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada', // MATIC-USD
+    },
     USDC_ETH: {
-      baseTokenName: 'USDC',
-      quoteTokenName: 'WETH',
+      baseTokenName: 'WETH',
+      quoteTokenName: 'USDC',
       address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
     },
     DAI_ETH: {
-      baseTokenName: 'DAI',
-      quoteTokenName: 'WETH',
-      address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
-    },
-    LINK_DAI: {
-      baseTokenName: 'LINK',
+      baseTokenName: 'WETH',
       quoteTokenName: 'DAI',
-      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD MAINNET
-    },
-    LINK_USDC: {
-      baseTokenName: 'LINK',
-      quoteTokenName: 'USDC',
-      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD MAINNET
-    },
-    MATIC_USD: {
-      baseTokenName: 'WMATIC',
-      quoteTokenName: 'USDC',
-      address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
+      address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
     },
   },
   hardhat: mainnetChainlink,
