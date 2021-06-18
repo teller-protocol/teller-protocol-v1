@@ -110,7 +110,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       case STORY_DOMAINS.LOAN.LIQUIDATE: {
         let newTest = new Test(action.suiteName, async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
-          const shouldPass = false
+          const shouldPass = true
           //read the state and determine if this should pass
 
           if (shouldPass) {

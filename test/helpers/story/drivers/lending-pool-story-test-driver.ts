@@ -65,7 +65,8 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
           if (shouldPass) {
             // expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
-            expect(await helpers.deposit()).to.not.throw()
+            const deposit = await helpers.deposit()
+            console.log({ deposit })
             await helpers.deposit()
           } else {
             expect(await helpers.deposit()).to.be.reverted
@@ -86,7 +87,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           //read the state and determine if this should pass
 
           if (shouldPass) {
-            expect(await helpers.withdraw()).to.not.throw()
+            await helpers.withdraw()
           } else {
             expect(await helpers.withdraw()).to.be.reverted
           }
@@ -110,17 +111,17 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
     const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
-    const depositAmount = maxTVL.div(2)
+    const depositAmount = maxTVL
     await fundLender({
       token: details.lendingToken,
-      amount: depositAmount,
+      amount: BigNumber.from(100),
       hre,
     })
     const helpers = getLPHelpers(hre, {
       diamond,
       lendingToken: details.lendingToken,
       tToken: tToken,
-      amount: depositAmount,
+      amount: BigNumber.from(100),
     })
     return helpers
     // const depositAmount = BigNumber.from(details.loan.borrowedAmount)

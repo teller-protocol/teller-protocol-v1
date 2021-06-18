@@ -12,6 +12,19 @@ export const STORY_DOMAINS = {
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
+export const TREE_STRUCTURE = {
+  LOAN: {
+    TAKE_OUT: { 'TAKE_OUT.REPAY': null, 'TAKE_OUT.LIQUIDATE': null },
+    REPAY: null,
+    LIQUIDATE: null,
+  },
+  LENDING_POOL: { LEND: null, WITHDRAW: null },
+  DAPP: {
+    LEND: { COMPOUND: null, AAVE: null, POOL_TOGETHER: null },
+    SWAP: { UNISWAP: null, SUSHISWAP: null },
+  },
+}
+
 export const DAPP_ACTION_TARGETS = {
   LEND: {
     COMPOUND: 0,

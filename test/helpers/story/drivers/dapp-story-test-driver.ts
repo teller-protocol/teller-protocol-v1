@@ -162,7 +162,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
             escrowAddress
           )
           console.log({ lendingBalBefore })
-          // expect(lendingBalBefore).to.greaterThan(0)
           lendingBalBefore
             .gt(0)
             .should.eql(true, 'Loan escrow should have a lending token balance')
