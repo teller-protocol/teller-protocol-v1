@@ -151,7 +151,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     switch (dapp) {
       case DAPP_ACTION_TARGETS.SWAP.UNISWAP: {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
+          // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -167,7 +167,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
             .should.eql(true, 'Loan escrow should have a lending token balance')
 
           const swapBalBefore = await link.balanceOf(escrowAddress)
-          // expect(swapBalBefore).to.equal(0)
           swapBalBefore
             .eq(0)
             .should.eql(
