@@ -37,6 +37,16 @@ export const DAPP_ACTION_TARGETS = {
   },
 }
 
+export interface DomainStoryTests {
+  domain: string
+  test: Array<Mocha.Test>
+}
+
+export interface StoryTest {
+  domain: string
+  test: Mocha.Test
+}
+
 export interface TestScenario {
   domain: string
   //shouldPass: boolean
@@ -57,10 +67,10 @@ export interface TestArgs {
   nft?: boolean
 }
 
-export const generateTests = (
+export const generateStoryTests = (
   hre: HardhatRuntimeEnvironment,
   scenario: TestScenario
-): Array<Test> => {
+): Array<StoryTest> => {
   switch (scenario.domain) {
     case 'LOAN':
       return LoanStoryTestDriver.generateDomainSpecificTestsForScenario(

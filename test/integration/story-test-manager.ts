@@ -1,16 +1,20 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import Mocha from 'mocha'
-import { generateTests, TestScenario } from '../helpers/story/story-helpers'
+import {
+  generateStoryTests,
+  StoryTest,
+  TestScenario,
+} from '../helpers/story/story-helpers'
 import { generateStories } from '../helpers/story/generator/story-generator'
 
 export const generateAllStoryTests = (
   hre: HardhatRuntimeEnvironment
-): Array<Mocha.Test> => {
+): Array<StoryTest> => {
   const allTestStories: Array<TestScenario> = generateStories()
-  var allGeneratedTests: Array<Mocha.Test> = []
+  var allGeneratedTests: Array<StoryTest> = []
 
   for (let story of allTestStories) {
-    let newTests = generateTests(hre, story)
+    let newTests = generateStoryTests(hre, story)
 
     allGeneratedTests = allGeneratedTests.concat(newTests)
   }

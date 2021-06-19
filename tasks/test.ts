@@ -9,6 +9,8 @@ import Mocha from 'mocha'
 import path from 'path'
 import { glob } from 'hardhat/internal/util/glob'
 
+import { STORY_DOMAINS } from '../test/helpers/story/story-helpers'
+
 const { EVENT_FILE_PRE_REQUIRE, EVENT_FILE_POST_REQUIRE, EVENT_FILE_REQUIRE } =
   Mocha.Suite.constants
 
@@ -65,43 +67,47 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
   //{ testFiles }: { testFiles: string[] }, { config }
 
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
-    var mochaInstance = new Mocha()
-    mochaInstance.timeout(19000)
-
-    var suiteInstance = Mocha.Suite.create(
-      mochaInstance.suite,
-      'Story Test Suite'
-    )
-
     //custom code
     const allStoryTests = generateAllStoryTests(hre)
 
-    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
+    let allDomains = Object.keys(STORY_DOMAINS)
 
-    let storyTestFiles: string[] = []
+    for (let domain of allDomains) {
+      var mochaInstance = new Mocha()
+      mochaInstance.timeout(19000)
 
-    for (let test of allStoryTests) {
-      suiteInstance.addTest(test)
+      var suiteInstance = Mocha.Suite.create(
+        mochaInstance.suite,
+        'Story Test Suite: '.concat(domain)
+      )
 
-      // storyTestFiles.push(  convertMochaTestToFile(test)  )
+      let domainStoryTests = allStoryTests.filter(
+        (x) => x.domain.toLowerCase() == domain.toLowerCase()
+      )
+
+      for (let storyTest of domainStoryTests) {
+        suiteInstance.addTest(storyTest.test)
+      }
+
+      console.log('\n\n\n\n')
+
+      const testFailures = await new Promise<number>((resolve, _) => {
+        mochaInstance.run(resolve)
+      })
+
+      console.log('\n\n\n\n')
     }
 
-    console.log('\n\n\n\n')
-
-    const percentageSubmission = {
+    /*    const percentageSubmission = {
       name: 'RequiredSubmissionsPercentage',
       value: 0,
     }
-    await updatePlatformSetting(percentageSubmission, hre)
-
-    const testFailures = await new Promise<number>((resolve, _) => {
-      mochaInstance.run(resolve)
-    })
-
-    console.log('\n\n\n\n')
+    await updatePlatformSetting(percentageSubmission, hre)*/
 
     mochaInstance = new Mocha()
     mochaInstance.timeout(19000)
+
+    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
     tsFiles.forEach(function (file: string) {
       mochaInstance.addFile(file)
