@@ -183,15 +183,18 @@ subtask('stats:pending-interest-owed')
     )
 
     let pendingInterestOwed = BN.from(0)
-    let currentLoanID = BN.from(0)
-    while (currentLoanID.lt(loansTakenOut.length)) {
-      if (!loansRepaidMap[currentLoanID.toString()]) {
-        const debt = await diamond.getDebtOwed(currentLoanID)
+    const fetchPendingInterestOwed = async (loanID: number): Promise<void> => {
+      if (!loansRepaidMap[loanID]) {
+        const debt = await diamond.getDebtOwed(loanID)
         pendingInterestOwed = pendingInterestOwed.add(debt.interestOwed)
       }
-
-      currentLoanID = currentLoanID.add(1)
     }
+
+    await Promise.all(
+      new Array(loansTakenOut.length)
+        .fill(null)
+        .map((_, loanID) => fetchPendingInterestOwed(loanID))
+    )
 
     if (!args.disableLog) {
       const pendingInterestOwedFN = FN.from(pendingInterestOwed).divUnsafe(
