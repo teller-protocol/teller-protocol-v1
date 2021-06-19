@@ -44,7 +44,7 @@ describe.only('AaveDapp', () => {
       })
 
       describe('lend, redeemAll', () => {
-        it.only('Should be able to lend and then redeem successfully from Aave', async () => {
+        it('Should be able to lend and then redeem successfully from Aave', async () => {
           const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],

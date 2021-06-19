@@ -59,13 +59,13 @@ contract AaveFacet is PausableMods, DappMods {
         ILoansEscrow escrow = LibEscrow.e(loanID);
 
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
+        escrow.setTokenAllowance(tokenAddress, address(aaveLendingPool));
         IAToken aToken = LibDapps.getAToken(tokenAddress);
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(escrow));
-        IERC20(tokenAddress).safeApprove(address(aaveLendingPool), amount);
 
         bytes memory callData =
-            abi.encode(
-                IAaveLendingPool.deposit.selector,
+            abi.encodeWithSelector(
+                aaveLendingPool.deposit.selector,
                 tokenAddress,
                 amount,
                 address(escrow),
@@ -113,8 +113,8 @@ contract AaveFacet is PausableMods, DappMods {
         );
 
         bytes memory callData =
-            abi.encode(
-                IAaveLendingPool.withdraw.selector,
+            abi.encodeWithSelector(
+                aaveLendingPool.withdraw.selector,
                 tokenAddress,
                 amount,
                 address(escrow)
@@ -161,8 +161,8 @@ contract AaveFacet is PausableMods, DappMods {
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
 
         bytes memory callData =
-            abi.encode(
-                IAaveLendingPool.withdraw.selector,
+            abi.encodeWithSelector(
+                aaveLendingPool.withdraw.selector,
                 tokenAddress,
                 aTokenBalanceBeforeWithdraw,
                 address(escrow)
