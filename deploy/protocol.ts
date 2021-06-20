@@ -145,6 +145,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'AaveFacet',
       skipIfAlreadyDeployed: true,
     },
+    {
+      contract: 'PoolTogetherFacet',
+      skipIfAlreadyDeployed: true,
+    },
   ]
 
   // Network specify Facets

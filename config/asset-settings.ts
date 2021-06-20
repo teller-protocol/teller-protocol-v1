@@ -18,6 +18,7 @@ const mainnetAssetSettings: AssetSettings = {
 const polygonAssetSettings: AssetSettings = {
   DAI: [
     { key: 'aToken', value: 'ADAI', type: AssetType.Address },
+    { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
     { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
     { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
     { key: 'MaxDebtRatio', value: 10000, type: AssetType.Uint },
