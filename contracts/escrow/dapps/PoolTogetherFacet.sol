@@ -74,13 +74,12 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         bytes memory callData =
             abi.encodeWithSelector(
                 PrizePoolInterface.depositTo.selector,
-                address(this),
+                address(LibEscrow.e(loanID)), // Tickets sent to Escrow
                 amount,
                 ticketAddress,
-                address(this)
+                address(this) // Referrer is the Teller Diamond
             );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
-
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
 
@@ -117,7 +116,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
 
         ) =
             prizePool.calculateEarlyExitFee(
-                address(this),
+                address(LibEscrow.e(loanID)),
                 ticketAddress,
                 amount
             );
@@ -125,7 +124,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         bytes memory callData =
             abi.encodeWithSelector(
                 PrizePoolInterface.withdrawInstantlyFrom.selector,
-                address(this),
+                address(LibEscrow.e(loanID)),
                 amount,
                 ticketAddress,
                 maxExitFee
@@ -165,7 +164,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
 
         (uint256 maxExitFee, ) =
             prizePool.calculateEarlyExitFee(
-                address(this),
+                address(LibEscrow.e(loanID)),
                 ticketAddress,
                 balanceBefore
             );
@@ -173,7 +172,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         bytes memory callData =
             abi.encodeWithSelector(
                 PrizePoolInterface.withdrawInstantlyFrom.selector,
-                address(this),
+                address(LibEscrow.e(loanID)),
                 balanceBefore,
                 ticketAddress,
                 maxExitFee

@@ -23,11 +23,6 @@ describe('poolTogether Dapp', () => {
       let lendingToken: ERC20
 
       before(async () => {
-        const deployer = await getNamedSigner('deployer')
-        const balance = await hre.ethers.provider.getBalance(
-          await deployer.getAddress()
-        )
-        console.log({ balance: ethers.utils.formatEther(balance) })
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100,
@@ -40,7 +35,6 @@ describe('poolTogether Dapp', () => {
           'RequestLoanTermsRateLimit',
           hre
         )
-        console.log('rate lomit: %o', rateLimit.toString())
         await evm.advanceTime(rateLimit)
       })
 
