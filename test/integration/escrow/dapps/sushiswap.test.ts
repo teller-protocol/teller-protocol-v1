@@ -67,7 +67,7 @@ describe('SushiswapDapp', () => {
 
           await diamond
             .connect(details.borrower.signer)
-            .uniswapSwap(
+            .sushiswapSwap(
               details.loan.id,
               [lendingToken.address, link.address],
               lendingBalBefore,
