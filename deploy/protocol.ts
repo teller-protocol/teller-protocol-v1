@@ -79,37 +79,37 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Settings
     {
       contract: 'SettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'PlatformSettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'AssetSettingsDataFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'AssetSettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'PausableFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Pricing
     {
       contract: 'PriceAggFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'ChainlinkAggFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Lending
     {
       contract: 'LendingFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Loans
     {
@@ -118,7 +118,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'CollateralFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'CreateLoanFacet',
@@ -126,7 +126,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'LoanDataFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'RepayFacet',
@@ -134,23 +134,18 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'SignersFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // NFT
     {
       contract: 'NFTFacet',
       skipIfAlreadyDeployed: false,
     },
-    // Escrow
-    {
-      contract: 'EscrowClaimTokensFacet',
-      skipIfAlreadyDeployed: false,
-    },
-    // Dapps
-    {
-      contract: 'AaveFacet',
-      skipIfAlreadyDeployed: false,
-    },
+    // // Dapps
+    // {
+    //   contract: 'AaveFacet',
+    //   skipIfAlreadyDeployed: true,
+    // },
   ]
 
   // Network specify Facets
@@ -163,11 +158,11 @@ const deployProtocol: DeployFunction = async (hre) => {
         // Dapps
         {
           contract: 'UniswapFacet',
-          skipIfAlreadyDeployed: false,
+          skipIfAlreadyDeployed: true,
         },
         {
           contract: 'CompoundFacet',
-          skipIfAlreadyDeployed: false,
+          skipIfAlreadyDeployed: true,
         }
       )
 
@@ -178,7 +173,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         // Dapps
         {
           contract: 'SushiswapFacet',
-          skipIfAlreadyDeployed: false,
+          skipIfAlreadyDeployed: true,
         }
       )
 

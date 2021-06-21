@@ -14,7 +14,9 @@ export async function updatePlatformSetting(
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
   const { name, value } = args
-  const { contracts, network, ethers, log } = hre
+  const { getNamedSigner, contracts, network, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('')
 
@@ -24,11 +26,6 @@ export async function updatePlatformSetting(
     log('')
     log('Choose from the following list:', { indent: 2 })
     log(settingNames.join('\n'), { indent: 3, star: true })
-
-    return
-  } else {
-    log(`>>>>>> Setting name found: ${name} <<<<<<`, { indent: 1 })
-    log(`>>>>>> Updated with value: ${value} <<<<<<`, { indent: 1 })
     return
   }
 
@@ -37,7 +34,7 @@ export async function updatePlatformSetting(
   const keccak = ethers.utils.id(name)
   const currentSetting = await settings.getPlatformSetting(keccak)
 
-  await settings.updatePlatformSetting(keccak, value)
+  await settings.connect(deployer).updatePlatformSetting(keccak, value)
 
   log(`Platform Settings (Settings: ${settings.address})`, {
     indent: 1,

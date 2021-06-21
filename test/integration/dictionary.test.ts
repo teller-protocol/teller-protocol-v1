@@ -6,7 +6,6 @@ import hre, { getNamedAccounts } from 'hardhat'
 import { getMarkets, getNFT } from '../../config'
 import { generateMerkleDistribution } from '../../scripts/merkle/root'
 import { claimNFT, getPlatformSetting } from '../../tasks'
-import { getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import {
   DistributorEvents,

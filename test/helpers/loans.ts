@@ -6,7 +6,6 @@ import { createSign } from 'crypto'
 import {
   BigNumber,
   BigNumberish,
-  Contract,
   ContractTransaction,
   PayableOverrides,
   Signer,
@@ -26,11 +25,10 @@ import {
 
 // teller files
 import { getNFT } from '../../config'
-import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
+import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
-import { LoanStatus } from '../../utils/consts'
-import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
+
 import { readFileSync } from 'fs'
 import { join } from 'path'
 const {
@@ -42,6 +40,7 @@ const {
   toBN,
   evm,
 } = hre
+
 export enum LoanType {
   ZERO_COLLATERAL,
   UNDER_COLLATERALIZED,
@@ -50,11 +49,6 @@ export enum LoanType {
 export interface LoanHelpersReturn {
   diamond: ITellerDiamond
   details: PromiseReturnType<typeof loanDetails>
-  takeOut: (
-    amount?: BigNumberish,
-    from?: Signer,
-    nft?: boolean
-  ) => ReturnType<typeof takeOutLoan>
   repay: (amount: BigNumberish, from?: Signer) => ReturnType<typeof repayLoan>
   escrowRepay: (
     amount: BigNumberish,
@@ -73,6 +67,7 @@ export interface LoanHelpersReturn {
     ) => ReturnType<typeof withdrawCollateral>
   }
 }
+
 export const loanHelpers = async (
   loanID: string
 ): Promise<LoanHelpersReturn> => {
@@ -81,11 +76,6 @@ export const loanHelpers = async (
   return {
     diamond,
     details,
-    takeOut: (
-      amount = details.terms.maxLoanAmount,
-      from?: Signer,
-      nft?: boolean
-    ) => takeOutLoan({ diamond, details, amount, from, nft }),
     repay: (amount: BigNumberish, from?: Signer) =>
       repayLoan({ diamond, details, amount, from }),
     escrowRepay: (amount: BigNumberish, from?: Signer) =>
@@ -115,7 +105,6 @@ interface CreateLoanArgs {
   loanType: LoanType
   amount?: BigNumberish
   amountBN?: BigNumberish
-  collAmount?: BigNumberish
   borrower?: string
   duration?: moment.Duration
   nft?: boolean
@@ -213,7 +202,6 @@ export const takeOutLoanWithoutNfts = async (
     amount = 100,
     amountBN,
     duration = moment.duration(1, 'day'),
-    collAmount = 100,
   } = args
 
   // define diamond contract
@@ -229,7 +217,7 @@ export const takeOutLoanWithoutNfts = async (
 
   // set borrower and loan amount
   const borrower = args.borrower ?? (await getNamedAccounts()).borrower
-  const loanAmount = amount
+  const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
 
   // depending on the loan type, we set a different collateral ratio. 10000 = 100%
   let collateralRatio = 0
@@ -254,13 +242,24 @@ export const takeOutLoanWithoutNfts = async (
     borrower,
   })
 
+  const { value: collValue } = await getPrice(
+    {
+      src: await lendingToken.symbol(),
+      dst: await collateralToken.symbol(),
+      amount: hre.fromBN(loanAmount, await lendingToken.decimals()),
+    },
+    hre
+  )
+  const collAmount = hre.toBN(collValue, await collateralToken.decimals())
+
   // call the takeOutLoan function from the diamond
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
     .takeOutLoan(
       { request: craReturn.request, responses: craReturn.responses },
       collateralToken.address,
-      collAmount
+      collAmount,
+      { value: collAmount.toString() }
     )
 
   // return our transaction and our helper variable
@@ -293,30 +292,15 @@ export const takeOutLoanWithNfts = async (
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
 
   // amount in loan
-  const loanAmount = amount
-
-  // gets all the merkle trees of from our network and gives us a sample merkle tree address
-  const { merkleTrees } = getNFT(hre.network)
-  const merkleTreeAddress = merkleTrees[0].balances[0].address
+  const loanAmount = toBN(amount, await lendingToken.decimals())
 
   // get the borrower, deployer and borrower's signer
-  const borrower = ethers.utils.getAddress(merkleTreeAddress)
-  const deployer = await ethers.provider.getSigner(
-    '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
-  )
-  const signerBorrower = await ethers.provider.getSigner(borrower)
-
-  // add the borrower as authorized address
-  await diamond.connect(deployer).addAuthorizedAddress(borrower)
+  const deployer = await getNamedSigner('deployer')
+  const borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
+  const { signer: borrowerSigner } = await hre.evm.impersonate(borrower)
 
   // Claim user's NFT as borrower
   await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
-
-  // Create and set NFT loan merkle
-  const nftLoanTree = await getLoanMerkleTree(hre)
-  await setLoanMerkle({ loanTree: nftLoanTree, sendTx: true }, hre)
-
-  const proofs = []
 
   // Get the sum of loan amount to take out
   const nft = await contracts.get<TellerNFT>('TellerNFT')
@@ -326,22 +310,11 @@ export const takeOutLoanWithNfts = async (
     .getOwnedTokens(borrower)
     .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
 
-  // loop through the NFTs and push each id, baseLoanSize, and proof into the proofs array
-  for (const nftID of ownedNFTs) {
-    const { tier_ } = await nft.getTokenTier(nftID)
-    const baseLoanSize = toBN(tier_.baseLoanSize, await lendingToken.decimals())
-    proofs.push({
-      id: nftID,
-      baseLoanSize,
-      proof: nftLoanTree.getProof(nftID, baseLoanSize),
-    })
-  }
-
   // Set NFT approval
-  await nft.connect(signerBorrower).setApprovalForAll(diamond.address, true)
+  await nft.connect(borrowerSigner).setApprovalForAll(diamond.address, true)
 
   // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
-  await diamond.connect(signerBorrower).stakeNFTs(ownedNFTs)
+  await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
 
   // Create mockCRAResponse
   const craReturn = await mockCRAResponse({
@@ -355,10 +328,10 @@ export const takeOutLoanWithNfts = async (
 
   // plug it in the takeOutLoanWithNfts function along with the proofs to apply to the loan!
   const tx = diamond
-    .connect(ethers.provider.getSigner(borrower))
+    .connect(borrowerSigner)
     .takeOutLoanWithNFTs(
       { request: craReturn.request, responses: craReturn.responses },
-      proofs
+      ownedNFTs
     )
 
   // return our transaction and our helper variables
@@ -372,8 +345,6 @@ export const takeOutLoanWithNfts = async (
     },
   }
 }
-
-// zkCRA helper functions
 const serializeSecret = (secret: string) => {
   const serialized = new Array(8)
   for (let i = 0; i < 8; i++) {
@@ -687,52 +658,7 @@ export const borrowWithZKCRA = async (
   return tx
 }
 
-export const takeOut = async (
-  args: CreateLoanArgs
-): Promise<LoanHelpersReturn> => {
-  // Setup for NFT user
-  const { merkleTrees } = getNFT(hre.network)
-  const borrower = ethers.utils.getAddress(merkleTrees[0].balances[0].address)
-  if (args.nft) {
-    args.borrower = borrower
-    await evm.impersonate(borrower)
-    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-    await diamond.addAuthorizedAddress(borrower)
-    await getFunds({
-      to: borrower,
-      amount: ethers.utils.parseEther('1'),
-      tokenSym: 'ETH',
-      hre,
-    })
-  }
-  // Create loan
-  const { getHelpers } = await createLoan(args)
-  const helpers = await getHelpers()
-  const { diamond, collateral, details, takeOut } = helpers
-  // Deposit collateral needed
-  const neededCollateral = await collateral.needed()
-  if (neededCollateral.gt(0)) {
-    await collateral.deposit(neededCollateral)
-    // .should.emit(diamond, 'CollateralDeposited')
-    // .withArgs(loanID, borrowerAddress, collateralNeeded)
-  }
-  // Advance time
-  await evm.advanceTime(moment.duration(5, 'minutes'))
-  // Take out loan
-  await takeOut(details.terms.maxLoanAmount, details.borrower.signer, args.nft)
-    .should.emit(diamond, 'LoanTakenOut')
-    .withArgs(
-      details.loan.id,
-      details.borrower.address,
-      details.terms.maxLoanAmount,
-      args.nft
-    )
-  // Refresh details after taking out loan
-  helpers.details = await details.refresh()
-  // Verify loan is now active
-  helpers.details.loan.status.should.eq(LoanStatus.Active)
-  return helpers
-}
+
 interface LoanDetailsReturn {
   lendingToken: ERC20
   collateralToken: ERC20
@@ -774,72 +700,11 @@ interface CommonLoanArgs {
   details: LoanDetailsReturn
   from?: Signer
 }
-interface TakeOutLoanArgs extends CommonLoanArgs {
-  amount?: BigNumberish
-  nft?: boolean
-}
-const takeOutLoan = async (
-  args: TakeOutLoanArgs
-): Promise<ContractTransaction> => {
-  const {
-    diamond,
-    details,
-    amount = details.terms.maxLoanAmount,
-    from = details.borrower.signer,
-    nft,
-  } = args
-  if (!nft) {
-    return await diamond.connect(from).takeOutLoan(details.loan.id, amount)
-  } else {
-    const borrower = await from.getAddress()
-    const deployer = await ethers.provider.getSigner(0)
-    await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
-    // Claim user's NFTs
-    await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
-    // Create and set NFT loan merkle
-    const nftLoanTree = await getLoanMerkleTree(hre)
-    await setLoanMerkle({ loanTree: nftLoanTree }, hre)
-    const proofs = []
-
-    // Get the sum of loan amount to take out
-    const nft = await contracts.get<TellerNFT>('TellerNFT')
-    const ownedNFTs = await nft
-      .getOwnedTokens(borrower)
-      .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-    const lendingToken = await tokens.get(details.lendingToken.address)
-    let maxNftAmount = toBN(0)
-    for (const nftID of ownedNFTs) {
-      const { tier_ } = await nft.getTokenTier(nftID)
-      const baseLoanSize = toBN(
-        tier_.baseLoanSize,
-        await lendingToken.decimals()
-      )
-      maxNftAmount = maxNftAmount.add(baseLoanSize)
-      // Get the proofs for the NFT loan size
-      proofs.push({
-        id: nftID,
-        baseLoanSize,
-        proof: nftLoanTree.getProof(nftID, baseLoanSize),
-      })
-    }
-    // Set NFT approval
-    await nft.connect(from).setApprovalForAll(diamond.address, true)
-
-    // Stake user NFTs
-    await diamond.connect(from).stakeNFTs(ownedNFTs)
-    const amountBN = ethers.BigNumber.from(amount)
-    if (amountBN.gt(maxNftAmount)) {
-      throw new Error(`Invalid loan amount (max: ${maxNftAmount.toString()})`)
-    }
-    return await diamond
-      .connect(from)
-      .takeOutLoanWithNFTs(details.loan.id, amount, proofs)
-  }
-}
 interface DepositCollateralArgs extends CommonLoanArgs {
   amount?: BigNumberish
 }
+
 const depositCollateral = async (
   args: DepositCollateralArgs
 ): Promise<ContractTransaction> => {

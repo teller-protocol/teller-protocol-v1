@@ -90,7 +90,7 @@ library LibLoans {
     {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
-
+    
     /**
      * @notice it returns the collateral needed in tokens
      * @param loanID the identifier of the loan to return the collateral from

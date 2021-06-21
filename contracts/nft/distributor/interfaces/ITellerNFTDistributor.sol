@@ -94,5 +94,9 @@ interface ITellerNFTDistributor {
      * @param _nft The address of the TellerNFT.
      * @param admin The address of an admin.
      */
-    function initialize(address _nft, address admin) external;
+    function initialize(
+        address _nft,
+        address _dictionary,
+        address admin
+    ) external;
 }

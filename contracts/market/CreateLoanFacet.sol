@@ -30,7 +30,7 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
-import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -52,9 +52,6 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-// Helper functions
-import "hardhat/console.sol";
-
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
@@ -74,8 +71,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @notice Creates the loan from requests and validator responses then calling the main function.
      * @param request Struct of the protocol loan request
      */
-    modifier __createLoan(LoanRequest calldata request) {
-        Loan storage loan = CreateLoanLib.createLoan(request);
+    modifier __createLoan(LoanRequest calldata request, bool withNFT) {
+        Loan storage loan = CreateLoanLib.createLoan(request, withNFT);
 
         _;
 
@@ -87,30 +84,27 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice Creates a loan with the loan request and NFTs without any collateral
      * @param request Struct of the protocol loan request
-     * @param proofs Merkle proofs for validating NFT base loan size
+     * @param nftIDs IDs of TellerNFTs to use for the loan
      */
     function takeOutLoanWithNFTs(
         LoanRequest calldata request,
-        NftLoanSizeProof[] calldata proofs
-    ) external paused(LibLoans.ID, false) __createLoan(request) {
+        uint16[] calldata nftIDs
+    ) external paused(LibLoans.ID, false) __createLoan(request, true) {
         // Get the ID of the newly created loan
         uint256 loanID = CreateLoanLib.currentID() - 1;
         uint256 amount = LibLoans.loan(loanID).borrowedAmount;
+        uint8 lendingDecimals = ERC20(request.request.assetAddress).decimals();
 
-        // Set the collateral ratio to 0 as linked NFTs are used as the collateral
-        LibLoans.loan(loanID).collateralRatio = 0;
+        uint256 allowedBaseLoanSize;
+        for (uint256 i; i < nftIDs.length; i++) {
+            NFTLib.applyToLoan(loanID, nftIDs[i]);
 
-        uint256 allowedLoanSize;
-        for (uint256 i; i < proofs.length; i++) {
-            NFTLib.applyToLoan(loanID, proofs[i]);
-
-            allowedLoanSize += proofs[i].baseLoanSize;
-            if (allowedLoanSize >= amount) {
-                break;
-            }
+            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
+                nftIDs[i]
+            );
         }
         require(
-            amount <= allowedLoanSize,
+            amount <= allowedBaseLoanSize * (10**lendingDecimals),
             "Teller: insufficient NFT loan size"
         );
 
@@ -149,7 +143,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
-        __createLoan(request)
+        __createLoan(request, false)
     {
         // Check if collateral token is zero
         require(
@@ -200,36 +194,70 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 }
 
 library CreateLoanLib {
-    function createLoan(LoanRequest memory request)
+    function createLoan(LoanRequest calldata request, bool withNFT)
         internal
         returns (Loan storage loan)
     {
-        // // Get and increment new loan ID
-        // uint256 loanID = CreateLoanLib.newID();
-        // // Set loan data based on terms
-        // loan = LibLoans.loan(loanID);
-        // loan.id = uint128(loanID);
-        // loan.status = LoanStatus.TermsSet;
-        // loan.lendingToken = request.request.assetAddress;
-        // loan.borrower = request.request.borrower;
-        // loan.borrowedAmount = amount;
-        // loan.interestRate = interestRate;
-        // loan.collateralRatio = collateralRatio;
-        // // Set loan debt
-        // LibLoans.debt(loanID).principalOwed = amount;
-        // LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
-        //     uint256(loanID),
-        //     amount
-        // );
-        // // Add loanID to borrower list
-        // MarketStorageLib.store().borrowerLoans[loan.borrower].push(
-        //     uint128(loanID)
-        // );
-        assembly {
-            loan.slot := 0
+        // Perform loan request checks
+        require(
+            msg.sender == request.request.borrower,
+            "Teller: not loan requester"
+        );
+        require(
+            PlatformSettingsLib.getMaximumLoanDurationValue() >=
+                request.request.duration,
+            "Teller: max loan duration exceeded"
+        );
+
+        // Get consensus values from request
+        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
+            LibConsensus.processLoanTerms(request);
+
+        // Perform loan value checks
+        require(
+            MaxLoanAmountLib.get(request.request.assetAddress) > maxLoanAmount,
+            "Teller: asset max loan amount exceeded"
+        );
+        require(
+            LendingLib.tToken(request.request.assetAddress).debtRatioFor(
+                maxLoanAmount
+            ) <= MaxDebtRatioLib.get(request.request.assetAddress),
+            "Teller: max supply-to-debt ratio exceeded"
+        );
+
+        // Get and increment new loan ID
+        uint256 loanID = CreateLoanLib.newID();
+        // Set loan data based on terms
+        loan = LibLoans.loan(loanID);
+        loan.id = uint128(loanID);
+        loan.status = LoanStatus.TermsSet;
+        loan.lendingToken = request.request.assetAddress;
+        loan.borrower = request.request.borrower;
+        loan.borrowedAmount = maxLoanAmount;
+        if (withNFT) {
+            loan.interestRate = PlatformSettingsLib.getNFTInterestRate();
+        } else {
+            loan.interestRate = interestRate;
+            loan.collateralRatio = collateralRatio;
         }
+
+        // Set loan debt
+        LibLoans.debt(loanID).principalOwed = maxLoanAmount;
+        LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
+            uint256(loanID),
+            maxLoanAmount
+        );
+
+        // Add loanID to borrower list
+        MarketStorageLib.store().borrowerLoans[loan.borrower].push(
+            uint128(loanID)
+        );
     }
 
+    /**
+     * @notice increments the loanIDCounter
+     * @return id_ the new ID requested, which stores it in the loan data
+     */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
@@ -243,6 +271,11 @@ library CreateLoanLib {
         id_ = Counters.current(counter);
     }
 
+    /**
+     * @notice it creates a new loan escrow contract
+     * @param loanID the ID that identifies the loan
+     * @return escrow_ the loanEscrow that gets created
+     */
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
         escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");

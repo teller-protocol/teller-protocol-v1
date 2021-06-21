@@ -102,6 +102,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         external
         virtual
         returns (uint16 ratio_);
+        
 
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.

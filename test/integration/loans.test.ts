@@ -8,24 +8,13 @@ import {
 } from 'zokrates-js/node'
 import { defaultMaxListeners } from 'events'
 import hre from 'hardhat'
-import { BUILD_INFO_FORMAT_VERSION } from 'hardhat/internal/constants'
 
 import { getMarkets, getNFT } from '../../config'
-import {
-  claimNFT,
-  getPlatformSetting,
-  updatePlatformSetting,
-} from '../../tasks'
-import { getLoanMerkleTree, setLoanMerkle } from '../../tasks'
+import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ITellerDiamond, TellerNFT } from '../../types/typechain'
-import { CacheType, LoanStatus } from '../../utils/consts'
-import { fundedMarket } from '../fixtures'
-import { fundLender, getFunds } from '../helpers/get-funds'
+import { ITellerDiamond } from '../../types/typechain'
 import {
-  createLoan,
   LoanType,
-  takeOut,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
   outputCraValues,
@@ -52,12 +41,11 @@ describe.only('Loans', () => {
       })
 
       diamond = await contracts.get('TellerDiamond')
-
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
-    describe('merge create loan', () => {
-      var helpers: any = null
+    describe.only('merge create loan', () => {
+      let helpers: any = null
       before(async () => {
         // update percentage submission percentage value to 0 for this test
         const percentageSubmission = {
@@ -72,39 +60,39 @@ describe.only('Loans', () => {
           hre
         )
         await evm.advanceTime(rateLimit)
+      })
+      describe('without NFT', () => {
+        it('should create a loan', async () => {
+          // get helpers variables after function returns our transaction and
+          // helper variables
+          const { getHelpers } = await takeOutLoanWithoutNfts({
+            lendToken: market.lendingToken,
+            collToken: market.collateralTokens[0],
+            loanType: LoanType.UNDER_COLLATERALIZED,
+          })
+          helpers = await getHelpers()
 
-        // get helpers variables after function returns our transaction and
-        // helper variables
-        const { getHelpers } = await takeOutLoanWithoutNfts({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType: LoanType.UNDER_COLLATERALIZED,
-          collAmount: 100,
+          // borrower data from our helpers
+          borrower = helpers.details.borrower.signer
+
+          // check if loan exists
+          expect(helpers.details.loan).to.exist
         })
-        helpers = await getHelpers()
+        it('should have collateral deposited', async () => {
+          // get collateral
+          const { collateral } = helpers
+          const amount = await collateral.current()
 
-        // borrower data from our helpers
-        borrower = helpers.details.borrower.signer
-      })
-      it('should create a loan', () => {
-        // check if loan exists
-        expect(helpers.details.loan).to.exist
-      })
-      it('should have collateral deposited', async () => {
-        // get collateral
-        const { collateral } = helpers
-        const amount = await collateral.current()
+          // check if collateral is > 0
+          amount.gt(0).should.eq(true, 'Loan must have collateral')
+        })
+        it('should be taken out', () => {
+          // get loanStatus from helpers and check if it's equal to 2, which means
+          // it's active and taken out
+          const loanStatus = helpers.details.loan.status
+          expect(loanStatus).to.equal(2)
+        })
 
-        // check if collateral is > 0
-        amount.gt(0).should.eq(true, 'Loan must have collateral')
-      })
-      it('should be taken out', () => {
-        // get loanStatus from helpers and check if it's equal to 2, which means
-        // it's active and taken out
-        const loanStatus = helpers.details.loan.status
-        expect(loanStatus).to.equal(2)
-      })
-      describe('other loan tests', () => {
         it('should not be able to take out a loan when loan facet is paused', async () => {
           const LOANS_ID = hre.ethers.utils.id('LOANS')
 
@@ -143,19 +131,16 @@ describe.only('Loans', () => {
         //   await tx.should.be.revertedWith('Teller: more collateral required')
         // })
       })
-    })
-    describe('merge create loan w/ nfts', () => {
-      var helpers: any
-      before(async () => {
-        // Advance time
-        const { value: rateLimit } = await getPlatformSetting(
-          'RequestLoanTermsRateLimit',
-          hre
-        )
 
-        // get helpers
-        const { getHelpers } = await takeOutLoanWithNfts({
-          lendToken: market.lendingToken,
+      describe('with NFT', () => {
+        let helpers: any
+        before(async () => {
+          // Advance time
+          const { value: rateLimit } = await getPlatformSetting(
+            'RequestLoanTermsRateLimit',
+            hre
+          )
+          await evm.advanceTime(rateLimit)
         })
         helpers = await getHelpers()
 
@@ -410,81 +395,21 @@ describe.only('Loans', () => {
       //   )
       // })
 
-      describe('repay', () => {
-        it('should be able to repay loan as borrower', async () => {
-          const { details, repay } = await takeOut({
+
+        it('creates a loan', async () => {
+          // get helpers
+          const { getHelpers } = await takeOutLoanWithNfts({
+            amount: 100,
             lendToken: market.lendingToken,
-            collToken: market.collateralTokens[0],
-            loanType: LoanType.OVER_COLLATERALIZED,
           })
+          helpers = await getHelpers()
 
-          // Get the funds to pay back the interest
-          await getFunds({
-            tokenSym: market.lendingToken,
-            to: details.borrower.address,
-            amount: details.debt.interestOwed,
-            hre,
-          })
-
-          // Approve loan repayment
-          await details.lendingToken
-            .connect(details.borrower.signer)
-            .approve(diamond.address, details.totalOwed)
-
-          // Repay loan
-          await repay(details.totalOwed)
-            .should.emit(diamond, 'LoanRepaid')
-            .withArgs(
-              details.loan.id,
-              details.borrower.address,
-              details.totalOwed,
-              details.borrower.address,
-              '0'
-            )
-
-          // Verify loan is closed
-          await details
-            .refresh()
-            .then(({ loan }) => loan.status.should.eq(LoanStatus.Closed))
+          expect(helpers.details.loan).to.exist
         })
-
-        it('should be able to take out and repay an under collateralized loan', async () => {
-          // Create loan
-          const { details, escrowRepay } = await takeOut({
-            lendToken: market.lendingToken,
-            collToken: market.collateralTokens[0],
-            loanType: LoanType.UNDER_COLLATERALIZED,
-          })
-
-          // Repay full amount
-          const amountToRepay = details.totalOwed
-
-          // Get the funds to pay back the interest
-          await getFunds({
-            tokenSym: market.lendingToken,
-            to: details.borrower.address,
-            amount: details.debt.interestOwed,
-            hre,
-          })
-
-          // Approve loan repayment
-          await details.lendingToken
-            .connect(details.borrower.signer)
-            .approve(diamond.address, amountToRepay)
-
-          // Repay loan
-          await escrowRepay(amountToRepay)
-            .should.emit(diamond, 'LoanRepaid')
-            .withArgs(
-              details.loan.id,
-              details.borrower.address,
-              amountToRepay,
-              details.borrower.address,
-              '0'
-            )
-
-          const { loan: repaidLoan } = await details.refresh()
-          repaidLoan.status.should.eq(LoanStatus.Closed)
+        it('should be an active loan', () => {
+          // get loanStatus from helpers and check if it's equal to 2, which means it's active
+          const loanStatus = helpers.details.loan.status
+          expect(loanStatus).to.equal(2)
         })
       })
     })
