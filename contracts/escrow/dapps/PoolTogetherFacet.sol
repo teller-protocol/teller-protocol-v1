@@ -159,7 +159,6 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
-
         uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
 
         (uint256 maxExitFee, ) =

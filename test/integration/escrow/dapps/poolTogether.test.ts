@@ -5,7 +5,7 @@ import hre, { ethers } from 'hardhat'
 import { getMarkets } from '../../../../config'
 import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
-import { ERC20, IAToken, ITellerDiamond } from '../../../../types/typechain'
+import { ERC20, IERC20, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
 import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
@@ -21,12 +21,16 @@ describe('poolTogether Dapp', () => {
     describe(`${market.lendingToken} lending token`, () => {
       let diamond: ITellerDiamond
       let lendingToken: ERC20
+      let poolTicket: IERC20
 
       before(async () => {
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100,
         }))
+        poolTicket = await contracts.get<IERC20>('IERC20', {
+          at: await diamond.getAssetPPoolTicket(lendingToken.address),
+        })
       })
 
       beforeEach(async () => {
@@ -58,22 +62,21 @@ describe('poolTogether Dapp', () => {
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
           let daiBalance = await lendingToken.balanceOf(escrowAddress)
-
-          daiBalance.eq(0).should.eql(false, '')
+          daiBalance.should.be.eql('0')
 
           let tokenAddresses: string[]
           tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-          tokenAddresses.should.include(lendingToken.address)
+          tokenAddresses.should.include(poolTicket.address)
 
           await diamond
             .connect(details.borrower.signer)
             .poolTogetherWithdrawAll(details.loan.id, lendingToken.address)
 
           tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-          tokenAddresses.should.not.include(lendingToken.address)
+          tokenAddresses.should.not.include(poolTicket.address)
 
           daiBalance = await lendingToken.balanceOf(escrowAddress)
-          daiBalance.eq(0).should.eql(true, '')
+          daiBalance.should.be.gt('0')
         })
 
         it('Should not be able to deposit into pooltogether as not the loan borrower', async () => {
