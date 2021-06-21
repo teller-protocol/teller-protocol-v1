@@ -13,56 +13,46 @@ export const STORY_DOMAINS = {
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
-const STORY_NETWORKS = {
+export const STORY_NETWORKS = {
   POLYGON: 'polygon',
   MAINNET: 'mainnet',
   ALL: 'all',
 }
 
 export const TREE_STRUCTURE = {
-  LOAN: {
-    'LOAN.TAKE_OUT': { network: STORY_NETWORKS.ALL },
-    'LOAN.REPAY': { network: STORY_NETWORKS.ALL, parents: ['LOAN.TAKE_OUT'] },
-    'LOAN.LIQUIDATE': {
-      network: STORY_NETWORKS.ALL,
-      parents: ['LOAN.TAKE_OUT'],
-    },
+  'LOAN.TAKE_OUT': { network: STORY_NETWORKS.ALL },
+  'LOAN.REPAY': { network: STORY_NETWORKS.ALL, parents: ['LOAN.TAKE_OUT'] },
+  'LOAN.LIQUIDATE': {
+    network: STORY_NETWORKS.ALL,
+    parents: ['LOAN.TAKE_OUT'],
   },
-  LENDING_POOL: {
-    'LENDING_POOL.LEND': {
-      network: STORY_NETWORKS.ALL,
-      parents: ['LOAN.TAKE_OUT'],
-    },
-    'LENDING_POOL.WITHDRAW': {
-      network: STORY_NETWORKS.ALL,
-      parents: ['LOAN.TAKE_OUT', 'LENDING_POOL.LEND'],
-    },
+  'LENDING_POOL.LEND': {
+    network: STORY_NETWORKS.ALL,
+    parents: ['LOAN.TAKE_OUT'],
   },
-  DAPP: {
-    'DAPP.LEND': {
-      'DAPP.LEND.COMPOUND': {
-        network: STORY_NETWORKS.ALL,
-        parents: ['LOAN.TAKE_OUT'],
-      },
-      'DAPP.LEND.AAVE': {
-        network: STORY_NETWORKS.MAINNET,
-        parents: ['LOAN.TAKE_OUT'],
-      },
-      'DAPP.LEND.POOL_TOGETHER': {
-        network: STORY_NETWORKS.MAINNET,
-        parents: ['LOAN.TAKE_OUT'],
-      },
-    },
-    'DAPP.SWAP': {
-      'DAPP.SWAP.UNISWAP': {
-        network: STORY_NETWORKS.MAINNET,
-        parents: ['LOAN.TAKE_OUT'],
-      },
-      'DAPP.SWAP.SUSHISWAP': {
-        network: STORY_NETWORKS.POLYGON,
-        parents: ['LOAN.TAKE_OUT'],
-      },
-    },
+  'LENDING_POOL.WITHDRAW': {
+    network: STORY_NETWORKS.ALL,
+    parents: ['LENDING_POOL.LEND', 'LOAN.TAKE_OUT'],
+  },
+  'DAPP.LEND.COMPOUND': {
+    network: STORY_NETWORKS.ALL,
+    parents: ['LOAN.TAKE_OUT'],
+  },
+  'DAPP.LEND.AAVE': {
+    network: STORY_NETWORKS.MAINNET,
+    parents: ['LOAN.TAKE_OUT'],
+  },
+  'DAPP.LEND.POOL_TOGETHER': {
+    network: STORY_NETWORKS.MAINNET,
+    parents: ['LOAN.TAKE_OUT'],
+  },
+  'DAPP.SWAP.UNISWAP': {
+    network: STORY_NETWORKS.MAINNET,
+    parents: ['LOAN.TAKE_OUT'],
+  },
+  'DAPP.SWAP.SUSHISWAP': {
+    network: STORY_NETWORKS.POLYGON,
+    parents: ['LOAN.TAKE_OUT'],
   },
 }
 
@@ -78,6 +68,13 @@ export const DAPP_ACTION_TARGETS = {
   },
 }
 
+// export interface Story
+
+export interface StoryValues {
+  network: string
+  parents?: Array<string>
+}
+
 export interface TestScenario {
   domain: string
   //shouldPass: boolean
@@ -85,7 +82,7 @@ export interface TestScenario {
 }
 
 export interface TestAction {
-  actionType: Number
+  actionType: string
   suiteName: string
   args: TestArgs
 }
@@ -93,7 +90,7 @@ export interface TestAction {
 export interface TestArgs {
   actionTarget?: number
   dappAction?: number
-  rewindStateTo: number | null
+  // rewindStateTo: string | null
   //shouldPass: boolean
   nft?: boolean
 }
