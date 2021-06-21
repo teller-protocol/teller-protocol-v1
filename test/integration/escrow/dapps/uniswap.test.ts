@@ -7,7 +7,7 @@ import { getPlatformSetting } from '../../../../tasks'
 import { Market } from '../../../../types/custom/config-types'
 import { ERC20, ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
-import { LoanType, takeOut } from '../../../helpers/loans'
+import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 chai.should()
 chai.use(solidity)
@@ -26,7 +26,7 @@ describe.only('UniswapDapp', () => {
       before(async () => {
         ;({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
-          amount: 100000,
+          amount: 100,
         }))
 
         link = await tokens.get('LINK')
@@ -43,12 +43,12 @@ describe.only('UniswapDapp', () => {
 
       describe('swap', () => {
         it('Should be able to swap using Uniswap', async () => {
-          const { details } = await takeOut({
+          const { tx, getHelpers } = await takeOutLoanWithoutNfts(hre, {
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
           })
-
+          const { details, diamond } = await getHelpers()
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
           const lendingBalBefore = await lendingToken.balanceOf(escrowAddress)
@@ -89,13 +89,13 @@ describe.only('UniswapDapp', () => {
         })
 
         it('Should NOT be able to swap using Uniswap as not the loan borrower', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.UNDER_COLLATERALIZED,
             amount: 100,
           })
-
+          const { details, diamond } = await getHelpers()
           await diamond
             .connect(await getNamedSigner('deployer'))
             .uniswapSwap(
@@ -108,13 +108,13 @@ describe.only('UniswapDapp', () => {
         })
 
         it('Should NOT be able to swap using Uniswap with an unsecured loan', async () => {
-          const { details } = await takeOut({
+          const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
             loanType: LoanType.ZERO_COLLATERAL,
             amount: 100,
           })
-
+          const { details, diamond } = await getHelpers()
           await diamond
             .connect(details.borrower.signer)
             .uniswapSwap(

@@ -1,4 +1,5 @@
 import { Test } from 'mocha'
+import hre from 'hardhat'
 import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 import LPStoryTestDriver from './drivers/lending-pool-story-test-driver'
 import DappStoryTestDriver from './drivers/dapp-story-test-driver'
@@ -22,6 +23,19 @@ export const TREE_STRUCTURE = {
   DAPP: {
     LEND: { COMPOUND: null, AAVE: null, POOL_TOGETHER: null },
     SWAP: { UNISWAP: null, SUSHISWAP: null },
+  },
+}
+const networks = {
+  MAINNET: 'mainnet',
+  POLYGON: 'polygon',
+  BOTH: 'both',
+}
+export const TEST_STRUCTURE = {
+  'LOAN.TAKE_OUT': {
+    'LOAN.REPAY': null,
+    'LOAN.LIQUIDATE': null,
+    'LENDING_POOL.LEND': { 'LENDING_POOL.WITHDRAW': null },
+    'DAPP.LEND.COMPOUND': { 'LENDING_POOL.WITHDRAW': null },
   },
 }
 
