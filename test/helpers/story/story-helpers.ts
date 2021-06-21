@@ -13,29 +13,56 @@ export const STORY_DOMAINS = {
   DAPP: { LEND: 0, SWAP: 1 },
 }
 
+const STORY_NETWORKS = {
+  POLYGON: 'polygon',
+  MAINNET: 'mainnet',
+  ALL: 'all',
+}
+
 export const TREE_STRUCTURE = {
   LOAN: {
-    TAKE_OUT: { 'TAKE_OUT.REPAY': null, 'TAKE_OUT.LIQUIDATE': null },
-    REPAY: null,
-    LIQUIDATE: null,
+    'LOAN.TAKE_OUT': { network: STORY_NETWORKS.ALL },
+    'LOAN.REPAY': { network: STORY_NETWORKS.ALL, parents: ['LOAN.TAKE_OUT'] },
+    'LOAN.LIQUIDATE': {
+      network: STORY_NETWORKS.ALL,
+      parents: ['LOAN.TAKE_OUT'],
+    },
   },
-  LENDING_POOL: { LEND: null, WITHDRAW: null },
+  LENDING_POOL: {
+    'LENDING_POOL.LEND': {
+      network: STORY_NETWORKS.ALL,
+      parents: ['LOAN.TAKE_OUT'],
+    },
+    'LENDING_POOL.WITHDRAW': {
+      network: STORY_NETWORKS.ALL,
+      parents: ['LOAN.TAKE_OUT', 'LENDING_POOL.LEND'],
+    },
+  },
   DAPP: {
-    LEND: { COMPOUND: null, AAVE: null, POOL_TOGETHER: null },
-    SWAP: { UNISWAP: null, SUSHISWAP: null },
-  },
-}
-const networks = {
-  MAINNET: 'mainnet',
-  POLYGON: 'polygon',
-  BOTH: 'both',
-}
-export const TEST_STRUCTURE = {
-  'LOAN.TAKE_OUT': {
-    'LOAN.REPAY': null,
-    'LOAN.LIQUIDATE': null,
-    'LENDING_POOL.LEND': { 'LENDING_POOL.WITHDRAW': null },
-    'DAPP.LEND.COMPOUND': { 'LENDING_POOL.WITHDRAW': null },
+    'DAPP.LEND': {
+      'DAPP.LEND.COMPOUND': {
+        network: STORY_NETWORKS.ALL,
+        parents: ['LOAN.TAKE_OUT'],
+      },
+      'DAPP.LEND.AAVE': {
+        network: STORY_NETWORKS.MAINNET,
+        parents: ['LOAN.TAKE_OUT'],
+      },
+      'DAPP.LEND.POOL_TOGETHER': {
+        network: STORY_NETWORKS.MAINNET,
+        parents: ['LOAN.TAKE_OUT'],
+      },
+    },
+    'DAPP.SWAP': {
+      'DAPP.SWAP.UNISWAP': {
+        network: STORY_NETWORKS.MAINNET,
+        parents: ['LOAN.TAKE_OUT'],
+      },
+      'DAPP.SWAP.SUSHISWAP': {
+        network: STORY_NETWORKS.POLYGON,
+        parents: ['LOAN.TAKE_OUT'],
+      },
+    },
   },
 }
 
