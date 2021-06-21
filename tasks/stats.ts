@@ -14,11 +14,13 @@ task('stats', 'Prints out current stats about the DAI market').setAction(
 
     const loansTakenOut = await hre.run('stats:loans-taken-out')
     const loansRepaid = await hre.run('stats:loans-repaid')
-    await hre.run('stats:current-tvl')
+    const currentTVL = await hre.run('stats:current-tvl')
     await hre.run('stats:average-loan-amount', {
       loansTakenOut: JSON.stringify(loansTakenOut),
     })
-    await hre.run('stats:interest-generated')
+    await hre.run('stats:interest-generated', {
+      currentTVL: currentTVL.toString(),
+    })
     await hre.run('stats:pending-interest-owed', {
       loansTakenOut: JSON.stringify(loansTakenOut),
       loansRepaid: JSON.stringify(loansRepaid),
@@ -30,8 +32,13 @@ task('stats', 'Prints out current stats about the DAI market').setAction(
 )
 
 subtask('stats:current-tvl')
+  .addOptionalParam('currentTVL', 'Current TVL value to use')
   .addFlag('disableLog', 'Disables console output')
   .setAction(async (args, hre) => {
+    if ('currentTVL' in args) {
+      return BN.from(args.currentTVL)
+    }
+
     const diamond: ITellerDiamond = await hre.contracts.get('TellerDiamond')
     const dai = await hre.tokens.get('dai')
     const tDai: ITToken = await hre.contracts.get('ITToken', {
