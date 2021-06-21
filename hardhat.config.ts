@@ -108,7 +108,7 @@ export default <HardhatUserConfig>{
         version: '0.8.3',
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: process.env.TESTING !== '1',
             runs: 200,
           },
         },
