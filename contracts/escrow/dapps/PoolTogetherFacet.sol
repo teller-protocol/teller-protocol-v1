@@ -68,10 +68,11 @@ contract PoolTogetherFacet is PausableMods, DappMods {
 
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
         uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
-        IERC20(tokenAddress).safeApprove(address(prizePool), amount);
 
+        // Set token allowance to Prize Pool
+        LibEscrow.e(loanID).setTokenAllowance(tokenAddress, address(prizePool));
         bytes memory callData =
-            abi.encode(
+            abi.encodeWithSelector(
                 PrizePoolInterface.depositTo.selector,
                 address(this),
                 amount,
@@ -122,7 +123,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             );
 
         bytes memory callData =
-            abi.encode(
+            abi.encodeWithSelector(
                 PrizePoolInterface.withdrawInstantlyFrom.selector,
                 address(this),
                 amount,
@@ -170,7 +171,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             );
 
         bytes memory callData =
-            abi.encode(
+            abi.encodeWithSelector(
                 PrizePoolInterface.withdrawInstantlyFrom.selector,
                 address(this),
                 balanceBefore,
