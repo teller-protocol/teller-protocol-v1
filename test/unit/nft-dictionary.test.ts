@@ -13,8 +13,11 @@ describe('TellerNFTDictionary', () => {
   let deployer: Signer
 
   before(async () => {
-    dictionary = await hre.contracts.get('TellerNFTDictionary')
     deployer = await hre.getNamedSigner('deployer')
+
+    const factory = await hre.ethers.getContractFactory('TellerNFTDictionary')
+    dictionary = (await factory.deploy()) as TellerNFTDictionary
+    await dictionary.initialize(await deployer.getAddress())
   })
 
   it('Should add token tier mappings', async () => {
@@ -349,6 +352,6 @@ describe('TellerNFTDictionary', () => {
 
     const tokenContributionMultiplier =
       await dictionary.tokenContributionMultiplier('0')
-    tokenContributionMultiplier.should.equal('150')
+    tokenContributionMultiplier.should.equal(150)
   })
 })
