@@ -27,6 +27,7 @@ const deployProtocol: DeployFunction = async (hre) => {
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
+  const nftDictionary = await contracts.get('TellerNFTDictionary')
 
   const tokens = getTokens(network)
   const wrappedNativeToken =
@@ -70,6 +71,7 @@ const deployProtocol: DeployFunction = async (hre) => {
           nftLiquidationController:
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
           wrappedNativeToken: wrappedNativeToken,
+          nftDictionary: nftDictionary.address,
         },
       ],
     }
