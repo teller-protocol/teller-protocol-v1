@@ -4,25 +4,13 @@ import { solidity } from 'ethereum-waffle'
 import { ICErc20 } from '../../../../types/typechain'
 import { Test } from 'mocha'
 import { getFunds } from '../../get-funds'
-import {
-  TestScenario,
-  STORY_DOMAINS,
-  DAPP_ACTION_TARGETS,
-  TestAction,
-  TestArgs,
-  LoanSnapshots,
-} from '../story-helpers'
+import { TestScenario, TestAction } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 chai.should()
 chai.use(solidity)
-/*
-export const DAPPS = {
-  LEND: { AAVE: 0, COMPOUND: 1, POOL_TOGETHER: 2 },
-  SWAP: { UNISWAP: 0, SUSHISWAP: 1 },
-}*/
 
 /*
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
@@ -54,16 +42,15 @@ export default class DappStoryTestDriver extends StoryTestDriver {
   ): Array<Test> {
     let tests: Array<Test> = []
 
-    let actionType = action.actionType
-    let args = action.args
+    let actionParentType = action.actionParentType
 
-    switch (actionType) {
-      case STORY_DOMAINS.DAPP.LEND: {
-        DappStoryTestDriver.generateTestsForLend(hre, args, tests)
+    switch (actionParentType) {
+      case 'LEND': {
+        DappStoryTestDriver.generateTestsForLend(hre, action, tests)
         break
       }
-      case STORY_DOMAINS.DAPP.SWAP: {
-        DappStoryTestDriver.generateTestsForSwap(hre, args, tests)
+      case 'SWAP': {
+        DappStoryTestDriver.generateTestsForSwap(hre, action, tests)
         break
       }
     }
@@ -73,13 +60,13 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
   static generateTestsForLend(
     hre: HardhatRuntimeEnvironment,
-    args: TestArgs,
+    action: TestAction,
     tests: Array<Test>
   ) {
     const { getNamedSigner, contracts } = hre
-    const dapp = args.actionTarget ? args.actionTarget : 0
-    switch (dapp) {
-      case DAPP_ACTION_TARGETS.LEND.AAVE: {
+    const actionType = action.actionType
+    switch (actionType) {
+      case 'AAVE': {
         let newTest = new Test('AAVE Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
@@ -87,9 +74,8 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPP_ACTION_TARGETS.LEND.COMPOUND: {
+      case 'COMPOUND': {
         let newTest = new Test('COMPOUND Lend DAPP', async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -128,7 +114,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPP_ACTION_TARGETS.LEND.POOL_TOGETHER: {
+      case 'POOL_TOGETHER': {
         let newTest = new Test('POOL_TOGETHER Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
@@ -143,13 +129,13 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
   static async generateTestsForSwap(
     hre: HardhatRuntimeEnvironment,
-    args: TestArgs,
+    action: TestAction,
     tests: Array<Test>
   ) {
     const { getNamedSigner, tokens } = hre
-    const dapp = args.actionTarget ? args.actionTarget : 0
+    const dapp = action.actionType
     switch (dapp) {
-      case DAPP_ACTION_TARGETS.SWAP.UNISWAP: {
+      case 'UNISWAP': {
         let newTest = new Test('UNISWAP Swap DAPP', async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
@@ -203,7 +189,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case DAPP_ACTION_TARGETS.SWAP.SUSHISWAP: {
+      case 'SUSHISWAP': {
         let newTest = new Test('SUSHISWAP Swap DAPP', async function () {
           expect(1).to.equal(1)
         })

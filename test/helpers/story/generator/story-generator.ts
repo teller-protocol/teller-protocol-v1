@@ -32,6 +32,7 @@ const generateDomain = (
   const parentactions: TestAction[] = []
   const action = splitStructure[splitStructure.length - 1]
   let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? splitStructure[1] : undefined,
     actionType: action,
     suiteName: `${domain} ${action} test`,
     args: {},
@@ -54,6 +55,7 @@ const parseParents = (structure: string): TestAction => {
   const action = structureSplit[structureSplit.length - 1]
   const value: StoryValues = TREE_STRUCTURE[structure]
   let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? structureSplit[1] : undefined,
     actionType: action,
     suiteName: `${domain} ${action} test`,
     args: {},

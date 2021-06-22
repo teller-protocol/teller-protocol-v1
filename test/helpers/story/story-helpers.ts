@@ -68,8 +68,6 @@ export const DAPP_ACTION_TARGETS = {
   },
 }
 
-// export interface Story
-
 export interface StoryValues {
   network: string
   parents?: Array<string>
@@ -82,6 +80,7 @@ export interface TestScenario {
 }
 
 export interface TestAction {
+  actionParentType?: string
   actionType: string
   suiteName: string
   args: TestArgs

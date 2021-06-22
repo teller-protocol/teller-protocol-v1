@@ -26,6 +26,15 @@ We will read state data from the chaindata to determine whether or not each 'act
 Then we will expect that 
 */
 
+// 'LENDING_POOL.LEND': {
+//     network: STORY_NETWORKS.ALL,
+//     parents: ['LOAN.TAKE_OUT'],
+//   },
+//   'LENDING_POOL.WITHDRAW': {
+//     network: STORY_NETWORKS.ALL,
+//     parents: ['LENDING_POOL.LEND', 'LOAN.TAKE_OUT'],
+//   },
+
 export default class LPStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
     hre: HardhatRuntimeEnvironment,
@@ -54,9 +63,8 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const { actionType, args } = action
 
     switch (actionType) {
-      case STORY_DOMAINS.LENDING_POOL.LEND: {
+      case 'LEND': {
         let newTest = new Test(action.suiteName, async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -77,9 +85,8 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LENDING_POOL.WITHDRAW: {
+      case 'WITHDRAW': {
         let newTest = new Test(action.suiteName, async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 

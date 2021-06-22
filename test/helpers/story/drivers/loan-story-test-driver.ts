@@ -65,7 +65,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
 
     const { actionType, args } = action
     switch (actionType) {
-      case STORY_DOMAINS.LOAN.TAKE_OUT: {
+      case 'TAKE_OUT': {
         let newTest = new Test(action.suiteName, async function () {
           let shouldPass = true
           //read the state and determine if this should pass
@@ -90,7 +90,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LOAN.REPAY: {
+      case 'REPAY': {
         let newTest = new Test(action.suiteName, async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
@@ -107,7 +107,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LOAN.LIQUIDATE: {
+      case 'LIQUIDATE': {
         let newTest = new Test(action.suiteName, async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
