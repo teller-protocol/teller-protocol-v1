@@ -29,32 +29,38 @@ Then we will expect that
 export default class LPStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
     hre: HardhatRuntimeEnvironment,
-    scenario: TestScenario
-  ): Array<Test> {
-    let allTests: Array<Test> = []
+    scenario: TestScenario,
+    parentSuite: Mocha.Suite
+  ): Mocha.Suite {
+    // let allTests: Array<Test> = []
 
     let scenarioActions = scenario.actions
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        LPStoryTestDriver.generateTestsForAction(hre, action)
+        LPStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
 
-      allTests = allTests.concat(testsForAction)
+      //allTests = allTests.concat(testsForAction)
+
+      for (let test of testsForAction) {
+        parentSuite.addTest(test)
+      }
     }
 
-    return allTests
+    return parentSuite
   }
 
   static generateTestsForAction(
     hre: HardhatRuntimeEnvironment,
-    action: TestAction
+    action: TestAction,
+    testSuite: Mocha.Suite
   ): Array<Test> {
     let tests: Array<Test> = []
 
     const { actionType, args } = action
 
     switch (actionType) {
-      case STORY_DOMAINS.LENDING_POOL.LEND: {
+      case 'LEND': {
         let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =
@@ -77,7 +83,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LENDING_POOL.WITHDRAW: {
+      case 'WITHDRAW': {
         let newTest = new Test(action.suiteName, async function () {
           if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =

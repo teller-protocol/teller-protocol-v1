@@ -32,25 +32,31 @@ Then we will expect that
 export default class DappStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
     hre: HardhatRuntimeEnvironment,
-    scenario: TestScenario
-  ): Array<Test> {
-    let allTests: Array<Test> = []
+    scenario: TestScenario,
+    parentSuite: Mocha.Suite
+  ): Mocha.Suite {
+    // let allTests: Array<Test> = []
 
     let scenarioActions = scenario.actions
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        DappStoryTestDriver.generateTestsForAction(hre, action)
+        DappStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
 
-      allTests = allTests.concat(testsForAction)
+      //allTests = allTests.concat(testsForAction)
+
+      for (let test of testsForAction) {
+        parentSuite.addTest(test)
+      }
     }
 
-    return allTests
+    return parentSuite
   }
 
   static generateTestsForAction(
     hre: HardhatRuntimeEnvironment,
-    action: TestAction
+    action: TestAction,
+    testSuite: Mocha.Suite
   ): Array<Test> {
     let tests: Array<Test> = []
 
@@ -58,11 +64,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     let args = action.args
 
     switch (actionType) {
-      case STORY_DOMAINS.DAPP.LEND: {
+      case 'LEND': {
         DappStoryTestDriver.generateTestsForLend(hre, args, tests)
         break
       }
-      case STORY_DOMAINS.DAPP.SWAP: {
+      case 'SWAP': {
         DappStoryTestDriver.generateTestsForSwap(hre, args, tests)
         break
       }

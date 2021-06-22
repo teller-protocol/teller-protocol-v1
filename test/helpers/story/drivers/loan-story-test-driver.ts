@@ -43,29 +43,41 @@ Then we will expect that
 export default class LoanStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(
     hre: HardhatRuntimeEnvironment,
-    scenario: TestScenario
-  ): Array<Test> {
-    let allTests: Array<Test> = []
+    scenario: TestScenario,
+    parentSuite: Mocha.Suite
+  ): Mocha.Suite {
+    // let allTests: Array<Test> = []
 
     let scenarioActions = scenario.actions
 
     for (let action of scenarioActions) {
       let testsForAction: Array<Test> =
-        LoanStoryTestDriver.generateTestsForAction(hre, action)
-      allTests = allTests.concat(testsForAction)
+        LoanStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
+
+      //allTests = allTests.concat(testsForAction)
+
+      console.log('meep tests', testsForAction)
+
+      for (let test of testsForAction) {
+        parentSuite.addTest(test)
+      }
     }
-    return allTests
+
+    return parentSuite
   }
 
   static generateTestsForAction(
     hre: HardhatRuntimeEnvironment,
-    action: TestAction
+    action: TestAction,
+    testSuite: Mocha.Suite
   ): Array<Test> {
     let tests: Array<Test> = []
 
+    console.log('generateTestsForAction', action)
+
     const { actionType, args } = action
     switch (actionType) {
-      case STORY_DOMAINS.LOAN.TAKE_OUT: {
+      case 'TAKE_OUT': {
         let newTest = new Test(action.suiteName, async function () {
           let shouldPass = true
           //read the state and determine if this should pass
@@ -90,7 +102,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LOAN.REPAY: {
+      case 'REPAY': {
         let newTest = new Test(action.suiteName, async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
@@ -107,7 +119,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
         tests.push(newTest)
         break
       }
-      case STORY_DOMAINS.LOAN.LIQUIDATE: {
+      case 'LIQUIDATE': {
         let newTest = new Test(action.suiteName, async function () {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
