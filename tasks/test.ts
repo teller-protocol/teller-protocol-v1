@@ -66,31 +66,21 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
 
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
     //custom code
-    const allDomainTestSuites: Array<Mocha> = generateAllStoryTests(hre)
+    const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
-    // console.log('meepe',allDomainTestSuites)
+    console.log('\n\n\n\n')
 
-    // let storyTestFiles: string[] = []
+    const testFailures = await new Promise<number>((resolve, _) => {
+      storyMochaInstance.run(resolve)
+    })
 
-    for (let mochaInstance of allDomainTestSuites) {
-      //  suiteInstance.addTest(test)
-
-      // storyTestFiles.push(  convertMochaTestToFile(test)  )
-
-      console.log('\n\n\n\n')
-
-      const testFailures = await new Promise<number>((resolve, _) => {
-        mochaInstance.run(resolve)
-      })
-    }
+    console.log('\n\n\n\n')
 
     const percentageSubmission = {
       name: 'RequiredSubmissionsPercentage',
       value: 0,
     }
     await updatePlatformSetting(percentageSubmission, hre)
-
-    console.log('\n\n\n\n')
 
     const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
