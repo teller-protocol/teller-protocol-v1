@@ -10,12 +10,7 @@ import {
 } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
-import {
-  LPHelperArgs,
-  depositWithArgs,
-  withdrawWithArgs,
-  getLPHelpers,
-} from '../../lending-pool'
+import { getLPHelpers } from '../../lending-pool'
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { fundLender, getFunds } from '../../get-funds'
@@ -25,15 +20,6 @@ chai.use(solidity)
 We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
 Then we will expect that 
 */
-
-// 'LENDING_POOL.LEND': {
-//     network: STORY_NETWORKS.ALL,
-//     parents: ['LOAN.TAKE_OUT'],
-//   },
-//   'LENDING_POOL.WITHDRAW': {
-//     network: STORY_NETWORKS.ALL,
-//     parents: ['LENDING_POOL.LEND', 'LOAN.TAKE_OUT'],
-//   },
 
 export default class LPStoryTestDriver extends StoryTestDriver {
   static generateDomainSpecificTestsForScenario(

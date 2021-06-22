@@ -166,7 +166,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const createArgs = LoanStoryTestDriver.createLoanArgs(hre, borrowerAddress)
     const funcToRun =
       args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
-    // if(!args.nft)
     const { tx, getHelpers } = await funcToRun(hre, createArgs)
     return tx
   }
@@ -179,7 +178,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const allBorrowerLoans = await diamond.getBorrowerLoans(
       await borrower.getAddress()
     )
-    console.log({ allBorrowerLoans })
     // expect(
     //   allBorrowerLoans.length,
     //   'allBorrowerLoans must be greater than 0'
@@ -196,7 +194,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const borrower = await hre.ethers.provider.getSigner(borrowerAddress)
     const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
     const { details, diamond, collateral } = loan
-    console.log({ duration: details.loan.duration })
     await hre.evm.advanceTime(details.loan.duration + 3600)
     const liquidator = await hre.getNamedSigner('liquidator')
     let borrowedAmount = details.loan.borrowedAmount

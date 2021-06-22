@@ -12,7 +12,6 @@ export const generateStories = (
   let proceduralScenarios: TestScenario[] = []
   for (const [key, value] of Object.entries(TREE_STRUCTURE)) {
     const domains = generateDomain(key, value, hre)
-    // console.log("domains: %o", domains)
     proceduralScenarios = proceduralScenarios.concat(domains)
   }
   console.log('procedural: %o', proceduralScenarios)
