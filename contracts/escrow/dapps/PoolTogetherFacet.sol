@@ -6,9 +6,7 @@ import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import {
-    AssetPPoolLib
-} from "../../settings/asset/libraries/AssetPPoolLib.sol";
+import { AssetPPoolLib } from "../../settings/asset/libraries/AssetPPoolLib.sol";
 import { PoolTogetherLib } from "./libraries/PoolTogetherLib.sol";
 import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -71,14 +69,13 @@ contract PoolTogetherFacet is PausableMods, DappMods {
 
         // Set token allowance to Prize Pool
         LibEscrow.e(loanID).setTokenAllowance(tokenAddress, address(prizePool));
-        bytes memory callData =
-            abi.encodeWithSelector(
-                PrizePoolInterface.depositTo.selector,
-                address(LibEscrow.e(loanID)), // Tickets sent to Escrow
-                amount,
-                ticketAddress,
-                address(this) // Referrer is the Teller Diamond
-            );
+        bytes memory callData = abi.encodeWithSelector(
+            PrizePoolInterface.depositTo.selector,
+            address(LibEscrow.e(loanID)), // Tickets sent to Escrow
+            amount,
+            ticketAddress,
+            address(this) // Referrer is the Teller Diamond
+        );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
@@ -111,24 +108,13 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
         uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
 
-        (
-            uint256 maxExitFee, /* uint256 burnedCredit */
-
-        ) =
-            prizePool.calculateEarlyExitFee(
-                address(LibEscrow.e(loanID)),
-                ticketAddress,
-                amount
-            );
-
-        bytes memory callData =
-            abi.encodeWithSelector(
-                PrizePoolInterface.withdrawInstantlyFrom.selector,
-                address(LibEscrow.e(loanID)),
-                amount,
-                ticketAddress,
-                maxExitFee
-            );
+        bytes memory callData = abi.encodeWithSelector(
+            PrizePoolInterface.withdrawInstantlyFrom.selector,
+            address(LibEscrow.e(loanID)),
+            amount,
+            ticketAddress,
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF // max exit fee
+        );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
@@ -161,21 +147,13 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
         uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
 
-        (uint256 maxExitFee, ) =
-            prizePool.calculateEarlyExitFee(
-                address(LibEscrow.e(loanID)),
-                ticketAddress,
-                balanceBefore
-            );
-
-        bytes memory callData =
-            abi.encodeWithSelector(
-                PrizePoolInterface.withdrawInstantlyFrom.selector,
-                address(LibEscrow.e(loanID)),
-                balanceBefore,
-                ticketAddress,
-                maxExitFee
-            );
+        bytes memory callData = abi.encodeWithSelector(
+            PrizePoolInterface.withdrawInstantlyFrom.selector,
+            address(LibEscrow.e(loanID)),
+            balanceBefore,
+            ticketAddress,
+            0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
