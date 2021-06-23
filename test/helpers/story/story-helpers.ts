@@ -73,6 +73,12 @@ export interface StoryValues {
   parents?: Array<string>
 }
 
+export interface TestScenarioDomain {
+  domainName: string
+  //shouldPass: boolean
+  scenarios: TestScenario[]
+}
+
 export interface TestScenario {
   domain: string
   //shouldPass: boolean
@@ -96,29 +102,33 @@ export interface TestArgs {
 
 export const generateTests = (
   hre: HardhatRuntimeEnvironment,
-  scenario: TestScenario
-): Array<Test> => {
+  scenario: TestScenario,
+  parentSuite: Mocha.Suite
+): Mocha.Suite => {
   switch (scenario.domain) {
     case 'LOAN':
       return LoanStoryTestDriver.generateDomainSpecificTestsForScenario(
         hre,
-        scenario
+        scenario,
+        parentSuite
       )
       break
     case 'LENDING_POOL':
       return LPStoryTestDriver.generateDomainSpecificTestsForScenario(
         hre,
-        scenario
+        scenario,
+        parentSuite
       )
       break
     case 'DAPP':
       return DappStoryTestDriver.generateDomainSpecificTestsForScenario(
         hre,
-        scenario
+        scenario,
+        parentSuite
       )
       break
     default:
-      return []
+      return parentSuite
       break
   }
 }
