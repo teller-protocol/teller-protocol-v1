@@ -87,7 +87,7 @@ export default <HardhatUserConfig>{
   },
   tenderly: {
     username: 'soltel',
-    project: 'teller',
+    project: 'mumbai',
   },
   paths: {
     sources: 'contracts',
