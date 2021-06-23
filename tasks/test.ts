@@ -2,7 +2,7 @@ import { task, types } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
 import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
-
+import { updatePlatformSetting } from '../tasks'
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
 import Mocha from 'mocha'
 
@@ -44,6 +44,7 @@ task('test').setAction(async (args, hre, runSuper) => {
 
   // Run the actual test task
   await runSuper({
+    ...args,
     deployFixture: true,
   })
 })
@@ -64,36 +65,19 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
   //{ testFiles }: { testFiles: string[] }, { config }
 
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
-    var mochaInstance = new Mocha()
-    mochaInstance.timeout(19000)
-
-    var suiteInstance = Mocha.Suite.create(
-      mochaInstance.suite,
-      'Story Test Suite'
-    )
-
     //custom code
-    const allStoryTests = generateAllStoryTests(hre)
-
-    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
-
-    let storyTestFiles: string[] = []
-
-    for (let test of allStoryTests) {
-      suiteInstance.addTest(test)
-
-      // storyTestFiles.push(  convertMochaTestToFile(test)  )
-    }
+    const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
     console.log('\n\n\n\n')
 
     const testFailures = await new Promise<number>((resolve, _) => {
-      mochaInstance.run(resolve)
+      storyMochaInstance.run(resolve)
     })
 
     console.log('\n\n\n\n')
+    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
-    mochaInstance = new Mocha()
+    let mochaInstance = new Mocha()
     mochaInstance.timeout(19000)
 
     tsFiles.forEach(function (file: string) {

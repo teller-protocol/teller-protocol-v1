@@ -98,7 +98,13 @@ export const claimNFT = async (
   })
   log('')
 
-  await nftDistributor.claim(args.account, requests)
+  if (requests.length > 0) {
+    await nftDistributor
+      .claim(args.account, requests)
+      .then(({ wait }) => wait())
+  }
+
+  log('Done.')
 }
 
 task('claim-nft', 'Claims an NFT on behalf of an account')

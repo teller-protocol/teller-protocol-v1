@@ -228,6 +228,10 @@ extendEnvironment((hre) => {
   }
 
   hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
+    if (typeof amount === 'string') {
+      return ethers.utils.parseUnits(amount, decimals)
+    }
+
     const num = BigNumber.from(amount)
     if (decimals) {
       return num.mul(BigNumber.from('10').pow(decimals))

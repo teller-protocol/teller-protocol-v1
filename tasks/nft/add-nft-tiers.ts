@@ -3,7 +3,6 @@ import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getNFT } from '../../config'
-import { TierInfo } from '../../types/custom/config-types'
 import { ITellerNFT, TellerNFT } from '../../types/typechain'
 import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
 
@@ -62,31 +61,10 @@ export const addTiers = async (
 
       log(`done.`)
     } else {
-      const tier = {
-        baseLoanSize: await nftDictionary.baseLoanSizes(i),
-        hashes: await nftDictionary.getTierHashes(i),
-        contributionAsset: cAsset,
-        contributionSize: await nftDictionary.contributionSizes(i),
-        contributionMultiplier: await nftDictionary.contributionMultipliers(i),
-      }
-      if (hashTier(tier) !== hashTier(tiers[i])) {
-        log('')
-        log(`Tier ${i} NOT MATCH existing one on the NFTDictionary`, {
-          indent: 3,
-          star: true,
-        })
-        log(`Existing: `, { indent: 4, star: true })
-        logTier(tier, 5)
-        log(`New: `, { indent: 4, star: true })
-        logTier(tiers[i], 5)
-        log('')
-        throw new Error('NFT tiers config not match existing deployed')
-      } else {
-        log(`Tier ${i} already exists in NFTDictionary`, {
-          indent: 3,
-          star: true,
-        })
-      }
+      log(`Tier ${i} already exists in NFTDictionary`, {
+        indent: 3,
+        star: true,
+      })
     }
   }
 
@@ -120,36 +98,6 @@ export const addTiers = async (
 
     log(` set with ${colors.cyan(`${receipt!.gasUsed} gas`)}`)
   }
-}
-
-const hashTier = (tier: TierInfo): string => {
-  let tierStr = ''
-  tierStr += ethers.BigNumber.from(tier.baseLoanSize).toString()
-  tierStr += tier.hashes.join('')
-  tierStr += ethers.utils.getAddress(tier.contributionAsset)
-  tierStr += ethers.BigNumber.from(tier.contributionSize).toString()
-  tierStr += tier.contributionMultiplier.toString()
-  return ethers.utils.hashMessage(tierStr)
-}
-
-const logTier = (tier: TierInfo, indent: number): void => {
-  const indentStr = '  '.repeat(indent)
-  console.log(
-    `${indentStr}{
-  ${indentStr}  baseLoanSize: ${ethers.BigNumber.from(
-      tier.baseLoanSize
-    ).toString()},
-  ${indentStr}  hashes: [ ${JSON.stringify(tier.hashes.join(', '))} ],
-  ${indentStr}  contributionAsset: ${ethers.utils.getAddress(
-      tier.contributionAsset
-    )}
-  ${indentStr}  contributionSize: ${ethers.BigNumber.from(
-      tier.contributionSize
-    ).toString()},
-  ${indentStr}  contributionMultiplier: ${tier.contributionMultiplier.toString()}
-  ${indentStr}}
-  `
-  )
 }
 
 const compressTokenTierMappingsFromArray = (

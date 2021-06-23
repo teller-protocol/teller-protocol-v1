@@ -16,12 +16,6 @@ import {
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
 
-struct NftLoanSizeProof {
-    uint256 id;
-    uint256 baseLoanSize;
-    bytes32[] proof;
-}
-
 library NFTLib {
     function s() internal pure returns (NFTStorage storage s_) {
         s_ = NFTStorageLib.store();
@@ -88,19 +82,15 @@ library NFTLib {
     /**
      * @notice it unstakes an NFT and verifies the proof in order to apply the proof to a loan
      * @param loanID the identifier of the loan
-     * @param proof the proof to be attached to a loan after verifying the loan size
+     * @param nftID the NFT ID to apply to the loan
      */
-    function applyToLoan(uint256 loanID, NftLoanSizeProof calldata proof)
-        internal
-    {
+    function applyToLoan(uint256 loanID, uint256 nftID) internal {
         // NFT must be currently staked
         // Remove NFT from being staked - returns bool
-        require(unstake(proof.id), "Teller: borrower nft not staked");
-
-        require(verifyLoanSize(proof), "Teller invalid nft proof");
+        require(unstake(nftID), "Teller: borrower nft not staked");
 
         // Apply NFT to loan
-        EnumerableSet.add(s().loanNFTs[loanID], proof.id);
+        EnumerableSet.add(s().loanNFTs[loanID], nftID);
     }
 
     /**
@@ -115,22 +105,5 @@ library NFTLib {
             // Restake the NFT
             EnumerableSet.add(s().stakedNFTs[owner], EnumerableSet.at(nfts, i));
         }
-    }
-
-    /**
-     * @notice it verifies the NFT id to base loan size using the merkle proof
-     * @param proof the NFTLoanSizeProof to verify with the nft;s merkle root
-     * @return verified_ tells us if the loan is verified or not
-     */
-    function verifyLoanSize(NftLoanSizeProof calldata proof)
-        internal
-        view
-        returns (bool verified_)
-    {
-        verified_ = MerkleProof.verify(
-            proof.proof,
-            s().nftMerkleRoot,
-            keccak256(abi.encodePacked(proof.id, proof.baseLoanSize))
-        );
     }
 }

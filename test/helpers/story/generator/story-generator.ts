@@ -1,121 +1,71 @@
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import {
-  STORY_ACTIONS,
-  DAPP_ACTIONS,
+  TREE_STRUCTURE,
   TestScenario,
+  StoryValues,
   TestAction,
+  TestScenarioDomain,
 } from '../story-helpers'
 
-export const generateStories = (): Array<TestScenario> => {
-  // let manualScenarios: TestScenario[] = [
-  //   {
-  //     domain: 'LOAN',
-  //     actions: [
-  //       {
-  //         actionType: STORY_ACTIONS.LOAN.TAKE_OUT,
-  //         suiteName: '',
-  //         args: { pass: true, parent: null },
-  //       },
-  //       {
-  //         actionType: STORY_ACTIONS.LOAN.LIQUIDATE,
-  //         suiteName: '',
-  //         args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
-  //       },
-  //       {
-  //         actionType: STORY_ACTIONS.LOAN.REPAY,
-  //         suiteName: '',
-  //         args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT },
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     domain: 'LENDING_POOL',
-  //     actions: [
-  //       {
-  //         actionType: STORY_ACTIONS.LENDING_POOL.LEND,
-  //         suiteName: '',
-  //         args: { pass: true, parent: null },
-  //       },
-  //       {
-  //         actionType: STORY_ACTIONS.LENDING_POOL.WITHDRAW,
-  //         suiteName: '',
-  //         args: { pass: true, parent: STORY_ACTIONS.LENDING_POOL.LEND },
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     domain: 'DAPP',
-  //     actions: [
-  //       {
-  //         actionType: STORY_ACTIONS.DAPP.LEND,
-  //         suiteName: '',
-  //         args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT, dapp: 1 },
-  //       },
-  //       {
-  //         actionType: STORY_ACTIONS.DAPP.SWAP,
-  //         suiteName: '',
-  //         args: { pass: true, parent: STORY_ACTIONS.LOAN.TAKE_OUT, dapp: 0 },
-  //       },
-  //     ],
-  //   },
-  // ]
+export const generateStoryDomains = (
+  hre: HardhatRuntimeEnvironment
+): Array<TestScenarioDomain> => {
+  let proceduralScenarioDomains: TestScenarioDomain[] = []
 
-  const domains: string[] = Object.keys(STORY_ACTIONS)
-  const proceduralScenarios = domains.map((domain) => {
-    const actions: TestAction[] = []
-    switch (domain) {
-      case 'DAPP':
-        const dappActionTypes: [string, number][] = Object.entries(
-          STORY_ACTIONS[domain]
-        )
-        dappActionTypes.map((dappActionType) => {
-          const dappTypes: [string, number][] = Object.entries(
-            DAPP_ACTIONS[dappActionType[0]]
-          )
-          dappTypes.map((dappType) => {
-            let trueTest: TestAction = {
-              actionType: dappActionType[1],
-              suiteName: `${dappType[0]} true test`,
-              args: {
-                pass: true,
-                parent: dappType[1] == 0 ? null : dappType[1],
-                dapp: dappType[1],
-              },
-            }
-            let falseTest: TestAction = {
-              actionType: dappActionType[1],
-              suiteName: `${dappType[0]} false test`,
-              args: { pass: false, parent: null, dapp: dappType[1] },
-            }
-            actions.push(trueTest, falseTest)
-          })
-        })
-        break
-      default:
-        const actionTypes: [string, number][] = Object.entries(
-          STORY_ACTIONS[domain]
-        )
-        actionTypes.map((actionType) => {
-          let trueTest: TestAction = {
-            actionType: actionType[1],
-            suiteName: `${actionType[0]} true test`,
-            args: {
-              pass: true,
-              parent: actionType[1] == 0 ? null : actionType[1],
-            },
-          }
-          let falseTest: TestAction = {
-            actionType: actionType[1],
-            suiteName: `${actionType[0]} false test`,
-            args: { pass: false, parent: null },
-          }
-          actions.push(trueTest, falseTest)
-        })
-        break
+  for (const [key, value] of Object.entries(TREE_STRUCTURE)) {
+    const scenarioArray = generateDomainScenarios(key, value, hre)
+    let newSDomain: TestScenarioDomain = {
+      domainName: key,
+      scenarios: scenarioArray,
     }
-    return { domain, actions }
-  })
+    proceduralScenarioDomains.push(newSDomain)
+  }
+  return proceduralScenarioDomains
+}
 
-  // console.log('procedural tests: %o', proceduralScenarios)
+const generateDomainScenarios = (
+  key: string,
+  value: StoryValues,
+  hre: HardhatRuntimeEnvironment
+) => {
+  const testCases = []
+  console.log(`${key}: ${value}`)
+  // if (hre.network.name == '') {
 
-  return proceduralScenarios
+  // }
+  const splitStructure = key.split('.')
+  const domain = splitStructure[0]
+  const actions: TestAction[] = []
+  const parentactions: TestAction[] = []
+  const action = splitStructure[splitStructure.length - 1]
+  let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? splitStructure[1] : undefined,
+    actionType: action,
+    suiteName: `${domain} ${action} test`,
+    args: {},
+  }
+  actions.unshift(test)
+  testCases.push({ domain, actions })
+  if (value.parents) {
+    value.parents.map((value) => {
+      parentactions.unshift(parseParents(value))
+    })
+    parentactions.push(test)
+    testCases.push({ domain, actions: parentactions })
+  }
+  return testCases
+}
+
+const parseParents = (structure: string): TestAction => {
+  const structureSplit = structure.split('.')
+  const domain = structureSplit[0]
+  const action = structureSplit[structureSplit.length - 1]
+  const value: StoryValues = TREE_STRUCTURE[structure]
+  let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? structureSplit[1] : undefined,
+    actionType: action,
+    suiteName: `${domain} ${action} test`,
+    args: {},
+  }
+  return test
 }

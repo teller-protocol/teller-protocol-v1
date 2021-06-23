@@ -14,8 +14,7 @@ export async function updatePlatformSetting(
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
   const { name, value } = args
-  const { contracts, network, ethers, log, getNamedSigner } = hre
-
+  const { getNamedSigner, contracts, network, ethers, log } = hre
   log('')
   const deployer = await getNamedSigner('deployer')
   const settingNames = Object.keys(getPlatformSettings(network))

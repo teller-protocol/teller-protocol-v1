@@ -1,18 +1,37 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import Mocha from 'mocha'
-import { generateTests, TestScenario } from '../helpers/story/story-helpers'
-import { generateStories } from '../helpers/story/generator/story-generator'
+import {
+  generateTests,
+  TestScenario,
+  TestScenarioDomain,
+} from '../helpers/story/story-helpers'
+import { generateStoryDomains } from '../helpers/story/generator/story-generator'
 
 export const generateAllStoryTests = (
   hre: HardhatRuntimeEnvironment
-): Array<Mocha.Test> => {
-  const allTestStories: Array<TestScenario> = generateStories()
-  var allGeneratedTests: Array<Mocha.Test> = []
+): Mocha => {
+  const allTestStoryDomains: Array<TestScenarioDomain> =
+    generateStoryDomains(hre)
 
-  for (let story of allTestStories) {
-    let newTests = generateTests(hre, story)
+  // var allGeneratedSuites: Array<Mocha.Suite> = []
 
-    allGeneratedTests = allGeneratedTests.concat(newTests)
+  // var allMochaInstances: Array<Mocha> = []
+
+  var mochaInstance = new Mocha()
+  mochaInstance.timeout(19000)
+
+  for (let storyDomain of allTestStoryDomains) {
+    var suiteInstance = Mocha.Suite.create(
+      mochaInstance.suite,
+      'Story Test Suite - '.concat(storyDomain.domainName)
+    )
+
+    console.log('storyDomain ', storyDomain)
+
+    for (let scenario of storyDomain.scenarios) {
+      let testsForDomain = generateTests(hre, scenario, suiteInstance)
+    }
   }
-  return allGeneratedTests
+
+  return mochaInstance
 }
