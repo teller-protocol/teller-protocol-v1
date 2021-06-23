@@ -26,6 +26,7 @@ import {
 } from 'zokrates-js/node'
 // import zkcra from '../fixtures/zkcra.json'
 const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
+import scores from '../fixtures/zk-scores.json'
 
 // teller files
 import { getNFT } from '../../config'
@@ -443,7 +444,9 @@ export const fillZKCRAConfigInfo = async () => {
   }
 }
 
-export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
+export const outputCraValues = async (
+  goodScore: boolean
+): Promise<CreateLoanWithZKCRA> => {
   console.log('inside output cra values')
   // local variables
   let zokratesProvider: ZoKratesProvider
@@ -513,45 +516,19 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   // sample data. first element of each array element is the value (Score).
   // next 7 elements are the secrets
-  const data = [
-    [
-      '0x0000000a',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000001',
-    ],
-    [
-      '0x0000000a',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000002',
-    ],
-    [
-      '0x0000000a',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000000',
-      '0x00000003',
-    ],
-  ]
 
   // get computation
-  console.log('about to get computation')
-  computation = provider.computeWitness(compArtifact, [
-    data,
-    identifier.toString(),
-  ])
+  if (goodScore) {
+    computation = provider.computeWitness(compArtifact, [
+      scores.good,
+      identifier.toString(),
+    ])
+  } else {
+    computation = provider.computeWitness(compArtifact, [
+      scores.bad,
+      identifier.toString(),
+    ])
+  }
 
   // compute proof
   const provingKey = new Uint8Array(

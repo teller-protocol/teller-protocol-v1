@@ -167,8 +167,9 @@ describe.skip('Loans', () => {
       })
 
       // check if computation and proof exist
-      it('checks if computation and proof are returned', async () => {
-        const { computation, proof } = await outputCraValues()
+      it('checks if computation and proof are returned with a good score', async () => {
+        const goodScore = true
+        const { computation, proof } = await outputCraValues(goodScore)
         computation_ = computation
         proof_ = proof
       })
