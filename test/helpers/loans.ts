@@ -13,6 +13,8 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
+
+// zkcra imports
 import {
   initialize,
   ZoKratesProvider,
@@ -22,6 +24,8 @@ import {
   SetupKeypair,
   //@ts-ignore
 } from 'zokrates-js/node'
+// import zkcra from '../fixtures/zkcra.json'
+const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
 
 // teller files
 import { getNFT } from '../../config'
@@ -29,8 +33,10 @@ import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
-import { readFileSync } from 'fs'
+
+import { readFileSync, writeFile, writeFileSync } from 'fs'
 import { join } from 'path'
+import { JsonRpcBatchProvider } from '@ethersproject/providers'
 const {
   getNamedSigner,
   getNamedAccounts,
@@ -448,7 +454,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('initialized private variables')
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
-  console.log('after getting stuff')
+  console.log('got provider')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -462,11 +468,34 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
       endfor
 
       return MARKET_SCORE,commitments`
+  // const uint8Array = new Uint8Array(JSON.parse(JSON.stringify(zkcra)).program)
+  console.log('fetching zkcra json')
+  const zkcra = await fetch(zkcraJson)
+  console.log('fetched')
+  console.log(zkcra)
+  const uint8Array = new Uint8Array(
+    JSON.parse(JSON.stringify(zkcra)).program.data
+  )
+  const abi = JSON.parse(JSON.stringify(zkcra)).abi
+  const compArtifact = { program: uint8Array, abi: abi }
+  console.log(compArtifact)
 
   // compile into circuit
-  console.log('about to compile source')
-  compilationArtifacts = provider.compile(source)
-  console.log('compiled source')
+  // console.log('about to compile source')
+  // compilationArtifacts = provider.compile(source)
+  // console.log('compiled source')
+  // const programArray = compilationArtifacts.program
+  // const programBuffer = programArray.buffer
+  // const objectToAdd = {
+  //   program: Buffer.from(programBuffer),
+  //   abi: compilationArtifacts.abi,
+  // }
+  // console.log(JSON.stringify(objectToAdd))
+  // writeFileSync(
+  //   join(__dirname, '../fixtures/zkcra.json'),
+  //   JSON.stringify(objectToAdd),
+  //   { encoding: 'utf-8' }
+  // )
 
   // generate keypair
   // keyPair = provider.setup(compilationArtifacts.program)
@@ -519,7 +548,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   // get computation
   console.log('about to get computation')
-  computation = provider.computeWitness(compilationArtifacts, [
+  computation = provider.computeWitness(compArtifact, [
     data,
     identifier.toString(),
   ])
@@ -533,7 +562,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   console.log('about to get proof')
   proof = provider.generateProof(
-    compilationArtifacts.program,
+    compArtifact.program,
     computation.witness,
     provingKey
   )
@@ -682,52 +711,6 @@ export const borrowWithZKCRA = async (
   return tx
 }
 
-export const takeOut = async (
-  args: CreateLoanArgs
-): Promise<LoanHelpersReturn> => {
-  // Setup for NFT user
-  const { merkleTrees } = getNFT(hre.network)
-  const borrower = ethers.utils.getAddress(merkleTrees[0].balances[0].address)
-  if (args.nft) {
-    args.borrower = borrower
-    await evm.impersonate(borrower)
-    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-    await diamond.addAuthorizedAddress(borrower)
-    await getFunds({
-      to: borrower,
-      amount: ethers.utils.parseEther('1'),
-      tokenSym: 'ETH',
-      hre,
-    })
-  }
-  // Create loan
-  const { getHelpers } = await createLoan(args)
-  const helpers = await getHelpers()
-  const { diamond, collateral, details, takeOut } = helpers
-  // Deposit collateral needed
-  const neededCollateral = await collateral.needed()
-  if (neededCollateral.gt(0)) {
-    await collateral.deposit(neededCollateral)
-    // .should.emit(diamond, 'CollateralDeposited')
-    // .withArgs(loanID, borrowerAddress, collateralNeeded)
-  }
-  // Advance time
-  await evm.advanceTime(moment.duration(5, 'minutes'))
-  // Take out loan
-  await takeOut(details.terms.maxLoanAmount, details.borrower.signer, args.nft)
-    .should.emit(diamond, 'LoanTakenOut')
-    .withArgs(
-      details.loan.id,
-      details.borrower.address,
-      details.terms.maxLoanAmount,
-      args.nft
-    )
-  // Refresh details after taking out loan
-  helpers.details = await details.refresh()
-  // Verify loan is now active
-  helpers.details.loan.status.should.eq(LoanStatus.Active)
-  return helpers
-}
 interface LoanDetailsReturn {
   lendingToken: ERC20
   collateralToken: ERC20
