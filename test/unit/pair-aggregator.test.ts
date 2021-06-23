@@ -47,7 +47,7 @@ describe('PriceAggregator', () => {
     })
 
     for (const pair of pairs) {
-      it.skip(`Should be able add Chainlink aggregators for ${pair.baseTokenName}/${pair.quoteTokenName} an admin`, async () => {
+      it(`Should be able add Chainlink aggregators for ${pair.baseTokenName}/${pair.quoteTokenName} an admin`, async () => {
         const srcTokenAddress = getTokenAddress(pair.baseTokenName)
         const dstTokenAddress = getTokenAddress(pair.quoteTokenName)
 
