@@ -72,9 +72,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     testSuite: Mocha.Suite
   ): Array<Test> {
     let tests: Array<Test> = []
-
-    console.log('generateTestsForAction', action)
-
     const { actionType, args } = action
     switch (actionType) {
       case 'TAKE_OUT': {
@@ -89,7 +86,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             await borrower.getAddress()
           )
           if (allBorrowerLoans.length > 0) shouldPass = false
-          console.log({ allBorrowerLoans, shouldPass })
+          // console.log({ allBorrowerLoans, shouldPass })
           if (shouldPass) {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
             LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
@@ -169,6 +166,11 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     args: TestArgs
   ): Promise<ContractTransaction> => {
+    const percentageSubmission = {
+      name: 'RequiredSubmissionsPercentage',
+      value: 0,
+    }
+    await updatePlatformSetting(percentageSubmission, hre)
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',
       hre

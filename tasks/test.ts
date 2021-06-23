@@ -75,13 +75,6 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     })
 
     console.log('\n\n\n\n')
-
-    const percentageSubmission = {
-      name: 'RequiredSubmissionsPercentage',
-      value: 0,
-    }
-    await updatePlatformSetting(percentageSubmission, hre)
-
     const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
     let mochaInstance = new Mocha()

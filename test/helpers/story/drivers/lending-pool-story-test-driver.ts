@@ -66,7 +66,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           if (shouldPass) {
             // expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
             const deposit = await helpers.deposit()
-            console.log({ deposit })
             await helpers.deposit()
           } else {
             expect(await helpers.deposit()).to.be.reverted
