@@ -13,6 +13,8 @@ import {
 import hre from 'hardhat'
 import moment from 'moment'
 import { ConsoleLogger } from 'ts-generator/dist/logger'
+
+// zkcra imports
 import {
   initialize,
   ZoKratesProvider,
@@ -22,6 +24,8 @@ import {
   SetupKeypair,
   //@ts-ignore
 } from 'zokrates-js/node'
+// import zkcra from '../fixtures/zkcra.json'
+const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
 
 // teller files
 import { getNFT } from '../../config'
@@ -29,8 +33,9 @@ import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { mockCRAResponse } from './mock-cra-response'
 
-import { readFileSync } from 'fs'
+import { readFileSync, writeFile, writeFileSync } from 'fs'
 import { join } from 'path'
+import { JsonRpcBatchProvider } from '@ethersproject/providers'
 const {
   getNamedSigner,
   getNamedAccounts,
@@ -424,7 +429,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
   console.log('initialized private variables')
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
-  console.log('after getting stuff')
+  console.log('got provider')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -438,11 +443,34 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
       endfor
 
       return MARKET_SCORE,commitments`
+  // const uint8Array = new Uint8Array(JSON.parse(JSON.stringify(zkcra)).program)
+  console.log('fetching zkcra json')
+  const zkcra = await fetch(zkcraJson)
+  console.log('fetched')
+  console.log(zkcra)
+  const uint8Array = new Uint8Array(
+    JSON.parse(JSON.stringify(zkcra)).program.data
+  )
+  const abi = JSON.parse(JSON.stringify(zkcra)).abi
+  const compArtifact = { program: uint8Array, abi: abi }
+  console.log(compArtifact)
 
   // compile into circuit
-  console.log('about to compile source')
-  compilationArtifacts = provider.compile(source)
-  console.log('compiled source')
+  // console.log('about to compile source')
+  // compilationArtifacts = provider.compile(source)
+  // console.log('compiled source')
+  // const programArray = compilationArtifacts.program
+  // const programBuffer = programArray.buffer
+  // const objectToAdd = {
+  //   program: Buffer.from(programBuffer),
+  //   abi: compilationArtifacts.abi,
+  // }
+  // console.log(JSON.stringify(objectToAdd))
+  // writeFileSync(
+  //   join(__dirname, '../fixtures/zkcra.json'),
+  //   JSON.stringify(objectToAdd),
+  //   { encoding: 'utf-8' }
+  // )
 
   // generate keypair
   // keyPair = provider.setup(compilationArtifacts.program)
@@ -495,7 +523,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   // get computation
   console.log('about to get computation')
-  computation = provider.computeWitness(compilationArtifacts, [
+  computation = provider.computeWitness(compArtifact, [
     data,
     identifier.toString(),
   ])
@@ -509,7 +537,7 @@ export const outputCraValues = async (): Promise<CreateLoanWithZKCRA> => {
 
   console.log('about to get proof')
   proof = provider.generateProof(
-    compilationArtifacts.program,
+    compArtifact.program,
     computation.witness,
     provingKey
   )
@@ -657,7 +685,6 @@ export const borrowWithZKCRA = async (
     )
   return tx
 }
-
 
 interface LoanDetailsReturn {
   lendingToken: ERC20
