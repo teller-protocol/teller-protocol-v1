@@ -254,5 +254,5 @@ export const platformSettings: Record<string, PlatformSettings> = {
   localhost: mainnetPlatformSettings,
   mainnet: mainnetPlatformSettings,
   polygon: mainnetPlatformSettings,
-  ploygon_mumbai: mainnetPlatformSettings,
+  polygon_mumbai: mainnetPlatformSettings,
 }
