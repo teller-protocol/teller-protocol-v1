@@ -10,12 +10,7 @@ import {
 } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
-import {
-  LPHelperArgs,
-  depositWithArgs,
-  withdrawWithArgs,
-  getLPHelpers,
-} from '../../lending-pool'
+import { getLPHelpers } from '../../lending-pool'
 
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { fundLender, getFunds } from '../../get-funds'
@@ -62,7 +57,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     switch (actionType) {
       case 'LEND': {
         let newTest = new Test(action.suiteName, async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -85,7 +79,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       }
       case 'WITHDRAW': {
         let newTest = new Test(action.suiteName, async function () {
-          if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 

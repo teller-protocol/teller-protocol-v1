@@ -33,7 +33,6 @@ export const generateStories = (
   let proceduralScenarios: TestScenario[] = []
   for (const [key, value] of Object.entries(TREE_STRUCTURE)) {
     const domains = generateDomainScenarios(key, value, hre)
-    // console.log("domains: %o", domains)
     proceduralScenarios = proceduralScenarios.concat(domains)
   }
   console.log('procedural: %o', proceduralScenarios)
@@ -53,6 +52,7 @@ const generateDomainScenarios = (
   const parentactions: TestAction[] = []
   const action = splitStructure[splitStructure.length - 1]
   let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? splitStructure[1] : undefined,
     actionType: action,
     suiteName: `${domain} ${action} test`,
     args: {},
@@ -75,6 +75,7 @@ const parseParents = (structure: string): TestAction => {
   const action = structureSplit[structureSplit.length - 1]
   const value: StoryValues = TREE_STRUCTURE[structure]
   let test: TestAction = {
+    actionParentType: domain == 'DAPP' ? structureSplit[1] : undefined,
     actionType: action,
     suiteName: `${domain} ${action} test`,
     args: {},
