@@ -25,6 +25,9 @@ const generateDomain = (
 ) => {
   const testCases = []
   console.log(`${key}: ${value}`)
+  // if (hre.network.name == '') {
+
+  // }
   const splitStructure = key.split('.')
   const domain = splitStructure[0]
   const actions: TestAction[] = []
