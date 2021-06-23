@@ -65,26 +65,14 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
   //{ testFiles }: { testFiles: string[] }, { config }
 
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
-    var mochaInstance = new Mocha()
-    mochaInstance.timeout(19000)
-
-    var suiteInstance = Mocha.Suite.create(
-      mochaInstance.suite,
-      'Story Test Suite'
-    )
-
     //custom code
-    const allStoryTests = generateAllStoryTests(hre)
+    const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
-    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
+    console.log('\n\n\n\n')
 
-    let storyTestFiles: string[] = []
-
-    for (let test of allStoryTests) {
-      suiteInstance.addTest(test)
-
-      // storyTestFiles.push(  convertMochaTestToFile(test)  )
-    }
+    const testFailures = await new Promise<number>((resolve, _) => {
+      storyMochaInstance.run(resolve)
+    })
 
     console.log('\n\n\n\n')
 
@@ -94,13 +82,9 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     }
     await updatePlatformSetting(percentageSubmission, hre)
 
-    const testFailures = await new Promise<number>((resolve, _) => {
-      mochaInstance.run(resolve)
-    })
+    const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
-    console.log('\n\n\n\n')
-
-    mochaInstance = new Mocha()
+    let mochaInstance = new Mocha()
     mochaInstance.timeout(19000)
 
     tsFiles.forEach(function (file: string) {

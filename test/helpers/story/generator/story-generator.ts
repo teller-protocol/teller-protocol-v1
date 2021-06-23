@@ -4,21 +4,42 @@ import {
   TestScenario,
   StoryValues,
   TestAction,
+  TestScenarioDomain,
 } from '../story-helpers'
+
+export const generateStoryDomains = (
+  hre: HardhatRuntimeEnvironment
+): Array<TestScenarioDomain> => {
+  let proceduralScenarioDomains: TestScenarioDomain[] = []
+
+  for (const [key, value] of Object.entries(TREE_STRUCTURE)) {
+    const scenarioArray = generateDomainScenarios(key, value, hre)
+
+    let newSDomain: TestScenarioDomain = {
+      domainName: key,
+      scenarios: scenarioArray,
+    }
+
+    proceduralScenarioDomains.push(newSDomain)
+  }
+  console.log('procedural: %o', proceduralScenarioDomains)
+
+  return proceduralScenarioDomains
+}
 
 export const generateStories = (
   hre: HardhatRuntimeEnvironment
 ): Array<TestScenario> => {
   let proceduralScenarios: TestScenario[] = []
   for (const [key, value] of Object.entries(TREE_STRUCTURE)) {
-    const domains = generateDomain(key, value, hre)
+    const domains = generateDomainScenarios(key, value, hre)
     proceduralScenarios = proceduralScenarios.concat(domains)
   }
   console.log('procedural: %o', proceduralScenarios)
   return proceduralScenarios
 }
 
-const generateDomain = (
+const generateDomainScenarios = (
   key: string,
   value: StoryValues,
   hre: HardhatRuntimeEnvironment
