@@ -24,7 +24,9 @@ import {
   SetupKeypair,
   //@ts-ignore
 } from 'zokrates-js/node'
+import fetch from 'node-fetch'
 // import zkcra from '../fixtures/zkcra.json'
+// const out = 'https://ipfs.io/ipfs/QmeWAsv22oPBK2Rk8Jdj49CGjpz8fMivSzozmvARWGVqY8?filename=out'
 const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
 import scores from '../fixtures/zk-scores.json'
 
@@ -448,13 +450,17 @@ export const outputCraValues = async (
       return MARKET_SCORE,commitments`
   // const uint8Array = new Uint8Array(JSON.parse(JSON.stringify(zkcra)).program)
   console.log('fetching zkcra json')
-  const zkcra = await fetch(zkcraJson)
+  let zkcra: any
+  try {
+    zkcra = await fetch(zkcraJson)
+  } catch (err) {
+    console.log('error found: ' + err)
+  }
   console.log('fetched')
-  console.log(zkcra)
-  const uint8Array = new Uint8Array(
-    JSON.parse(JSON.stringify(zkcra)).program.data
-  )
-  const abi = JSON.parse(JSON.stringify(zkcra)).abi
+  const response = await zkcra.json()
+  console.log(response)
+  const uint8Array = new Uint8Array(response.program.data)
+  const abi = response.abi
   const compArtifact = { program: uint8Array, abi: abi }
   console.log(compArtifact)
 
@@ -493,6 +499,7 @@ export const outputCraValues = async (
   // next 7 elements are the secrets
 
   // get computation
+  console.log('getting proof')
   if (goodScore) {
     computation = provider.computeWitness(compArtifact, [
       scores.good,
@@ -504,6 +511,7 @@ export const outputCraValues = async (
       identifier.toString(),
     ])
   }
+  console.log('got proof')
 
   // compute proof
   const provingKey = new Uint8Array(
