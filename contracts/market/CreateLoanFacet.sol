@@ -304,7 +304,7 @@ library CreateLoanLib {
 
         // The second witness item (after identifier) is the market
         // score
-        uint256 marketScore = request.witness[1];
+        uint256 marketScore = uint256(request.witness[1]);
 
         // Let the market handle the loan request and disperse the loan.
 
@@ -330,14 +330,14 @@ library CreateLoanLib {
                 signatureData[i].signedAt >
                     // solhint-disable-next-line
                     block.timestamp -
-                        MarketLib.m[marketId].providerConfigs[providerId]
+                        MarketLib.m(marketId).providerConfigs[providerId]
                             .maxAge,
                 "Signed at less than max age"
             );
-            require(
-                MarketLib.s().usedCommitments[commitments[i]] == false,
-                "Teller: commitment already used"
-            );
+            // require(
+            //     MarketLib.s().usedCommitments[commitments[i]] == false,
+            //     "Teller: commitment already used"
+            // );
 
             MarketLib.s().usedCommitments[commitments[i]] = true;
 

@@ -524,7 +524,7 @@ export const outputCraValues = async (
   // next 7 elements are the secrets
 
   // get computation
-  console.log('getting proof')
+  console.log('getting witness')
   if (goodScore) {
     computation = provider.computeWitness(compArtifact, [
       scores.good,
@@ -536,7 +536,7 @@ export const outputCraValues = async (
       identifier.toString(),
     ])
   }
-  console.log('got proof')
+  console.log('got witness')
 
   // compute proof
   const provingKey = new Uint8Array(
@@ -552,6 +552,7 @@ export const outputCraValues = async (
     provingKey
   )
   console.log('proof')
+  console.log(proof.inputs)
   return {
     computation: computation,
     proof: proof,
@@ -675,6 +676,8 @@ export const borrowWithZKCRA = async (
     '0x0000000000000000000000000000000000000000000000000000000000000000'
   const proof_ = proof
   const witness_ = proof.inputs
+  console.log('witness')
+  console.log(witness_)
   const request = {
     collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
     loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
