@@ -28,7 +28,8 @@ import { NFTFacet } from "../../nft/NFTFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
 import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
-import { BorrowFacet } from "../../market/cra/Borrow.sol";
+
+// import { BorrowFacet } from "../../market/cra/Borrow.sol";
 
 // When adding a new Facet, kindly make sure to order the inherited contracts around so
 // that it's consistent with all the Facets' inheritance order. For example, if all the
@@ -52,7 +53,7 @@ abstract contract ITellerDiamond is
     NFTFacet,
     CompoundFacet,
     UniswapFacet,
-    BorrowFacet,
+    // BorrowFacet,
     IDiamondCut,
     IDiamondLoupe
 {

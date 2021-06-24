@@ -57,7 +57,11 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods, Verifier {
+contract CreateLoanFacet is
+    RolesMods,
+    ReentryMods,
+    PausableMods //, Verifier {
+{
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -268,7 +272,7 @@ library CreateLoanLib {
      * @return collateralRatio the collateral ratio required for the loan, if any
      * @return maxLoanAmount the max loan amount the user is entitled to
      */
-    function borrow(LoanRequest calldata request)
+    function borrow(LoanRequest memory request)
         internal
         returns (
             uint16 interestRate,
@@ -284,7 +288,7 @@ library CreateLoanLib {
             LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
-        require(Verifier.verifyTx(request.proof, request.witness), "BE01");
+        // require(Verifier.verifyTx(request.proof, request.witness), "BE01");
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
@@ -300,11 +304,7 @@ library CreateLoanLib {
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
-        _verifySignatures(
-            request.marketId,
-            request.commitments,
-            request.signatureData
-        );
+        _verifySignatures(request.marketId, commitments, request.signatureData);
 
         // The second witness item (after identifier) is the market
         // score
@@ -323,7 +323,7 @@ library CreateLoanLib {
     function _verifySignatures(
         bytes32 marketId,
         bytes32[3] memory commitments,
-        SignatureData[3] calldata signatureData
+        SignatureData[3] memory signatureData
     ) private {
         for (uint256 i = 0; i < 3; i++) {
             bytes32 providerId = bytes32(i);
@@ -331,7 +331,7 @@ library CreateLoanLib {
                 signatureData[i].signedAt >
                     // solhint-disable-next-line
                     block.timestamp -
-                        BorrowLib.m[marketId].providerConfigs[providerId]
+                        BorrowLib.m(marketId).providerConfigs[providerId]
                             .maxAge,
                 "Signed at less than max age"
             );
