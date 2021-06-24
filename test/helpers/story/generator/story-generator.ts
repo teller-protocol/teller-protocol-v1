@@ -29,7 +29,6 @@ const generateDomainScenarios = (
   hre: HardhatRuntimeEnvironment
 ) => {
   const testCases = []
-  console.log(`${key}: ${value}`)
   // if (hre.network.name == '') {
 
   // }

@@ -71,8 +71,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
             expect(await helpers.deposit()).to.be.reverted
           }
         })
-
-        console.log('push new story test !')
         tests.push(newTest)
         break
       }
@@ -90,7 +88,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
             expect(await helpers.withdraw()).to.be.reverted
           }
         })
-        console.log('push new story test !')
         tests.push(newTest)
         break
       }
@@ -122,18 +119,5 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       amount: BigNumber.from(100),
     })
     return helpers
-    // const depositAmount = BigNumber.from(details.loan.borrowedAmount)
-    // await fundLender({
-    //   token: details.lendingToken,
-    //   amount: depositAmount,
-    //   hre,
-    // })
-
-    // const lpHelperArgs: LPHelperArgs = {
-    //   diamond: diamond,
-    //   lendingToken: details.lendingToken,
-    //   tToken: tToken,
-    // }
-    // return lpHelperArgs
   }
 }

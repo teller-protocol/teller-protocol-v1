@@ -75,7 +75,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         let newTest = new Test('AAVE Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
-        console.log('push new story test ! ')
         tests.push(newTest)
         break
       }
@@ -115,7 +114,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
           tokenAddresses.should.include(cToken.address)
         })
-        console.log('push COMPOUND Lend test ! ')
         tests.push(newTest)
         break
       }
@@ -123,7 +121,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         let newTest = new Test('POOL_TOGETHER Lend DAPP', async function () {
           expect(1).to.equal(1)
         })
-        console.log('push new story test ! ')
         tests.push(newTest)
         break
       }
@@ -152,7 +149,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           const lendingBalBefore = await details.lendingToken.balanceOf(
             escrowAddress
           )
-          console.log({ lendingBalBefore })
           lendingBalBefore
             .gt(0)
             .should.eql(true, 'Loan escrow should have a lending token balance')
@@ -190,7 +186,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
               'Loan escrow has lending token balance after swapping full amount'
             )
         })
-        console.log('push UNISWAP Swap test ! ')
         tests.push(newTest)
         break
       }
@@ -198,7 +193,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         let newTest = new Test('SUSHISWAP Swap DAPP', async function () {
           expect(1).to.equal(1)
         })
-        console.log('push new story test ! ')
         tests.push(newTest)
         break
       }

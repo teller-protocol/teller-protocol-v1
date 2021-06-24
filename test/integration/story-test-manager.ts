@@ -25,9 +25,6 @@ export const generateAllStoryTests = (
       mochaInstance.suite,
       'Story Test Suite - '.concat(storyDomain.domainName)
     )
-
-    console.log('storyDomain ', storyDomain)
-
     for (let scenario of storyDomain.scenarios) {
       let testsForDomain = generateTests(hre, scenario, suiteInstance)
     }
