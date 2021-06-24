@@ -30,7 +30,10 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
-import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
+import { Verifier } from "./cra/verifier.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { BorrowLib } from "./cra/BorrowLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -48,11 +51,13 @@ import {
     LoanStatus,
     LoanTerms,
     Loan,
-    MarketStorageLib
+    MarketStorageLib,
+    Signature,
+    SignatureData
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
+contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods, Verifier {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -205,11 +210,8 @@ library CreateLoanLib {
         );
 
         // Get consensus values from request
-        (
-            uint16 interestRate,
-            uint16 collateralRatio,
-            uint256 maxLoanAmount
-        ) = LibConsensus.processLoanTerms(request);
+        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
+            borrow(request);
 
         // Perform loan value checks
         require(
@@ -253,6 +255,134 @@ library CreateLoanLib {
         );
     }
 
+    /**
+     * @notice it uses our request to verify the returned proof and witness with each other,
+     * verifies our signature data with our respective data providers, then retrieves our interest rate,
+     * collateral ratio and max loan amount
+     * @param request contains all the needed data to do the above
+     * @return interestRate the rate of the loan
+     * @return collateralRatio the collateral ratio required for the loan, if any
+     * @return maxLoanAmount the max loan amount the user is entitled to
+     */
+    function borrow(LoanRequest calldata request)
+        internal
+        returns (
+            uint16 interestRate,
+            uint16 collateralRatio,
+            uint256 maxLoanAmount
+        )
+    {
+        // Overwrite the first snark witness item with the on-chain identifier
+        // for the loan (msg.sender ^ nonce). This forces the CRA to have been
+        // run with the proper identifier.
+        request.witness[0] =
+            uint256(uint160(msg.sender)) ^
+            LibLoans.s().borrowerLoans[msg.sender].length;
+
+        // Verify the snark proof.
+        require(Verifier.verifyTx(request.proof, request.witness), "BE01");
+
+        bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
+
+        // constructing our commitments to verify with our signature data
+        for (uint8 i = 0; i < 3; i++) {
+            for (uint8 j = 0; j < 8; j++) {
+                commitments[i] =
+                    (commitments[i] << 32) ^
+                    bytes32(request.witness[2 + i * 8 + j]);
+            }
+            commitments[i] ^= bytes32(request.signatureData[i].signedAt);
+        }
+
+        // Verify that the commitment signatures are valid and that the data
+        // is not too old for the market's liking.
+        _verifySignatures(
+            request.marketId,
+            request.commitments,
+            request.signatureData
+        );
+
+        // The second witness item (after identifier) is the market
+        // score
+        uint256 marketScore = request.witness[1];
+
+        // Let the market handle the loan request and disperse the loan.
+
+        // create default teller market handler
+        // pass it the marketId and return max loan amount, collateral ratio, interest rate
+        // upper and lower bound for loan amount, interest rate and collateral ratio depending on
+        // market id
+        // maxloanAmount, interestRate, loanAmount = asset settings
+        // s().markets[marketId].handler(abi.encode(marketScore, request));
+    }
+
+    function _verifySignatures(
+        bytes32 marketId,
+        bytes32[3] memory commitments,
+        SignatureData[3] calldata signatureData
+    ) private {
+        for (uint256 i = 0; i < 3; i++) {
+            bytes32 providerId = bytes32(i);
+            require(
+                signatureData[i].signedAt >
+                    // solhint-disable-next-line
+                    block.timestamp -
+                        BorrowLib.m[marketId].providerConfigs[providerId]
+                            .maxAge,
+                "Signed at less than max age"
+            );
+            require(
+                BorrowLib.s().usedCommitments[commitments[i]] == false,
+                "Teller: commitment already used"
+            );
+
+            BorrowLib.s().usedCommitments[commitments[i]] = true;
+
+            _validateSignature(
+                signatureData[i].signature,
+                commitments[i],
+                providerId,
+                marketId
+            );
+        }
+    }
+
+    /**
+     * @notice It validates whether a signature is valid or not.
+     * @param signature signature to validate.
+     * @param commitment used to recover the signer.
+     * @param providerId the expected signer address.
+     */
+    function _validateSignature(
+        Signature memory signature,
+        bytes32 commitment,
+        bytes32 providerId,
+        bytes32 marketId
+    ) private view {
+        address recoveredSigner =
+            ECDSA.recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        uint256(commitment)
+                    )
+                ),
+                signature.v,
+                signature.r,
+                signature.s
+            );
+        require(
+            BorrowLib.m(marketId).providerConfigs[providerId].signer[
+                recoveredSigner
+            ],
+            "Teller: not valid signature"
+        );
+    }
+
+    /**
+     * @notice increments the loanIDCounter
+     * @return id_ the new ID requested, which stores it in the loan data
+     */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter = MarketStorageLib.store()
             .loanIDCounter;
