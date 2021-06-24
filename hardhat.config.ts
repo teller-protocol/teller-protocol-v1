@@ -60,7 +60,7 @@ const networkUrls: { [network: string]: string } = {
 }
 
 const networkForkingBlock: { [network: string]: number } = {
-  mainnet: 12480795,
+  mainnet: 12648380,
   // polygon: 14891625,
   // polygon_mumbai: 14244031,
 }
