@@ -153,6 +153,12 @@ struct ProviderConfig {
     uint32 maxAge;
 }
 
+struct MarketInformation {
+    uint16 interestRate;
+    uint16 collateralRatio;
+    uint256 maxLoanAmount;
+}
+
 /**
  * @notice it represents information of a market configuration which contains the admin and provider configurations
  * @param admin a mapping of addresses to an administrator
@@ -161,6 +167,7 @@ struct ProviderConfig {
 struct MarketConfig {
     mapping(address => bool) admin;
     mapping(bytes32 => ProviderConfig) providerConfigs;
+    MarketInformation marketInformation;
 }
 
 struct MarketStorage {
