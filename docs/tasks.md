@@ -28,7 +28,7 @@ At the time of writing this, these are a list of all the available tasks.
 
 ```shell
 yarn hh add-authorized-account --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] add-authorized-account --account <STRING>
 
@@ -43,7 +43,7 @@ add-authorized-account: Adds the AUTHORIZED role to an account
 
 ```shell
 yarn hh add-nft-merkles --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] add-nft-merkles [--send-tx]
 
@@ -58,7 +58,7 @@ add-nft-merkles: Generates and adds the merkles defined in the config file (./co
 
 ```shell
 yarn hh add-nft-tiers --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] add-nft-tiers [--send-tx]
 
@@ -73,7 +73,7 @@ add-nft-tiers: Saves the tier information in the config file ("./config/nft.ts")
 
 ```shell
 yarn hh claim-nft --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] claim-nft --account <STRING> --merkle-index <STRING> [--send-tx]
 
@@ -90,7 +90,7 @@ claim-nft: Claims an NFT on behalf of an account
 
 ```shell
 yarn hh clean --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] clean [--global]
 
@@ -105,7 +105,7 @@ clean: Clears the cache and deletes all artifacts
 
 ```shell
 yarn hh compile --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] compile [--force] [--quiet]
 
@@ -121,7 +121,7 @@ compile: Compiles the entire project, building all artifacts
 
 ```shell
 yarn hh console --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] console [--no-compile]
 
@@ -136,7 +136,7 @@ console: Opens a hardhat console
 
 ```shell
 yarn hh deploy --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] deploy --deploy-scripts <STRING> --export <STRING> --export-all <STRING> --gasprice <STRING> [--no-compile] [--no-impersonation] [--reset] [--silent] --tags <STRING> [--watch] --write <BOOLEAN>
 
@@ -161,7 +161,7 @@ deploy: Deploy contracts
 
 ```shell
 yarn hh etherscan-verify --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] etherscan-verify --api-key <STRING> [--force-license] --license <STRING> [--solc-input]
 
@@ -179,7 +179,7 @@ etherscan-verify: submit contract source code to etherscan
 
 ```shell
 yarn hh export --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] export --export <STRING> --export-all <STRING>
 
@@ -195,7 +195,7 @@ export: export contract deployment of the specified network into one file
 
 ```shell
 yarn hh export-artifacts --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] export-artifacts --exclude <STRING> --include <STRING> [--solc-input] dest
 
@@ -216,7 +216,7 @@ export-artifacts:
 
 ```shell
 yarn hh flatten --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] flatten ...files
 
@@ -231,7 +231,7 @@ flatten: Flattens and prints contracts and their dependencies
 
 ```shell
 yarn hh get-price --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] get-price --amount <FLOAT> --dst <STRING> --src <STRING>
 
@@ -248,7 +248,7 @@ get-price: Gets the value for a given token in terms of another
 
 ```shell
 yarn hh node --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] node --as-network <STRING> --export <STRING> --export-all <STRING> --fork <STRING> --fork-block-number <INT> [--fork-deployments <STRING>] --gasprice <STRING> --hostname <STRING> [--no-deploy] [--no-impersonation] [--no-reset] [--port <INT>] [--show-accounts] [--silent] --tags <STRING> [--watch] [--write <BOOLEAN>]
 
@@ -279,7 +279,7 @@ node: Starts a JSON-RPC server on top of Hardhat EVM
 
 ```shell
 yarn hh pause-protocol --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] pause-protocol --id <STRING> [--state <BOOLEAN>]
 
@@ -295,7 +295,7 @@ pause-protocol: Pause the whole Teller Protocol or a specific ID
 
 ```shell
 yarn hh run --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] run [--no-compile] script
 
@@ -314,7 +314,7 @@ run: Runs a user-defined script after compiling the project
 
 ```shell
 yarn hh set-nft-loan-merkle --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] set-nft-loan-merkle --output <STRING> [--send-tx]
 
@@ -330,7 +330,7 @@ set-nft-loan-merkle: Generates and sets the merkle used to verify NFT loan sizes
 
 ```shell
 yarn hh size-contracts --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] size-contracts
 
@@ -341,7 +341,7 @@ size-contracts: Output the size of compiled contracts
 
 ```shell
 yarn hh sourcify --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] sourcify --endpoint <STRING> [--write-failing-metadata]
 
@@ -357,7 +357,7 @@ sourcify: submit contract source code to sourcify (https://sourcify.dev)
 
 ```shell
 yarn hh tenderly-contracts --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] tenderly-contracts
 
@@ -368,7 +368,7 @@ tenderly-contracts: Verifies and pushes all deployed contracts to Tenderly
 
 ```shell
 yarn hh tenderly:push --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] tenderly:push ...contracts
 
@@ -383,7 +383,7 @@ tenderly:push: Privately pushes contracts to Tenderly
 
 ```shell
 yarn hh tenderly:verify --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] tenderly:verify ...contracts
 
@@ -398,7 +398,7 @@ tenderly:verify: Verifies contracts on Tenderly
 
 ```shell
 yarn hh test --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] test [--deploy-fixture] [--no-compile] [--no-impersonation] [...testFiles]
 
@@ -419,7 +419,7 @@ test: Runs mocha tests
 
 ```shell
 yarn hh update-platform-setting --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] update-platform-setting --name <STRING> [--value <INT>]
 
@@ -435,7 +435,7 @@ update-platform-setting: Updates a platform setting value
 
 ```shell
 yarn hh view-nfts --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] view-nfts --account <STRING> [--claimable] [--claimed] --tier <STRING>
 
@@ -453,7 +453,7 @@ view-nfts: Retrieve information about NFTs on the blockchain
 
 ```shell
 yarn hh view-platform-setting --help
-Hardhat version 2.2.1
+Hardhat version 2.3.0
 
 Usage: hardhat [GLOBAL OPTIONS] view-platform-setting --name <STRING>
 
@@ -462,4 +462,15 @@ OPTIONS:
   --name        Get a specific platform setting
 
 view-platform-setting: Lists the current platform settings
+```
+
+### stats
+
+```shell
+yarn hh stats --help
+Hardhat version 2.3.0
+
+Usage: hardhat [GLOBAL OPTIONS] stats
+
+stats: Prints out current stats about the DAI market
 ```
