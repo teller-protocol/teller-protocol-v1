@@ -33,7 +33,7 @@ import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 import { Verifier } from "./cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { BorrowLib } from "./cra/BorrowLib.sol";
+import { MarketLib } from "./cra/MarketLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -317,7 +317,10 @@ library CreateLoanLib {
         // upper and lower bound for loan amount, interest rate and collateral ratio depending on
         // market id
         // maxloanAmount, interestRate, loanAmount = asset settings
-        // s().markets[marketId].handler(abi.encode(marketScore, request));
+        (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
+            marketScore,
+            request
+        );
     }
 
     function _verifySignatures(
@@ -331,16 +334,16 @@ library CreateLoanLib {
                 signatureData[i].signedAt >
                     // solhint-disable-next-line
                     block.timestamp -
-                        BorrowLib.m(marketId).providerConfigs[providerId]
+                        MarketLib.m[marketId].providerConfigs[providerId]
                             .maxAge,
                 "Signed at less than max age"
             );
             require(
-                BorrowLib.s().usedCommitments[commitments[i]] == false,
+                MarketLib.s().usedCommitments[commitments[i]] == false,
                 "Teller: commitment already used"
             );
 
-            BorrowLib.s().usedCommitments[commitments[i]] = true;
+            MarketLib.s().usedCommitments[commitments[i]] = true;
 
             _validateSignature(
                 signatureData[i].signature,
@@ -376,7 +379,7 @@ library CreateLoanLib {
                 signature.s
             );
         require(
-            BorrowLib.m(marketId).providerConfigs[providerId].signer[
+            MarketLib.m(marketId).providerConfigs[providerId].signer[
                 recoveredSigner
             ],
             "Teller: not valid signature"
