@@ -14,7 +14,6 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
-import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { MarketLib } from "./cra/MarketLib.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
@@ -58,11 +57,10 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-contract CreateLoanFacet is
-    RolesMods,
-    ReentryMods,
-    PausableMods //, Verifier {
-{
+// hardhat helpers
+import "hardhat/console.sol";
+
+contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -93,13 +91,28 @@ contract CreateLoanFacet is
 
     // used for testing our zkcra function
     function initializeMarketAdmins() external authorized(ADMIN, msg.sender) {
+        // setting market admin
         MarketLib.m(bytes32(uint256(0))).admin[msg.sender] = true;
+        // setting providers admin
         MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(0))]
             .admin[msg.sender] = true;
         MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(1))]
             .admin[msg.sender] = true;
         MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(2))]
             .admin[msg.sender] = true;
+    }
+
+    function setProviderInformation(
+        bytes32 marketId,
+        bytes32 providerId,
+        uint32 maxAge,
+        address signer,
+        bool signerValue
+    ) external {
+        console.log("solidity: about to set provider signer");
+        MarketLib.setProviderSigner(marketId, providerId, signer, signerValue);
+        console.log("solidity: about to set provider max age");
+        MarketLib.setProviderMaxAge(marketId, providerId, maxAge);
     }
 
     /**
@@ -300,7 +313,7 @@ library CreateLoanLib {
             LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
-        // require(Verifier.verifyTx(request.proof, request.witness), "BE01");
+        // require(Verifier.verifyTx(request.proof, request.witness), "Proof not verified");
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
@@ -314,12 +327,12 @@ library CreateLoanLib {
             commitments[i] ^= bytes32(request.signatureData[i].signedAt);
         }
 
-        // Verify that the commitment signatures are valid and that the data
-        // is not too old for the market's liking.
+        // // Verify that the commitment signatures are valid and that the data
+        // // is not too old for the market's liking.
         _verifySignatures(request.marketId, commitments, request.signatureData);
 
-        // The second witness item (after identifier) is the market
-        // score
+        // // The second witness item (after identifier) is the market
+        // // score
         uint256 marketScore = uint256(request.witness[1]);
 
         // Let the market handle the loan request and disperse the loan.
@@ -329,10 +342,14 @@ library CreateLoanLib {
         // upper and lower bound for loan amount, interest rate and collateral ratio depending on
         // market id
         // maxloanAmount, interestRate, loanAmount = asset settings
+        // interestRate = 10;
+        // collateralRatio = 10;
+        // maxLoanAmount = 10;
         (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
             marketScore,
             request
         );
+        return (interestRate, collateralRatio, maxLoanAmount);
     }
 
     function _verifySignatures(
@@ -350,10 +367,10 @@ library CreateLoanLib {
                             .maxAge,
                 "Signed at less than max age"
             );
-            // require(
-            //     MarketLib.s().usedCommitments[commitments[i]] == false,
-            //     "Teller: commitment already used"
-            // );
+            require(
+                MarketLib.s().usedCommitments[commitments[i]] == false,
+                "Teller: commitment already used"
+            );
 
             MarketLib.s().usedCommitments[commitments[i]] = true;
 
