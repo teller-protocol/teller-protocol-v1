@@ -163,7 +163,7 @@ describe.skip('Loans', () => {
         // we fill the necessary config information (admins mostly) into our providers
         // and market
         console.log('filling zkCRAConfigInfo')
-        // await fillZKCRAConfigInfo()
+        await fillZKCRAConfigInfo()
       })
 
       // check if computation and proof exist

@@ -108,18 +108,13 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'LendingFacet',
       skipIfAlreadyDeployed: false,
     },
-    // Loans
-    // {
-    //   contract: 'BorrowFacet',
-    //   skipIfAlreadyDeployed: false,
-    // },
     {
       contract: 'CollateralFacet',
       skipIfAlreadyDeployed: false,
     },
     {
       contract: 'CreateLoanFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'LoanDataFacet',
