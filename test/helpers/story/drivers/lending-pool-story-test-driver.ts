@@ -57,7 +57,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case 'LEND': {
-        const newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, (async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -71,14 +71,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             await expect(await helpers.deposit()).to.be.reverted
           }
-        })
+        }))
 
         console.log('push new story test !')
         tests.push(newTest)
         break
       }
       case 'WITHDRAW': {
-        const newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, (async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -90,7 +90,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             await expect(await helpers.withdraw()).to.be.reverted
           }
-        })
+        }))
         console.log('push new story test !')
         tests.push(newTest)
         break

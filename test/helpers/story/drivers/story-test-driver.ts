@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
+
 import { TestAction, TestScenario } from '../story-helpers'
 
 /*
@@ -33,7 +34,7 @@ export default class StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
     testSuite: Mocha.Suite
-  ): Array<Test> {
+  ): Test[] {
     return []
   }
 }

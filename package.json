@@ -7,7 +7,7 @@
     "hf": "hf() { local network=\"$1\"; shift; FORKING_NETWORK=$network yarn hh \"$@\"; }; hf",
     "test": "test() { TS_NODE_TRANSPILE_ONLY=1 yarn hf \"$1\" test; }; test",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint:fix": "yarn lint --fix",
     "format:write": "prettier --write",
     "compile": "COMPILING=true yarn hh compile",
     "build": "yarn compile && yarn types && yarn tsc",

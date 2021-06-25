@@ -1,30 +1,11 @@
-import { task, types } from 'hardhat/config'
-import { subtask } from 'hardhat/config'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
-import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
-import { updatePlatformSetting } from '../tasks'
-import { generateAllStoryTests } from '../test/integration/story-test-manager'
-import Mocha from 'mocha'
-
-import path from 'path'
+import { task } from 'hardhat/config'
+import { subtask } from 'hardhat/config'
 import { glob } from 'hardhat/internal/util/glob'
+import Mocha from 'mocha'
+import path from 'path'
 
-const { EVENT_FILE_PRE_REQUIRE, EVENT_FILE_POST_REQUIRE, EVENT_FILE_REQUIRE } =
-  Mocha.Suite.constants
-
-import {
-  HardhatArguments,
-  HttpNetworkConfig,
-  NetworkConfig,
-  EthereumProvider,
-  HardhatRuntimeEnvironment,
-  Artifact,
-  Artifacts,
-  ActionType,
-} from 'hardhat/types'
-import { MochaOptions } from 'mocha'
-
-let mochaConfig
+import { generateAllStoryTests } from '../test/integration/story-test-manager'
 
 task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
@@ -40,7 +21,7 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 
   // Disable logging
-  // process.env.DISABLE_LOGS = 'true'
+  process.env.DISABLE_LOGS = 'true'
 
   // Run the actual test task
   await runSuper({
@@ -49,7 +30,7 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 })
 
-//https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
+// https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
 /**
  * Overrides TASK_TEST_RUN_MOCHA_TEST to (conditionally) use eth-gas-reporter as
  * the mocha test reporter and passes mocha relevant options. These are listed
@@ -77,10 +58,10 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     console.log('\n\n\n\n')
     const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
-    let mochaInstance = new Mocha()
+    const mochaInstance = new Mocha()
     mochaInstance.timeout(19000)
 
-    tsFiles.forEach(function (file: string) {
+    tsFiles.forEach((file: string) => {
       mochaInstance.addFile(file)
     })
 
