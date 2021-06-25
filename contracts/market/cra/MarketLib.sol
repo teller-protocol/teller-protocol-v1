@@ -25,22 +25,6 @@ import { LibLoans } from "../libraries/LibLoans.sol";
 import "hardhat/console.sol";
 
 library MarketLib {
-    // for testing
-    // function initializeConfigAdmins() external {
-    //     // authorized(ADMIN, msg.sender) {
-    //     // only used for testing
-    //     m(bytes32(uint256(0))).admin[msg.sender] = true;
-    //     m(bytes32(uint256(0))).providersConfigs(bytes32(uint256(0))).admin[
-    //         msg.sender
-    //     ] = true;
-    //     m(bytes32(uint256(0))).providersConfigs(bytes32(uint256(1))).admin[
-    //         msg.sender
-    //     ] = true;
-    //     m(bytes32(uint256(0))).providersConfigs(bytes32(uint256(2))).admin[
-    //         msg.sender
-    //     ] = true;
-    // }
-
     function s() internal pure returns (MarketStorage storage s_) {
         s_ = MarketStorageLib.store();
     }

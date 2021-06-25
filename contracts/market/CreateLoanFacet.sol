@@ -7,7 +7,7 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
+import { AUTHORIZED, ADMIN } from "../shared/roles.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
@@ -15,6 +15,7 @@ import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
+import { MarketLib } from "./cra/MarketLib.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
     PlatformSettingsLib
@@ -88,6 +89,17 @@ contract CreateLoanFacet is
         loan.status = LoanStatus.Active;
         loan.loanStartTime = uint32(block.timestamp);
         loan.duration = request.request.duration;
+    }
+
+    // used for testing our zkcra function
+    function initializeMarketAdmins() external authorized(ADMIN, msg.sender) {
+        MarketLib.m(bytes32(uint256(0))).admin[msg.sender] = true;
+        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(0))]
+            .admin[msg.sender] = true;
+        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(1))]
+            .admin[msg.sender] = true;
+        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(2))]
+            .admin[msg.sender] = true;
     }
 
     /**

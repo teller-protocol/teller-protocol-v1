@@ -369,7 +369,7 @@ export const fillZKCRAConfigInfo = async () => {
   // get signers (providers)
   const { craSigner } = await getNamedAccounts()
 
-  console.log('about to initialize config admin')
+  console.log('about to initialize config admins')
   const deployer = await getNamedSigner('deployer')
   await diamond.connect(deployer).initializeConfigAdmins()
   console.log('initialized config admin')
