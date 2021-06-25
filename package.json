@@ -82,7 +82,10 @@
     }
   },
   "lint-staged": {
-    "*.{sol,js,ts}": [
+    "*.sol": [
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
       "eslint --fix"
     ]
   }
