@@ -1,24 +1,25 @@
 import chai, { expect } from 'chai'
-import { BigNumber } from 'ethers'
 import { solidity } from 'ethereum-waffle'
+import { BigNumber } from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
+
+import { ITToken } from "../../../../types/typechain"
+import { fundLender, getFunds } from '../../get-funds'
+import { getLPHelpers } from '../../lending-pool'
 import {
-  TestScenario,
+  LoanSnapshots,
   STORY_DOMAINS,
   TestAction,
-  LoanSnapshots,
+  TestScenario,
 } from '../story-helpers'
-import StoryTestDriver from './story-test-driver'
 import LoanStoryTestDriver from './loan-story-test-driver'
-import { getLPHelpers } from '../../lending-pool'
-
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { fundLender, getFunds } from '../../get-funds'
+import StoryTestDriver from './story-test-driver'
 chai.should()
 chai.use(solidity)
 /*
-We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment 
-Then we will expect that 
+We will read state data from the chaindata to determine whether or not each 'action' should pass or fail at the current moment
+Then we will expect that
 */
 
 export default class LPStoryTestDriver extends StoryTestDriver {
@@ -29,15 +30,15 @@ export default class LPStoryTestDriver extends StoryTestDriver {
   ): Mocha.Suite {
     // let allTests: Array<Test> = []
 
-    let scenarioActions = scenario.actions
+    const scenarioActions = scenario.actions
 
-    for (let action of scenarioActions) {
-      let testsForAction: Array<Test> =
+    for (const action of scenarioActions) {
+      const testsForAction: Test[] =
         LPStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
 
       //allTests = allTests.concat(testsForAction)
 
-      for (let test of testsForAction) {
+      for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
     }
@@ -49,14 +50,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
     testSuite: Mocha.Suite
-  ): Array<Test> {
-    let tests: Array<Test> = []
+  ): Test[] {
+    const tests: Test[] = []
 
     const { actionType, args } = action
 
     switch (actionType) {
       case 'LEND': {
-        let newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, async function () {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -68,7 +69,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
             const deposit = await helpers.deposit()
             await helpers.deposit()
           } else {
-            expect(await helpers.deposit()).to.be.reverted
+            await expect(await helpers.deposit()).to.be.reverted
           }
         })
 
@@ -77,7 +78,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
         break
       }
       case 'WITHDRAW': {
-        let newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, async function () {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -87,7 +88,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           if (shouldPass) {
             await helpers.withdraw()
           } else {
-            expect(await helpers.withdraw()).to.be.reverted
+            await expect(await helpers.withdraw()).to.be.reverted
           }
         })
         console.log('push new story test !')
@@ -105,7 +106,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const borrower = await getNamedSigner('borrower')
     const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
     const { details, diamond } = loan
-    const tToken = await contracts.get('ITToken', {
+    const tToken: ITToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
     const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
@@ -118,7 +119,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const helpers = getLPHelpers(hre, {
       diamond,
       lendingToken: details.lendingToken,
-      tToken: tToken,
+      tToken,
       amount: BigNumber.from(100),
     })
     return helpers
