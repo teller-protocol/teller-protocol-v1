@@ -77,12 +77,12 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "yarn build && lint-staged"
     }
   },
   "lint-staged": {
-    "*.{sol,js,ts,json,md}": [
-      "prettier --write"
+    "*.{sol,js,ts}": [
+      "eslint --fix"
     ]
   }
 }
