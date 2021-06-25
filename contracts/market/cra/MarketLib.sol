@@ -46,12 +46,12 @@ library MarketLib {
         bytes32 providerId,
         address account,
         bool admin
-    ) external onlyProviderAdmin(providerId) {
+    ) internal onlyProviderAdmin(marketId, providerId) {
         m(marketId).providerConfigs[providerId].signer[account] = admin;
     }
 
     function getProviderAdmin(bytes32 marketId, bytes32 providerId)
-        external
+        internal
         view
         returns (bool admin)
     {
@@ -63,15 +63,23 @@ library MarketLib {
         bytes32 providerId,
         address account,
         bool signerValue
-    ) external onlyProviderAdmin(providerId) {
+    ) internal onlyProviderAdmin(marketId, providerId) {
         m(marketId).providerConfigs[providerId].signer[account] = signerValue;
+    }
+
+    function setProviderMaxAge(
+        bytes32 marketId,
+        bytes32 providerId,
+        uint32 maxAge
+    ) internal onlyProviderAdmin(marketId, providerId) {
+        m(marketId).providerConfigs[providerId].maxAge = maxAge;
     }
 
     function setMarketAdmin(
         bytes32 marketId,
         address account,
         bool admin
-    ) external onlyMarketAdmin(marketId) {
+    ) internal onlyMarketAdmin(marketId) {
         m(marketId).admin[account] = admin;
     }
 
@@ -84,8 +92,8 @@ library MarketLib {
      * @return userCollateralRatio returns the collateral ratio of the user based on his score
      * @return userLoanAmount returns the amount for the user to take a loan out based on his score
      */
-    function handler(uint256 marketScore, LoanRequest calldata request)
-        public
+    function handler(uint256 marketScore, LoanRequest memory request)
+        internal
         pure
         returns (
             uint16 userInterestRate,
@@ -99,11 +107,15 @@ library MarketLib {
             uint16 marketCollateralRatio,
             uint256 marketLoanAmount
         ) = _getMarketInformation(request.marketId);
-        uint256 marketScoreForInterestRatio = (marketScore - 5) / 5;
-        userInterestRate = uint16(
-            marketInterestRate -
-                (marketScoreForInterestRatio * marketInterestRate)
-        );
+        // uint256 marketScoreForInterestRatio = (marketScore - 5) / 5;
+        // userInterestRate = uint16(
+        //     marketInterestRate -
+        //         (marketScoreForInterestRatio * marketInterestRate)
+        // );
+        // to compile for now
+        userInterestRate = marketInterestRate;
+        userCollateralRatio = marketCollateralRatio;
+        userLoanAmount = marketLoanAmount;
     }
 
     /**
@@ -146,8 +158,11 @@ library MarketLib {
         _;
     }
 
-    modifier onlyProviderAdmin(bytes32 providerId) {
-        require(m(providerId).admin[msg.sender], "Teller: not provider admin");
+    modifier onlyProviderAdmin(bytes32 marketId, bytes32 providerId) {
+        require(
+            m(marketId).providerConfigs[providerId].admin[msg.sender],
+            "Teller: not provider admin"
+        );
         _;
     }
 }

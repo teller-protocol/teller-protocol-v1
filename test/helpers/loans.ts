@@ -377,16 +377,6 @@ export const takeOutLoanWithNfts = async (
   }
 }
 
-// zkCRA helper functions
-const serializeSecret = (secret: string) => {
-  const serialized = new Array(8)
-  for (let i = 0; i < 8; i++) {
-    const start = 8 * (8 - i) - 8
-    serialized[i] = secret.substr(2).substr(start, start + 8)
-  }
-  return serialized
-}
-
 // we fill zkCRAConfigInfo before we sign
 export const fillZKCRAConfigInfo = async () => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -396,51 +386,33 @@ export const fillZKCRAConfigInfo = async () => {
 
   console.log('about to initialize config admins')
   const deployer = await getNamedSigner('deployer')
-  await diamond.connect(deployer).initializeConfigAdmins()
+  await diamond.connect(deployer).initializeMarketAdmins()
   console.log('initialized config admin')
-
-  // set signers for the providerIds
-  console.log('setting provider signers')
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000000',
-      craSigner,
-      true
-    )
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-      craSigner,
-      true
-    )
-  await diamond
-    .connect(deployer)
-    .setProviderSigner(
-      '0x0000000000000000000000000000000000000000000000000000000000000002',
-      craSigner,
-      true
-    )
-  console.log('set signers on 3 provider ids')
 
   // create config
   console.log('setting market config')
   const maxAge_ = moment.duration(10, 'hours').asSeconds()
   for (let i = 0; i < 3; i++) {
-    const providerConfig = {
-      maxAge: maxAge_,
+    console.log('setting provider #' + i)
+    const config = {
+      marketId:
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
       providerId:
         '0x000000000000000000000000000000000000000000000000000000000000000' +
         i.toString(),
+      maxAge: maxAge_,
+      signer: craSigner,
+      signerValue: true,
     }
     // set market provider config in a loop
     await diamond
       .connect(deployer)
-      .setMarketProviderConfig(
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        i,
-        providerConfig
+      .setProviderInformation(
+        config.marketId,
+        config.providerId,
+        config.maxAge,
+        config.signer,
+        config.signerValue
       )
     console.log('provider config #' + i + ' set.')
   }
