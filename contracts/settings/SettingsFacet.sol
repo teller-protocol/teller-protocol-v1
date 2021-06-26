@@ -8,12 +8,14 @@ import {
     UpgradeableBeaconFactory
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 import { TellerNFT } from "../nft/TellerNFT.sol";
+import { TellerNFTDictionary } from "../nft/TellerNFTDictionary.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
 
 // Libraries
 import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../storage/app.sol";
@@ -32,6 +34,8 @@ struct InitArgs {
     address collateralEscrowBeacon;
     address tTokenBeacon;
     address nftLiquidationController;
+    address wrappedNativeToken;
+    address nftDictionary;
 }
 
 contract SettingsFacet is RolesMods {
@@ -147,5 +151,8 @@ contract SettingsFacet is RolesMods {
         );
         s.tTokenBeacon = UpgradeableBeaconFactory(_args.tTokenBeacon);
         s.nftLiquidationController = _args.nftLiquidationController;
+        s.wrappedNativeToken = _args.wrappedNativeToken;
+
+        NFTLib.s().nftDictionary = TellerNFTDictionary(_args.nftDictionary);
     }
 }

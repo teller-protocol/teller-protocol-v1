@@ -68,7 +68,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
-     * @return ERC20 token that is the underl
+     * @return ERC20 token that is the underlying asset
      */
     function underlying() public view override returns (ERC20) {
         return s().underlying;

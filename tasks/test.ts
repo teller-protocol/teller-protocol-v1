@@ -1,30 +1,11 @@
-import { task, types } from 'hardhat/config'
+import { task } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
-import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
-import { updatePlatformSetting } from '../tasks'
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
 import Mocha from 'mocha'
 
 import path from 'path'
 import { glob } from 'hardhat/internal/util/glob'
-
-const { EVENT_FILE_PRE_REQUIRE, EVENT_FILE_POST_REQUIRE, EVENT_FILE_REQUIRE } =
-  Mocha.Suite.constants
-
-import {
-  HardhatArguments,
-  HttpNetworkConfig,
-  NetworkConfig,
-  EthereumProvider,
-  HardhatRuntimeEnvironment,
-  Artifact,
-  Artifacts,
-  ActionType,
-} from 'hardhat/types'
-import { MochaOptions } from 'mocha'
-
-let mochaConfig
 
 task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
@@ -40,7 +21,7 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 
   // Disable logging
-  // process.env.DISABLE_LOGS = 'true'
+  process.env.DISABLE_LOGS = 'true'
 
   // Run the actual test task
   await runSuper({
@@ -61,8 +42,6 @@ task('test').setAction(async (args, hre, runSuper) => {
  runSuper: RunSuperFunction<ArgsT>*/
 
 subtask(TASK_TEST_RUN_MOCHA_TESTS)
-  // let sample:ActionType;
-  //{ testFiles }: { testFiles: string[] }, { config }
 
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
     //custom code

@@ -88,15 +88,23 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
   const { ethers } = hre
 
   const [mainAccount] = await hre.getUnnamedAccounts()
-  const { deployer } = await hre.getNamedAccounts()
+  const { deployer, funder } = await hre.getNamedAccounts()
   if (
     ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
   ) {
-    await getFunds({
-      to: deployer,
-      tokenSym: 'ETH',
-      amount: hre.ethers.utils.parseEther('1000'),
-      hre,
-    })
+    await Promise.all([
+      getFunds({
+        to: deployer,
+        tokenSym: 'ETH',
+        amount: hre.ethers.utils.parseEther('1000'),
+        hre,
+      }),
+      getFunds({
+        to: deployer,
+        tokenSym: 'MATIC',
+        amount: hre.ethers.utils.parseEther('10000'),
+        hre,
+      }),
+    ])
   }
 })

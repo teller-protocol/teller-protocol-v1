@@ -27,6 +27,11 @@ const deployProtocol: DeployFunction = async (hre) => {
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
+  const nftDictionary = await contracts.get('TellerNFTDictionary')
+
+  const tokens = getTokens(network)
+  const wrappedNativeToken =
+    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -44,8 +49,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute = upgradeExecute
   } catch {
     // Else execute initialize function
-
-    const tokens = getTokens(network)
     const executeMethod = 'init'
     const initExecute: DeployDiamondArgs<
       ITellerDiamond,
@@ -67,6 +70,8 @@ const deployProtocol: DeployFunction = async (hre) => {
           // Teller Gnosis Safe contract
           nftLiquidationController:
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
+          wrappedNativeToken: wrappedNativeToken,
+          nftDictionary: nftDictionary.address,
         },
       ],
     }
@@ -138,10 +143,14 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     // // Dapps
-    // {
-    //   contract: 'AaveFacet',
-    //   skipIfAlreadyDeployed: true,
-    // },
+    {
+      contract: 'AaveFacet',
+      skipIfAlreadyDeployed: true,
+    },
+    {
+      contract: 'PoolTogetherFacet',
+      skipIfAlreadyDeployed: true,
+    },
   ]
 
   // Network specify Facets

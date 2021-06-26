@@ -7,14 +7,14 @@
 // import { Market } from '../../../../types/custom/config-types'
 // import { ERC20, ICErc20, ITellerDiamond } from '../../../../types/typechain'
 // import { fundedMarket } from '../../../fixtures'
-// import { LoanType, takeOut } from '../../../helpers/loans'
+// import { LoanType, takeOutLoanWithoutNfts } from '../../../helpers/loans'
 
 // chai.should()
 // chai.use(solidity)
 
 // const { getNamedSigner, contracts, evm } = hre
 
-// describe('CompoundDapp', () => {
+// describe.skip('CompoundDapp', () => {
 //   getMarkets(hre.network).forEach(testCompound)
 
 //   function testCompound(market: Market): void {
@@ -45,11 +45,12 @@
 
 //       describe('lend, redeemAll', () => {
 //         it('Should be able to lend and then redeem successfully from Compound', async () => {
-//           const { details } = await takeOut({
+//           const { getHelpers } = await takeOutLoanWithoutNfts({
 //             lendToken: market.lendingToken,
 //             collToken: market.collateralTokens[0],
 //             loanType: LoanType.UNDER_COLLATERALIZED,
 //           })
+//           const { details } = await getHelpers()
 
 //           await diamond
 //             .connect(details.borrower.signer)
@@ -81,11 +82,12 @@
 //         })
 
 //         it('Should not be able to lend into Compound as not the loan borrower', async () => {
-//           const { details } = await takeOut({
+//           const { getHelpers } = await takeOutLoanWithoutNfts({
 //             lendToken: market.lendingToken,
 //             collToken: market.collateralTokens[0],
 //             loanType: LoanType.UNDER_COLLATERALIZED,
 //           })
+//           const { details } = await getHelpers()
 
 //           const rando = await getNamedSigner('lender')
 //           await diamond

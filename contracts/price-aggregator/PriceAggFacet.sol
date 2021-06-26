@@ -48,6 +48,13 @@ contract PriceAggFacet {
         return _valueFor(src, srcAmount, uint256(_priceFor(src, dst)));
     }
 
+    /**
+     * @notice It calculates the value of a token amount into another.
+     * @param src Source token address.
+     * @param amount Amount of the source token to convert into the destination token.
+     * @param exchangeRate The calculated exchange rate between the tokens.
+     * @return uint256 Value of the source token amount given an exchange rate peg.
+     */
     function _valueFor(
         address src,
         uint256 amount,
@@ -194,11 +201,12 @@ contract PriceAggFacet {
                     (_scale(price, resDecimals, _decimalsFor(dst)))
                 );
         } else {
-            address WETH = AppStorageLib.store().assetAddresses["WETH"];
-            if (dst != WETH) {
-                int256 price1 = _priceFor(src, WETH);
+            address wrappedNativeToken =
+                AppStorageLib.store().wrappedNativeToken;
+            if (dst != wrappedNativeToken) {
+                int256 price1 = _priceFor(src, wrappedNativeToken);
                 if (price1 > 0) {
-                    int256 price2 = _priceFor(dst, WETH);
+                    int256 price2 = _priceFor(dst, wrappedNativeToken);
                     if (price2 > 0) {
                         uint256 dstFactor = TEN**_decimalsFor(dst);
                         return (price1 * int256(dstFactor)) / price2;

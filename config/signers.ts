@@ -19,4 +19,6 @@ export const signers: Record<string, Signers> = {
   hardhat: [],
   localhost: [],
   mainnet: [],
+  polygon: [],
+  polygon_mumbai: []
 }

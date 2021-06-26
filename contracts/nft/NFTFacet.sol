@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
-import "../nft/TellerNFTDictionary.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -56,19 +55,5 @@ contract NFTFacet is RolesMods {
         }
         // Give the caller authorization to protocol
         RolesLib.grantRole(AUTHORIZED, msg.sender);
-    }
-
-    /**
-     * @notice Sets the NFTDictionary address used to get information about an NFT and its tier.
-     * @param dictAddress Dictionary address to use.
-     *
-     * Requirements:
-     *  - Sender must have `ADMIN` role
-     */
-    function setNFTDictionary(address dictAddress)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        NFTLib.s().nftDictionary = TellerNFTDictionary(dictAddress);
     }
 }

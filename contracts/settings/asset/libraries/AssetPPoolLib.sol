@@ -20,7 +20,7 @@ import { AppStorageLib } from "../../../storage/app.sol";
  * @author develop@teller.finance
  */
 library AssetPPoolLib {
-    bytes32 private constant NAME = keccak256("pPoolAddress");
+    bytes32 private constant NAME = keccak256("pPool");
 
     function s(address asset) private view returns (Cache storage) {
         return AppStorageLib.store().assetSettings[asset];

@@ -5,7 +5,7 @@ import {
   PayableOverrides,
   Signer,
 } from 'ethers'
-// import hre from 'hardhat'
+import { ethers } from 'hardhat'
 import moment from 'moment'
 
 import { claimNFT, getPrice } from '../../tasks'
@@ -266,7 +266,7 @@ export const takeOutLoanWithNfts = async (
   const loanAmount = toBN(amount, await lendingToken.decimals())
 
   // get the borrower, deployer and borrower's signer
-  const deployer = await getNamedSigner('deployer')
+  // const deployer = await getNamedSigner('deployer')
   const borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
   const { signer: borrowerSigner } = await hre.evm.impersonate(borrower)
 

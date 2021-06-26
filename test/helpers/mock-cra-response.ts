@@ -1,5 +1,5 @@
 import { BytesLike } from '@ethersproject/bytes'
-import { BigNumberish, Signature } from 'ethers'
+import { BigNumberish } from 'ethers'
 // import hre from 'hardhat'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -56,7 +56,9 @@ export const mockCRAResponse = async (
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const { length: nonce } = await diamond.getBorrowerLoans(args.borrower)
 
-  const requestTime = ethers.BigNumber.from(Date.now()).div(1000)
+  const { timestamp: currentTimestamp } = await ethers.provider.getBlock(
+    'latest'
+  )
   const request: CRARequest = {
     borrower: args.borrower,
     recipient: args.recipient ?? NULL_ADDRESS,
@@ -64,7 +66,7 @@ export const mockCRAResponse = async (
     requestNonce: nonce,
     amount: args.loanAmount,
     duration: args.loanTermLength,
-    requestTime,
+    requestTime: currentTimestamp,
   }
   const requestHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
@@ -83,13 +85,12 @@ export const mockCRAResponse = async (
         request.amount,
         nonce,
         request.duration,
-        requestTime,
+        currentTimestamp,
         chainId,
       ]
     )
   )
 
-  const responseTime = ethers.BigNumber.from(Date.now()).div(1000)
   const responseHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
       [
@@ -105,7 +106,7 @@ export const mockCRAResponse = async (
         args.lendingToken,
         args.loanAmount,
         requestHash,
-        responseTime,
+        currentTimestamp,
         args.interestRate,
         args.collateralRatio,
         chainId,
@@ -121,7 +122,7 @@ export const mockCRAResponse = async (
   responses.push({
     signer: await signer.getAddress(),
     assetAddress: args.lendingToken,
-    responseTime,
+    responseTime: currentTimestamp,
     interestRate: args.interestRate,
     collateralRatio: args.collateralRatio,
     maxLoanAmount: args.loanAmount,

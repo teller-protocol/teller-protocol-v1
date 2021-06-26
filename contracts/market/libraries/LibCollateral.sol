@@ -97,8 +97,8 @@ library LibCollateral {
                 AppStorageLib.store().collateralEscrowBeacon.cloneProxy("");
             ICollateralEscrow(escrow).init(
                 token,
-                // Check if collateral token is WETH
-                token == AppStorageLib.store().assetAddresses["WETH"]
+                // Check if collateral token is the base network token
+                token == AppStorageLib.store().wrappedNativeToken
             );
 
             // Set max allowance
