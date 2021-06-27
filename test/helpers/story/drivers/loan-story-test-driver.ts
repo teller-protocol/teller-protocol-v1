@@ -1,37 +1,35 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
+import { BigNumber, ContractTransaction,Signer } from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
-import {
-  TestScenario,
-  STORY_DOMAINS,
-  TestAction,
-  LoanSnapshots,
-  TestArgs,
-} from '../story-helpers'
-import StoryTestDriver from './story-test-driver'
-
-import { Signer, BigNumber, ContractTransaction } from 'ethers'
 import moment from 'moment'
+import Prando from 'prando'
 
+import { getMarkets } from '../../../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
 import { ITellerDiamond } from '../../../../types/typechain'
-import { getMarkets } from '../../../../config'
 import { getFunds } from '../../get-funds'
 import {
-  LoanType,
   CreateLoanArgs,
-  RepayLoanArgs,
-  LoanHelpersReturn,
-  loanHelpers,
-  takeOutLoanWithoutNfts,
-  takeOutLoanWithNfts,
-  repayLoan,
   CreateLoanReturn,
+  loanHelpers,
+  LoanHelpersReturn,
+  LoanType,
+  repayLoan,
+  RepayLoanArgs,
+  takeOutLoanWithNfts,
+  takeOutLoanWithoutNfts,
 } from '../../loans'
-
-import Prando from 'prando'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
-let rng = new Prando('teller')
+import {
+  LoanSnapshots,
+  STORY_DOMAINS,
+  TestAction,
+  TestArgs,
+  TestScenario,
+} from '../story-helpers'
+import StoryTestDriver from './story-test-driver'
+const rng = new Prando('teller')
 
 chai.should()
 chai.use(solidity)
@@ -48,17 +46,17 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
   ): Mocha.Suite {
     // let allTests: Array<Test> = []
 
-    let scenarioActions = scenario.actions
+    const scenarioActions = scenario.actions
 
-    for (let action of scenarioActions) {
-      let testsForAction: Array<Test> =
+    for (const action of scenarioActions) {
+      const testsForAction: Test[] =
         LoanStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
 
       //allTests = allTests.concat(testsForAction)
 
       console.log('meep tests', testsForAction)
 
-      for (let test of testsForAction) {
+      for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
     }
@@ -70,12 +68,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
     testSuite: Mocha.Suite
-  ): Array<Test> {
-    let tests: Array<Test> = []
+  ): Test[] {
+    const tests: Test[] = []
     const { actionType, args } = action
     switch (actionType) {
       case 'TAKE_OUT': {
-        let newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, (async () => {
           let shouldPass = true
           //read the state and determine if this should pass
           const borrower = await hre.getNamedSigner('borrower')
@@ -94,13 +92,13 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           } else {
             // await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.rejected
           }
-        })
+        }))
         console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
         tests.push(newTest)
         break
       }
       case 'REPAY': {
-        let newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, (async () => {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
           //read the state and determine if this should pass
@@ -109,15 +107,15 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
             expect(tx).to.exist
           } else {
-            expect(await LoanStoryTestDriver.repayLoan(hre)).to.throw()
+            await expect(await LoanStoryTestDriver.repayLoan(hre)).to.be.reverted
           }
-        })
+        }))
         console.log('push STORY_ACTIONS.LOAN.REPAY test ! ')
         tests.push(newTest)
         break
       }
       case 'LIQUIDATE': {
-        let newTest = new Test(action.suiteName, async function () {
+        const newTest = new Test(action.suiteName, (async () => {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
           //read the state and determine if this should pass
@@ -126,9 +124,9 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             const tx = await LoanStoryTestDriver.liquidateLoan(hre)
             expect(tx).to.exist
           } else {
-            expect(await LoanStoryTestDriver.liquidateLoan(hre)).to.be.reverted
+            await expect(await LoanStoryTestDriver.liquidateLoan(hre)).to.be.reverted
           }
-        })
+        }))
         console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
         break
@@ -181,7 +179,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const funcToRun =
       args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
     const { tx, getHelpers } = await funcToRun(hre, createArgs)
-    return tx
+    return await tx
   }
 
   static getLoan = async (
@@ -198,7 +196,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     // ).to.be.greaterThan(0)
     if (allBorrowerLoans.length == 0) throw Error('No borrower loans')
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-    return loanHelpers(hre, loanID)
+    return await loanHelpers(hre, loanID)
   }
 
   static liquidateLoan = async (
@@ -210,7 +208,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const { details, diamond, collateral } = loan
     await hre.evm.advanceTime(details.loan.duration + 3600)
     const liquidator = await hre.getNamedSigner('liquidator')
-    let borrowedAmount = details.loan.borrowedAmount
+    const borrowedAmount = details.loan.borrowedAmount
     await getFunds({
       to: await liquidator.getAddress(),
       tokenSym: await details.lendingToken.symbol(),

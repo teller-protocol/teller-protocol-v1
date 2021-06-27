@@ -5,14 +5,13 @@ import {
   PayableOverrides,
   Signer,
 } from 'ethers'
-import { ethers } from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
 import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { mockCRAResponse } from './mock-cra-response'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
-// const { getNamedAccounts, contracts, tokens, ethers, toBN, evm } = hre
+
 export enum LoanType {
   ZERO_COLLATERAL,
   UNDER_COLLATERALIZED,
@@ -132,7 +131,7 @@ export const createLoan = async (
   })
   // Create loan with terms
   const tx = diamond
-    .connect(ethers.provider.getSigner(borrower))
+    .connect(hre.ethers.provider.getSigner(borrower))
     .createLoanWithTerms(
       craReturn.request,
       [craReturn.responses],
@@ -223,7 +222,7 @@ export const takeOutLoanWithoutNfts = async (
 
   // call the takeOutLoan function from the diamond
   const tx = diamond
-    .connect(ethers.provider.getSigner(borrower))
+    .connect(hre.ethers.provider.getSigner(borrower))
     .takeOutLoan(
       { request: craReturn.request, responses: craReturn.responses },
       collateralToken.address,
@@ -342,7 +341,7 @@ const loanDetails = async (
   const debt = await diamond.getDebtOwed(loan.id)
   const totalOwed = debt.principalOwed.add(debt.interestOwed)
   const terms = await diamond.getLoanTerms(loan.id)
-  const signer = await ethers.provider.getSigner(loan.borrower)
+  const signer = await hre.ethers.provider.getSigner(loan.borrower)
   return {
     loan,
     lendingToken,
@@ -380,8 +379,8 @@ const depositCollateral = async (
   const collateralToken = await tokens.get(details.loan.collateralToken)
   const options: PayableOverrides = {}
   if (
-    ethers.utils.getAddress(details.loan.collateralToken) ==
-    ethers.utils.getAddress(weth.address)
+    hre.ethers.utils.getAddress(details.loan.collateralToken) ==
+    hre.ethers.utils.getAddress(weth.address)
   ) {
     options.value = amount
   } else {

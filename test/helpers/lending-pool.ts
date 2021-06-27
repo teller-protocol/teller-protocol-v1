@@ -1,8 +1,8 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
-// import { evm, getNamedSigner } from 'hardhat'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 
 chai.use(solidity)
@@ -14,14 +14,20 @@ export interface LPHelperArgs {
   amount: BigNumber | null
 }
 
+interface LPHelpersReturn {
+  deposit: ReturnType<typeof depositWithArgs>
+  withdraw: ReturnType<typeof withdrawWithArgs>
+}
+
 /**
  * Creates all LP test helper functions.
+ * @param hre {HardhatRuntimeEnvironment}
  * @param args {LPHelperArgs}
  */
 export const getLPHelpers = (
   hre: HardhatRuntimeEnvironment,
   args: LPHelperArgs
-) => ({
+): LPHelpersReturn => ({
   deposit: depositWithArgs(hre, args),
   withdraw: withdrawWithArgs(hre, args),
   // createLoan: creatLoanWithArgs(args),
@@ -31,6 +37,7 @@ export const getLPHelpers = (
 /**
  * Factory function to create a test LP helper to easily deposit and verify
  * state changes.
+ * @param hre {HardhatRuntimeEnvironment}
  * @param args {LPHelperArgs}
  */
 export const depositWithArgs =
@@ -67,6 +74,7 @@ export const depositWithArgs =
 /**
  * Factory function to create a test LP helper to easily withdraw and verify
  * state changes.
+ * @param hre {HardhatRuntimeEnvironment}
  * @param args {LPHelperArgs}
  */
 export const withdrawWithArgs =

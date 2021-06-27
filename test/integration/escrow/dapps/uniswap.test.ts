@@ -151,7 +151,7 @@ describe.skip('UniswapDapp', () => {
   function testUniswap(market: Market): void {
     describe(`${market.lendingToken} lending token`, () => {
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100000,
         }))

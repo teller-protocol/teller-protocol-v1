@@ -1,11 +1,10 @@
-import { Test } from 'mocha'
-import hre from 'hardhat'
-import LoanStoryTestDriver from './drivers/loan-story-test-driver'
-import LPStoryTestDriver from './drivers/lending-pool-story-test-driver'
-import DappStoryTestDriver from './drivers/dapp-story-test-driver'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-export const LoanSnapshots: { [key: number]: Function } = {}
+import DappStoryTestDriver from './drivers/dapp-story-test-driver'
+import LPStoryTestDriver from './drivers/lending-pool-story-test-driver'
+import LoanStoryTestDriver from './drivers/loan-story-test-driver'
+
+export const LoanSnapshots: { [key: number]: () => Promise<void> } = {}
 
 export const STORY_DOMAINS = {
   LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
@@ -70,7 +69,7 @@ export const DAPP_ACTION_TARGETS = {
 
 export interface StoryValues {
   network: string
-  parents?: Array<string>
+  parents?: string[]
 }
 
 export interface TestScenarioDomain {

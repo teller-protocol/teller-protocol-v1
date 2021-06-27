@@ -1,13 +1,14 @@
 import chai, { expect } from 'chai'
-import { BigNumber } from 'ethers'
 import { solidity } from 'ethereum-waffle'
-import { ICErc20 } from '../../../../types/typechain'
-import { Test } from 'mocha'
-import { getFunds } from '../../get-funds'
-import { TestScenario, TestAction } from '../story-helpers'
-import StoryTestDriver from './story-test-driver'
-import LoanStoryTestDriver from './loan-story-test-driver'
+import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { Test } from 'mocha'
+
+import { ICErc20 } from '../../../../types/typechain'
+import { getFunds } from '../../get-funds'
+import { TestAction,TestScenario } from '../story-helpers'
+import LoanStoryTestDriver from './loan-story-test-driver'
+import StoryTestDriver from './story-test-driver'
 
 chai.should()
 chai.use(solidity)
@@ -25,15 +26,15 @@ export default class DappStoryTestDriver extends StoryTestDriver {
   ): Mocha.Suite {
     // let allTests: Array<Test> = []
 
-    let scenarioActions = scenario.actions
+    const scenarioActions = scenario.actions
 
-    for (let action of scenarioActions) {
-      let testsForAction: Array<Test> =
+    for (const action of scenarioActions) {
+      const testsForAction: Test[] =
         DappStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
 
       //allTests = allTests.concat(testsForAction)
 
-      for (let test of testsForAction) {
+      for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
     }
@@ -45,17 +46,17 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
     testSuite: Mocha.Suite
-  ): Array<Test> {
-    let tests: Array<Test> = []
+  ): Test[] {
+    const tests: Test[] = []
 
-    let actionParentType = action.actionParentType
+    const actionParentType = action.actionParentType
     switch (actionParentType) {
       case 'LEND': {
         DappStoryTestDriver.generateTestsForLend(hre, action, tests)
         break
       }
       case 'SWAP': {
-        DappStoryTestDriver.generateTestsForSwap(hre, action, tests)
+        void DappStoryTestDriver.generateTestsForSwap(hre, action, tests)
         break
       }
     }
@@ -66,21 +67,21 @@ export default class DappStoryTestDriver extends StoryTestDriver {
   static generateTestsForLend(
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
-    tests: Array<Test>
-  ) {
+    tests: Test[]
+  ): void {
     const { getNamedSigner, contracts } = hre
     const actionType = action.actionType
     switch (actionType) {
       case 'AAVE': {
-        let newTest = new Test('AAVE Lend DAPP', async function () {
+        const newTest = new Test('AAVE Lend DAPP', (async () => {
           expect(1).to.equal(1)
-        })
+        }))
         console.log('push new story test ! ')
         tests.push(newTest)
         break
       }
       case 'COMPOUND': {
-        let newTest = new Test('COMPOUND Lend DAPP', async function () {
+        const newTest = new Test('COMPOUND Lend DAPP', (async () => {
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
@@ -108,21 +109,20 @@ export default class DappStoryTestDriver extends StoryTestDriver {
               details.loan.borrowedAmount
             )
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-          let cDaiBalance = await cToken.balanceOf(escrowAddress)
+          const cDaiBalance = await cToken.balanceOf(escrowAddress)
           cDaiBalance.eq(0).should.eql(false, '')
 
-          let tokenAddresses: string[]
-          tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+          const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
           tokenAddresses.should.include(cToken.address)
-        })
+        }))
         console.log('push COMPOUND Lend test ! ')
         tests.push(newTest)
         break
       }
       case 'POOL_TOGETHER': {
-        let newTest = new Test('POOL_TOGETHER Lend DAPP', async function () {
+        const newTest = new Test('POOL_TOGETHER Lend DAPP', (async () => {
           expect(1).to.equal(1)
-        })
+        }))
         console.log('push new story test ! ')
         tests.push(newTest)
         break
@@ -135,13 +135,13 @@ export default class DappStoryTestDriver extends StoryTestDriver {
   static async generateTestsForSwap(
     hre: HardhatRuntimeEnvironment,
     action: TestAction,
-    tests: Array<Test>
-  ) {
+    tests: Test[]
+  ): Promise<void> {
     const { getNamedSigner, tokens } = hre
     const dapp = action.actionType
     switch (dapp) {
       case 'UNISWAP': {
-        let newTest = new Test('UNISWAP Swap DAPP', async function () {
+        const newTest = new Test('UNISWAP Swap DAPP', (async () => {
           // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
@@ -189,15 +189,15 @@ export default class DappStoryTestDriver extends StoryTestDriver {
               true,
               'Loan escrow has lending token balance after swapping full amount'
             )
-        })
+        }))
         console.log('push UNISWAP Swap test ! ')
         tests.push(newTest)
         break
       }
       case 'SUSHISWAP': {
-        let newTest = new Test('SUSHISWAP Swap DAPP', async function () {
+        const newTest = new Test('SUSHISWAP Swap DAPP', (async () => {
           expect(1).to.equal(1)
-        })
+        }))
         console.log('push new story test ! ')
         tests.push(newTest)
         break
