@@ -94,7 +94,7 @@ struct LoanUserRequest {
     address assetAddress;
     uint256 assetAmount;
     address collateralAsset;
-    address collateralAmount;
+    uint256 collateralAmount;
     uint32 duration;
 }
 
@@ -154,8 +154,8 @@ struct ProviderConfig {
 }
 
 struct MarketInformation {
-    uint16 interestRate;
-    uint16 collateralRatio;
+    uint16 maxInterestRate;
+    uint16 maxCollateralRatio;
     uint256 maxLoanAmount;
 }
 
@@ -166,7 +166,6 @@ struct MarketInformation {
  */
 struct MarketConfig {
     mapping(address => bool) admin;
-    mapping(bytes32 => ProviderConfig) providerConfigs;
     MarketInformation marketInformation;
 }
 
@@ -197,6 +196,8 @@ struct MarketStorage {
     mapping(bytes32 => MarketConfig) markets;
     // Maps id to boolean values to check if a commitment has already been used
     mapping(bytes32 => bool) usedCommitments;
+    // Maps id to ProviderConfig structs
+    mapping(bytes32 => ProviderConfig) providers;
 }
 
 bytes32 constant MARKET_STORAGE_POS = keccak256("teller.market.storage");

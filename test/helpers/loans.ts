@@ -408,7 +408,6 @@ export const fillZKCRAConfigInfo = async () => {
     await diamond
       .connect(deployer)
       .setProviderInformation(
-        config.marketId,
         config.providerId,
         config.maxAge,
         config.signer,
@@ -446,37 +445,37 @@ export const outputCraValues = async (
 
       return MARKET_SCORE,commitments`
   // const uint8Array = new Uint8Array(JSON.parse(JSON.stringify(zkcra)).program)
-  console.log('fetching zkcra json')
-  let zkcra: any
-  try {
-    zkcra = await fetch(zkcraJson)
-  } catch (err) {
-    console.log('error found: ' + err)
-  }
-  console.log('fetched')
-  const response = await zkcra.json()
-  console.log(response)
-  const uint8Array = new Uint8Array(response.program.data)
-  const abi = response.abi
-  const compArtifact = { program: uint8Array, abi: abi }
-  console.log(compArtifact)
+  // console.log('fetching zkcra json')
+  // let zkcra: any
+  // try {
+  //   zkcra = await fetch(zkcraJson)
+  // } catch (err) {
+  //   console.log('error found: ' + err)
+  // }
+  // console.log('fetched')
+  // const response = await zkcra.json()
+  // console.log(response)
+  // const uint8Array = new Uint8Array(response.program.data)
+  // const abi = response.abi
+  // const compArtifact = { program: uint8Array, abi: abi }
+  // console.log(compArtifact)
 
   // compile into circuit
-  // console.log('about to compile source')
-  // compilationArtifacts = provider.compile(source)
-  // console.log('compiled source')
+  console.log('about to compile source')
+  compilationArtifacts = provider.compile(source)
+  console.log('compiled source')
   // const programArray = compilationArtifacts.program
   // const programBuffer = programArray.buffer
   // const objectToAdd = {
   //   program: Buffer.from(programBuffer),
   //   abi: compilationArtifacts.abi,
   // }
-  // console.log(JSON.stringify(objectToAdd))
-  // writeFileSync(
-  //   join(__dirname, '../fixtures/zkcra.json'),
-  //   JSON.stringify(objectToAdd),
-  //   { encoding: 'utf-8' }
-  // )
+  // // console.log(JSON.stringify(objectToAdd))
+  // // writeFileSync(
+  // //   join(__dirname, '../fixtures/zkcra.json'),
+  // //   JSON.stringify(objectToAdd),
+  // //   { encoding: 'utf-8' }
+  // // )
 
   // generate keypair
   // keyPair = provider.setup(compilationArtifacts.program)
@@ -498,12 +497,12 @@ export const outputCraValues = async (
   // get computation
   console.log('getting witness')
   if (goodScore) {
-    computation = provider.computeWitness(compArtifact, [
+    computation = provider.computeWitness(compilationArtifacts, [
       scores.good,
       identifier.toString(),
     ])
   } else {
-    computation = provider.computeWitness(compArtifact, [
+    computation = provider.computeWitness(compilationArtifacts, [
       scores.bad,
       identifier.toString(),
     ])
@@ -519,7 +518,7 @@ export const outputCraValues = async (
 
   console.log('about to get proof')
   proof = provider.generateProof(
-    compArtifact.program,
+    compilationArtifacts.program,
     computation.witness,
     provingKey
   )
@@ -648,26 +647,50 @@ export const borrowWithZKCRA = async (
     '0x0000000000000000000000000000000000000000000000000000000000000000'
   const proof_ = proof
   const witness_ = proof.inputs
-  console.log('witness')
-  console.log(witness_)
+  const borrower = (await getNamedAccounts()).borrower
+  const signerBorrower = ethers.provider.getSigner(borrower)
+
+  // get tokens
+  const lendToken = '0x6b175474e89094c44da98b954eedeac495271d0f'
+  const collToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
+  const lendingToken =
+    typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
+  const collateralToken =
+    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
+
+  // get loan amount
+  const loanAmount = 100
+  const assetAmount = toBN(loanAmount, await lendingToken.decimals())
+
+  // get collateral value to get collateral amount
+  const { value: collValue } = await getPrice(
+    {
+      src: await lendingToken.symbol(),
+      dst: await collateralToken.symbol(),
+      amount: hre.fromBN(loanAmount, await lendingToken.decimals()),
+    },
+    hre
+  )
+  const collAmount = hre.toBN(collValue, await collateralToken.decimals())
+
   const request = {
-    collateralAssets: ['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'],
-    loanToken: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    collateralAmounts: [10],
-    loanAmount: 100,
+    borrower: borrower,
+    assetAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    assetAmount: assetAmount,
+    collateralAsset: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    collateralAmount: collAmount,
     duration: moment.duration(1, 'day').asSeconds(),
   }
-  const borrower = (await getNamedAccounts()).borrower
-  const signerBorrower = await ethers.provider.getSigner(borrower)
+  const loanRequest = {
+    request: request,
+    marketId: marketId_,
+    proof: { a: proof_.proof.a, b: proof_.proof.b, c: proof_.proof.c },
+    witness: witness_,
+    signatureData: [signatureDataOne, signatureDataTwo, signatureDataThree],
+  }
   const tx = await diamond
-    .connect(signerBorrower)
-    .borrow(
-      marketId_,
-      { a: proof_.proof.a, b: proof_.proof.b, c: proof_.proof.c },
-      witness_,
-      [signatureDataOne, signatureDataTwo, signatureDataThree],
-      request
-    )
+    .connect(ethers.provider.getSigner(borrower))
+    .takeOutLoan(loanRequest, collateralToken, collAmount)
   return tx
 }
 

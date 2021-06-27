@@ -92,27 +92,23 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     // used for testing our zkcra function
     function initializeMarketAdmins() external authorized(ADMIN, msg.sender) {
         // setting market admin
-        MarketLib.m(bytes32(uint256(0))).admin[msg.sender] = true;
+        MarketLib.m(bytes32(0)).admin[msg.sender] = true;
         // setting providers admin
-        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(0))]
-            .admin[msg.sender] = true;
-        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(1))]
-            .admin[msg.sender] = true;
-        MarketLib.m(bytes32(uint256(0))).providerConfigs[bytes32(uint256(2))]
-            .admin[msg.sender] = true;
+        MarketLib.p(bytes32(0)).admin[msg.sender] = true;
+        MarketLib.p(bytes32(uint256(1))).admin[msg.sender] = true;
+        MarketLib.p(bytes32(uint256(2))).admin[msg.sender] = true;
     }
 
     function setProviderInformation(
-        bytes32 marketId,
         bytes32 providerId,
         uint32 maxAge,
         address signer,
         bool signerValue
     ) external {
         console.log("solidity: about to set provider signer");
-        MarketLib.setProviderSigner(marketId, providerId, signer, signerValue);
+        MarketLib.setProviderSigner(providerId, signer, signerValue);
         console.log("solidity: about to set provider max age");
-        MarketLib.setProviderMaxAge(marketId, providerId, maxAge);
+        MarketLib.setProviderMaxAge(providerId, maxAge);
     }
 
     /**
@@ -240,7 +236,7 @@ library CreateLoanLib {
 
         // Get consensus values from request
         (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
-            borrow(request);
+            processMarketRequest(request);
 
         // Perform loan value checks
         require(
@@ -293,7 +289,7 @@ library CreateLoanLib {
      * @return collateralRatio the collateral ratio required for the loan, if any
      * @return maxLoanAmount the max loan amount the user is entitled to
      */
-    function borrow(LoanRequest memory request)
+    function processMarketRequest(LoanRequest memory request)
         internal
         returns (
             uint16 interestRate,
@@ -309,7 +305,14 @@ library CreateLoanLib {
             LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
-        // require(Verifier.verifyTx(request.proof, request.witness), "Proof not verified");
+        // call from deployed contract
+        // SnarkVerifier sv = new SnarkVerifier(contract address)
+
+        // deploy verifier library and integrate into create loan facet
+        require(
+            Verifier.verifyTx(request.proof, request.witness),
+            "Proof not verified"
+        );
 
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
@@ -323,12 +326,12 @@ library CreateLoanLib {
             commitments[i] ^= bytes32(request.signatureData[i].signedAt);
         }
 
-        // // Verify that the commitment signatures are valid and that the data
-        // // is not too old for the market's liking.
-        _verifySignatures(request.marketId, commitments, request.signatureData);
+        // Verify that the commitment signatures are valid and that the data
+        // is not too old for the market's liking.
+        _verifySignatures(commitments, request.signatureData);
 
-        // // The second witness item (after identifier) is the market
-        // // score
+        // The second witness item (after identifier) is the market
+        // score
         uint256 marketScore = uint256(request.witness[1]);
 
         // Let the market handle the loan request and disperse the loan.
@@ -337,10 +340,6 @@ library CreateLoanLib {
         // pass it the marketId and return max loan amount, collateral ratio, interest rate
         // upper and lower bound for loan amount, interest rate and collateral ratio depending on
         // market id
-        // maxloanAmount, interestRate, loanAmount = asset settings
-        // interestRate = 10;
-        // collateralRatio = 10;
-        // maxLoanAmount = 10;
         (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
             marketScore,
             request
@@ -349,7 +348,6 @@ library CreateLoanLib {
     }
 
     function _verifySignatures(
-        bytes32 marketId,
         bytes32[3] memory commitments,
         SignatureData[3] memory signatureData
     ) private {
@@ -358,9 +356,7 @@ library CreateLoanLib {
             require(
                 signatureData[i].signedAt >
                     // solhint-disable-next-line
-                    block.timestamp -
-                        MarketLib.m(marketId).providerConfigs[providerId]
-                            .maxAge,
+                    block.timestamp - MarketLib.p(providerId).maxAge,
                 "Signed at less than max age"
             );
             require(
@@ -373,8 +369,7 @@ library CreateLoanLib {
             _validateSignature(
                 signatureData[i].signature,
                 commitments[i],
-                providerId,
-                marketId
+                providerId
             );
         }
     }
@@ -388,8 +383,7 @@ library CreateLoanLib {
     function _validateSignature(
         Signature memory signature,
         bytes32 commitment,
-        bytes32 providerId,
-        bytes32 marketId
+        bytes32 providerId
     ) private view {
         address recoveredSigner =
             ECDSA.recover(
@@ -404,9 +398,7 @@ library CreateLoanLib {
                 signature.s
             );
         require(
-            MarketLib.m(marketId).providerConfigs[providerId].signer[
-                recoveredSigner
-            ],
+            MarketLib.p(providerId).signer[recoveredSigner],
             "Teller: not valid signature"
         );
     }
