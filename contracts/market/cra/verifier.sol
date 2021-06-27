@@ -687,7 +687,7 @@ library Pairing {
     }
 }
 
-contract Verifier {
+library Verifier {
     using Pairing for *;
     struct VerifyingKey {
         Pairing.G1Point alpha;
@@ -1018,8 +1018,8 @@ contract Verifier {
         return 0;
     }
 
-    function verifyTx(Proof calldata proof, uint256[26] memory input)
-        public
+    function verifyTx(Proof memory proof, uint256[26] memory input)
+        internal
         view
         returns (bool r)
     {

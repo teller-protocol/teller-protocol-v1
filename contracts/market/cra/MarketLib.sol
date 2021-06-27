@@ -37,42 +37,47 @@ library MarketLib {
         m_ = s().markets[marketId];
     }
 
+    function p(bytes32 providerId)
+        internal
+        view
+        returns (ProviderConfig storage p_)
+    {
+        p_ = s().providers[providerId];
+    }
+
     function c(bytes32 commitmentId) internal view returns (bool c_) {
         c_ = s().usedCommitments[commitmentId];
     }
 
     function setProviderAdmin(
-        bytes32 marketId,
         bytes32 providerId,
         address account,
         bool admin
-    ) internal onlyProviderAdmin(marketId, providerId) {
-        m(marketId).providerConfigs[providerId].signer[account] = admin;
+    ) internal onlyProviderAdmin(providerId) {
+        p(providerId).signer[account] = admin;
     }
 
-    function getProviderAdmin(bytes32 marketId, bytes32 providerId)
+    function getProviderAdmin(bytes32 providerId)
         internal
         view
         returns (bool admin)
     {
-        admin = m(marketId).providerConfigs[providerId].signer[msg.sender];
+        admin = p(providerId).signer[msg.sender];
     }
 
     function setProviderSigner(
-        bytes32 marketId,
         bytes32 providerId,
         address account,
         bool signerValue
-    ) internal onlyProviderAdmin(marketId, providerId) {
-        m(marketId).providerConfigs[providerId].signer[account] = signerValue;
+    ) internal onlyProviderAdmin(providerId) {
+        p(providerId).signer[account] = signerValue;
     }
 
-    function setProviderMaxAge(
-        bytes32 marketId,
-        bytes32 providerId,
-        uint32 maxAge
-    ) internal onlyProviderAdmin(marketId, providerId) {
-        m(marketId).providerConfigs[providerId].maxAge = maxAge;
+    function setProviderMaxAge(bytes32 providerId, uint32 maxAge)
+        internal
+        onlyProviderAdmin(providerId)
+    {
+        p(providerId).maxAge = maxAge;
     }
 
     function setMarketAdmin(
@@ -102,6 +107,7 @@ library MarketLib {
         )
     {
         require(marketScore > 5, "market score not high enough!");
+
         (
             uint16 marketInterestRate,
             uint16 marketCollateralRatio,
@@ -140,7 +146,7 @@ library MarketLib {
         uint256 _maxLoanAmount;
 
         // if market id is teller market
-        if (marketId == bytes32(uint256(0))) {
+        if (marketId == bytes32(0)) {
             _maxInterestRate = 10000;
             _maxCollateralRatio = 15000;
             _maxLoanAmount = 25000;
@@ -158,11 +164,8 @@ library MarketLib {
         _;
     }
 
-    modifier onlyProviderAdmin(bytes32 marketId, bytes32 providerId) {
-        require(
-            m(marketId).providerConfigs[providerId].admin[msg.sender],
-            "Teller: not provider admin"
-        );
+    modifier onlyProviderAdmin(bytes32 providerId) {
+        require(p(providerId).admin[msg.sender], "Teller: not provider admin");
         _;
     }
 }
