@@ -51,7 +51,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 balance_);
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @notice It calculates the current exchange rate for a whole Teller Token based off the underlying token balance.
      * @return rate_ The current exchange rate.
      */
     function exchangeRate() external virtual returns (uint256 rate_);
@@ -102,7 +102,6 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         external
         virtual
         returns (uint16 ratio_);
-        
 
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
@@ -129,7 +128,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 mintAmount_);
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
+     * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
     function redeem(uint256 amount) external virtual;

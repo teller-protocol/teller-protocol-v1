@@ -67,8 +67,8 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice The token that is the underlying assets for this Teller token.
-     * @return ERC20 token that is the underl
+     * @notice The token that is the underlying asset for this Teller token.
+     * @return ERC20 token that is the underlying asset
      */
     function underlying() public view override returns (ERC20) {
         return s().underlying;
@@ -88,7 +88,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @notice It calculates the current exchange rate for a whole Teller Token based off the underlying token balance.
      * @return rate_ The current exchange rate.
      */
     function exchangeRate() public override returns (uint256 rate_) {
@@ -114,7 +114,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice It calculates the market state values across a given markets.
+     * @notice It calculates the market state values across a given market.
      * @notice Returns values that represent the global state across the market.
      * @return totalSupplied Total amount of the underlying asset supplied.
      * @return totalBorrowed Total amount borrowed through loans.
@@ -251,7 +251,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
+     * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
     function redeem(uint256 amount) external override {
@@ -432,7 +432,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice it retrives the value in the underlying tokens
+     * @notice it retrieves the value in the underlying tokens
      *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
