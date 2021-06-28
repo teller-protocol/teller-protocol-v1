@@ -99,15 +99,16 @@ library MarketLib {
      */
     function handler(uint256 marketScore, LoanRequest memory request)
         internal
-        pure
+        view
         returns (
             uint16 userInterestRate,
             uint16 userCollateralRatio,
             uint256 userLoanAmount
         )
     {
+        console.log("checking market score");
         require(marketScore > 5, "market score not high enough!");
-
+        console.log("after checking market score");
         (
             uint16 marketInterestRate,
             uint16 marketCollateralRatio,

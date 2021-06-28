@@ -148,7 +148,7 @@ interface CreateLoanArgs {
 
 interface CreateLoanWithZKCRA {
   proof: Proof
-  computation: ComputationResult
+  computation?: ComputationResult
 }
 
 interface ZKCRAHelpersReturn {
@@ -660,8 +660,6 @@ export const borrowWithZKCRA = async (
   const collToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
   const lendingToken =
     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
-  const collateralToken =
-    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
 
   // get loan amount
   const loanAmount = 1
@@ -670,6 +668,7 @@ export const borrowWithZKCRA = async (
   // collateral amount
   const collAmount = '100000'
 
+  // create loan user request object
   const request_ = {
     borrower: borrower,
     assetAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
@@ -679,6 +678,7 @@ export const borrowWithZKCRA = async (
     duration: moment.duration(1, 'day').asSeconds(),
   }
 
+  // create loan request object
   const loanRequest = {
     request: request_,
     marketId: marketId_,
