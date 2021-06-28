@@ -96,13 +96,12 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider the StD ratio.
-     * @return ratio_ Whether debt ratio for lending pool is valid.
+     * @return ratio_ The debt ratio for lending pool.
      */
     function debtRatioFor(uint256 newLoanAmount)
         external
         virtual
         returns (uint16 ratio_);
-        
 
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.

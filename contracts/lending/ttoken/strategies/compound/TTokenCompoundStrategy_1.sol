@@ -103,7 +103,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**
      * @notice it gets balances and the current ratio of the underlying asset stored on the TToken.
      * @return storedBalance_ returns the total stored balance of the current underlying token
-     * @return compoundBalance_ returns the total stored balance
+     * @return compoundBalance_ returns the amount of underlying value stored in Compound
      * @return storedRatio_ ratio of current storedBalance_ over storedBalance_ and compoundBalance_
      */
     function _getBalanceInfo()

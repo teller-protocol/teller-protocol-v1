@@ -43,7 +43,7 @@ contract TToken_V1 is ITToken {
     /* Modifiers */
 
     /**
-     * @notice Checks if the LP is restricted or has the CONTROLLER role.
+     * @notice Checks if the LP is restricted or the message sender has the CONTROLLER role.
      *
      * The LP being restricted means that only the Teller protocol may
      *  lend/borrow funds.
@@ -155,7 +155,7 @@ contract TToken_V1 is ITToken {
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider the StD ratio.
-     * @return ratio_ Whether debt ratio for lending pool is valid.
+     * @return ratio_ The debt ratio for lending pool.
      */
     function debtRatioFor(uint256 newLoanAmount)
         external
@@ -332,7 +332,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Sets a new strategy to use for balancing funds.
+     * @notice Sets or updates a strategy to use for balancing funds.
      * @param strategy Address to the new strategy contract. Must implement the {ITTokenStrategy} interface.
      * @param initData Optional data to initialize the strategy.
      *
@@ -425,7 +425,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
@@ -439,8 +439,6 @@ contract TToken_V1 is ITToken {
      * @notice Delegates data to call on the strategy contract.
      * @param callData Data to call the strategy contract with.
      *
-     * Requirements:
-     *  - Sender must have ADMIN role
      */
     function _delegateStrategy(bytes memory callData)
         internal
