@@ -231,6 +231,8 @@ contract TToken_V1 is ITToken {
         // Calculate amount of tokens to mint
         uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate());
 
+        require(mintAmount > 0, "Teller: amount to be minted cannot be 0");
+
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
             s().underlying,
@@ -261,6 +263,11 @@ contract TToken_V1 is ITToken {
         // Accrue interest and calculate exchange rate
         uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
         require(
+            underlyingAmount > 0,
+            "Teller: underlying teller token value to be redeemed cannot be 0"
+        );
+
+        require(
             underlyingAmount <= totalUnderlyingSupply(),
             "Teller: redeem ttoken lp not enough supply"
         );
@@ -283,6 +290,11 @@ contract TToken_V1 is ITToken {
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
         uint256 tokenValue = _valueOfUnderlying(amount, rate);
+
+        require(
+            tokenValue > 0,
+            "Teller: underlying value to be redeemed cannot be 0"
+        );
 
         // Make sure sender has adequate balance
         require(
@@ -425,7 +437,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
