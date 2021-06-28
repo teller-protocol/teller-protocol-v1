@@ -2,12 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    CONTROLLER,
-    ADMIN,
-    EXCHANGE_RATE_FACTOR,
-    ONE_HUNDRED_PERCENT
-} from "./data.sol";
+import { CONTROLLER, ADMIN, EXCHANGE_RATE_FACTOR } from "./data.sol";
 import { ITTokenStrategy } from "./strategies/ITTokenStrategy.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -425,7 +420,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
