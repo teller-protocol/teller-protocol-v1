@@ -37,7 +37,7 @@ import "./storage.sol" as Storage;
  * @author develop@teller.finance
  */
 contract TToken_V1 is ITToken {
-    function() pure returns (Storage.Store storage) private constant s =
+    function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 
     /* Modifiers */
@@ -176,6 +176,7 @@ contract TToken_V1 is ITToken {
      */
     function fundLoan(address recipient, uint256 amount)
         external
+        virtual
         override
         authorized(CONTROLLER, _msgSender())
     {
@@ -425,7 +426,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
