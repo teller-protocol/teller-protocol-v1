@@ -330,6 +330,8 @@ library CreateLoanLib {
             commitments[i] ^= bytes32(request.signatureData[i].signedAt);
         }
 
+        require(request.signatureData.length == 3, "Must have 3 providers!");
+
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
         _verifySignatures(commitments, request.signatureData);
