@@ -101,6 +101,34 @@ export const loanHelpers = async (
   }
 }
 
+interface Signature {
+  v: number
+  r: string
+  s: string
+}
+
+interface SignatureData {
+  signature: Signature
+  signedAt: number
+}
+
+interface LoanRequest {
+  request: LoanUserRequest
+  marketId: string
+  proof: any
+  witness: any
+  signatureData: SignatureData[]
+}
+
+interface LoanUserRequest {
+  borrower: string
+  assetAddress: string
+  assetAmount: BigNumberish
+  collateralAsset: string
+  collateralAmount: BigNumberish
+  duration: moment.Duration
+}
+
 interface CreateLoanWithNftArgs {
   lendToken: string | ERC20
   borrower?: string
@@ -532,7 +560,7 @@ export const outputCraValues = async (
 // take out function with zkcra implemented
 export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
-): Promise<ContractTransaction> => {
+): Promise<CreateLoanReturn> => {
   console.log('borrowing with zkcra')
 
   // get proof and witness from args
@@ -645,7 +673,7 @@ export const borrowWithZKCRA = async (
   // all borrow variables
   const marketId_ =
     '0x0000000000000000000000000000000000000000000000000000000000000000'
-  const proof_ = proof
+  const proof_ = proof.proof
   const witness_ = proof.inputs
   const borrower = (await getNamedAccounts()).borrower
   const signerBorrower = ethers.provider.getSigner(borrower)
@@ -659,21 +687,13 @@ export const borrowWithZKCRA = async (
     typeof collToken === 'string' ? await tokens.get(collToken) : collToken
 
   // get loan amount
-  const loanAmount = 100
+  const loanAmount = 1
   const assetAmount = toBN(loanAmount, await lendingToken.decimals())
 
-  // get collateral value to get collateral amount
-  const { value: collValue } = await getPrice(
-    {
-      src: await lendingToken.symbol(),
-      dst: await collateralToken.symbol(),
-      amount: hre.fromBN(loanAmount, await lendingToken.decimals()),
-    },
-    hre
-  )
-  const collAmount = hre.toBN(collValue, await collateralToken.decimals())
+  // collateral amount
+  const collAmount = '100000'
 
-  const request = {
+  const request_ = {
     borrower: borrower,
     assetAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
     assetAmount: assetAmount,
@@ -681,17 +701,27 @@ export const borrowWithZKCRA = async (
     collateralAmount: collAmount,
     duration: moment.duration(1, 'day').asSeconds(),
   }
+
   const loanRequest = {
-    request: request,
+    request: request_,
     marketId: marketId_,
-    proof: { a: proof_.proof.a, b: proof_.proof.b, c: proof_.proof.c },
+    proof: proof_,
     witness: witness_,
     signatureData: [signatureDataOne, signatureDataTwo, signatureDataThree],
   }
-  const tx = await diamond
+  const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
-    .takeOutLoan(loanRequest, collateralToken, collAmount)
-  return tx
+    .takeOutLoan(loanRequest, collToken, collAmount)
+
+  return {
+    tx,
+    getHelpers: async (): Promise<LoanHelpersReturn> => {
+      await tx
+      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+      const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+      return await loanHelpers(loanID)
+    },
+  }
 }
 
 interface LoanDetailsReturn {
