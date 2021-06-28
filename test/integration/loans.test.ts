@@ -155,31 +155,49 @@ describe.skip('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe.only('create loan w/ new zkCRA', async () => {
+    describe.only('create loan w/ zkCRA', async () => {
       // declare computation and proof variables to be used throughout the test
-      let computation_: ComputationResult
-      let proof_: Proof
+      let goodScoreComputation: ComputationResult
+      let goodProof_: Proof
+      let badProof_: Proof
+      let helpers: any
       before(async () => {
         // we fill the necessary config information (admins mostly) into our providers
         // and market
         console.log('filling zkCRAConfigInfo')
         await fillZKCRAConfigInfo()
       })
-
-      // check if computation and proof exist
-      it('checks if computation and proof are returned with a good score', async () => {
-        const goodScore = true
-        const { computation, proof } = await outputCraValues(goodScore)
-        computation_ = computation
-        proof_ = proof
-      })
-      // TODO: Complete this test tonight
-      it('uses witness, output and proof to take out a loan', async () => {
-        const tx = await borrowWithZKCRA({
-          proof: proof_,
-          computation: computation_,
+      describe('good score', async () => {
+        // check if computation and proof exist
+        it('checks if proof are returned from good score', async () => {
+          const goodScore = true
+          const { proof } = await outputCraValues(goodScore)
+          goodProof_ = proof
+          goodProof_.should.exist
         })
-        tx.should.exist
+        it('uses witness, output and proof to take out a loan with a good score', async () => {
+          const { getHelpers } = await borrowWithZKCRA({
+            proof: goodProof_,
+          })
+          helpers = await getHelpers()
+          // check if loan exists
+          expect(helpers.details.loan).to.exist
+        })
+      })
+      describe.only('bad score', async () => {
+        // check if computation and proof exist
+        it('checks if proof are returned from bad score', async () => {
+          const goodScore = false
+          const { proof } = await outputCraValues(goodScore)
+          badProof_ = proof
+          badProof_.should.exist
+        })
+        it('take out a loan should fail with bad score', async () => {
+          const { tx } = await borrowWithZKCRA({
+            proof: badProof_,
+          })
+          await tx.should.be.revertedWith('market score not high enough!')
+        })
       })
     })
   }

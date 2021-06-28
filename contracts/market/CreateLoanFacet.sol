@@ -321,7 +321,7 @@ library CreateLoanLib {
         bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
 
         // constructing our commitments to verify with our signature data
-        for (uint8 i = 0; i < 3; i++) {
+        for (uint8 i = 0; i < commitments.length; i++) {
             for (uint8 j = 0; j < 8; j++) {
                 commitments[i] =
                     (commitments[i] << 32) ^
@@ -355,7 +355,7 @@ library CreateLoanLib {
         bytes32[3] memory commitments,
         SignatureData[3] memory signatureData
     ) private {
-        for (uint256 i = 0; i < 3; i++) {
+        for (uint256 i = 0; i < signatureData.length; i++) {
             bytes32 providerId = bytes32(i);
             require(
                 signatureData[i].signedAt >
