@@ -73,7 +73,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           }
         }))
 
-        console.log('push new story test !')
         tests.push(newTest)
         break
       }
@@ -91,7 +90,6 @@ export default class LPStoryTestDriver extends StoryTestDriver {
             await expect(await helpers.withdraw()).to.be.reverted
           }
         }))
-        console.log('push new story test !')
         tests.push(newTest)
         break
       }

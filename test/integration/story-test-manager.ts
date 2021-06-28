@@ -14,10 +14,6 @@ export const generateAllStoryTests = (
   const allTestStoryDomains: TestScenarioDomain[] =
     generateStoryDomains(hre)
 
-  // var allGeneratedSuites: Array<Mocha.Suite> = []
-
-  // var allMochaInstances: Array<Mocha> = []
-
   const mochaInstance = new Mocha()
   mochaInstance.timeout(19000)
 
@@ -26,13 +22,9 @@ export const generateAllStoryTests = (
       mochaInstance.suite,
       'Story Test Suite - '.concat(storyDomain.domainName)
     )
-
-    console.log('storyDomain ', storyDomain)
-
     for (const scenario of storyDomain.scenarios) {
       const testsForDomain = generateTests(hre, scenario, suiteInstance)
     }
   }
-
   return mochaInstance
 }

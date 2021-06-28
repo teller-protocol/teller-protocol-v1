@@ -51,11 +51,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     for (const action of scenarioActions) {
       const testsForAction: Test[] =
         LoanStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
-
-      //allTests = allTests.concat(testsForAction)
-
-      console.log('meep tests', testsForAction)
-
       for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
@@ -84,22 +79,19 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             await borrower.getAddress()
           )
           if (allBorrowerLoans.length > 0) shouldPass = false
-          // console.log({ allBorrowerLoans, shouldPass })
           if (shouldPass) {
             expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
             LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
               await hre.evm.snapshot()
           } else {
-            // await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.rejected
+            await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.reverted
           }
         }))
-        console.log('push STORY_ACTIONS.LOAN.TAKE_OUT test! ')
         tests.push(newTest)
         break
       }
       case 'REPAY': {
         const newTest = new Test(action.suiteName, (async () => {
-          // if (args.rewindStateTo) LoanSnapshots[args.rewindStateTo]()
           const shouldPass = true
           //read the state and determine if this should pass
 
@@ -110,7 +102,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             await expect(await LoanStoryTestDriver.repayLoan(hre)).to.be.reverted
           }
         }))
-        console.log('push STORY_ACTIONS.LOAN.REPAY test ! ')
         tests.push(newTest)
         break
       }
@@ -127,7 +118,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             await expect(await LoanStoryTestDriver.liquidateLoan(hre)).to.be.reverted
           }
         }))
-        console.log('push STORY_ACTIONS.LOAN.LIQUIDATE test ! ')
         tests.push(newTest)
         break
       }
@@ -143,7 +133,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const markets = getMarkets(network)
     const randomMarket = rng.nextInt(0, markets.length - 1)
     const market = markets[randomMarket]
-    // console.log({ markets })
     const randomCollateralToken = rng.nextInt(
       0,
       market.collateralTokens.length - 1
