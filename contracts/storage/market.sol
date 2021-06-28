@@ -77,7 +77,7 @@ struct LoanRequest {
     bytes32 marketId;
     Verifier.Proof proof;
     uint256[26] witness;
-    SignatureData[3] signatureData;
+    SignatureData[] signatureData;
 }
 
 /**

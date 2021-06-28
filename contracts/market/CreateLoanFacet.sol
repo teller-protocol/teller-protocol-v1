@@ -353,7 +353,7 @@ library CreateLoanLib {
 
     function _verifySignatures(
         bytes32[3] memory commitments,
-        SignatureData[3] memory signatureData
+        SignatureData[] memory signatureData
     ) private {
         for (uint256 i = 0; i < signatureData.length; i++) {
             bytes32 providerId = bytes32(i);
