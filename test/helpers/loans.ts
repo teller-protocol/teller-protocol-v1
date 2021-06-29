@@ -382,13 +382,10 @@ export const fillZKCRAConfigInfo = async () => {
   // get signers (providers)
   const { craSigner } = await getNamedAccounts()
 
-  console.log('about to initialize config admins')
   const deployer = await getNamedSigner('deployer')
   await diamond.connect(deployer).initializeMarketAdmins()
-  console.log('initialized config admin')
 
   // create config
-  console.log('setting market config')
   const maxAge_ = moment.duration(10, 'hours').asSeconds()
   for (let i = 0; i < 3; i++) {
     console.log('setting provider #' + i)
@@ -418,17 +415,14 @@ export const fillZKCRAConfigInfo = async () => {
 export const outputCraValues = async (
   goodScore: boolean
 ): Promise<CreateLoanWithZKCRA> => {
-  console.log('inside output cra values')
   // local variables
   let zokratesProvider: ZoKratesProvider
   let compilationArtifacts: CompilationArtifacts
   let keyPair: SetupKeypair
   let computation: ComputationResult
   let proof: Proof
-  console.log('initialized private variables')
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
-  console.log('got provider')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -459,9 +453,7 @@ export const outputCraValues = async (
   // console.log(compArtifact)
 
   // compile into circuit
-  console.log('about to compile source')
   compilationArtifacts = provider.compile(source)
-  console.log('compiled source')
   // const programArray = compilationArtifacts.program
   // const programBuffer = programArray.buffer
   // const objectToAdd = {
@@ -481,19 +473,14 @@ export const outputCraValues = async (
 
   // get borrower nonce and identifier
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  console.log('got diamond')
   const borrower = (await getNamedAccounts()).borrower
-  console.log('got borrower')
   const { length: nonce } = await diamond.getBorrowerLoans(borrower)
-  console.log('got nonce')
   const identifier = BigNumber.from(borrower).xor(nonce)
-  console.log('got identifier')
 
   // sample data. first element of each array element is the value (Score).
   // next 7 elements are the secrets
 
   // get computation
-  console.log('getting witness')
   if (goodScore) {
     computation = provider.computeWitness(compilationArtifacts, [
       scores.good,
@@ -505,7 +492,6 @@ export const outputCraValues = async (
       identifier.toString(),
     ])
   }
-  console.log('got witness')
 
   // compute proof
   const provingKey = new Uint8Array(
@@ -513,15 +499,11 @@ export const outputCraValues = async (
       join(__dirname, '../../contracts/market/cra/proving.key')
     ).buffer
   )
-
-  console.log('about to get proof')
   proof = provider.generateProof(
     compilationArtifacts.program,
     computation.witness,
     provingKey
   )
-  console.log('proof')
-  console.log(proof.inputs)
   return {
     computation: computation,
     proof: proof,
@@ -531,13 +513,10 @@ export const outputCraValues = async (
 export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
 ): Promise<CreateLoanReturn> => {
-  console.log('borrowing with zkcra')
-
   // get proof and witness from args
   const { proof, computation } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  console.log('getting signers')
 
   // cutting the proof inputs and concatenating them into our input variables
   const firstInput =
@@ -560,14 +539,9 @@ export const borrowWithZKCRA = async (
       .slice(18, 26)
       .map((input: string) => input.substr(2).substr(56))
       .join('')
-
-  console.log('input one: ' + firstInput)
-  console.log('input two: ' + secondInput)
-  console.log('input three: ' + thirdInput)
   // get the signer
   const signer = await getNamedSigner('craSigner')
   const signerAddress = await signer.getAddress()
-  console.log("signer's address: " + signerAddress)
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
@@ -576,7 +550,6 @@ export const borrowWithZKCRA = async (
     .xor(timestampOne)
     .toHexString()
 
-  console.log({ messageOne: BigNumber.from(messageOne).toString() })
   // signing first message
   const credentialsSignerOne = await signer.signMessage(
     ethers.utils.arrayify(messageOne)
@@ -593,14 +566,11 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampOne,
   }
-  console.log({ signatureDataOne })
-
   // second signature
   const timestampTwo = moment().unix()
   const messageTwo = ethers.BigNumber.from(secondInput)
     .xor(timestampTwo)
     .toHexString()
-  console.log({ messageTwo: BigNumber.from(messageTwo.toString()).toString() })
   const credentialsSignerTwo = await signer.signMessage(
     ethers.utils.arrayify(messageTwo)
   )
@@ -678,6 +648,8 @@ export const borrowWithZKCRA = async (
     proof: proof_,
     witness: witness_,
     signatureData: [signatureDataOne, signatureDataTwo, signatureDataThree],
+    // {}[]
+    // [{},{},{}]
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))

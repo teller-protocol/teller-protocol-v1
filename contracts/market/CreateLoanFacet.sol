@@ -303,16 +303,12 @@ library CreateLoanLib {
             LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
-        // call from deployed contract
-        // SnarkVerifier sv = new SnarkVerifier(contract address)
-
-        // deploy verifier library and integrate into create loan facet
         require(
             Verifier.verifyTx(request.proof, request.witness),
             "Proof not verified"
         );
-
-        bytes32[3] memory commitments = [bytes32(0), bytes32(0), bytes32(0)];
+        // get variable amount of commitments from market handler
+        bytes32[] memory commitments = new bytes32[](0);
 
         // constructing our commitments to verify with our signature data
         for (uint8 i = 0; i < commitments.length; i++) {
@@ -324,6 +320,7 @@ library CreateLoanLib {
             commitments[i] ^= bytes32(request.signatureData[i].signedAt);
         }
 
+        // equate this require statement to amount of commitments from market handler
         require(request.signatureData.length == 3, "Must have 3 providers!");
 
         // Verify that the commitment signatures are valid and that the data
@@ -348,14 +345,13 @@ library CreateLoanLib {
     }
 
     function _verifySignatures(
-        bytes32[3] memory commitments,
+        bytes32[] memory commitments,
         SignatureData[] memory signatureData
     ) private {
         for (uint256 i = 0; i < signatureData.length; i++) {
             bytes32 providerId = bytes32(i);
             require(
                 signatureData[i].signedAt >
-                    // solhint-disable-next-line
                     block.timestamp - MarketLib.p(providerId).maxAge,
                 "Signed at less than max age"
             );
