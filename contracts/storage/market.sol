@@ -68,10 +68,10 @@ struct LoanDebt {
  */
 struct LoanRequest {
     LoanUserRequest request;
-    bytes32 marketId;
-    Verifier.Proof proof;
-    uint256[26] witness;
-    SignatureData[] signatureData;
+    address marketHandlerAddress;
+    Verifier.Proof snarkProof;
+    uint256[26] snarkWitnesses;
+    DataProviderSignature[] dataProviderSignatures;
 }
 
 /**
@@ -129,7 +129,7 @@ struct Signature {
  * @param signature signature from our data provider
  * @param signedAt the timed they signed at
  */
-struct SignatureData {
+struct DataProviderSignature {
     Signature signature;
     uint256 signedAt;
 }
@@ -193,12 +193,6 @@ struct MarketStorage {
     mapping(address => EnumerableSet.AddressSet) signers;
     // Maps lending token to list of allowed collateral tokens
     mapping(address => EnumerableSet.AddressSet) collateralTokens;
-    // Maps id to Market Config to identify a specific market
-    mapping(bytes32 => MarketConfig) markets;
-    // Maps id to boolean values to check if a commitment has already been used
-    mapping(bytes32 => bool) usedCommitments;
-    // Maps id to ProviderConfig structs
-    mapping(bytes32 => ProviderConfig) providers;
 }
 
 bytes32 constant MARKET_STORAGE_POS = keccak256("teller.market.storage");
