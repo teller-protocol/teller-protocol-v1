@@ -79,7 +79,7 @@ describe.skip('poolTogether Dapp', () => {
           daiBalance.should.be.gt('0')
         })
 
-        it('Should not be able to deposit into pooltogether as not the loan borrower', async () => {
+        it.skip('Should not be able to deposit into pooltogether as not the loan borrower', async () => {
           const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
