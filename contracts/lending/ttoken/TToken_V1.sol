@@ -381,6 +381,9 @@ contract TToken_V1 is ITToken {
      * @notice it initializes the Teller Token
      * @param admin address of the admin to the respective Teller Token
      * @param underlying address of the ERC20 token
+     *
+     * Requirements:
+     *  - Underlying token must implement `name`, `symbol` and `decimals`
      */
     function initialize(address admin, address underlying)
         external
@@ -425,7 +428,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
