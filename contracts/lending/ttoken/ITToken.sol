@@ -35,7 +35,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
-     * @notice The token that is the underlying assets for this Teller token.
+     * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token
      */
     function underlying() external view virtual returns (ERC20);
