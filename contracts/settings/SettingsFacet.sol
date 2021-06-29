@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, PAUSER, AUTHORIZED } from "../shared/roles.sol";
-import { UpgradeableBeaconFactory } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
+import {
+    UpgradeableBeaconFactory
+} from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { TellerNFTDictionary } from "../nft/TellerNFTDictionary.sol";
 
@@ -26,7 +28,7 @@ struct InitAssets {
 struct InitArgs {
     address admin;
     InitAssets[] assets;
-    address[] underlyingTokens;
+    address[] cTokens;
     address tellerNFT;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
@@ -138,8 +140,8 @@ contract SettingsFacet is RolesMods {
         for (uint256 i; i < _args.assets.length; i++) {
             s.assetAddresses[_args.assets[i].sym] = _args.assets[i].addr;
         }
-        for (uint256 i; i < _args.underlyingTokens.length; i++) {
-            s.underlyingTokenRegistry[_args.underlyingTokens[i]] = true;
+        for (uint256 i; i < _args.cTokens.length; i++) {
+            s.cTokenRegistry[_args.cTokens[i]] = true;
         }
 
         s.nft = TellerNFT(_args.tellerNFT);
