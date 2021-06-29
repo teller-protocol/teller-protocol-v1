@@ -31,7 +31,7 @@ describe('PriceAggregator', () => {
     deployer = await getNamedSigner('deployer')
   })
 
-  describe('addChainlinkAggregator', () => {
+  describe.skip('addChainlinkAggregator', () => {
     it('Should not be able to add a Chainlink aggregator as not an admin', async () => {
       // Sender address
       const lender = await getNamedSigner('lender')

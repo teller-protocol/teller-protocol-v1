@@ -81,7 +81,7 @@ describe('AaveDapp', () => {
           aDaiBalance.eq(0).should.eql(true, '')
         })
 
-        it('Should not be able to lend into Aave as not the loan borrower', async () => {
+        it.skip('Should not be able to lend into Aave as not the loan borrower', async () => {
           const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],

@@ -109,7 +109,7 @@ describe('SushiswapDapp', () => {
             .should.rejectedWith('Teller: dapp not loan borrower')
         })
 
-        it('Should NOT be able to swap using Sushiswap with an unsecured loan', async () => {
+        it.skip('Should NOT be able to swap using Sushiswap with an unsecured loan', async () => {
           const { getHelpers } = await takeOutLoanWithoutNfts({
             lendToken: market.lendingToken,
             collToken: market.collateralTokens[0],
