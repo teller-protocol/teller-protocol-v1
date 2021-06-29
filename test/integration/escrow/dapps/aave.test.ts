@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, evm } = hre
 
-describe('AaveDapp', () => {
+describe.skip('AaveDapp', () => {
   getMarkets(hre.network).forEach(testAave)
 
   function testAave(market: Market): void {
@@ -24,7 +24,7 @@ describe('AaveDapp', () => {
       let aToken: IAToken
 
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100000,
         }))

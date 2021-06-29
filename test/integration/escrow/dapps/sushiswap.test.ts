@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { tokens, getNamedSigner, evm } = hre
 
-describe('SushiswapDapp', () => {
+describe.skip('SushiswapDapp', () => {
   let diamond: ITellerDiamond
   let lendingToken: ERC20
   let link: ERC20
@@ -24,7 +24,7 @@ describe('SushiswapDapp', () => {
   function testSushiswap(market: Market): void {
     describe(`${market.lendingToken} lending token`, () => {
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100000,
         }))

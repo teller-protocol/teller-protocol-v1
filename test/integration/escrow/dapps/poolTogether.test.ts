@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, evm } = hre
 
-describe('poolTogether Dapp', () => {
+describe.skip('poolTogether Dapp', () => {
   getMarkets(hre.network).forEach(testPoolTogether)
 
   function testPoolTogether(market: Market): void {
@@ -24,7 +24,7 @@ describe('poolTogether Dapp', () => {
       let poolTicket: IERC20
 
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 1000000,
         }))
