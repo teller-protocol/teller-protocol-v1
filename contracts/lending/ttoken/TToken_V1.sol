@@ -16,11 +16,9 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import { ITToken } from "./ITToken.sol";
-import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Libraries
 import {
-    IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
@@ -425,7 +423,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice it retrives the value in the underlying tokens
-     * 
+     *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
         internal
