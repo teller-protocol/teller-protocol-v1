@@ -27,7 +27,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.only('Loans', () => {
+describe('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -153,7 +153,7 @@ describe.only('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe.only('create loan w/ zkCRA', async () => {
+    describe('create loan w/ zkCRA', async () => {
       // declare computation and proof variables to be used throughout the test
       let goodScoreComputation: ComputationResult
       let goodProof_: Proof
@@ -182,7 +182,7 @@ describe.only('Loans', () => {
           expect(helpers.details.loan).to.exist
         })
       })
-      describe.only('bad score', async () => {
+      describe('bad score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from bad score', async () => {
           const goodScore = false

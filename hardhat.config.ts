@@ -203,7 +203,5 @@ export default <HardhatUserConfig>{
       timeout: 10000000,
     }),
   },
-  mocha: {
-    timeout: 100000000,
-  },
+  mocha: {},
 }

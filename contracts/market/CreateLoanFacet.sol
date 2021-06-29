@@ -80,7 +80,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @param request Struct of the protocol loan request
      */
     modifier __createLoan(LoanRequest calldata request, bool withNFT) {
-        console.log("creating loan");
         Loan storage loan = CreateLoanLib.createLoan(request, withNFT);
 
         _;
@@ -106,9 +105,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         address signer,
         bool signerValue
     ) external {
-        console.log("solidity: about to set provider signer");
         MarketLib.setProviderSigner(providerId, signer, signerValue);
-        console.log("solidity: about to set provider max age");
         MarketLib.setProviderMaxAge(providerId, maxAge);
     }
 
@@ -176,7 +173,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         __createLoan(request, false)
     {
-        console.log("taking out loan");
         // Check if collateral token is zero
         require(
             collateralToken != address(0x0),
@@ -303,7 +299,6 @@ library CreateLoanLib {
             uint256 maxLoanAmount
         )
     {
-        console.log("processing market request");
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
@@ -316,7 +311,6 @@ library CreateLoanLib {
         // SnarkVerifier sv = new SnarkVerifier(contract address)
 
         // deploy verifier library and integrate into create loan facet
-        console.log("about to verify tx");
         require(
             Verifier.verifyTx(request.proof, request.witness),
             "Proof not verified"

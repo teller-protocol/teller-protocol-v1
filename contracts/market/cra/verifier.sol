@@ -8,6 +8,7 @@ pragma solidity ^0.8.0;
  * @dev Homepage: https://github.com/musalbas/solidity-BN256G2
  */
 
+// GENERATED FROM ZOKRATES: DO NOT MODIFY
 library BN256G2 {
     uint256 internal constant FIELD_MODULUS =
         0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
@@ -480,6 +481,7 @@ library BN256G2 {
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// GENERATED FROM ZOKRATES: DO NOT MODIFY
 library Pairing {
     struct G1Point {
         uint256 X;
@@ -687,6 +689,7 @@ library Pairing {
     }
 }
 
+// GENERATED FROM ZOKRATES: DO NOT MODIFY
 library Verifier {
     using Pairing for *;
     struct VerifyingKey {

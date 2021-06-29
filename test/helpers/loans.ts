@@ -1,4 +1,3 @@
-// external packages
 import { isBytesLike } from '@ethersproject/bytes'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { time, timeStamp } from 'console'
@@ -28,7 +27,7 @@ import fetch from 'node-fetch'
 // import zkcra from '../fixtures/zkcra.json'
 // const out = 'https://ipfs.io/ipfs/QmeWAsv22oPBK2Rk8Jdj49CGjpz8fMivSzozmvARWGVqY8?filename=out'
 const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
-import scores from '../fixtures/zk-scores.json'
+import scores from '../fixtures/zk-scores'
 
 // teller files
 import { getNFT } from '../../config'
@@ -98,35 +97,6 @@ export const loanHelpers = async (
     },
   }
 }
-
-interface Signature {
-  v: number
-  r: string
-  s: string
-}
-
-interface SignatureData {
-  signature: Signature
-  signedAt: number
-}
-
-interface LoanRequest {
-  request: LoanUserRequest
-  marketId: string
-  proof: any
-  witness: any
-  signatureData: SignatureData[]
-}
-
-interface LoanUserRequest {
-  borrower: string
-  assetAddress: string
-  assetAmount: BigNumberish
-  collateralAsset: string
-  collateralAmount: BigNumberish
-  duration: moment.Duration
-}
-
 interface CreateLoanWithNftArgs {
   lendToken: string | ERC20
   borrower?: string

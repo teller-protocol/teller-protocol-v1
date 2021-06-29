@@ -48,9 +48,9 @@ library LibLoans {
         d_ = s().loanDebt[loanID];
     }
 
-    // DEPRECATED
     /**
      * @notice it returns the loan terms from a respective loan
+     * @notice DEPRECATED
      * @param loanID the ID of the respective loan
      * @return t_ the loan terms from a respective loan
      */
@@ -90,7 +90,7 @@ library LibLoans {
     {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
-    
+
     /**
      * @notice it returns the collateral needed in tokens
      * @param loanID the identifier of the loan to return the collateral from

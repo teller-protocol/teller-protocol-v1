@@ -147,6 +147,13 @@ struct ProviderConfig {
     uint32 maxAge;
 }
 
+/**
+ * @notice It represents the information needed from a market when users request loans from the
+ * respective market
+ * @param maxInterestRate the max interest rate in a market
+ * @param maxCollateralRatio the max collateral ratio in a market
+ * @param maxLoanAmount the max loan amount in a market
+ */
 struct MarketInformation {
     uint16 maxInterestRate;
     uint16 maxCollateralRatio;
