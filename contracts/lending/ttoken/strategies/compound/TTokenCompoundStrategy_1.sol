@@ -158,6 +158,10 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
     ) external {
+        require(
+            balanceRatioMax > balanceRatioMin,
+            "Teller: Max ratio balance should be greater than Min ratio balance"
+        );
         compoundStore().cToken = ICErc20(cTokenAddress);
         compoundStore().balanceRatioMin = balanceRatioMin;
         compoundStore().balanceRatioMax = balanceRatioMax;
