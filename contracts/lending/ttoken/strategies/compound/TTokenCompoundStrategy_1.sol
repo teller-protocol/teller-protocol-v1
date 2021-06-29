@@ -18,8 +18,8 @@ import {
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 
 // Storage
-import "../../storage.sol" as TokenStorage;
-import "./storage.sol" as CompoundStorage;
+import "../../token-storage.sol" as TokenStorage;
+import "./compound-storage.sol" as CompoundStorage;
 
 contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**

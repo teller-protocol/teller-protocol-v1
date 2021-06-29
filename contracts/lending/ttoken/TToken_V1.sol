@@ -23,7 +23,7 @@ import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
-import "./storage.sol" as Storage;
+import "./token-storage.sol" as Storage;
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
