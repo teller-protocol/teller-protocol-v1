@@ -55,7 +55,7 @@ library CompoundLib {
     }
 
     function isCompoundToken(address token) internal view returns (bool) {
-        return AppStorageLib.store().cTokenRegistry[token];
+        return AppStorageLib.store().underlyingTokenRegistry[token];
     }
 
     /**
@@ -65,8 +65,9 @@ library CompoundLib {
      * @return address of the underlying cToken
      */
     function getUnderlying(address cToken) internal view returns (address) {
-        (bool success, bytes memory data) =
-            cToken.staticcall(abi.encode(ICErc20.underlying.selector));
+        (bool success, bytes memory data) = cToken.staticcall(
+            abi.encode(ICErc20.underlying.selector)
+        );
         if (success) {
             return abi.decode(data, (address));
         }

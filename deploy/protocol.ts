@@ -62,7 +62,7 @@ const deployProtocol: DeployFunction = async (hre) => {
             sym,
             addr,
           })),
-          cTokens: Object.values(tokens.compound),
+          underlyingTokens: Object.values(tokens.underlyingTokens),
           tellerNFT: nftAddress,
           loansEscrowBeacon: loansEscrowBeacon.address,
           collateralEscrowBeacon: collateralEscrowBeacon.address,

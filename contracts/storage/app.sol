@@ -7,13 +7,9 @@ import { TellerNFT } from "../nft/TellerNFT.sol";
 // Interfaces
 
 // Libraries
-import {
-    PlatformSetting
-} from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import { PlatformSetting } from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { Cache } from "../shared/libraries/CacheLib.sol";
-import {
-    UpgradeableBeaconFactory
-} from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
+import { UpgradeableBeaconFactory } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 
 struct AppStorage {
     // is it initialized
@@ -26,7 +22,7 @@ struct AppStorage {
     mapping(bytes32 => PlatformSetting) platformSettings;
     mapping(address => Cache) assetSettings;
     mapping(string => address) assetAddresses;
-    mapping(address => bool) cTokenRegistry;
+    mapping(address => bool) underlyingTokenRegistry;
     TellerNFT nft;
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;
