@@ -14,7 +14,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
-import { MarketLib } from "./cra/MarketLib.sol";
+import { MarketLib } from "./libraries/MarketLib.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
     PlatformSettingsLib
