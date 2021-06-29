@@ -9,7 +9,7 @@ const mainnetPlatformSettings: PlatformSettings = {
   },
   RequiredSubmissionsPercentage: {
     processOnDeployment: true,
-    value: 8000,
+    value: 100,
     min: 0,
     max: 10000,
   },

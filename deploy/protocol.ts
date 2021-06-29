@@ -31,7 +31,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
   const tokens = getTokens(network)
   const wrappedNativeToken =
-    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
+    networkName == 'polygon_mumbai' ? tokens.erc20.WMATIC : tokens.erc20.WETH
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 

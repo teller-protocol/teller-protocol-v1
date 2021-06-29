@@ -20,5 +20,5 @@ export const signers: Record<string, Signers> = {
   localhost: [],
   mainnet: [],
   polygon: [],
-  polygon_mumbai: []
+  polygon_mumbai: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
 }
