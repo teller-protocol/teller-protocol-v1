@@ -245,6 +245,14 @@ const addAuthorizedAddresses = async (
       .then(({ wait }) => wait())
 }
 
+const deployTellerMaket = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
+  const { ethers, log } = hre
+  log('********** Deploying Teller Market **********', { indent: 2 })
+  log('')
+}
+
 const deployLoansEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {

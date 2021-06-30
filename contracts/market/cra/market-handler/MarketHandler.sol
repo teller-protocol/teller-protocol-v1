@@ -10,6 +10,7 @@ import {
 abstract contract MarketHandler {
     using EnumerableSet for EnumerableSet.AddressSet;
     // market info
+
     uint8 public numberOfSignaturesRequired;
     uint16 public maxInterestRate;
     uint16 public maxCollateralRatio;
@@ -30,14 +31,12 @@ abstract contract MarketHandler {
     constructor(
         uint16 maxInterestRate_,
         uint16 maxCollateralRatio_,
-        uint256 maxLoanAmount_,
-        address[] calldata providers_
+        uint256 maxLoanAmount_
     ) {
         admins[msg.sender] = true;
         maxInterestRate = maxInterestRate_;
         maxCollateralRatio = maxCollateralRatio_;
         maxLoanAmount = maxLoanAmount_;
-        addProviders(providers_);
     }
 
     /**
@@ -51,7 +50,7 @@ abstract contract MarketHandler {
      */
     function handler(uint256 marketScore, LoanRequest memory request)
         external
-        pure
+        view
         virtual
         returns (
             uint16 userInterestRate,
@@ -66,14 +65,11 @@ abstract contract MarketHandler {
         }
     }
 
-    function addProviders(address[] calldata providerAddresses)
-        public
-        onlyAdmin
-    {
+    function addProviders(address[] memory providerAddresses) public onlyAdmin {
         for (uint256 i; i < providerAddresses.length; i++) {
             providers.add(providerAddresses[i]);
         }
-        numberOfSignaturesRequired = providers.length;
+        numberOfSignaturesRequired = uint8(providers.length());
     }
 
     function removeProviders(address[] calldata providerAddresses)

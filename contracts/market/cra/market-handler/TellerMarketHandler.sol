@@ -9,11 +9,12 @@ import {
 import { MarketHandler } from "./MarketHandler.sol";
 
 contract TellerMarketHandler is MarketHandler {
+    constructor() MarketHandler(10000, 15000, 25000) {}
+
     // teller market handler
     function handler(uint256 marketScore, LoanRequest memory request)
         external
-        pure
-        virtual
+        view
         override
         returns (
             uint16 userInterestRate,
@@ -39,5 +40,7 @@ contract TellerMarketHandler is MarketHandler {
             (marketScore * scoreMultiplier) /
                 (interestRate / (sampleCappedInterestRate + 1));
         userLoanAmount = loanAmount;
+
+        userCollateralRatio = request.request.collateralRatio;
     }
 }
