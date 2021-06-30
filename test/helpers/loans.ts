@@ -619,10 +619,12 @@ export const borrowWithZKCRA = async (
     duration: moment.duration(1, 'day').asSeconds(),
   }
 
+  // teller market address
+  const marketHandlerAddress_ = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
   // create loan request object
   const loanRequest = {
     request: request_,
-    marketHandlerAddress: marketId_,
+    marketHandlerAddress: marketHandlerAddress_,
     snarkProof: proof_,
     snarkWitnesses: witness_,
     dataProviderSignatures: [

@@ -6,8 +6,8 @@ import {
     DataProviderSignature,
     Signature
 } from "../../storage/market.sol";
-import { LibLoans } from "./LibLoans.sol";
-import { MarketLib } from "./MarketLib.sol";
+import { MarketHandler } from "../cra/market-handler/MarketHandler.sol";
+import { LibLoans } from "../libraries/LibLoans.sol";
 import { Verifier } from "../cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
@@ -29,6 +29,8 @@ library ProcessRequestLib {
             uint256 maxLoanAmount
         )
     {
+        MarketHandler marketHandler =
+            MarketHandler(request.marketHandlerAddress);
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
@@ -64,7 +66,11 @@ library ProcessRequestLib {
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
-        _verifySignatures(commitments, request.dataProviderSignatures);
+        _verifySignatures(
+            commitments,
+            request.dataProviderSignatures,
+            request.marketHandlerAddress
+        );
 
         // The second witness item (after identifier) is the market
         // score
@@ -76,10 +82,10 @@ library ProcessRequestLib {
         // pass it the marketId and return max loan amount, collateral ratio, interest rate
         // upper and lower bound for loan amount, interest rate and collateral ratio depending on
         // market id
-        // (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
-        //     marketScore,
-        //     request
-        // );
+        (interestRate, collateralRatio, maxLoanAmount) = marketHandler.handler(
+            marketScore,
+            request
+        );
         interestRate = 1000;
         collateralRatio = 15000;
         maxLoanAmount = 25000;
@@ -88,20 +94,21 @@ library ProcessRequestLib {
 
     function _verifySignatures(
         bytes32[] memory commitments,
-        DataProviderSignature[] memory signatureData
+        DataProviderSignature[] memory signatureData,
+        address marketHandlerAddress
     ) private {
+        MarketHandler marketHandler = MarketHandler(marketHandlerAddress);
         for (uint256 i = 0; i < signatureData.length; i++) {
             bytes32 providerId = bytes32(i);
             require(
                 signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
             );
-            // require(
-            //     MarketLib.s().usedCommitments[commitments[i]] == false,
-            //     "Teller: commitment already used"
-            // );
-
-            // MarketLib.s().usedCommitments[commitments[i]] = true;
+            require(
+                marketHandler.usedCommitments(commitments[i]) == false,
+                "Teller: commitment already used"
+            );
+            marketHandler.addCommitment(commitments[i]);
 
             _validateSignature(
                 signatureData[i].signature,
@@ -121,7 +128,7 @@ library ProcessRequestLib {
         Signature memory signature,
         bytes32 commitment,
         bytes32 providerId
-    ) private view {
+    ) private pure {
         address recoveredSigner =
             ECDSA.recover(
                 keccak256(

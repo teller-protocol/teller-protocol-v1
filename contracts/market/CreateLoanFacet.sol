@@ -34,7 +34,7 @@ import { NFTLib } from "../nft/libraries/NFTLib.sol";
 import { Verifier } from "./cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MarketLib } from "./libraries/MarketLib.sol";
-import { ProcessRequestLib } from "./libraries/ProcessRequestLib.sol";
+import { ProcessRequestLib } from "./cra/ProcessRequestLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -238,6 +238,7 @@ library CreateLoanLib {
             "Teller: max loan duration exceeded"
         );
 
+        // address of processRequestLib: 0xe7168c514A022345ed07E4Fad73eC3921C2b7bDb
         // Get consensus values from request
         (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
             ProcessRequestLib.processMarketRequest(request);
