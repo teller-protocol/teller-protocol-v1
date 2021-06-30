@@ -9,7 +9,11 @@ import {
 import { MarketHandler } from "./MarketHandler.sol";
 
 contract TellerMarketHandler is MarketHandler {
-    constructor() MarketHandler(10000, 15000, 25000) {}
+    constructor(
+        uint16 maxInterestRate,
+        uint16 collateralRatio,
+        uint256 maxLoanAmount
+    ) MarketHandler(maxInterestRate, collateralRatio, maxLoanAmount) {}
 
     // teller market handler
     function handler(uint256 marketScore, LoanRequest memory request)

@@ -32,11 +32,13 @@ abstract contract MarketHandler {
         uint16 maxInterestRate_,
         uint16 maxCollateralRatio_,
         uint256 maxLoanAmount_
-    ) {
+    ) // provider addresses
+    {
         admins[msg.sender] = true;
         maxInterestRate = maxInterestRate_;
         maxCollateralRatio = maxCollateralRatio_;
         maxLoanAmount = maxLoanAmount_;
+        // addProviders(addresses)
     }
 
     /**
@@ -57,6 +59,10 @@ abstract contract MarketHandler {
             uint16 userCollateralRatio,
             uint256 userLoanAmount
         );
+
+    function addCommitment(bytes32 commitment) public onlyAdmin {
+        usedCommitments[commitment] = true;
+    }
 
     function getProviders() public view returns (address[] memory providers_) {
         providers_ = new address[](providers.length());
