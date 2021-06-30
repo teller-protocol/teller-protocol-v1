@@ -25,9 +25,3 @@ contract Provider {
         admins[adminAddress] = adminValue;
     }
 }
-
-// select provider = plaid, credit karma
-// maxinterest rate
-//
-
-// constructor() { }
