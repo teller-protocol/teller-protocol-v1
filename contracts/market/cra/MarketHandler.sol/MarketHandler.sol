@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import { LoanRequest } from "../../storage/market.sol";
-import { Provider } from "./Provider.sol";
+import { LoanRequest } from "../../../storage/market.sol";
+import { Provider } from "../Provider.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -16,15 +16,9 @@ abstract contract MarketHandler {
     uint256 public maxLoanAmount;
 
     // admin stuff
-    mapping(address => bool) admins;
+    mapping(address => bool) public admins;
 
-    struct ProviderConfig {
-        mapping(address => bool) admin;
-        mapping(address => bool) signer;
-        // uint32 maxAge;
-    }
-
-    // signature stuff
+    // signature related variables
     mapping(bytes32 => bool) public usedCommitments;
     EnumerableSet.AddressSet internal providers;
 
@@ -33,7 +27,18 @@ abstract contract MarketHandler {
         _;
     }
 
-    constructor() {}
+    constructor(
+        uint16 maxInterestRate_,
+        uint16 maxCollateralRatio_,
+        uint256 maxLoanAmount_,
+        address[] calldata providers_
+    ) {
+        admins[msg.sender] = true;
+        maxInterestRate = maxInterestRate_;
+        maxCollateralRatio = maxCollateralRatio_;
+        maxLoanAmount = maxLoanAmount_;
+        addProviders(providers_);
+    }
 
     /**
      * @notice it gets the user score and user request then returns the loan interest rate,
@@ -68,6 +73,7 @@ abstract contract MarketHandler {
         for (uint256 i; i < providerAddresses.length; i++) {
             providers.add(providerAddresses[i]);
         }
+        numberOfSignaturesRequired = providers.length;
     }
 
     function removeProviders(address[] calldata providerAddresses)

@@ -84,8 +84,7 @@ library ProcessRequestLib {
         for (uint256 i = 0; i < signatureData.length; i++) {
             bytes32 providerId = bytes32(i);
             require(
-                signatureData[i].signedAt >
-                    block.timestamp - MarketLib.p(providerId).maxAge,
+                signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
             );
             require(

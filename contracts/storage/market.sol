@@ -92,10 +92,11 @@ struct LoanRequest {
 struct LoanUserRequest {
     address payable borrower;
     address assetAddress;
-    uint256 assetAmount;
     address collateralAsset;
-    uint256 collateralAmount;
+    uint16 collateralRatio;
     uint32 duration;
+    uint256 collateralAmount;
+    uint256 assetAmount;
 }
 
 /**
