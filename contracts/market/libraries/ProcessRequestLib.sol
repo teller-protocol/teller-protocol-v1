@@ -9,6 +9,7 @@ import {
 import { LibLoans } from "./LibLoans.sol";
 import { MarketLib } from "./MarketLib.sol";
 import { Verifier } from "../cra/verifier.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 library ProcessRequestLib {
     /**
@@ -31,13 +32,13 @@ library ProcessRequestLib {
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
-        request.witness[0] =
+        request.snarkWitnesses[0] =
             uint256(uint160(msg.sender)) ^
             LibLoans.s().borrowerLoans[msg.sender].length;
 
         // Verify the snark proof.
         require(
-            Verifier.verifyTx(request.proof, request.witness),
+            Verifier.verifyTx(request.snarkProof, request.snarkWitnesses),
             "Proof not verified"
         );
         // get variable amount of commitments from market handler
@@ -48,21 +49,26 @@ library ProcessRequestLib {
             for (uint8 j = 0; j < 8; j++) {
                 commitments[i] =
                     (commitments[i] << 32) ^
-                    bytes32(request.witness[2 + i * 8 + j]);
+                    bytes32(request.snarkWitnesses[2 + i * 8 + j]);
             }
-            commitments[i] ^= bytes32(request.signatureData[i].signedAt);
+            commitments[i] ^= bytes32(
+                request.dataProviderSignatures[i].signedAt
+            );
         }
 
         // equate this require statement to amount of commitments from market handler
-        require(request.signatureData.length == 3, "Must have 3 providers!");
+        require(
+            request.dataProviderSignatures.length == 3,
+            "Must have 3 providers!"
+        );
 
         // Verify that the commitment signatures are valid and that the data
         // is not too old for the market's liking.
-        _verifySignatures(commitments, request.signatureData);
+        _verifySignatures(commitments, request.dataProviderSignatures);
 
         // The second witness item (after identifier) is the market
         // score
-        uint256 marketScore = uint256(request.witness[1]);
+        uint256 marketScore = uint256(request.snarkWitnesses[1]);
 
         // Let the market handle the loan request and disperse the loan.
 
@@ -70,10 +76,13 @@ library ProcessRequestLib {
         // pass it the marketId and return max loan amount, collateral ratio, interest rate
         // upper and lower bound for loan amount, interest rate and collateral ratio depending on
         // market id
-        (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
-            marketScore,
-            request
-        );
+        // (interestRate, collateralRatio, maxLoanAmount) = MarketLib.handler(
+        //     marketScore,
+        //     request
+        // );
+        interestRate = 1000;
+        collateralRatio = 15000;
+        maxLoanAmount = 25000;
         return (interestRate, collateralRatio, maxLoanAmount);
     }
 
@@ -87,12 +96,12 @@ library ProcessRequestLib {
                 signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
             );
-            require(
-                MarketLib.s().usedCommitments[commitments[i]] == false,
-                "Teller: commitment already used"
-            );
+            // require(
+            //     MarketLib.s().usedCommitments[commitments[i]] == false,
+            //     "Teller: commitment already used"
+            // );
 
-            MarketLib.s().usedCommitments[commitments[i]] = true;
+            // MarketLib.s().usedCommitments[commitments[i]] = true;
 
             _validateSignature(
                 signatureData[i].signature,
@@ -125,9 +134,9 @@ library ProcessRequestLib {
                 signature.r,
                 signature.s
             );
-        require(
-            MarketLib.p(providerId).signer[recoveredSigner],
-            "Teller: not valid signature"
-        );
+        // require(
+        //     MarketLib.p(providerId).signer[recoveredSigner],
+        //     "Teller: not valid signature"
+        // );
     }
 }

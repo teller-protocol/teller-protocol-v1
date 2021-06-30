@@ -615,18 +615,21 @@ export const borrowWithZKCRA = async (
     assetAmount: assetAmount,
     collateralAsset: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     collateralAmount: collAmount,
+    collateralRatio: 500,
     duration: moment.duration(1, 'day').asSeconds(),
   }
 
   // create loan request object
   const loanRequest = {
     request: request_,
-    marketId: marketId_,
-    proof: proof_,
-    witness: witness_,
-    signatureData: [signatureDataOne, signatureDataTwo, signatureDataThree],
-    // {}[]
-    // [{},{},{}]
+    marketHandlerAddress: marketId_,
+    snarkProof: proof_,
+    snarkWitnesses: witness_,
+    dataProviderSignatures: [
+      signatureDataOne,
+      signatureDataTwo,
+      signatureDataThree,
+    ],
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
