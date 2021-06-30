@@ -121,18 +121,5 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       amount: BigNumber.from(100),
     })
     return helpers
-    // const depositAmount = BigNumber.from(details.loan.borrowedAmount)
-    // await fundLender({
-    //   token: details.lendingToken,
-    //   amount: depositAmount,
-    //   hre,
-    // })
-
-    // const lpHelperArgs: LPHelperArgs = {
-    //   diamond: diamond,
-    //   lendingToken: details.lendingToken,
-    //   tToken: tToken,
-    // }
-    // return lpHelperArgs
   }
 }

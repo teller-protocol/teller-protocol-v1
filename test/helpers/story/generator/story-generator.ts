@@ -20,7 +20,6 @@ export const generateStoryDomains = (
       scenarios: scenarioArray,
     }
     proceduralScenarioDomains.push(newSDomain)
-    console.log('scenarioArray: %o | newSDomain: %o', scenarioArray, newSDomain)
   }
   return proceduralScenarioDomains
 }
