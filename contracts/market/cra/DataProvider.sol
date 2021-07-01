@@ -10,8 +10,8 @@ contract DataProvider {
         _;
     }
 
-    constructor() {
-        admins[msg.sender] = true;
+    constructor(address initAdmin) {
+        admins[initAdmin] = true;
     }
 
     /**
