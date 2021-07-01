@@ -120,6 +120,9 @@ const deployProtocol: DeployFunction = async (hre) => {
     {
       contract: 'CreateLoanFacet',
       skipIfAlreadyDeployed: false,
+      libraries: {
+        ProcessRequestLib: '0xe7168c514A022345ed07E4Fad73eC3921C2b7bDb',
+      },
     },
     {
       contract: 'LoanDataFacet',
@@ -131,6 +134,10 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'SignersFacet',
+      skipIfAlreadyDeployed: true,
+    },
+    {
+      contract: 'ProviderFactoryFacet',
       skipIfAlreadyDeployed: true,
     },
     // NFT
