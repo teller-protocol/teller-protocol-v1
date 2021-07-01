@@ -4,8 +4,9 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ICErc20 } from '../../../../types/typechain'
+import { ICErc20, IERC20 } from '../../../../types/typechain'
 import { getFunds } from '../../get-funds'
+import { LoanHelpersReturn } from '../../loans'
 import { TestAction,TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import StoryTestDriver from './story-test-driver'
@@ -120,7 +121,17 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case 'POOL_TOGETHER': {
         const newTest = new Test('POOL_TOGETHER Lend DAPP', (async () => {
-          expect(1).to.equal(1)
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          const { details, diamond } = loan
+          const shouldPass = true
+          if (shouldPass) {
+            const tx = await DappStoryTestDriver.lendPoolTogether(hre, loan)
+            expect(tx).to.exist
+          } else {
+            await expect(await DappStoryTestDriver.lendPoolTogether(hre, loan)).to.be.reverted
+          }
+          // expect(1).to.equal(1)
         }))
         tests.push(newTest)
         break
@@ -200,5 +211,45 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       default:
         break
     }
+  }
+
+  static async lendPoolTogether(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const poolTicket = await contracts.get<IERC20>('IERC20', {
+      at: await diamond.getAssetPPoolTicket(details.lendingToken.address),
+    })
+    await diamond
+      .connect(details.borrower.signer)
+      .poolTogetherDepositTicket(
+        details.loan.id,
+        details.loan.lendingToken,
+        details.loan.borrowedAmount
+      )
+
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const daiBalance = await details.lendingToken.balanceOf(escrowAddress)
+    daiBalance.should.be.eql('0')
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.include(poolTicket.address)
+  }
+
+  static async withdrawPoolTogether(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const poolTicket = await contracts.get<IERC20>('IERC20', {
+      at: await diamond.getAssetPPoolTicket(details.lendingToken.address),
+    })
+    await diamond
+      .connect(details.borrower.signer)
+      .poolTogetherWithdrawAll(details.loan.id, details.lendingToken.address)
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.not.include(poolTicket.address)
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+    const daiBalance = await details. lendingToken.balanceOf(escrowAddress)
+    daiBalance.should.be.gt('0')
   }
 }
