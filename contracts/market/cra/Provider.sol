@@ -14,6 +14,11 @@ contract Provider {
         admins[msg.sender] = true;
     }
 
+    /**
+     * @notice it sets the admin of a provider
+     * @param signerAddress the address of the new or existing signer
+     * @param signerValue the bool value for the admin
+     */
     function setSigner(address signerAddress, bool signerValue)
         public
         onlyAdmin
@@ -21,6 +26,11 @@ contract Provider {
         signers[signerAddress] = signerValue;
     }
 
+    /**
+     * @notice it sets the admin of a provider
+     * @param adminAddress the address of the new or existing admin
+     * @param adminValue the bool value for the admin
+     */
     function setAdmin(address adminAddress, bool adminValue) public onlyAdmin {
         admins[adminAddress] = adminValue;
     }
