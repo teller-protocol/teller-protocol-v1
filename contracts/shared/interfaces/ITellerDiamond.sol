@@ -28,6 +28,7 @@ import {
 } from "../../escrow/dapps/CompoundClaimComp.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
+import { ProviderFactoryFacet } from "../../market/ProviderFactoryFacet.sol";
 
 // When adding a new Facet, kindly make sure to order the inherited contracts around so
 // that it's consistent with all the Facets' inheritance order. For example, if all the
@@ -52,7 +53,8 @@ abstract contract ITellerDiamond is
     AaveFacet,
     PoolTogetherFacet,
     IDiamondCut,
-    IDiamondLoupe
+    IDiamondLoupe,
+    ProviderFactoryFacet
 {
 
 }
