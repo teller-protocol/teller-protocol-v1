@@ -2,7 +2,6 @@
 pragma solidity ^0.8.3;
 
 import { LoanRequest } from "../../../storage/market.sol";
-import { Provider } from "../Provider.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
