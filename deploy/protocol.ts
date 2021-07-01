@@ -1,7 +1,12 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getNativeToken, getNetworkName, getTokens } from '../config'
+import {
+  getNativeToken,
+  getNetworkName,
+  getTokens,
+  getDappAddresses,
+} from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -31,6 +36,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
   const tokens = getTokens(network)
   const wrappedNativeToken = getNativeToken(network)
+  const dappAddresses = getDappAddresses(network)
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -141,7 +147,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'NFTFacet',
       skipIfAlreadyDeployed: false,
     },
-    // // Dapps
+    // Dapps
     {
       contract: 'AaveFacet',
       skipIfAlreadyDeployed: true,
@@ -163,6 +169,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'UniswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.uniswapV2RouterAddress],
         },
         {
           contract: 'CompoundFacet',
@@ -181,6 +188,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'SushiswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.sushiswapV2RouterAddress],
         }
       )
 
