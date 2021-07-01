@@ -43,8 +43,10 @@ library ProcessRequestLib {
             Verifier.verifyTx(request.snarkProof, request.snarkWitnesses),
             "Proof not verified"
         );
+
+        uint8 signaturesLength = marketHandler.numberOfSignaturesRequired();
         // get variable amount of commitments from market handler
-        bytes32[] memory commitments = new bytes32[](0);
+        bytes32[10] memory commitments = new bytes32(10)(0);
 
         // constructing our commitments to verify with our signature data
         for (uint8 i = 0; i < commitments.length; i++) {

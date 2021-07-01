@@ -366,59 +366,30 @@ export const fillZKCRAConfigInfo = async () => {
 
   // get provider address that was just created
   const providerAddress = await diamond.connect(deployer).providers('0')
-
-  // get provider artifact
-  const path = require('path')
-  const providerPath = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'artifacts',
-    'contracts',
-    'market',
-    'cra',
-    'DataProvider.sol',
-    'DataProvider.json'
-  )
-  const compiledProvider = readFileSync(providerPath, 'utf-8')
-
-  // construct new provider contract using the provider address and abi of the provider artifact
-  const provider = new ethers.Contract(
-    providerAddress,
-    JSON.parse(compiledProvider).abi
-  )
+  console.log(providerAddress)
+  // set new provider
+  const provider = await contracts.get('DataProvider', {
+    at: providerAddress,
+  })
 
   // add signers to provider
   console.log('about to set signer')
-  console.log(provider)
   await provider.connect(deployer).functions.setSigner(craSigner, true)
   console.log('set signer')
 
-  // create config
-  const maxAge_ = moment.duration(10, 'hours').asSeconds()
-  for (let i = 0; i < 3; i++) {
-    console.log('setting provider #' + i)
-    const config = {
-      marketId:
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-      providerId:
-        '0x000000000000000000000000000000000000000000000000000000000000000' +
-        i.toString(),
-      maxAge: maxAge_,
-      signer: craSigner,
-      signerValue: true,
-    }
-    // set market provider config in a loop
-    await diamond
-      .connect(deployer)
-      .setProviderInformation(
-        config.providerId,
-        config.maxAge,
-        config.signer,
-        config.signerValue
-      )
-    console.log('provider config #' + i + ' set.')
-  }
+  // getting tellerMarketHandler contract
+  const marketHandlerAddress = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
+  const tellerMarketHandler = await contracts.get('MarketHandler', {
+    at: marketHandlerAddress,
+  })
+  await tellerMarketHandler
+    .connect(deployer)
+    .functions.addProviders([providerAddress])
+  const marketProviders = await tellerMarketHandler
+    .connect(deployer)
+    .functions.getProviders()
+  console.log('set providers in market')
+  console.log(marketProviders)
 }
 
 export const outputCraValues = async (
@@ -432,6 +403,7 @@ export const outputCraValues = async (
   let proof: Proof
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
+  console.log('provider initialized')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -462,7 +434,9 @@ export const outputCraValues = async (
   // console.log(compArtifact)
 
   // compile into circuit
+  console.log('about to compile source')
   compilationArtifacts = provider.compile(source)
+  console.log('compiled source')
   // const programArray = compilationArtifacts.program
   // const programBuffer = programArray.buffer
   // const objectToAdd = {
@@ -501,6 +475,7 @@ export const outputCraValues = async (
       identifier.toString(),
     ])
   }
+  console.log('witness computed')
 
   // compute proof
   const provingKey = new Uint8Array(
@@ -513,6 +488,7 @@ export const outputCraValues = async (
     computation.witness,
     provingKey
   )
+  console.log('proof generated')
   return {
     computation: computation,
     proof: proof,

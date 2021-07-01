@@ -23,7 +23,7 @@ contract ProviderFactoryFacet {
      * admin of the said provider.
      */
     function createProvider() public {
-        DataProvider provider = new DataProvider();
+        DataProvider provider = new DataProvider(msg.sender);
         providers.push(provider);
     }
 
