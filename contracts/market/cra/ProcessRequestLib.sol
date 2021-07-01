@@ -22,7 +22,7 @@ library ProcessRequestLib {
      * @return maxLoanAmount the max loan amount the user is entitled to
      */
     function processMarketRequest(LoanRequest memory request)
-        internal
+        public
         returns (
             uint16 interestRate,
             uint16 collateralRatio,
