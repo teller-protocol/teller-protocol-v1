@@ -4,8 +4,9 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ICErc20 } from '../../../../types/typechain'
+import { IAToken,ICErc20 } from '../../../../types/typechain'
 import { getFunds } from '../../get-funds'
+import { LoanHelpersReturn } from '../../loans'
 import { TestAction,TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import StoryTestDriver from './story-test-driver'
@@ -69,12 +70,24 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     action: TestAction,
     tests: Test[]
   ): void {
-    const { getNamedSigner, contracts } = hre
     const actionType = action.actionType
     switch (actionType) {
       case 'AAVE': {
         const newTest = new Test('AAVE Lend DAPP', (async () => {
-          expect(1).to.equal(1)
+          const { getNamedSigner } = hre
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          let shouldPass = true
+          if (!loan) {
+            shouldPass = false
+          }
+          if (shouldPass) {
+            await DappStoryTestDriver.lendAave(hre, loan)
+            // expect().to.not.be.reverted
+          } else {
+            await DappStoryTestDriver.lendAave(hre, loan)
+            // await expect(await DappStoryTestDriver.lendAave(hre, loan)).to.be.reverted
+          }
         }))
         tests.push(newTest)
         break
@@ -200,5 +213,48 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       default:
         break
     }
+  }
+
+  static async lendAave(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const aToken = await contracts.get<IAToken>('IAToken', {
+          at: await diamond.getAssetAToken(details.lendingToken.address),
+        })
+    await diamond
+      .connect(details.borrower.signer)
+      .aaveDeposit(
+        details.loan.id,
+        details.loan.lendingToken,
+        details.loan.borrowedAmount
+      )
+
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const aDaiBalance = await aToken.balanceOf(escrowAddress)
+
+    aDaiBalance.eq(0).should.eql(false, '')
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.include(aToken.address)
+  }
+
+  static async withdrawAave(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const aToken = await contracts.get<IAToken>('IAToken', {
+          at: await diamond.getAssetAToken(details.lendingToken.address),
+        })
+    await diamond
+      .connect(details.borrower.signer)
+      .aaveWithdrawAll(details.loan.id, details.lendingToken.address)
+    
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.not.include(aToken.address)
+
+    const aDaiBalance = await aToken.balanceOf(escrowAddress)
+    aDaiBalance.eq(0).should.eql(true, '')
   }
 }
