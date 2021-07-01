@@ -11,6 +11,7 @@ import { nodes } from './nodes'
 import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
+import { dapps } from './dapps'
 
 export const getNetworkName = (network: Network): string =>
   process.env.FORKING_NETWORK ?? network.name
@@ -60,6 +61,8 @@ export const getNativeToken = (network: Network) => {
   }
   return wrappedNativeToken
 }
+
+export const getDappAddresses = (network: Network) => dapps[network.name]
 
 export const getNFT = (network: Network) => {
   const distributionsOutputFile = path.resolve(
