@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getNetworkName, getTokens } from '../config'
+import { getNativeToken, getNetworkName, getTokens } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -30,8 +30,7 @@ const deployProtocol: DeployFunction = async (hre) => {
   const nftDictionary = await contracts.get('TellerNFTDictionary')
 
   const tokens = getTokens(network)
-  const wrappedNativeToken =
-    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
+  const wrappedNativeToken = getNativeToken(network)
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -174,6 +173,9 @@ const deployProtocol: DeployFunction = async (hre) => {
       break
 
     case 'polygon':
+    case 'polygon_mumbai':
+    case 'localhost':
+    case 'hardhat':
       facets.push(
         // Dapps
         {

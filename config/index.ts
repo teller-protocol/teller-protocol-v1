@@ -45,6 +45,22 @@ export const getTokens = (network: Network) => {
   }
 }
 
+export const getNativeToken = (network: Network) => {
+  const tokens = getTokens(network)
+  let wrappedNativeToken
+  if (
+    network.name === 'mainnet' ||
+    network.name === 'kovan' ||
+    network.name === 'rinkeby' ||
+    network.name === 'ropsten'
+  ) {
+    wrappedNativeToken = tokens.erc20.WETH
+  } else {
+    wrappedNativeToken = tokens.erc20.WMATIC
+  }
+  return wrappedNativeToken
+}
+
 export const getNFT = (network: Network) => {
   const distributionsOutputFile = path.resolve(
     path.join(
