@@ -153,7 +153,7 @@ describe('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe('create loan w/ zkCRA', async () => {
+    describe.only('create loan w/ zkCRA', async () => {
       // declare computation and proof variables to be used throughout the test
       let goodScoreComputation: ComputationResult
       let goodProof_: Proof

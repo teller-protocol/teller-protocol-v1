@@ -360,7 +360,39 @@ export const fillZKCRAConfigInfo = async () => {
   const { craSigner } = await getNamedAccounts()
 
   const deployer = await getNamedSigner('deployer')
-  await diamond.connect(deployer).initializeMarketAdmins()
+  // await diamond.connect(deployer).initializeMarketAdmins()
+  // create random provider
+  await diamond.connect(deployer).createProvider()
+
+  // get provider address that was just created
+  const providerAddress = await diamond.connect(deployer).providers('0')
+
+  // get provider artifact
+  const path = require('path')
+  const providerPath = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'artifacts',
+    'contracts',
+    'market',
+    'cra',
+    'DataProvider.sol',
+    'DataProvider.json'
+  )
+  const compiledProvider = readFileSync(providerPath, 'utf-8')
+
+  // construct new provider contract using the provider address and abi of the provider artifact
+  const provider = new ethers.Contract(
+    providerAddress,
+    JSON.parse(compiledProvider).abi
+  )
+
+  // add signers to provider
+  console.log('about to set signer')
+  console.log(provider)
+  await provider.connect(deployer).functions.setSigner(craSigner, true)
+  console.log('set signer')
 
   // create config
   const maxAge_ = moment.duration(10, 'hours').asSeconds()
