@@ -20,6 +20,9 @@ import {
     ERC165Checker
 } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
@@ -29,7 +32,7 @@ import "./token-storage.sol" as Storage;
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-contract TToken_V1 is ITToken {
+contract TToken_V1 is ITToken, ReentryMods {
     function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 
@@ -216,6 +219,7 @@ contract TToken_V1 is ITToken {
         external
         override
         notRestricted
+        nonReentry(keccak256("MINT"))
         returns (uint256)
     {
         require(amount > 0, "Teller: cannot mint 0");
@@ -249,7 +253,11 @@ contract TToken_V1 is ITToken {
      * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
-    function redeem(uint256 amount) external override {
+    function redeem(uint256 amount)
+        external
+        override
+        nonReentry(keccak256("REDEEM"))
+    {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= balanceOf(_msgSender()),
@@ -276,7 +284,11 @@ contract TToken_V1 is ITToken {
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
-    function redeemUnderlying(uint256 amount) external override {
+    function redeemUnderlying(uint256 amount)
+        external
+        override
+        nonReentry(keccak256("REDEEM"))
+    {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= totalUnderlyingSupply(),
