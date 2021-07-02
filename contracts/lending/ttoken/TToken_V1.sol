@@ -367,7 +367,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Sets the restricted state of the platform.
+     * @notice Sets the restricted state of the tToken.
      * @param state boolean value that resembles the platform's state
      */
     function restrict(bool state)
@@ -376,6 +376,7 @@ contract TToken_V1 is ITToken {
         authorized(ADMIN, _msgSender())
     {
         s().restricted = state;
+        emit PlatformRestricted(state, _msgSender());
     }
 
     /**

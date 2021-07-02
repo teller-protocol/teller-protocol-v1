@@ -35,6 +35,16 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
+     * @notice This event is emitted when the platform restriction is switched
+     * @param restriction Boolean representing the state of the restriction
+     * @param investmentManager address of the investment manager flipping the switch
+     */
+    event PlatformRestricted(
+        bool restriction,
+        address indexed investmentManager
+    );
+
+    /**
      * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token
      */
