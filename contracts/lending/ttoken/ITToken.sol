@@ -54,6 +54,13 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
+     * @notice This event is emitted when a new investment management strategy has been set for a Teller token.
+     * @param strategyAddress The address of the new strategy set for managing the underlying assets held by the tToken.
+     * @param sender The address of the sender setting the token strategy.
+     */
+    event StrategySet(address strategyAddress, address indexed sender);
+
+    /**
      * @notice This event is emitted when the platform restriction is switched
      * @param restriction Boolean representing the state of the restriction
      * @param investmentManager address of the investment manager flipping the switch

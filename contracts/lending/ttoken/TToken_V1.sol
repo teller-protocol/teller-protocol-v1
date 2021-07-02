@@ -358,6 +358,7 @@ contract TToken_V1 is ITToken {
         if (initData.length > 0) {
             _delegateStrategy(initData);
         }
+        emit StrategySet(strategy, _msgSender());
     }
 
     /**
