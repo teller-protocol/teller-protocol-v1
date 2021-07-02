@@ -116,9 +116,18 @@ interface CreateLoanArgs {
   nft?: boolean
 }
 
+interface ZKCRAConfigArgs {
+  numberOfProviders: any
+}
+
 interface CreateLoanWithZKCRA {
   proof: Proof
   computation?: ComputationResult
+}
+
+interface ZKCRAConfigReturn {
+  numberOfSignaturesRequired: any
+  providerAddresses: string[]
 }
 
 interface ZKCRAHelpersReturn {
@@ -353,43 +362,50 @@ export const takeOutLoanWithNfts = async (
 }
 
 // we fill zkCRAConfigInfo before we sign
-export const fillZKCRAConfigInfo = async () => {
+export const fillZKCRAConfigInfo = async (
+  args: ZKCRAConfigArgs
+): Promise<ZKCRAConfigReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
   // get signers (providers)
   const { craSigner } = await getNamedAccounts()
 
   const deployer = await getNamedSigner('deployer')
-  // await diamond.connect(deployer).initializeMarketAdmins()
+  const providerAddresses_ = []
+
   // create random provider
-  await diamond.connect(deployer).createProvider()
-
-  // get provider address that was just created
-  const providerAddress = await diamond.connect(deployer).providers('0')
-  console.log(providerAddress)
-  // set new provider
-  const provider = await contracts.get('DataProvider', {
-    at: providerAddress,
-  })
-
-  // add signers to provider
-  console.log('about to set signer')
-  await provider.connect(deployer).functions.setSigner(craSigner, true)
-  console.log('set signer')
+  for (let i = 0; i < args.numberOfProviders; i++) {
+    await diamond.connect(deployer).createProvider()
+    const providerAddress = await diamond
+      .connect(deployer)
+      .providers(i.toString())
+    providerAddresses_.push(providerAddress)
+    const provider = await contracts.get('DataProvider', {
+      at: providerAddress,
+    })
+    console.log('about to set signer #' + i.toString())
+    await provider.connect(deployer).functions.setSigner(craSigner, true)
+  }
 
   // getting tellerMarketHandler contract
   const marketHandlerAddress = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
   const tellerMarketHandler = await contracts.get('MarketHandler', {
     at: marketHandlerAddress,
   })
+
   await tellerMarketHandler
     .connect(deployer)
-    .functions.addProviders([providerAddress])
-  const marketProviders = await tellerMarketHandler
+    .functions.addProviders(providerAddresses_)
+
+  // number of signatures required
+  const numberOfSignaturesRequired_ = await tellerMarketHandler
     .connect(deployer)
-    .functions.getProviders()
-  console.log('set providers in market')
-  console.log(marketProviders)
+    .numberOfSignaturesRequired()
+
+  return {
+    numberOfSignaturesRequired: numberOfSignaturesRequired_,
+    providerAddresses: providerAddresses_,
+  }
 }
 
 export const outputCraValues = async (
@@ -596,12 +612,9 @@ export const borrowWithZKCRA = async (
   console.log('all our signature data created')
 
   // all borrow variables
-  const marketId_ =
-    '0x0000000000000000000000000000000000000000000000000000000000000000'
   const proof_ = proof.proof
   const witness_ = proof.inputs
   const borrower = (await getNamedAccounts()).borrower
-  const signerBorrower = ethers.provider.getSigner(borrower)
 
   // get tokens
   const lendToken = '0x6b175474e89094c44da98b954eedeac495271d0f'
