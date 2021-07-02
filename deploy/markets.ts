@@ -3,7 +3,7 @@ import { ContractTransaction } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getMarkets, getSigners, getTokens } from '../config'
+import { getDappAddresses, getMarkets, getSigners, getTokens } from '../config'
 import { ITellerDiamond, ITToken } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
@@ -24,6 +24,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
   log('')
 
   const tokenAddresses = getTokens(network)
+  const dappAddresses = getDappAddresses(network)
   const markets = getMarkets(network)
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
@@ -129,6 +130,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
                 case 'TokenSymbol':
                   return tokenAddresses.all[value]
                 case 'Address':
+                  return dappAddresses[value]
                 case 'Number':
                   return value
               }

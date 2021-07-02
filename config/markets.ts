@@ -38,6 +38,10 @@ const polygonMarkets: Market[] = [
           value: 'ADAI',
         },
         {
+          type: 'Address',
+          value: 'aaveLendingPoolAddressProvider',
+        },
+        {
           // Balance Ratio Min
           type: 'Number',
           value: '2000',
