@@ -189,6 +189,7 @@ contract TToken_V1 is ITToken {
 
         // Transfer tokens to recipient
         SafeERC20.safeTransfer(s().underlying, recipient, amount);
+        emit LoanFunded(recipient, amount);
     }
 
     /**
@@ -203,6 +204,7 @@ contract TToken_V1 is ITToken {
     {
         s().totalRepaid += amount;
         s().totalInterestRepaid += interestAmount;
+        emit LoanPaymentMade(_msgSender(), amount, interestAmount);
     }
 
     /**

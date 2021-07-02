@@ -35,6 +35,25 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
+     * @notice This event is emitted when a loan has been taken out through the Teller Diamond.
+     * @param recipient The address receiving the borrowed funds.
+     * @param totalBorrowed The total amount being loaned out by the tToken.
+     */
+    event LoanFunded(address indexed recipient, uint256 totalBorrowed);
+
+    /**
+     * @notice This event is emitted when a loan has been repaid through the Teller Diamond.
+     * @param sender The address making the payment to the tToken.
+     * @param principlePayment The amount paid back towards the principle loaned out by the tToken.
+     * @param interestPayment The amount paid back towards the interest owed to the tToken.
+     */
+    event LoanPaymentMade(
+        address indexed sender,
+        uint256 principlePayment,
+        uint256 interestPayment
+    );
+
+    /**
      * @notice This event is emitted when the platform restriction is switched
      * @param restriction Boolean representing the state of the restriction
      * @param investmentManager address of the investment manager flipping the switch
