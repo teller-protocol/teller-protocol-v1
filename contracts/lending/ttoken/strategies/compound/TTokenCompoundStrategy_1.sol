@@ -17,6 +17,9 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibMeta } from "../../../../shared/libraries/LibMeta.sol";
+import {
+    LibCompound
+} from "../../../../escrow/dapps/libraries/LibCompound.sol";
 
 // Storage
 import "../../token-storage.sol" as TokenStorage;
@@ -76,7 +79,11 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
             );
 
             // Deposit tokens into Compound
-            compoundStore().cToken.mint(amountToDeposit);
+            require(
+                compoundStore().cToken.mint(amountToDeposit) ==
+                    LibCompound.NO_ERROR,
+                "Teller: Strategy deposit error - Compound"
+            );
 
             emit StrategyRebalanced(NAME, msg.sender);
         } else if (storedRatio < compoundStore().balanceRatioMin) {
@@ -140,7 +147,11 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
             NumbersLib.percent(storedBal + compoundBal - amount, medianRatio);
         uint256 redeemAmount = requiredBal + amount - storedBal;
         // Withdraw tokens from Compound if needed
-        compoundStore().cToken.redeemUnderlying(redeemAmount);
+        require(
+            compoundStore().cToken.redeemUnderlying(redeemAmount) ==
+                LibCompound.NO_ERROR,
+            "Teller: Strategy withdraw error - Compound"
+        );
     }
 
     /**
