@@ -185,6 +185,7 @@ describe('Loans', () => {
         it('uses witness, output and proof to take out a loan with a good score', async () => {
           const { getHelpers } = await borrowWithZKCRA({
             proof: goodProof_,
+            providerAddresses: providerAddresses_,
           })
           helpers = await getHelpers()
           const takenOutLoan = helpers.details.loan
