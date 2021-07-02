@@ -6,6 +6,7 @@ import { DataProvider } from "../DataProvider.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "hardhat/console.sol";
 
 abstract contract MarketHandler {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -72,6 +73,8 @@ abstract contract MarketHandler {
     function addProviders(address[] memory providerAddresses) public onlyAdmin {
         for (uint256 i; i < providerAddresses.length; i++) {
             providers.add(providerAddresses[i]);
+            console.log("Market Handler");
+            console.log(providerAddresses[i]);
         }
         numberOfSignaturesRequired = uint8(providers.length());
     }

@@ -393,6 +393,8 @@ export const fillZKCRAConfigInfo = async (
     .connect(deployer)
     .functions.addProviders(providerAddresses_)
 
+  console.log(providerAddresses_)
+
   // number of signatures required
   const numberOfSignaturesRequired_ = await tellerMarketHandler
     .connect(deployer)
@@ -511,7 +513,7 @@ export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
 ): Promise<CreateLoanReturn> => {
   // get proof and witness from args
-  const { proof, computation } = args
+  const { proof, computation, providerAddresses } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
@@ -538,7 +540,6 @@ export const borrowWithZKCRA = async (
       .join('')
   // get the signer
   const signer = await getNamedSigner('craSigner')
-  const signerAddress = await signer.getAddress()
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
@@ -649,7 +650,7 @@ export const borrowWithZKCRA = async (
       signatureDataTwo,
       signatureDataThree,
     ],
-    providers: args.providerAddresses,
+    providers: providerAddresses,
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))

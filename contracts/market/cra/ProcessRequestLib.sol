@@ -51,13 +51,12 @@ library ProcessRequestLib {
 
         // get variable amount of commitments from market handler
         bytes32[] memory commitments = new bytes32[](signaturesLength);
-        console.log(commitments.length);
 
         // constructing our commitments to verify with our signature data
         for (uint8 i = 0; i < commitments.length; i++) {
             for (uint8 j = 0; j < 8; j++) {
                 commitments[i] =
-                    (bytes32(0) << 32) ^
+                    (commitments[i] << 32) ^
                     bytes32(request.snarkWitnesses[2 + i * 8 + j]);
             }
             commitments[i] ^= bytes32(
@@ -150,6 +149,9 @@ library ProcessRequestLib {
                 signature.s
             );
         DataProvider provider = DataProvider(providerAddress);
+        console.log("Process request lib");
+        console.log(providerAddress);
+        console.log(recoveredSigner);
         require(
             provider.signers(recoveredSigner),
             "Teller: not valid signature"
