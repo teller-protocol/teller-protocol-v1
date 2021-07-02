@@ -168,7 +168,7 @@ describe('Loans', () => {
         // and market
         console.log('filling zkCRAConfigInfo')
         const { numberOfSignaturesRequired, providerAddresses } =
-          await fillZKCRAConfigInfo({ numberOfProviders: 1 })
+          await fillZKCRAConfigInfo({ numberOfProviders: 2 })
         numberOfSignaturesRequired_ = numberOfSignaturesRequired
         providerAddresses_ = providerAddresses
         console.log(
@@ -176,7 +176,7 @@ describe('Loans', () => {
         )
         console.log('provider addresses: ' + providerAddresses_)
       })
-      describe.only('good score', async () => {
+      describe('good score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true
