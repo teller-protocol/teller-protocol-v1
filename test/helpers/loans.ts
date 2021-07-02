@@ -125,16 +125,12 @@ interface ZKCRAConfigArgs {
 interface CreateLoanWithZKCRA {
   proof: Proof
   computation?: ComputationResult
+  providerAddresses?: any
 }
 
 interface ZKCRAConfigReturn {
   numberOfSignaturesRequired: any
   providerAddresses: string[]
-}
-
-interface ZKCRAHelpersReturn {
-  computation: ComputationResult
-  proof: Proof
 }
 export interface CreateLoanReturn {
   tx: Promise<ContractTransaction>
@@ -676,6 +672,7 @@ export const borrowWithZKCRA = async (
       signatureDataTwo,
       signatureDataThree,
     ],
+    providers: args.providerAddresses,
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
