@@ -13,6 +13,21 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract AaveFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
+
+    /**
+     * @dev The address of Aave's Lending Pool Address Provider on the deployed network
+     * @dev example - Aave's Lending Pool Address Provider contract address on L1 mainnet or L2 polygon mainnet
+     */
+    address public immutable LP_ADDRESS_PROVIDER_ADDRESS;
+
+    /**
+     * @notice Sets the network relevant address for Aave's Lending Pool Address Provider on protocol deployment.
+     * @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
+     */
+    constructor(address aaveLPAddressProvider) public {
+        LP_ADDRESS_PROVIDER_ADDRESS = aaveLPAddressProvider;
+    }
+
     /**
         @notice This event is emitted every time Aave deposit is invoked successfully.
         @param tokenAddress address of the underlying token.
@@ -58,9 +73,14 @@ contract AaveFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         ILoansEscrow escrow = LibEscrow.e(loanID);
 
-        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
+        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool(
+            LP_ADDRESS_PROVIDER_ADDRESS
+        );
         escrow.setTokenAllowance(tokenAddress, address(aaveLendingPool));
-        IAToken aToken = LibDapps.getAToken(tokenAddress);
+        IAToken aToken = LibDapps.getAToken(
+            LP_ADDRESS_PROVIDER_ADDRESS,
+            tokenAddress
+        );
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(escrow));
 
         bytes memory callData = abi.encodeWithSelector(
@@ -103,8 +123,13 @@ contract AaveFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         ILoansEscrow escrow = LibEscrow.e(loanID);
 
-        IAToken aToken = LibDapps.getAToken(tokenAddress);
-        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
+        IAToken aToken = LibDapps.getAToken(
+            LP_ADDRESS_PROVIDER_ADDRESS,
+            tokenAddress
+        );
+        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool(
+            LP_ADDRESS_PROVIDER_ADDRESS
+        );
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(escrow));
         require(
             aTokenBalanceBeforeWithdraw >= amount,
@@ -151,12 +176,17 @@ contract AaveFacet is PausableMods, DappMods {
         onlyBorrower(loanID)
     {
         ILoansEscrow escrow = LibEscrow.e(loanID);
-        IAToken aToken = LibDapps.getAToken(tokenAddress);
+        IAToken aToken = LibDapps.getAToken(
+            LP_ADDRESS_PROVIDER_ADDRESS,
+            tokenAddress
+        );
 
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(escrow));
         require(aTokenBalanceBeforeWithdraw >= 0, "NO_BALANCE_TO_WITHDRAW");
 
-        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
+        IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool(
+            LP_ADDRESS_PROVIDER_ADDRESS
+        );
 
         bytes memory callData = abi.encodeWithSelector(
             aaveLendingPool.withdraw.selector,
