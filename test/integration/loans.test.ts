@@ -167,7 +167,7 @@ describe('Loans', () => {
         console.log('filling zkCRAConfigInfo')
         await fillZKCRAConfigInfo()
       })
-      describe('good score', async () => {
+      describe.only('good score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true
