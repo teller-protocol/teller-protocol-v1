@@ -2,13 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    ERC20Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {
-    RolesFacet
-} from "../../contexts2/access-control/roles/RolesFacet.sol";
+import { RolesFacet } from "../../contexts2/access-control/roles/RolesFacet.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
@@ -32,6 +28,16 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         address indexed sender,
         uint256 tTokenAmount,
         uint256 underlyingAmount
+    );
+
+    /**
+     * @notice This event is emitted when the platform restriction is switched
+     * @param restriction Boolean representing the state of the restriction
+     * @param investmentManager address of the investment manager flipping the switch
+     */
+    event PlatformRestricted(
+        bool restriction,
+        address indexed investmentManager
     );
 
     /**
@@ -102,7 +108,6 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         external
         virtual
         returns (uint16 ratio_);
-        
 
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
