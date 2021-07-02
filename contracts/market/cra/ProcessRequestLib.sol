@@ -45,6 +45,7 @@ library ProcessRequestLib {
             "Proof not verified"
         );
 
+        // signatures length
         uint8 signaturesLength = marketHandler.numberOfSignaturesRequired();
 
         // get variable amount of commitments from market handler

@@ -161,11 +161,20 @@ describe('Loans', () => {
       let goodProof_: Proof
       let badProof_: Proof
       let helpers: any
+      let numberOfSignaturesRequired_: any
+      let providerAddresses_: any
       before(async () => {
         // we fill the necessary config information (admins mostly) into our providers
         // and market
         console.log('filling zkCRAConfigInfo')
-        await fillZKCRAConfigInfo()
+        const { numberOfSignaturesRequired, providerAddresses } =
+          await fillZKCRAConfigInfo({ numberOfProviders: 1 })
+        numberOfSignaturesRequired_ = numberOfSignaturesRequired
+        providerAddresses_ = providerAddresses
+        console.log(
+          'number of signatures required: ' + numberOfSignaturesRequired_
+        )
+        console.log('provider addresses: ' + providerAddresses_)
       })
       describe.only('good score', async () => {
         // check if computation and proof exist
@@ -180,8 +189,10 @@ describe('Loans', () => {
             proof: goodProof_,
           })
           helpers = await getHelpers()
+          const takenOutLoan = helpers.details.loan
+          console.log(takenOutLoan)
           // check if loan exists
-          expect(helpers.details.loan).to.exist
+          expect(takenOutLoan).to.exist
         })
       })
       describe('bad score', async () => {
