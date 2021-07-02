@@ -62,7 +62,8 @@ export const getNativeToken = (network: Network) => {
   return wrappedNativeToken
 }
 
-export const getDappAddresses = (network: Network) => dapps[network.name]
+export const getDappAddresses = (network: Network) =>
+  dapps[getNetworkName(network)]
 
 export const getNFT = (network: Network) => {
   const distributionsOutputFile = path.resolve(
