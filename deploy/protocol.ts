@@ -123,7 +123,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'CreateLoanFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'LoanDataFacet',
@@ -256,7 +256,7 @@ const deployLoansEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -264,7 +264,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -274,7 +274,7 @@ const deployLoansEscrowBeacon = async (
     ethers.utils.getAddress(loansEscrowLogic.address)
   ) {
     log(`Upgrading Loans Escrow logic: ${loansEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
     await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
@@ -304,7 +304,7 @@ const deployCollateralEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -312,7 +312,7 @@ const deployCollateralEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'CollateralEscrowBeaconFactory',
     args: [beaconProxy.address, collateralEscrowLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -322,7 +322,7 @@ const deployCollateralEscrowBeacon = async (
     ethers.utils.getAddress(collateralEscrowLogic.address)
   ) {
     log(`Upgrading Collateral Escrow logic: ${collateralEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
     await beacon
@@ -354,7 +354,7 @@ const deployTTokenBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -362,7 +362,7 @@ const deployTTokenBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'TTokenBeaconFactory',
     args: [beaconProxy.address, tTokenLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -372,7 +372,7 @@ const deployTTokenBeacon = async (
     ethers.utils.getAddress(tTokenLogic.address)
   ) {
     log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
     await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())

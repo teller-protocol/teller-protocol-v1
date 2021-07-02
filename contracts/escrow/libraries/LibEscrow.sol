@@ -25,10 +25,14 @@ library LibEscrow {
         e_ = s().loanEscrows[loanID];
     }
 
+    function exists(uint256 loanID) internal view returns (bool) {
+        return address(e(loanID)) != address(0);
+    }
+
     /**
      * @notice It returns a list of tokens owned by a loan escrow
      * @param loanID uint256 index used to return our token list
-     * @return t_ which is a list of tokens 
+     * @return t_ which is a list of tokens
      */
     function getEscrowTokens(uint256 loanID)
         internal
@@ -49,7 +53,7 @@ library LibEscrow {
         view
         returns (uint256)
     {
-        return IERC20(token).balanceOf(address(e(loanID)));
+        return exists(loanID) ? IERC20(token).balanceOf(address(e(loanID))) : 0;
     }
 
     /**
@@ -82,6 +86,10 @@ library LibEscrow {
         view
         returns (uint256 value_)
     {
+        if (!exists(loanID)) {
+            return 0;
+        }
+
         address lendingToken = LibLoans.loan(loanID).lendingToken;
         value_ += balanceOf(loanID, lendingToken);
 
