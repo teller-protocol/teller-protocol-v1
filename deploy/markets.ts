@@ -129,7 +129,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
               switch (type) {
                 case 'TokenSymbol':
                   return tokenAddresses.all[value]
-                case 'Address':
+                case 'ProtocolAddressConstant':
                   return dappAddresses[value]
                 case 'Number':
                   return value

@@ -53,7 +53,7 @@ interface Market {
 interface MarketStrategy {
   name: string
   initArgs: Array<{
-    type: 'TokenSymbol' | 'Address' | 'Number'
+    type: 'TokenSymbol' | 'Address' | 'Number' | 'ProtocolAddressConstant'
     value: any
   }>
 }

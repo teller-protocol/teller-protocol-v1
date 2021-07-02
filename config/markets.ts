@@ -38,7 +38,7 @@ const polygonMarkets: Market[] = [
           value: 'ADAI',
         },
         {
-          type: 'Address',
+          type: 'ProtocolAddressConstant',
           value: 'aaveLendingPoolAddressProvider',
         },
         {
