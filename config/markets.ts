@@ -38,6 +38,10 @@ const polygonMarkets: Market[] = [
           value: 'ADAI',
         },
         {
+          type: 'Address',
+          value: 'aaveLendingPoolAddressProvider',
+        },
+        {
           // Balance Ratio Min
           type: 'Number',
           value: '2000',
@@ -128,8 +132,8 @@ export const markets: Record<string, Market[]> = {
       },
     },
   ],
-  hardhat: mainnetMarkets,
-  localhost: mainnetMarkets,
+  hardhat: polygonMarkets,
+  localhost: polygonMarkets,
   mainnet: mainnetMarkets,
   polygon: polygonMarkets,
   polygon_mumbai: polygonMarkets,
