@@ -205,6 +205,7 @@ describe('Loans', () => {
         it('take out a loan should fail with bad score', async () => {
           const { tx } = await borrowWithZKCRA({
             proof: badProof_,
+            providerAddresses: providerAddresses_,
           })
           await tx.should.be.revertedWith('market score not high enough!')
         })

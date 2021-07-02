@@ -393,8 +393,6 @@ export const fillZKCRAConfigInfo = async (
     .connect(deployer)
     .functions.addProviders(providerAddresses_)
 
-  console.log(providerAddresses_)
-
   // number of signatures required
   const numberOfSignaturesRequired_ = await tellerMarketHandler
     .connect(deployer)
@@ -581,21 +579,15 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampTwo,
   }
-  console.log(signatureDataTwo)
 
   // third signature
   const timestampThree = moment().unix()
   const messageThree = ethers.BigNumber.from(thirdInput)
     .xor(timestampThree)
     .toHexString()
-  console.log({
-    messageThree: BigNumber.from(messageThree.toString()).toString(),
-  })
   const credentialsSignerThree = await signer.signMessage(
     ethers.utils.arrayify(messageThree)
   )
-  console.log('message three done')
-  console.log('credentials')
   const sigThree = ethers.utils.splitSignature(credentialsSignerThree)
   const signatureDataThree = {
     signature: {
@@ -605,8 +597,6 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampThree,
   }
-
-  console.log('all our signature data created')
 
   // all borrow variables
   const proof_ = proof.proof
@@ -639,6 +629,7 @@ export const borrowWithZKCRA = async (
 
   // teller market address
   const marketHandlerAddress_ = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
+  console.log('taking out loan')
   // create loan request object
   const loanRequest = {
     request: request_,

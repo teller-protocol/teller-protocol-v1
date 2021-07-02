@@ -58,9 +58,6 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-// hardhat helpers
-import "hardhat/console.sol";
-
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
