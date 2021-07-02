@@ -119,6 +119,7 @@ contract SettingsFacet is RolesMods {
      */
     function getNFTLiquidationController()
         external
+        view
         returns (address controller_)
     {
         controller_ = AppStorageLib.store().nftLiquidationController;
