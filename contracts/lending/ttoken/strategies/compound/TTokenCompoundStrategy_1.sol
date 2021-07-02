@@ -147,6 +147,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @param cTokenAddress Address of the Compound token that has the same underlying asset as the TToken.
      * @param balanceRatioMin Percentage indicating the _ limit of underlying token balance should remain on the TToken
      * @param balanceRatioMax Percentage indicating the _ limit of underlying token balance should remain on the TToken
+     * @dev Note that the balanceRatio percentages have to be scaled by ONE_HUNDRED_PERCENT
      */
     function init(
         address cTokenAddress,
