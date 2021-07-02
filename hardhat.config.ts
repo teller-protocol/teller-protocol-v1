@@ -121,6 +121,7 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
+    enabled: true, //enabled: (process.env.REPORT_GAS) ? true : false
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,

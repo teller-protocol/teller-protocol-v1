@@ -14,7 +14,7 @@ export const generateAllStoryTests = (
   const allTestStoryDomains: TestScenarioDomain[] =
     generateStoryDomains(hre)
 
-  const mochaInstance = new Mocha()
+  const mochaInstance = new Mocha(hre.config.mocha)
   mochaInstance.timeout(19000)
 
   for (const storyDomain of allTestStoryDomains) {

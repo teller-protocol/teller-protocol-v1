@@ -67,6 +67,9 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
       mochaInstance.run(resolve)
     })
 
+
+    
+
     console.log('Completed all tests.')
 
     /*if(testFailures > 0){
