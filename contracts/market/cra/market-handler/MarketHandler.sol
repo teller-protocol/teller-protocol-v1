@@ -58,7 +58,7 @@ abstract contract MarketHandler {
             uint256 userLoanAmount
         );
 
-    function addCommitment(bytes32 commitment) public onlyAdmin {
+    function addCommitment(bytes32 commitment) public {
         usedCommitments[commitment] = true;
     }
 

@@ -10,6 +10,7 @@ import { MarketHandler } from "../cra/market-handler/MarketHandler.sol";
 import { LibLoans } from "../libraries/LibLoans.sol";
 import { Verifier } from "../cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 
 library ProcessRequestLib {
     /**
@@ -48,6 +49,7 @@ library ProcessRequestLib {
 
         // get variable amount of commitments from market handler
         bytes32[] memory commitments = new bytes32[](signaturesLength);
+        console.log(commitments.length);
 
         // constructing our commitments to verify with our signature data
         for (uint8 i = 0; i < commitments.length; i++) {
@@ -101,12 +103,13 @@ library ProcessRequestLib {
         address marketHandlerAddress
     ) private {
         MarketHandler marketHandler = MarketHandler(marketHandlerAddress);
-        for (uint256 i = 0; i < signatureData.length; i++) {
+        for (uint256 i = 0; i < commitments.length; i++) {
             bytes32 providerId = bytes32(i);
             require(
                 signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
             );
+            console.log(marketHandler.maxInterestRate());
             require(
                 marketHandler.usedCommitments(commitments[i]) == false,
                 "Teller: commitment already used"
