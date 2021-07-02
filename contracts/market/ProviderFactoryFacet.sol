@@ -2,7 +2,6 @@
 pragma solidity ^0.8.3;
 
 import { DataProvider } from "./cra/DataProvider.sol";
-import "hardhat/console.sol";
 
 contract ProviderFactoryFacet {
     address public admin;

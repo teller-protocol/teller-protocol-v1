@@ -11,7 +11,6 @@ import { LibLoans } from "../libraries/LibLoans.sol";
 import { Verifier } from "../cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { DataProvider } from "./DataProvider.sol";
-import "hardhat/console.sol";
 
 library ProcessRequestLib {
     /**
@@ -110,7 +109,6 @@ library ProcessRequestLib {
                 signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
             );
-            console.log(marketHandler.maxInterestRate());
             require(
                 marketHandler.usedCommitments(commitments[i]) == false,
                 "Teller: commitment already used"
@@ -149,9 +147,6 @@ library ProcessRequestLib {
                 signature.s
             );
         DataProvider provider = DataProvider(providerAddress);
-        console.log("Process request lib");
-        console.log(providerAddress);
-        console.log(recoveredSigner);
         require(
             provider.signers(recoveredSigner),
             "Teller: not valid signature"
