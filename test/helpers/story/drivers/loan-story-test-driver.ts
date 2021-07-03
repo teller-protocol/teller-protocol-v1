@@ -168,7 +168,9 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const funcToRun =
       args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
     const { tx, getHelpers } = await funcToRun(hre, createArgs)
-    return await tx
+    const result = await tx
+    console.log({result})
+    return result
   }
 
   static getLoan = async (
