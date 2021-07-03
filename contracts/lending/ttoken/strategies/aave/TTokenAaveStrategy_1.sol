@@ -2,22 +2,16 @@
 pragma solidity ^0.8.0;
 
 // contracts
-import {
-    RolesMods
-} from "../../../../contexts2/access-control/roles/RolesMods.sol";
+import { RolesMods } from "../../../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../../data.sol";
 
 // Interfaces
 import { IAToken } from "../../../../shared/interfaces/IAToken.sol";
-import {
-    IAaveLendingPool
-} from "../../../../shared/interfaces/IAaveLendingPool.sol";
+import { IAaveLendingPool } from "../../../../shared/interfaces/IAaveLendingPool.sol";
 import { TTokenStrategy } from "../TTokenStrategy.sol";
 
 // Libraries
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibDapps } from "../../../../escrow/dapps/libraries/LibDapps.sol";
 
@@ -50,17 +44,24 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
      * withdraw to keep the ratio within that range.
      */
     function rebalance() public override {
-        (uint256 storedBal, uint256 aaveBal, uint16 storedRatio) =
-            _getBalanceInfo();
+        (
+            uint256 storedBal,
+            uint256 aaveBal,
+            uint16 storedRatio
+        ) = _getBalanceInfo();
         if (storedRatio > aaveStore().balanceRatioMax) {
             // Calculate median ratio to rebalance to
-            uint16 medianRatio =
-                (aaveStore().balanceRatioMax + aaveStore().balanceRatioMin) / 2;
-            uint256 requiredBal =
-                NumbersLib.percent(storedBal + aaveBal, medianRatio);
+            uint16 medianRatio = (aaveStore().balanceRatioMax +
+                aaveStore().balanceRatioMin) / 2;
+            uint256 requiredBal = NumbersLib.percent(
+                storedBal + aaveBal,
+                medianRatio
+            );
             uint256 amountToDeposit = storedBal - requiredBal;
 
-            IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+            IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool(
+                aaveStore().LP_ADDRESS_PROVIDER_ADDRESS
+            );
 
             // Approve Aave lending pool
             SafeERC20.safeIncreaseAllowance(
@@ -92,8 +93,11 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
      * @param amount Amount of underlying tokens that must be available.
      */
     function withdraw(uint256 amount) external override {
-        (uint256 storedBal, uint256 aaveBal, uint16 storedRatio) =
-            _getBalanceInfo();
+        (
+            uint256 storedBal,
+            uint256 aaveBal,
+            uint16 storedRatio
+        ) = _getBalanceInfo();
         if (storedBal < amount) {
             _withdraw(amount, storedBal, aaveBal, storedRatio);
         }
@@ -128,16 +132,17 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
         uint16 storedRatio
     ) internal {
         // Calculate amount to rebalance
-        uint16 medianRatio =
-            (aaveStore().balanceRatioMax + aaveStore().balanceRatioMin) / 2;
-        uint256 requiredBal =
-            NumbersLib.percent(
-                storedBal + aaveBal - amount,
-                medianRatio - storedRatio
-            );
+        uint16 medianRatio = (aaveStore().balanceRatioMax +
+            aaveStore().balanceRatioMin) / 2;
+        uint256 requiredBal = NumbersLib.percent(
+            storedBal + aaveBal - amount,
+            medianRatio - storedRatio
+        );
         uint256 redeemAmount = requiredBal - storedBal + amount;
         // Withdraw tokens from the Aave lending pool if needed
-        IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+        IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool(
+            aaveStore().LP_ADDRESS_PROVIDER_ADDRESS
+        );
         lendingPool.withdraw(
             address(tokenStore().underlying),
             redeemAmount,
@@ -148,15 +153,18 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
     /**
      * @notice Sets the Aave token that should be used to manage the underlying Teller Token asset.
      * @param aTokenAddress Address of the Aave token that has the same underlying asset as the TToken.
+     * @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
      * @param balanceRatioMin Percentage indicating the _ limit of underlying token balance should remain on the TToken
      * @param balanceRatioMax Percentage indicating the _ limit of underlying token balance should remain on the TToken
      */
     function init(
         address aTokenAddress,
+        address aaveLPAddressProvider,
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
     ) external {
         aaveStore().aToken = IAToken(aTokenAddress);
+        aaveStore().LP_ADDRESS_PROVIDER_ADDRESS = aaveLPAddressProvider;
         aaveStore().balanceRatioMin = balanceRatioMin;
         aaveStore().balanceRatioMax = balanceRatioMax;
     }

@@ -7,15 +7,27 @@ import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 
 // Libraries
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import { LibUniswap } from "./libraries/LibUniswap.sol";
-import {
-    ChainlinkLib
-} from "../../price-aggregator/chainlink/ChainlinkLib.sol";
+import { LibSwapper } from "./libraries/LibSwapper.sol";
+import { ChainlinkLib } from "../../price-aggregator/chainlink/ChainlinkLib.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
 
 contract UniswapFacet is PausableMods, DappMods {
+    /**
+     * @dev The address of the swapping router on the deployed network
+     * @dev example - UniswapV2Router contract address on L1 mainnet or L2 arbitrum mainnet
+     */
+    address public immutable UNISWAP_ROUTER_ADDRESS;
+
+    /**
+     * @notice Sets the swapping router address on protocol deployment.
+     * @param routerAddress The address of the swapping router contract on the network.
+     */
+    constructor(address routerAddress) public {
+        UNISWAP_ROUTER_ADDRESS = routerAddress;
+    }
+
     /**
      * @notice Event emitted every time a successful swap has taken place.
      * @param sourceToken source token address.
@@ -55,27 +67,22 @@ contract UniswapFacet is PausableMods, DappMods {
         );
 
         // Set allowance on source token to Uniswap Router
-        LibEscrow.e(loanID).setTokenAllowance(src, address(LibUniswap.ROUTER));
+        LibEscrow.e(loanID).setTokenAllowance(src, UNISWAP_ROUTER_ADDRESS);
 
         // Encode data for LoansEscrow to call
-        bytes memory callData =
-            abi.encodeWithSelector(
-                IUniswapV2Router.swapExactTokensForTokens.selector,
-                sourceAmount,
-                minDestination,
-                path,
-                address(LibEscrow.e(loanID)),
-                block.timestamp
-            );
+        bytes memory callData = abi.encodeWithSelector(
+            IUniswapV2Router.swapExactTokensForTokens.selector,
+            sourceAmount,
+            minDestination,
+            path,
+            address(LibEscrow.e(loanID)),
+            block.timestamp
+        );
         // Call Escrow to do swap get the response amounts
-        uint256[] memory amounts =
-            abi.decode(
-                LibEscrow.e(loanID).callDapp(
-                    address(LibUniswap.ROUTER),
-                    callData
-                ),
-                (uint256[])
-            );
+        uint256[] memory amounts = abi.decode(
+            LibEscrow.e(loanID).callDapp(UNISWAP_ROUTER_ADDRESS, callData),
+            (uint256[])
+        );
         uint256 destinationAmount = amounts[amounts.length - 1];
 
         LibEscrow.tokenUpdated(loanID, src);
