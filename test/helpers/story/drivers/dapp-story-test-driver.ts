@@ -6,6 +6,7 @@ import { Test } from 'mocha'
 
 import { ICErc20 } from '../../../../types/typechain'
 import { getFunds } from '../../get-funds'
+import { LoanHelpersReturn } from '../../loans'
 import { TestAction,TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import StoryTestDriver from './story-test-driver'
@@ -140,59 +141,32 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     switch (dapp) {
       case 'UNISWAP': {
         const newTest = new Test('UNISWAP Swap DAPP', (async () => {
-          expect(1).to.equal(1)
-          // const borrower = await getNamedSigner('borrower')
-          // const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
-          // const { details, diamond } = loan
-          // const link = await tokens.get('LINK')
-          // const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-
-          // const lendingBalBefore = await details.lendingToken.balanceOf(
-          //   escrowAddress
-          // )
-          // lendingBalBefore
-          //   .gt(0)
-          //   .should.eql(true, 'Loan escrow should have a lending token balance')
-
-          // const swapBalBefore = await link.balanceOf(escrowAddress)
-          // swapBalBefore
-          //   .eq(0)
-          //   .should.eql(
-          //     true,
-          //     'Loan escrow should not have a token balance before swap'
-          //   )
-
-          // await diamond
-          //   .connect(details.borrower.signer)
-          //   .uniswapSwap(
-          //     details.loan.id,
-          //     [details.lendingToken.address, link.address],
-          //     lendingBalBefore,
-          //     '0'
-          //   )
-          //   .should.emit(diamond, 'UniswapSwapped')
-
-          // const swapBalAfter = await link.balanceOf(escrowAddress)
-          // swapBalAfter
-          //   .gt(0)
-          //   .should.eql(true, 'Swap token balance not positive after swap')
-
-          // const lendingBalAfter = await details.lendingToken.balanceOf(
-          //   escrowAddress
-          // )
-          // lendingBalAfter
-          //   .eq(0)
-          //   .should.eql(
-          //     true,
-          //     'Loan escrow has lending token balance after swapping full amount'
-          //   )
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          let shouldPass = true
+          //read the state and determine if this should pass
+          if(!loan) shouldPass = false
+          if (shouldPass) {
+            expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.not.throw()
+          } else {
+            await expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.be.reverted
+          }
         }))
         tests.push(newTest)
         break
       }
       case 'SUSHISWAP': {
         const newTest = new Test('SUSHISWAP Swap DAPP', (async () => {
-          expect(1).to.equal(1)
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          let shouldPass = true
+          //read the state and determine if this should pass
+          if(!loan) shouldPass = false
+          if (shouldPass) {
+            expect(await DappStoryTestDriver.swapSushiSwap(hre, loan)).to.not.throw()
+          } else {
+            await expect(await DappStoryTestDriver.swapSushiSwap(hre, loan)).to.be.reverted
+          }
         }))
         tests.push(newTest)
         break
@@ -200,5 +174,94 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       default:
         break
     }
+  }
+
+  static async swapSushiSwap(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { tokens } = hre
+    const { details, diamond } = loan
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const lendingBalBefore = await details.lendingToken.balanceOf(escrowAddress)
+    lendingBalBefore
+      .gt(0)
+      .should.eql(true, 'Loan escrow should have a lending token balance')
+    const link = await tokens.get('LINK')
+    const swapBalBefore = await link.balanceOf(escrowAddress)
+    swapBalBefore
+      .eq(0)
+      .should.eql(
+        true,
+        'Loan escrow should not have a token balance before swap'
+      )
+
+    await diamond
+      .connect(details.borrower.signer)
+      .sushiswapSwap(
+        details.loan.id,
+        [details.lendingToken.address, link.address],
+        lendingBalBefore,
+        '0'
+      )
+      .should.emit(diamond, 'SushiswapSwapped')
+
+    const swapBalAfter = await link.balanceOf(escrowAddress)
+    swapBalAfter
+      .gt(0)
+      .should.eql(true, 'Swap token balance not positive after swap')
+
+    const lendingBalAfter = await details.lendingToken.balanceOf(escrowAddress)
+    lendingBalAfter
+      .eq(0)
+      .should.eql(
+        true,
+        'Loan escrow has lending token balance after swapping full amount'
+      )
+  }
+
+  static async swapUniSwap(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+    const { tokens } = hre
+    const { details, diamond } = loan
+    const link = await tokens.get('LINK')
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const lendingBalBefore = await details.lendingToken.balanceOf(
+      escrowAddress
+    )
+    lendingBalBefore
+      .gt(0)
+      .should.eql(true, 'Loan escrow should have a lending token balance')
+
+    const swapBalBefore = await link.balanceOf(escrowAddress)
+    swapBalBefore
+      .eq(0)
+      .should.eql(
+        true,
+        'Loan escrow should not have a token balance before swap'
+      )
+
+    await diamond
+      .connect(details.borrower.signer)
+      .uniswapSwap(
+        details.loan.id,
+        [details.lendingToken.address, link.address],
+        lendingBalBefore,
+        '0'
+      )
+      .should.emit(diamond, 'UniswapSwapped')
+
+    const swapBalAfter = await link.balanceOf(escrowAddress)
+    swapBalAfter
+      .gt(0)
+      .should.eql(true, 'Swap token balance not positive after swap')
+
+    const lendingBalAfter = await details.lendingToken.balanceOf(
+      escrowAddress
+    )
+    lendingBalAfter
+      .eq(0)
+      .should.eql(
+        true,
+        'Loan escrow has lending token balance after swapping full amount'
+      ) 
   }
 }
