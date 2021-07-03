@@ -9,6 +9,18 @@ library RolesLib {
     }
 
     /**
+     * @dev Provides information about the current execution context, including the
+     * sender of the transaction. While these are generally available
+     * via msg.sender, they should not be accessed in such a direct
+     * manner, since when dealing with meta-transactions the account sending and
+     * paying for execution may not be the actual sender (as far as an application
+     * is concerned).
+     */
+    function _msgSender() internal view returns (address) {
+        return msg.sender;
+    }
+
+    /**
      * @dev Emitted when `account` is granted `role`.
      */
     event RoleGranted(
@@ -47,7 +59,7 @@ library RolesLib {
     function grantRole(bytes32 role, address account) internal {
         if (hasRole(role, account)) return;
         s().roles[role][account] = true;
-        emit RoleGranted(role, account, msg.sender);
+        emit RoleGranted(role, account, _msgSender());
     }
 
     /**
@@ -60,6 +72,6 @@ library RolesLib {
     function revokeRole(bytes32 role, address account) internal {
         if (!hasRole(role, account)) return;
         s().roles[role][account] = false;
-        emit RoleRevoked(role, account, msg.sender);
+        emit RoleRevoked(role, account, _msgSender());
     }
 }
