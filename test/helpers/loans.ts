@@ -120,6 +120,11 @@ interface ZKCRAConfigArgs {
   numberOfProviders: any
 }
 
+interface ZKCRAProofArgs {
+  goodScore: boolean
+  numberOfProviders: any
+}
+
 interface CreateLoanWithZKCRA {
   proof: Proof
   computation?: ComputationResult
@@ -405,8 +410,9 @@ export const fillZKCRAConfigInfo = async (
 }
 
 export const outputCraValues = async (
-  goodScore: boolean
+  args: ZKCRAProofArgs
 ): Promise<CreateLoanWithZKCRA> => {
+  const { goodScore, numberOfProviders } = args
   // local variables
   let zokratesProvider: ZoKratesProvider
   let compilationArtifacts: CompilationArtifacts
@@ -418,12 +424,12 @@ export const outputCraValues = async (
   console.log('provider initialized')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
-    def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
-      u32[3][8] commitments = data
+    def main(private u32[${numberOfProviders}][8] data, public field identifier) -> (u32, u32[${numberOfProviders}][8]):
+      u32[${numberOfProviders}][8] commitments = data
       u32 MARKET_SCORE = 0
       u32 MASK = 0x0000000a
 
-      for u32 i in 0..3 do
+      for u32 i in 0..${numberOfProviders} do
           MARKET_SCORE = MARKET_SCORE + data[i][0] & MASK
           commitments[i] = sha256(data[i])
       endfor
@@ -476,31 +482,49 @@ export const outputCraValues = async (
   // next 7 elements are the secrets
 
   // get computation
+  let marketScore = ''
   if (goodScore) {
-    computation = provider.computeWitness(compilationArtifacts, [
-      scores.good,
-      identifier.toString(),
-    ])
+    marketScore = '0x0000000a'
   } else {
-    computation = provider.computeWitness(compilationArtifacts, [
-      scores.bad,
-      identifier.toString(),
+    marketScore = '0x00000003'
+  }
+  let scores: any = []
+  for (let i = 0; i < numberOfProviders; i++) {
+    scores.push([
+      '0x0000000a',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x00000000',
+      '0x0000000' + (i + 1).toString(),
     ])
   }
+  computation = provider.computeWitness(compilationArtifacts, [
+    scores,
+    identifier.toString(),
+  ])
   console.log('witness computed')
 
   // compute proof
-  const provingKey = new Uint8Array(
-    readFileSync(
-      join(__dirname, '../../contracts/market/cra/proving.key')
-    ).buffer
-  )
+  // const provingKey = new Uint8Array(
+  //   readFileSync(
+  //     join(__dirname, '../../contracts/market/cra/proving.key')
+  //   ).buffer
+  // )
+  keyPair = provider.setup(compilationArtifacts.program)
+  console.log('about to generate proof')
   proof = provider.generateProof(
     compilationArtifacts.program,
     computation.witness,
-    provingKey
+    keyPair.pk
   )
+
+  const verifier = provider.exportSolidityVerifier(keyPair.vk, 'v1')
+  console.log(verifier)
   console.log('proof generated')
+  console.log(proof.inputs)
   return {
     computation: computation,
     proof: proof,

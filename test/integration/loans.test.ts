@@ -178,7 +178,10 @@ describe('Loans', () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true
-          const { proof } = await outputCraValues(goodScore)
+          const { proof } = await outputCraValues({
+            goodScore: goodScore,
+            numberOfProviders: numberOfSignaturesRequired_,
+          })
           goodProof_ = proof
           goodProof_.should.exist
         })
