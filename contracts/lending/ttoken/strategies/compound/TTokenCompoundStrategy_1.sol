@@ -85,12 +85,12 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
                 "Teller: Strategy deposit error - Compound"
             );
 
-            emit StrategyRebalanced(NAME, msgSender());
+            emit StrategyRebalanced(NAME, _msgSender());
         } else if (storedRatio < compoundStore().balanceRatioMin) {
             // Withdraw tokens from Compound
             _withdraw(0, storedBal, compoundBal);
 
-            emit StrategyRebalanced(NAME, msgSender());
+            emit StrategyRebalanced(NAME, _msgSender());
         }
     }
 
