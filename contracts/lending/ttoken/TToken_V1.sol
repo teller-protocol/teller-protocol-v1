@@ -289,12 +289,7 @@ contract TToken_V1 is ITToken {
 
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
-        uint256 tokenValue = _valueOfUnderlying(amount, rate);
-
-        require(
-            tokenValue > 0,
-            "Teller: underlying value to be redeemed cannot be 0"
-        );
+        uint256 tokenValue = _valueOfUnderlying(amount, rate) + 1;
 
         // Make sure sender has adequate balance
         require(
