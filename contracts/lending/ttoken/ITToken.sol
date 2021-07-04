@@ -35,7 +35,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
-     * @notice The token that is the underlying assets for this Teller token.
+     * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token
      */
     function underlying() external view virtual returns (ERC20);
@@ -51,7 +51,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 balance_);
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @notice It calculates the current exchange rate for a whole Teller Token based off the underlying token balance.
      * @return rate_ The current exchange rate.
      */
     function exchangeRate() external virtual returns (uint256 rate_);
@@ -128,7 +128,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 mintAmount_);
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
+     * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
     function redeem(uint256 amount) external virtual;
