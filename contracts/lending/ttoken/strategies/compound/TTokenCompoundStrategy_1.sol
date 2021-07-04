@@ -16,6 +16,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
+import { LibMeta } from "../../../../shared/libraries/LibMeta.sol";
 
 // Storage
 import "../../token-storage.sol" as TokenStorage;
@@ -160,5 +161,6 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
         compoundStore().cToken = ICErc20(cTokenAddress);
         compoundStore().balanceRatioMin = balanceRatioMin;
         compoundStore().balanceRatioMax = balanceRatioMax;
+        emit StrategyInitialized(NAME, cTokenAddress, LibMeta.msgSender());
     }
 }

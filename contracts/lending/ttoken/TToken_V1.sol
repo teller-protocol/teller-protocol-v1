@@ -189,6 +189,7 @@ contract TToken_V1 is ITToken {
 
         // Transfer tokens to recipient
         SafeERC20.safeTransfer(s().underlying, recipient, amount);
+        emit LoanFunded(recipient, amount);
     }
 
     /**
@@ -203,6 +204,7 @@ contract TToken_V1 is ITToken {
     {
         s().totalRepaid += amount;
         s().totalInterestRepaid += interestAmount;
+        emit LoanPaymentMade(_msgSender(), amount, interestAmount);
     }
 
     /**
@@ -356,6 +358,7 @@ contract TToken_V1 is ITToken {
         if (initData.length > 0) {
             _delegateStrategy(initData);
         }
+        emit StrategySet(strategy, _msgSender());
     }
 
     /**
@@ -367,7 +370,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Sets the restricted state of the platform.
+     * @notice Sets the restricted state of the tToken.
      * @param state boolean value that resembles the platform's state
      */
     function restrict(bool state)
@@ -376,6 +379,7 @@ contract TToken_V1 is ITToken {
         authorized(ADMIN, _msgSender())
     {
         s().restricted = state;
+        emit PlatformRestricted(state, _msgSender());
     }
 
     /**
