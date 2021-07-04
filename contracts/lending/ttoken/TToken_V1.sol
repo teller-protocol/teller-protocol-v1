@@ -81,8 +81,8 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based off the underlying token balance.
-     * @return rate_ The current exchange rate.
+     * @notice It calculates the current scaled exchange rate for a whole Teller Token based of the underlying token balance.
+     * @return rate_ The current exchange rate, scaled by the EXCHANGE_RATE_FACTOR.
      */
     function exchangeRate() public override returns (uint256 rate_) {
         if (totalSupply() == 0) {
@@ -208,6 +208,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
+     * @dev The tToken contract needs to have been granted sufficient allowance to transfer the amount being used to mint.
      * @notice Deposit underlying token amount into LP and mint tokens.
      * @param amount The amount of underlying tokens to use to mint.
      * @return Amount of TTokens minted.
