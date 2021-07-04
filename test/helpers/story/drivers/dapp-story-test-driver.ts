@@ -1,11 +1,8 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ICErc20 } from '../../../../types/typechain'
-import { getFunds } from '../../get-funds'
 import { LoanHelpersReturn } from '../../loans'
 import { TestAction,TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
@@ -32,14 +29,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     for (const action of scenarioActions) {
       const testsForAction: Test[] =
         DappStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
-
-      //allTests = allTests.concat(testsForAction)
-
       for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
     }
-
     return parentSuite
   }
 
@@ -48,8 +41,8 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     action: TestAction,
     testSuite: Mocha.Suite
   ): Test[] {
+    // const _ = testSuite.tests
     const tests: Test[] = []
-
     const actionParentType = action.actionParentType
     switch (actionParentType) {
       case 'LEND': {
@@ -70,7 +63,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     action: TestAction,
     tests: Test[]
   ): void {
-    const { getNamedSigner, contracts } = hre
     const actionType = action.actionType
     switch (actionType) {
       case 'AAVE': {
@@ -136,7 +128,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     action: TestAction,
     tests: Test[]
   ): Promise<void> {
-    const { getNamedSigner, tokens } = hre
+    const { getNamedSigner } = hre
     const dapp = action.actionType
     switch (dapp) {
       case 'UNISWAP': {
@@ -147,7 +139,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           //read the state and determine if this should pass
           if(!loan) shouldPass = false
           if (shouldPass) {
-            expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.not.throw()
+            await DappStoryTestDriver.swapUniSwap(hre, loan)
           } else {
             await expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.be.reverted
           }
@@ -161,11 +153,17 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           let shouldPass = true
           //read the state and determine if this should pass
-          if(!loan) shouldPass = false
+          if (!loan) shouldPass = false
+          const { details, diamond } = loan
+          const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+          const lendingBalBefore = await details.lendingToken.balanceOf(escrowAddress)
+          if(lendingBalBefore.lte(0)) shouldPass = false
           if (shouldPass) {
-            expect(await DappStoryTestDriver.swapSushiSwap(hre, loan)).to.not.throw()
+            await DappStoryTestDriver.swapSushiSwap(hre, loan)
           } else {
-            await expect(await DappStoryTestDriver.swapSushiSwap(hre, loan)).to.be.reverted
+            await DappStoryTestDriver.swapSushiSwap(hre, loan).catch((error) => {
+              expect(error).to.exist
+            })
           }
         }))
         tests.push(newTest)
@@ -215,7 +213,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       .should.eql(
         true,
         'Loan escrow has lending token balance after swapping full amount'
-      )
+    )
   }
 
   static async swapUniSwap(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {

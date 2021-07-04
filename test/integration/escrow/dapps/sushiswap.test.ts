@@ -24,7 +24,7 @@ describe.skip('SushiswapDapp', () => {
   function testSushiswap(market: Market): void {
     describe(`${market.lendingToken} lending token`, () => {
       before(async () => {
-        ({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket(hre, {
           assetSym: market.lendingToken,
           amount: 100000,
         }))
