@@ -80,7 +80,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
             emit StrategyRebalanced(NAME, msg.sender);
         } else if (storedRatio < compoundStore().balanceRatioMin) {
             // Withdraw tokens from Compound
-            _withdraw(0, storedBal, compoundBal, storedRatio);
+            _withdraw(0, storedBal, compoundBal);
 
             emit StrategyRebalanced(NAME, msg.sender);
         }
@@ -93,10 +93,9 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @param amount Amount of underlying tokens that must be available.
      */
     function withdraw(uint256 amount) external override {
-        (uint256 storedBal, uint256 compoundBal, uint16 storedRatio) =
-            _getBalanceInfo();
+        (uint256 storedBal, uint256 compoundBal, ) = _getBalanceInfo();
         if (storedBal < amount) {
-            _withdraw(amount, storedBal, compoundBal, storedRatio);
+            _withdraw(amount, storedBal, compoundBal);
         }
     }
 
@@ -130,18 +129,14 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     function _withdraw(
         uint256 amount,
         uint256 storedBal,
-        uint256 compoundBal,
-        uint16 storedRatio
+        uint256 compoundBal
     ) internal {
         // Calculate amount to rebalance
         uint16 medianRatio =
             (compoundStore().balanceRatioMax +
                 compoundStore().balanceRatioMin) / 2;
         uint256 requiredBal =
-            NumbersLib.percent(
-                storedBal + compoundBal - amount,
-                medianRatio - storedRatio
-            );
+            NumbersLib.percent(storedBal + compoundBal - amount, medianRatio);
         uint256 redeemAmount = requiredBal + amount - storedBal;
         // Withdraw tokens from Compound if needed
         compoundStore().cToken.redeemUnderlying(redeemAmount);
