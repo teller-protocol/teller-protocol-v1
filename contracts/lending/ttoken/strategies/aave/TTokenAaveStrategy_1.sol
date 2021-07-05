@@ -136,7 +136,7 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
             aaveStore().balanceRatioMin) / 2;
         uint256 requiredBal = NumbersLib.percent(
             storedBal + aaveBal - amount,
-            medianRatio - storedRatio
+            medianRatio
         );
         uint256 redeemAmount = requiredBal - storedBal + amount;
         // Withdraw tokens from the Aave lending pool if needed
