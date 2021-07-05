@@ -11,6 +11,7 @@ import { Artifacts, HardhatRuntimeEnvironment, HttpNetworkConfig } from 'hardhat
 import { EthGasReporterConfig, RemoteContract } from "hardhat-gas-reporter/src/types"
 import Mocha from 'mocha'
 import path from 'path'
+import sha1 from "sha1"
 
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
 import {
@@ -233,7 +234,7 @@ function getOptions(hre: HardhatRuntimeEnvironment): any {
     try {
       contract.bytecode = await provider.getCode(contract.address)
       contract.deployedBytecode = contract.bytecode
-    //  contract.bytecodeHash = sha1(contract.bytecode);
+      contract.bytecodeHash = sha1(contract.bytecode)
     } catch (error){
       console.log(`Warning: failed to fetch bytecode for remote contract: ${contract.name}`)
       console.log(`Error was: ${error}\n`)
