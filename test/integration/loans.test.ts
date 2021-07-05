@@ -174,7 +174,7 @@ describe('Loans', () => {
         )
         console.log('provider addresses: ' + providerAddresses_)
       })
-      describe('good score', async () => {
+      describe.only('good score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true
@@ -198,7 +198,10 @@ describe('Loans', () => {
         // check if computation and proof exist
         it('checks if proof are returned from bad score', async () => {
           const goodScore = false
-          const { proof } = await outputCraValues(goodScore)
+          const { proof } = await outputCraValues({
+            goodScore: goodScore,
+            numberOfProviders: numberOfSignaturesRequired_,
+          })
           badProof_ = proof
           badProof_.should.exist
         })
