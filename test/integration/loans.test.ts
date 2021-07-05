@@ -174,7 +174,7 @@ describe('Loans', () => {
         )
         console.log('provider addresses: ' + providerAddresses_)
       })
-      describe('good score', async () => {
+      describe.only('good score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true

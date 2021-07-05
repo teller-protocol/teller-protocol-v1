@@ -84,12 +84,6 @@ contract TellerMarketHandler is MarketHandler {
             (highestAmountBound - lowestAmountBound) /
                 (highestScoreBound - lowestScoreBound);
 
-        // eliminate division by zero
-        require(
-            scoreToCalculate != highestScoreBound,
-            "Teller: no div by zero!"
-        );
-
         // return amount
         amount =
             highestAmountBound -
