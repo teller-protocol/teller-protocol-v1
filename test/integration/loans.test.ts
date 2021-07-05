@@ -176,7 +176,7 @@ describe('Loans', () => {
         )
         console.log('provider addresses: ' + providerAddresses_)
       })
-      describe.only('good score', async () => {
+      describe('good score', async () => {
         // check if computation and proof exist
         it('checks if proof are returned from good score', async () => {
           const goodScore = true
@@ -200,10 +200,7 @@ describe('Loans', () => {
         // check if computation and proof exist
         it('checks if proof are returned from bad score', async () => {
           const goodScore = false
-          const { proof } = await outputCraValues({
-            goodScore: goodScore,
-            numberOfProviders: numberOfSignaturesRequired_,
-          })
+          const { proof } = await outputCraValues(goodScore)
           badProof_ = proof
           badProof_.should.exist
         })
@@ -212,7 +209,9 @@ describe('Loans', () => {
             proof: badProof_,
             providerAddresses: providerAddresses_,
           })
-          await tx.should.be.revertedWith('market score not high enough!')
+          await tx.should.be.revertedWith(
+            'Teller: market score not high enough'
+          )
         })
       })
     })
