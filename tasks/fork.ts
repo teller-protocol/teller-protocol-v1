@@ -12,13 +12,14 @@ interface NetworkArgs {
   chain: string
   block?: number
   onlyDeployment: boolean
+  noDeploy: boolean
 }
 
 export const forkNetwork: ActionType<NetworkArgs> = async (
   args: NetworkArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { block, onlyDeployment } = args
+  const { block, onlyDeployment, noDeploy } = args
   const { log, run, network } = hre
 
   if (network.name !== HARDHAT_NETWORK_NAME) {
@@ -61,7 +62,7 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
     await run('node', {
       fork: network.config.forking.url,
       forkBlockNumber: block ?? network.config.forking.blockNumber,
-      noDeploy: true,
+      noDeploy: noDeploy,
       noReset: true,
     })
   }
@@ -78,8 +79,9 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
   )
   .addFlag(
     'onlyDeployment',
-    'optional flag that just copies the deployment files'
+    'Just copies the deployment files without starting a local node'
   )
+  .addFlag('noDeploy', 'Prevents deploy script from executing')
   .setAction(forkNetwork)
 
 subtask('fork:fund-deployer').setAction(async (args, hre) => {
