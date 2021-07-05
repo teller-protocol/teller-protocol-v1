@@ -25,8 +25,16 @@ contract TellerMarketHandler is MarketHandler {
             uint256 userLoanAmount
         )
     {
-        // loan score multiplier
-        uint16 scoreMultiplier = 2500;
+        uint256 amount = 0;
+
+        // get amount for user based on market score
+        if (marketScore >= 5 && marketScore < 7) {
+            amount = _loanAmount(18000, 10000, 7, 5, marketScore);
+        } else if (marketScore >= 7 && marketScore < 9) {
+            amount = _loanAmount(23000, 18000, 9, 7, marketScore);
+        } else if (marketScore >= 9 && marketScore <= 10) {
+            amount = _loanAmount(25000, 23000, 10, 9, marketScore);
+        }
 
         // get interest rate
         uint16 baseInterestRate = 1000;
@@ -43,14 +51,48 @@ contract TellerMarketHandler is MarketHandler {
 
         if (useLegalIR) {
             userInterestRate = sampleCappedInterestRate;
+            // 10 * 2500 = 25000
+            // 25000 / (1499 / (901)) = 15690 final loan amount
             userLoanAmount =
-                (marketScore * scoreMultiplier) /
+                (amount) /
                 (interestRate / (sampleCappedInterestRate + 1));
         } else {
             userInterestRate = interestRate;
-            userLoanAmount = marketScore * scoreMultiplier;
+            //
+            userLoanAmount = amount;
         }
 
         userCollateralRatio = request.request.collateralRatio;
+    }
+
+    /**
+     * @notice it calculates the loan amount from different bounds
+     * @param highestAmountBound the highest amount in a select bound (i.e 20000)
+     * @param lowestAmountBound the lowest amount in a select bound (i.e 10000)
+     * @param highestScoreBound the highest score in a select bound (i.e 7.5)
+     * @param lowestScoreBound the lowest score in a select bound
+     */
+    function _loanAmount(
+        uint256 highestAmountBound,
+        uint256 lowestAmountBound,
+        uint16 highestScoreBound,
+        uint16 lowestScoreBound,
+        uint256 scoreToCalculate
+    ) internal pure returns (uint256 amount) {
+        // calculate for slope
+        uint256 m =
+            (highestAmountBound - lowestAmountBound) /
+                (highestScoreBound - lowestScoreBound);
+
+        // eliminate division by zero
+        require(
+            scoreToCalculate != highestScoreBound,
+            "Teller: no div by zero!"
+        );
+
+        // return amount
+        amount =
+            highestAmountBound -
+            ((m) * uint256((highestScoreBound - scoreToCalculate)));
     }
 }
