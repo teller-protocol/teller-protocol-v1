@@ -628,7 +628,7 @@ export const borrowWithZKCRA = async (
     assetAmount: assetAmount,
     collateralAsset: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     collateralAmount: collAmount,
-    collateralRatio: 500,
+    collateralRatio: 5000,
     duration: moment.duration(1, 'day').asSeconds(),
   }
 

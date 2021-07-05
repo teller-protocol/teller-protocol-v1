@@ -25,24 +25,31 @@ contract TellerMarketHandler is MarketHandler {
             uint256 userLoanAmount
         )
     {
+        // loan score multiplier
+        uint16 scoreMultiplier = 2500;
+
         // get interest rate
         uint16 baseInterestRate = 1000;
+
         uint16 interestRate =
             baseInterestRate *
                 ((maxCollateralRatio / request.request.collateralRatio + 1) /
                     2);
-        userInterestRate = interestRate;
 
-        // loan score multiplier
-        uint16 scoreMultiplier = 100;
         // Illinois interest rate for testing
         uint16 sampleCappedInterestRate = 900;
 
-        // get loan
-        uint256 loanAmount =
-            (marketScore * scoreMultiplier) /
+        bool useLegalIR = interestRate > sampleCappedInterestRate;
+
+        if (useLegalIR) {
+            userInterestRate = sampleCappedInterestRate;
+            userLoanAmount =
+                (marketScore * scoreMultiplier) /
                 (interestRate / (sampleCappedInterestRate + 1));
-        userLoanAmount = loanAmount;
+        } else {
+            userInterestRate = interestRate;
+            userLoanAmount = marketScore * scoreMultiplier;
+        }
 
         userCollateralRatio = request.request.collateralRatio;
     }
