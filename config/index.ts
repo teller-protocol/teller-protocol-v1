@@ -5,22 +5,25 @@ import {
   AssetSettings,
   ATMs,
   Chainlink,
-  Market, NetworkTokens, NFTMerkleTree,
+  Market,
+  NetworkTokens,
+  NFTMerkleTree,
   Nodes,
   PlatformSettings,
-  Signers, TierInfo,
-  Tokens
-} from "../types/custom/config-types"
+  Signers,
+  TierInfo,
+  Tokens,
+} from '../types/custom/config-types'
 import { assetSettings } from './asset-settings'
 import { atms } from './atms'
 import { chainlink } from './chainlink'
+import { dapps } from './dapps'
 import { markets } from './markets'
 import { nftMerkleTree, tiers as nftTiers } from './nft'
 import { nodes } from './nodes'
 import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
-import { dapps } from './dapps'
 
 export const getNetworkName = (network: Network): string =>
   process.env.FORKING_NETWORK ?? network.name
@@ -33,16 +36,20 @@ export const getATMs = (network: Network): ATMs => atms[getNetworkName(network)]
 export const getChainlink = (network: Network): Chainlink =>
   chainlink[getNetworkName(network)]
 
-export const getMarkets = (network: Network): Market[] => markets[getNetworkName(network)]
+export const getMarkets = (network: Network): Market[] =>
+  markets[getNetworkName(network)]
 
-export const getNodes = (network: Network): Nodes => nodes[getNetworkName(network)]
+export const getNodes = (network: Network): Nodes =>
+  nodes[getNetworkName(network)]
 
 export const getPlatformSettings = (network: Network): PlatformSettings =>
   platformSettings[getNetworkName(network)]
 
 export const getSigners = (network: Network): Signers => signers[network.name]
 
-export const getTokens = (network: Network): NetworkTokens & { all: Tokens } => {
+export const getTokens = (
+  network: Network
+): NetworkTokens & { all: Tokens } => {
   const networkTokens = tokens[getNetworkName(network)]
   const all: Tokens = Object.keys(networkTokens).reduce((map, type) => {
     // @ts-expect-error keys
@@ -55,9 +62,9 @@ export const getTokens = (network: Network): NetworkTokens & { all: Tokens } => 
   }
 }
 
-export const getNativeToken = (network: Network) => {
+export const getNativeToken = (network: Network): string => {
   const tokens = getTokens(network)
-  let wrappedNativeToken
+  let wrappedNativeToken: string
   if (
     network.name === 'mainnet' ||
     network.name === 'kovan' ||
@@ -71,11 +78,17 @@ export const getNativeToken = (network: Network) => {
   return wrappedNativeToken
 }
 
-export const getDappAddresses = (network: Network) =>
+export const getDappAddresses = (network: Network): Tokens =>
   dapps[getNetworkName(network)]
 
-export const getNFT = (network: Network) => {
-  const distributionsOutputFile = path.resolve(
+export interface NftObject {
+  tiers: TierInfo[]
+  merkleTrees: NFTMerkleTree
+  distributionsOutputFile: string
+}
+
+export const getNFT = (network: Network): NftObject => {
+  const distributionsOutputFile: string = path.resolve(
     path.join(
       __dirname,
       '../deployments',
