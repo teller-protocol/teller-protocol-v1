@@ -22,7 +22,7 @@ import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibDapps } from "../../../../escrow/dapps/libraries/LibDapps.sol";
 
 // Storage
-import "../../storage.sol" as TokenStorage;
+import "../../token-storage.sol" as TokenStorage;
 import "./storage.sol" as AaveStorage;
 
 contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
