@@ -1,66 +1,169 @@
+import colors from 'colors'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getChainlink, getTokens } from '../config'
-import { ITellerDiamond } from '../types/typechain'
-import { NULL_ADDRESS } from '../utils/consts'
+import { getChainlink, getNetworkName, getTokens } from '../config'
+import {
+  ChainlinkPricer,
+  ENSRegistry,
+  PriceAggregator,
+  PublicResolver,
+} from '../types/typechain'
+import { DUMMY_ADDRESS } from '../utils/consts'
+import { deploy } from '../utils/deploy-helpers'
 
 const registerPriceAggregators: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, network, log } = hre
-  const { deployer } = await getNamedAccounts()
+  const { network, log } = hre
+
+  const tokens = getTokens(network)
 
   log('********** Chainlink **********', { indent: 1 })
   log('')
 
-  const tokens = getTokens(network)
-  const chainlink = getChainlink(network)
+  const chainlinkPricer = await deployChainlinkPricer(hre)
 
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
-    from: deployer,
+  const priceAgg = await deploy<PriceAggregator>({
+    contract: 'PriceAggregator',
+    args: [tokens.all.WETH, chainlinkPricer.address],
+    hre,
   })
 
-  for (const chainlinkPair of Object.values(chainlink)) {
-    const { address, baseTokenName, quoteTokenName } = chainlinkPair
-
-    log(
-      `Registering aggregator for ${baseTokenName}/${quoteTokenName} pair: `,
-      { indent: 2, star: true, nl: false }
-    )
-
-    // Check that the aggregator is already registered
-    const { agg } = await diamond.getChainlinkAggregatorFor(
-      tokens.all[baseTokenName],
-      tokens.all[quoteTokenName]
-    )
-    if (agg === address) {
-      log(`${address} already registered`)
-    } else if (agg !== NULL_ADDRESS) {
-      log('')
-      log(
-        `!! Chainlink Aggregator already registered with a different address !!`
-      )
-      log(
-        `!!                    Please check your config                      !!`
-      )
-      log(`Current:  ${agg}`, { indent: 2, star: true })
-      log(`New:      ${address}`, { indent: 2, star: true })
-    } else {
-      // Try to register the Chainlink aggregator address
-      const receipt = await diamond
-        .addChainlinkAggregator(
-          tokens.all[baseTokenName],
-          tokens.all[quoteTokenName],
-          address
-        )
-        .then(({ wait }) => wait())
-
-      log(`${address} with ${receipt.gasUsed} gas`)
-    }
-  }
+  await addCompoundPricer(priceAgg, hre)
 
   log('')
 }
 
+const deployChainlinkPricer = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<ChainlinkPricer> => {
+  let resolverAddress: string
+  switch (getNetworkName(hre.network)) {
+    case 'mainnet':
+    case 'kovan':
+    case 'rinkeby':
+    case 'ropsten':
+      resolverAddress = '0x122eb74f9d0F1a5ed587F43D120C1c2BbDb9360B'
+      break
+
+    case 'polygon':
+    case 'polygon_mumbai':
+      resolverAddress = await deployChainlinkENS(hre)
+      break
+
+    default:
+      throw new Error('Invalid network name')
+  }
+
+  const chainlinkPricer = await deploy<ChainlinkPricer>({
+    contract: 'ChainlinkPricer',
+    args: [resolverAddress],
+    hre,
+  })
+
+  return chainlinkPricer
+}
+
+const deployChainlinkENS = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<string> => {
+  const deployer = await hre.getNamedSigner('deployer')
+  const deployerAddress = await deployer.getAddress()
+
+  const ensRegistry = await deploy<ENSRegistry>({
+    contract: 'ENSRegistry',
+    hre,
+  })
+  const resolver = await deploy<PublicResolver>({
+    contract: 'PublicResolver',
+    args: [ensRegistry.address, DUMMY_ADDRESS],
+    hre,
+  })
+
+  const tld = 'eth'
+  const tldLabel = hre.ethers.utils.id(tld)
+  const tldNode = hre.ethers.utils.namehash(tld)
+
+  const mainDomain = 'data'
+  const dataLabel = hre.ethers.utils.id(mainDomain)
+  const dataNode = hre.ethers.utils.namehash(`${mainDomain}.${tld}`)
+
+  if (ensRegistry.deployResult.newlyDeployed) {
+    await ensRegistry
+      .connect(deployer)
+      .setSubnodeOwner(Buffer.alloc(32), tldLabel, deployerAddress)
+    await ensRegistry
+      .connect(deployer)
+      .setSubnodeOwner(tldNode, dataLabel, deployerAddress)
+    await ensRegistry.connect(deployer).setResolver(tldNode, resolver.address)
+    await ensRegistry.connect(deployer).setResolver(dataNode, resolver.address)
+    await resolver
+      .connect(deployer)
+      ['setAddr(bytes32,address)'](tldNode, resolver.address)
+    await resolver
+      .connect(deployer)
+      ['setAddr(bytes32,address)'](dataNode, resolver.address)
+  }
+
+  hre.log('')
+  hre.log('Registering Chainlink ENS names', { star: true, indent: 1 })
+
+  const chainlink = getChainlink(hre.network)
+  for (const config of Object.values(chainlink)) {
+    const chainlinkAggSubdomain = `${config.baseTokenName.toLowerCase()}-${config.quoteTokenName.toLowerCase()}`
+    const chainlinkAggDomain = `${chainlinkAggSubdomain}.${mainDomain}.${tld}`
+    const chainlinkAggLabel = hre.ethers.utils.id(chainlinkAggSubdomain)
+    const chainlinkAggNode = hre.ethers.utils.namehash(chainlinkAggDomain)
+    const address = await resolver['addr(bytes32)'](chainlinkAggNode)
+
+    hre.log(`${colors.underline(chainlinkAggSubdomain)}: ${config.address}`, {
+      star: true,
+      nl: false,
+      indent: 2,
+    })
+
+    if (address != config.address) {
+      await ensRegistry
+        .connect(deployer)
+        .setSubnodeOwner(dataNode, chainlinkAggLabel, deployerAddress)
+      const receipt = await resolver
+        .connect(deployer)
+        ['setAddr(bytes32,address)'](chainlinkAggNode, config.address)
+        .then(({ wait }) => wait())
+
+      const gas = `${receipt.gasUsed.toString()} gas`
+      hre.log(` ${colors.green('new')} with ${colors.cyan(gas)}`)
+    } else {
+      hre.log(` ${colors.yellow('reusing')}`)
+    }
+  }
+
+  return resolver.address
+}
+
+const addCompoundPricer = async (
+  priceAgg: PriceAggregator,
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
+  const { all: allTokens, compound: cTokens } = getTokens(hre.network)
+
+  if (cTokens != null) {
+    const tokens = Object.values(cTokens)
+
+    const compoundPricer = await deploy({
+      contract: 'CompoundPricer',
+      args: [allTokens.WETH, cTokens.CETH],
+      hre,
+    })
+
+    if (compoundPricer.deployResult.newlyDeployed) {
+      await priceAgg
+        .connect(await hre.getNamedSigner('deployer'))
+        .setAssetPricers(compoundPricer.address, tokens)
+    }
+  }
+}
+
 registerPriceAggregators.tags = ['price-agg']
-registerPriceAggregators.dependencies = ['protocol']
+registerPriceAggregators.dependencies = ['setup']
 
 export default registerPriceAggregators

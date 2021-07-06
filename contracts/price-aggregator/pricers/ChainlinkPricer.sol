@@ -2,9 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import {
-    AggregatorV2V3Interface as ChainlinkAgg
-} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
+import { AggregatorV2V3Interface as ChainlinkAgg } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
@@ -32,8 +30,8 @@ contract ChainlinkPricer {
     }
 
     function getEthAggregator(address token) public view returns (address) {
-        string memory subname = _getTokenSymbol(token).concat("-eth");
-        return ENS.resolve(ENS_RESOLVER, ENS.subnamehash(subname, ENS_DOMAIN));
+        string memory name = _getTokenSymbol(token).concat("-eth");
+        return ENS.resolve(ENS_RESOLVER, ENS.subnode(name, ENS_DOMAIN));
     }
 
     function _getTokenSymbol(address token)
@@ -44,6 +42,9 @@ contract ChainlinkPricer {
         string memory symbol_ = ERC20(token).symbol();
         if (symbol_.compareTo("WBTC")) {
             return "btc";
+        }
+        if (symbol_.compareTo("WMATIC")) {
+            return "matic";
         }
         return symbol_.lower();
     }

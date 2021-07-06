@@ -61,19 +61,24 @@ const networkUrls: { [network: string]: string } = {
   polygon_mumbai: MATIC_MUMBAI_KEY!,
 }
 
-const getLatestDeploymentBlock = (networkName: string): number =>
-  parseInt(
-    fs
-      .readFileSync(
-        path.resolve(
-          __dirname,
-          'deployments',
-          networkName,
-          '.latestDeploymentBlock'
+const getLatestDeploymentBlock = (networkName: string): number | undefined => {
+  try {
+    return parseInt(
+      fs
+        .readFileSync(
+          path.resolve(
+            __dirname,
+            'deployments',
+            networkName,
+            '.latestDeploymentBlock'
+          )
         )
-      )
-      .toString()
-  )
+        .toString()
+    )
+  } catch {
+    // Network deployment does not exist
+  }
+}
 
 const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
   config = {
@@ -115,7 +120,7 @@ export default <HardhatUserConfig>{
   solidity: {
     compilers: [
       {
-        version: '0.8.3',
+        version: '0.8.4',
         settings: {
           optimizer: {
             enabled: process.env.TESTING !== '1',

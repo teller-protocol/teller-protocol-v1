@@ -5,20 +5,10 @@ import { IDiamondCut } from "./IDiamondCut.sol";
 import { IDiamondLoupe } from "./IDiamondLoupe.sol";
 
 import { SettingsFacet } from "../../settings/SettingsFacet.sol";
-import {
-    PlatformSettingsFacet
-} from "../../settings/platform/PlatformSettingsFacet.sol";
-import {
-    AssetSettingsDataFacet
-} from "../../settings/asset/AssetSettingsDataFacet.sol";
-import {
-    AssetSettingsFacet
-} from "../../settings/asset/AssetSettingsFacet.sol";
+import { PlatformSettingsFacet } from "../../settings/platform/PlatformSettingsFacet.sol";
+import { AssetSettingsDataFacet } from "../../settings/asset/AssetSettingsDataFacet.sol";
+import { AssetSettingsFacet } from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
-import { PriceAggFacet } from "../../price-aggregator/PriceAggFacet.sol";
-import {
-    ChainlinkAggFacet
-} from "../../price-aggregator/chainlink/ChainlinkAggFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
@@ -27,9 +17,9 @@ import { SignersFacet } from "../../market/SignersFacet.sol";
 import { NFTFacet } from "../../nft/NFTFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
-import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
+import { UniswapFacet } from "../../escrow/dapps/swappers/UniswapFacet.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
-import { SushiswapFacet } from "../../escrow/dapps/SushiswapFacet.sol";
+import { SushiswapFacet } from "../../escrow/dapps/swappers/SushiswapFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 
 abstract contract ITellerDiamond is
@@ -38,8 +28,6 @@ abstract contract ITellerDiamond is
     AssetSettingsDataFacet,
     AssetSettingsFacet,
     PausableFacet,
-    PriceAggFacet,
-    ChainlinkAggFacet,
     LendingFacet,
     CollateralFacet,
     CreateLoanFacet,
@@ -48,9 +36,9 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     CompoundFacet,
-    UniswapFacet,
+    //    UniswapFacet,
     AaveFacet,
-    SushiswapFacet,
+    //    SushiswapFacet,
     PoolTogetherFacet,
     IDiamondCut,
     IDiamondLoupe

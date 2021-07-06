@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface Registry {
-    function resolver(bytes32 node) external view returns (Resolver);
-}
-
-interface Resolver {
-    function addr(bytes32 node) external view returns (address);
-}
+import { ENSRegistry } from "@ensdomains/ens-contracts/contracts/registry/ENSRegistry.sol";
+import { PublicResolver } from "@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol";
 
 library ENS {
     bytes32 public constant ETH_NAMEHASH =
@@ -18,7 +13,7 @@ library ENS {
         view
         returns (address)
     {
-        return Registry(registry).resolver(node).addr(node);
+        return resolve(resolver(registry, node), node);
     }
 
     function resolve(address resolver, bytes32 node)
@@ -26,52 +21,30 @@ library ENS {
         view
         returns (address)
     {
-        return Resolver(resolver).addr(node);
+        return PublicResolver(resolver).addr(node);
     }
 
-    function namehash(string memory name)
+    function resolver(address registry, bytes32 node)
+        internal
+        view
+        returns (address)
+    {
+        return ENSRegistry(registry).resolver(node);
+    }
+
+    function subnode(string memory name, bytes32 node)
         internal
         pure
         returns (bytes32 namehash_)
     {
-        namehash_ = keccak256(
-            abi.encodePacked(ETH_NAMEHASH, keccak256(abi.encodePacked(name)))
-        );
+        namehash_ = subnode(keccak256(abi.encodePacked(name)), node);
     }
 
-    function namehash(string memory name, string memory domain)
+    function subnode(bytes32 label, bytes32 node)
         internal
         pure
         returns (bytes32 namehash_)
     {
-        namehash_ = keccak256(
-            abi.encodePacked(namehash_, keccak256(abi.encodePacked(domain)))
-        );
-        namehash_ = keccak256(
-            abi.encodePacked(namehash_, keccak256(abi.encodePacked(name)))
-        );
-    }
-
-    function subnamehash(string memory subname, string memory name)
-        internal
-        pure
-        returns (bytes32 namehash_)
-    {
-        namehash_ = keccak256(
-            abi.encodePacked(ETH_NAMEHASH, keccak256(abi.encodePacked(name)))
-        );
-        namehash_ = keccak256(
-            abi.encodePacked(namehash_, keccak256(abi.encodePacked(subname)))
-        );
-    }
-
-    function subnamehash(string memory subname, bytes32 node)
-        internal
-        pure
-        returns (bytes32 namehash_)
-    {
-        namehash_ = keccak256(
-            abi.encodePacked(node, keccak256(abi.encodePacked(subname)))
-        );
+        namehash_ = keccak256(abi.encodePacked(node, label));
     }
 }

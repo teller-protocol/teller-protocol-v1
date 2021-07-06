@@ -1,12 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import {
-  getNativeToken,
-  getNetworkName,
-  getTokens,
-  getDappAddresses,
-} from '../config'
+import { getDappAddresses, getNativeToken, getNetworkName } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -33,8 +28,8 @@ const deployProtocol: DeployFunction = async (hre) => {
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
   const nftDictionary = await contracts.get('TellerNFTDictionary')
+  const priceAggregator = await contracts.get('PriceAggregator')
 
-  const tokens = getTokens(network)
   const wrappedNativeToken = getNativeToken(network)
   const dappAddresses = getDappAddresses(network)
 
@@ -45,11 +40,11 @@ const deployProtocol: DeployFunction = async (hre) => {
     await contracts.get('TellerDiamond')
 
     // If deployment exists execute upgrade function
-    const executeMethod = undefined
-    const upgradeExecute: DeployDiamondArgs<
-      ITellerDiamond,
-      typeof executeMethod
-    >['execute'] = undefined
+    const executeMethod = 'setPriceAggregator'
+    const upgradeExecute = {
+      methodName: executeMethod,
+      args: [priceAggregator.address],
+    }
 
     execute = upgradeExecute
   } catch {
@@ -63,11 +58,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [
         {
           admin: deployer,
-          assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({
-            sym,
-            addr,
-          })),
-          cTokens: Object.values(tokens.compound),
           tellerNFT: nftAddress,
           loansEscrowBeacon: loansEscrowBeacon.address,
           collateralEscrowBeacon: collateralEscrowBeacon.address,
@@ -77,6 +67,7 @@ const deployProtocol: DeployFunction = async (hre) => {
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
           wrappedNativeToken: wrappedNativeToken,
           nftDictionary: nftDictionary.address,
+          priceAggregator: priceAggregator.address,
         },
       ],
     }
@@ -89,42 +80,38 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Settings
     {
       contract: 'SettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'PlatformSettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'AssetSettingsDataFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'AssetSettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'PausableFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Pricing
     {
       contract: 'PriceAggFacet',
-      skipIfAlreadyDeployed: true,
-    },
-    {
-      contract: 'ChainlinkAggFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Lending
     {
       contract: 'LendingFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Loans
     {
       contract: 'CollateralFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'CreateLoanFacet',
@@ -132,7 +119,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'LoanDataFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'RepayFacet',
@@ -140,7 +127,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'SignersFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // NFT
     {
@@ -150,12 +137,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Dapps
     {
       contract: 'AaveFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
       args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
     {
       contract: 'PoolTogetherFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
   ]
 
@@ -169,12 +156,12 @@ const deployProtocol: DeployFunction = async (hre) => {
         // Dapps
         {
           contract: 'UniswapFacet',
-          skipIfAlreadyDeployed: true,
+          skipIfAlreadyDeployed: false,
           args: [dappAddresses.uniswapV2RouterAddress],
         },
         {
           contract: 'CompoundFacet',
-          skipIfAlreadyDeployed: true,
+          skipIfAlreadyDeployed: false,
         }
       )
 
@@ -188,7 +175,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         // Dapps
         {
           contract: 'SushiswapFacet',
-          skipIfAlreadyDeployed: true,
+          skipIfAlreadyDeployed: false,
           args: [dappAddresses.sushiswapV2RouterAddress],
         }
       )
@@ -267,7 +254,7 @@ const deployLoansEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -315,7 +302,7 @@ const deployCollateralEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -365,7 +352,7 @@ const deployTTokenBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -395,6 +382,6 @@ const deployTTokenBeacon = async (
 }
 
 deployProtocol.tags = ['protocol']
-deployProtocol.dependencies = ['setup', 'nft']
+deployProtocol.dependencies = ['setup', 'nft', 'price-agg']
 
 export default deployProtocol
