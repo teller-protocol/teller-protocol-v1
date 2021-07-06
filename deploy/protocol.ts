@@ -238,7 +238,9 @@ const addAuthorizedAddresses = async (
 const deployLoansEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Loans Escrow Beacon **********', { indent: 2 })
   log('')
@@ -275,7 +277,10 @@ const deployLoansEscrowBeacon = async (
       indent: 5,
       star: true,
     })
-    await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(loansEscrowLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')
@@ -286,7 +291,9 @@ const deployLoansEscrowBeacon = async (
 const deployCollateralEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Collateral Escrow Beacon **********', { indent: 2 })
   log('')
@@ -324,6 +331,7 @@ const deployCollateralEscrowBeacon = async (
       star: true,
     })
     await beacon
+      .connect(deployer)
       .upgradeTo(collateralEscrowLogic.address)
       .then(({ wait }) => wait())
   }
@@ -336,12 +344,14 @@ const deployCollateralEscrowBeacon = async (
 const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = 1
+  const logicVersion = 2
 
   const tTokenLogic = await deploy<ITToken>({
     hre,
@@ -373,7 +383,10 @@ const deployTTokenBeacon = async (
       indent: 5,
       star: true,
     })
-    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(tTokenLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')
