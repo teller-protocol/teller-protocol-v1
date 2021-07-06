@@ -1,18 +1,18 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { BigNumber, ContractTransaction,Signer } from 'ethers'
+import { BigNumber, ContractTransaction, Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 import moment from 'moment'
 import Prando from 'prando'
 
 import { getMarkets } from '../../../../config'
-import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
+import { getPlatformSetting } from '../../../../tasks'
 import { ITellerDiamond } from '../../../../types/typechain'
+import { fundedMarket } from '../../../fixtures'
 import { getFunds } from '../../get-funds'
 import {
   CreateLoanArgs,
-  CreateLoanReturn,
   loanHelpers,
   LoanHelpersReturn,
   LoanType,
@@ -21,13 +21,7 @@ import {
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts,
 } from '../../loans'
-import {
-  LoanSnapshots,
-  STORY_DOMAINS,
-  TestAction,
-  TestArgs,
-  TestScenario,
-} from '../story-helpers'
+import { TestAction, TestArgs, TestScenario } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
 const rng = new Prando('teller')
 
@@ -49,8 +43,11 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
-      const testsForAction: Test[] =
-        LoanStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
+      const testsForAction: Test[] = LoanStoryTestDriver.generateTestsForAction(
+        hre,
+        action,
+        parentSuite
+      )
       for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
@@ -64,11 +61,12 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     action: TestAction,
     testSuite: Mocha.Suite
   ): Test[] {
+    testSuite.tests
     const tests: Test[] = []
     const { actionType, args } = action
     switch (actionType) {
       case 'TAKE_OUT': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           let shouldPass = true
           //read the state and determine if this should pass
           const borrower = await hre.getNamedSigner('borrower')
@@ -78,20 +76,25 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           const allBorrowerLoans = await diamond.getBorrowerLoans(
             await borrower.getAddress()
           )
-          if (allBorrowerLoans.length > 0) shouldPass = false
+          console.log({ allBorrowerLoans })
+          if (allBorrowerLoans.length > 1) {
+            shouldPass = false
+          }
           if (shouldPass) {
-            expect(await LoanStoryTestDriver.takeOutLoan(hre, args)).to.exist
-            LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
-              await hre.evm.snapshot()
+            // expect().to.exist
+            // LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
+            //   await hre.evm.snapshot()
+            await LoanStoryTestDriver.takeOutLoan(hre, args)
           } else {
+            args.loanType = LoanType.OVER_COLLATERALIZED
             await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.reverted
           }
-        }))
+        })
         tests.push(newTest)
         break
       }
       case 'REPAY': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           const shouldPass = true
           //read the state and determine if this should pass
 
@@ -99,25 +102,27 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
             const tx = await LoanStoryTestDriver.repayLoan(hre)
             expect(tx).to.exist
           } else {
-            await expect(await LoanStoryTestDriver.repayLoan(hre)).to.be.reverted
+            await expect(await LoanStoryTestDriver.repayLoan(hre)).to.be
+              .reverted
           }
-        }))
+        })
         tests.push(newTest)
         break
       }
       case 'LIQUIDATE': {
-        const newTest = new Test(action.suiteName, (async () => {
-          expect(1).to.equal(1)
-          // const shouldPass = true
-          // //read the state and determine if this should pass
+        const newTest = new Test(action.suiteName, async () => {
+          // expect(1).to.equal(1)
+          const shouldPass = true
+          //read the state and determine if this should pass
 
-          // if (shouldPass) {
-          //   const tx = await LoanStoryTestDriver.liquidateLoan(hre)
-          //   expect(tx).to.exist
-          // } else {
-          //   await expect(await LoanStoryTestDriver.liquidateLoan(hre)).to.be.reverted
-          // }
-        }))
+          if (shouldPass) {
+            const tx = await LoanStoryTestDriver.liquidateLoan(hre)
+            expect(tx).to.exist
+          } else {
+            await expect(await LoanStoryTestDriver.liquidateLoan(hre)).to.be
+              .reverted
+          }
+        })
         tests.push(newTest)
         break
       }
@@ -125,49 +130,73 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     return tests
   }
 
-  static createLoanArgs = (
-    hre: HardhatRuntimeEnvironment,
-    borrower: string
-  ): CreateLoanArgs => {
-    const { network } = hre
-    const markets = getMarkets(network)
-    const randomMarket = rng.nextInt(0, markets.length - 1)
-    const market = markets[randomMarket]
-    const randomCollateralToken = rng.nextInt(
-      0,
-      market.collateralTokens.length - 1
-    )
-    const randomLoanType = rng.nextInt(
-      0,
-      Object.values(LoanType).length / 2 - 1
-    )
-    return {
-      lendToken: market.lendingToken,
-      collToken: market.collateralTokens[randomCollateralToken],
-      borrower,
-      loanType: randomLoanType,
-    }
-  }
+  // static createLoanArgs = (
+  //   hre: HardhatRuntimeEnvironment,
+  //   borrower: string
+  // ): CreateLoanArgs => {
+  //   const { network } = hre
+  //   const markets = getMarkets(network)
+  //   const randomMarket = rng.nextInt(0, markets.length - 1)
+  //   const market = markets[randomMarket]
+  //   const randomCollateralToken = rng.nextInt(
+  //     0,
+  //     market.collateralTokens.length - 1
+  //   )
+  //   const randomLoanType = rng.nextInt(
+  //     0,
+  //     Object.values(LoanType).length / 2 - 1
+  //   )
+  //   return {
+  //     lendToken: market.lendingToken,
+  //     collToken: market.collateralTokens[randomCollateralToken],
+  //     loanType: randomLoanType,
+  //   }
+  // }
 
   static takeOutLoan = async (
     hre: HardhatRuntimeEnvironment,
     args: TestArgs
   ): Promise<ContractTransaction> => {
-    const percentageSubmission = {
-      name: 'RequiredSubmissionsPercentage',
-      value: 0,
-    }
-    await updatePlatformSetting(percentageSubmission, hre)
+    const markets = getMarkets(hre.network)
+
+    console.log({ markets })
+    const market = markets[0]
+    const { diamond } = await fundedMarket(hre, {
+      assetSym: market.lendingToken,
+      amount: 100000,
+    })
+    // Advance time
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',
       hre
     )
+    const loanType = args.loanType
+      ? args.loanType
+      : LoanType.UNDER_COLLATERALIZED
     await hre.evm.advanceTime(rateLimit)
-    const borrowerAddress = (await hre.getNamedAccounts()).borrower
-    const createArgs = LoanStoryTestDriver.createLoanArgs(hre, borrowerAddress)
-    const funcToRun =
-      args.nft == true ? takeOutLoanWithNfts : takeOutLoanWithoutNfts
-    const { tx, getHelpers } = await funcToRun(hre, createArgs)
+    const funcToRun = args.nft
+      ? takeOutLoanWithNfts(hre, {
+          amount: 100,
+          lendToken: market.lendingToken,
+        })
+      : takeOutLoanWithoutNfts(hre, {
+          lendToken: market.lendingToken,
+          collToken: market.collateralTokens[0],
+          loanType,
+        })
+    const { tx, getHelpers } = await funcToRun
+    const helpers = await getHelpers()
+    // borrower data from our helpers
+    if (loanType != LoanType.ZERO_COLLATERAL) {
+      const { collateral } = helpers
+      const amount = await collateral.current()
+      // check if collateral is > 0
+      amount.gt(0).should.eq(true, 'Loan must have collateral')
+    }
+    // check if loan exists
+    expect(helpers.details.loan).to.exist
+    const loanStatus = helpers.details.loan.status
+    expect(loanStatus).to.equal(2)
     return await tx
   }
 
@@ -194,7 +223,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const borrowerAddress = (await hre.getNamedAccounts()).borrower
     const borrower = await hre.ethers.provider.getSigner(borrowerAddress)
     const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
-    const { details, diamond, collateral } = loan
+    const { details, diamond } = loan
     await hre.evm.advanceTime(details.loan.duration + 3600)
     const liquidator = await hre.getNamedSigner('liquidator')
     const borrowedAmount = details.loan.borrowedAmount
@@ -232,7 +261,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       amount: BigNumber.from(borrowedAmount).mul(2),
       hre,
     })
-    const approve = await details.lendingToken
+    await details.lendingToken
       .connect(borrower)
       .approve(diamond.address, BigNumber.from(borrowedAmount).mul(2))
     const tx = await repayLoan(repayLoanArgs)

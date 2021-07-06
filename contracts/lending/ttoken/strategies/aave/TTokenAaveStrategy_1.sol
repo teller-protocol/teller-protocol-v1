@@ -22,8 +22,8 @@ import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibDapps } from "../../../../escrow/dapps/libraries/LibDapps.sol";
 
 // Storage
-import "../../storage.sol" as TokenStorage;
-import "./storage.sol" as AaveStorage;
+import "../../token-storage.sol" as TokenStorage;
+import "./aave-storage.sol" as AaveStorage;
 
 contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
     function() pure returns (TokenStorage.Store storage)
@@ -60,7 +60,10 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
                 NumbersLib.percent(storedBal + aaveBal, medianRatio);
             uint256 amountToDeposit = storedBal - requiredBal;
 
-            IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+            IAaveLendingPool lendingPool =
+                LibDapps.getAaveLendingPool(
+                    aaveStore().LP_ADDRESS_PROVIDER_ADDRESS
+                );
 
             // Approve Aave lending pool
             SafeERC20.safeIncreaseAllowance(
@@ -131,13 +134,13 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
         uint16 medianRatio =
             (aaveStore().balanceRatioMax + aaveStore().balanceRatioMin) / 2;
         uint256 requiredBal =
-            NumbersLib.percent(
-                storedBal + aaveBal - amount,
-                medianRatio - storedRatio
-            );
+            NumbersLib.percent(storedBal + aaveBal - amount, medianRatio);
         uint256 redeemAmount = requiredBal - storedBal + amount;
         // Withdraw tokens from the Aave lending pool if needed
-        IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool();
+        IAaveLendingPool lendingPool =
+            LibDapps.getAaveLendingPool(
+                aaveStore().LP_ADDRESS_PROVIDER_ADDRESS
+            );
         lendingPool.withdraw(
             address(tokenStore().underlying),
             redeemAmount,
@@ -148,15 +151,18 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
     /**
      * @notice Sets the Aave token that should be used to manage the underlying Teller Token asset.
      * @param aTokenAddress Address of the Aave token that has the same underlying asset as the TToken.
+     * @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
      * @param balanceRatioMin Percentage indicating the _ limit of underlying token balance should remain on the TToken
      * @param balanceRatioMax Percentage indicating the _ limit of underlying token balance should remain on the TToken
      */
     function init(
         address aTokenAddress,
+        address aaveLPAddressProvider,
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
     ) external {
         aaveStore().aToken = IAToken(aTokenAddress);
+        aaveStore().LP_ADDRESS_PROVIDER_ADDRESS = aaveLPAddressProvider;
         aaveStore().balanceRatioMin = balanceRatioMin;
         aaveStore().balanceRatioMax = balanceRatioMax;
     }

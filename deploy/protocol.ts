@@ -1,7 +1,12 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getNetworkName, getTokens } from '../config'
+import {
+  getDappAddresses,
+  getNativeToken,
+  getNetworkName,
+  getTokens,
+} from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -30,8 +35,8 @@ const deployProtocol: DeployFunction = async (hre) => {
   const nftDictionary = await contracts.get('TellerNFTDictionary')
 
   const tokens = getTokens(network)
-  const wrappedNativeToken =
-    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
+  const wrappedNativeToken = getNativeToken(network)
+  const dappAddresses = getDappAddresses(network)
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -142,10 +147,11 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'NFTFacet',
       skipIfAlreadyDeployed: false,
     },
-    // // Dapps
+    // Dapps
     {
       contract: 'AaveFacet',
       skipIfAlreadyDeployed: true,
+      args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
     {
       contract: 'PoolTogetherFacet',
@@ -164,6 +170,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'UniswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.uniswapV2RouterAddress],
         },
         {
           contract: 'CompoundFacet',
@@ -174,11 +181,15 @@ const deployProtocol: DeployFunction = async (hre) => {
       break
 
     case 'polygon':
+    case 'polygon_mumbai':
+    case 'localhost':
+    case 'hardhat':
       facets.push(
         // Dapps
         {
           contract: 'SushiswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.sushiswapV2RouterAddress],
         }
       )
 
@@ -240,7 +251,9 @@ const addAuthorizedAddresses = async (
 const deployLoansEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Loans Escrow Beacon **********', { indent: 2 })
   log('')
@@ -256,7 +269,7 @@ const deployLoansEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -264,7 +277,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -274,10 +287,13 @@ const deployLoansEscrowBeacon = async (
     ethers.utils.getAddress(loansEscrowLogic.address)
   ) {
     log(`Upgrading Loans Escrow logic: ${loansEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
-    await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(loansEscrowLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')
@@ -288,7 +304,9 @@ const deployLoansEscrowBeacon = async (
 const deployCollateralEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Collateral Escrow Beacon **********', { indent: 2 })
   log('')
@@ -304,7 +322,7 @@ const deployCollateralEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -312,7 +330,7 @@ const deployCollateralEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'CollateralEscrowBeaconFactory',
     args: [beaconProxy.address, collateralEscrowLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -322,10 +340,11 @@ const deployCollateralEscrowBeacon = async (
     ethers.utils.getAddress(collateralEscrowLogic.address)
   ) {
     log(`Upgrading Collateral Escrow logic: ${collateralEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
     await beacon
+      .connect(deployer)
       .upgradeTo(collateralEscrowLogic.address)
       .then(({ wait }) => wait())
   }
@@ -338,12 +357,14 @@ const deployCollateralEscrowBeacon = async (
 const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = 1
+  const logicVersion = 2
 
   const tTokenLogic = await deploy<ITToken>({
     hre,
@@ -354,7 +375,7 @@ const deployTTokenBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -362,7 +383,7 @@ const deployTTokenBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'TTokenBeaconFactory',
     args: [beaconProxy.address, tTokenLogic.address],
-    indent: 3,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -372,10 +393,13 @@ const deployTTokenBeacon = async (
     ethers.utils.getAddress(tTokenLogic.address)
   ) {
     log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
-    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(tTokenLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')

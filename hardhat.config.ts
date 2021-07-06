@@ -7,12 +7,14 @@ import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
+import fs from 'fs'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
 } from 'hardhat/types'
+import path from 'path'
 
 config()
 
@@ -61,9 +63,23 @@ const networkUrls: { [network: string]: string } = {
 
 const networkForkingBlock: { [network: string]: number } = {
   mainnet: 12648380,
-  // polygon: 14891625,
-  // polygon_mumbai: 14244031,
+  polygon: 14891625,
+  polygon_mumbai: 14244031,
 }
+
+const getLatestDeploymentBlock = (networkName: string): number =>
+  parseInt(
+    fs
+      .readFileSync(
+        path.resolve(
+          __dirname,
+          'deployments',
+          networkName,
+          '.latestDeploymentBlock'
+        )
+      )
+      .toString()
+  )
 
 const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
   config = {
@@ -176,16 +192,16 @@ export default <HardhatUserConfig>{
       chainId: 1,
       live: true,
     }),
-    // polygon: networkConfig({
-    //   url: networkUrls.polygon,
-    //   chainId: 137,
-    //   live: true,
-    // }),
-    // polygon_mumbai: networkConfig({
-    //   url: networkUrls.polygon_mumbai,
-    //   chainId: 80001,
-    //   live: true,
-    // }),
+    polygon: networkConfig({
+      url: networkUrls.polygon,
+      chainId: 137,
+      live: true,
+    }),
+    polygon_mumbai: networkConfig({
+      url: networkUrls.polygon_mumbai,
+      chainId: 80001,
+      live: true,
+    }),
     hardhat: networkConfig({
       chainId: 31337,
       live: false,

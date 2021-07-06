@@ -41,15 +41,14 @@ task('test').setAction(async (args, hre, runSuper) => {
  env: HardhatRuntimeEnvironment,
  runSuper: RunSuperFunction<ArgsT>*/
 
-subtask(TASK_TEST_RUN_MOCHA_TESTS)
-
-  .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
+subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
+  async ({}: { testFiles: string[] }, hre) => {
     //custom code
     const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
     console.log('\n\n\n\n')
 
-    const testFailures = await new Promise<number>((resolve, _) => {
+    await new Promise<number>((resolve, _) => {
       storyMochaInstance.run(resolve)
     })
 
@@ -57,7 +56,7 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
 
     const mochaInstance = new Mocha()
-    mochaInstance.timeout(19000)
+    mochaInstance.timeout(30000)
 
     tsFiles.forEach((file: string) => {
       mochaInstance.addFile(file)
@@ -74,4 +73,5 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     }*/
 
     return fileTestFailures
-  })
+  }
+)
