@@ -94,8 +94,7 @@ export interface TestAction {
 export interface TestArgs {
   actionTarget?: number
   dappAction?: number
-  // rewindStateTo: string | null
-  //shouldPass: boolean
+  loanType?: number
   nft?: boolean
 }
 

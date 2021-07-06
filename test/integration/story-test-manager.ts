@@ -4,7 +4,6 @@ import Mocha from 'mocha'
 import { generateStoryDomains } from '../helpers/story/generator/story-generator'
 import {
   generateTests,
-  TestScenario,
   TestScenarioDomain,
 } from '../helpers/story/story-helpers'
 
@@ -12,10 +11,10 @@ export const generateAllStoryTests = (
   hre: HardhatRuntimeEnvironment
 ): Mocha => {
   const allTestStoryDomains: TestScenarioDomain[] =
-    generateStoryDomains(hre)
+    generateStoryDomains()
 
   const mochaInstance = new Mocha()
-  mochaInstance.timeout(19000)
+  mochaInstance.timeout(300000)
 
   for (const storyDomain of allTestStoryDomains) {
     const suiteInstance = Mocha.Suite.create(
@@ -23,7 +22,7 @@ export const generateAllStoryTests = (
       'Story Test Suite - '.concat(storyDomain.domainName)
     )
     for (const scenario of storyDomain.scenarios) {
-      const testsForDomain = generateTests(hre, scenario, suiteInstance)
+      generateTests(hre, scenario, suiteInstance)
     }
   }
   return mochaInstance
