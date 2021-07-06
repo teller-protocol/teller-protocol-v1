@@ -20,6 +20,7 @@ import { nodes } from './nodes'
 import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
+import { dapps } from './dapps'
 
 export const getNetworkName = (network: Network): string =>
   process.env.FORKING_NETWORK ?? network.name
@@ -54,11 +55,26 @@ export const getTokens = (network: Network): NetworkTokens & { all: Tokens } => 
   }
 }
 
-export const getNFT = (network: Network): {
-  tiers: TierInfo[]
-  merkleTrees: NFTMerkleTree
-  distributionsOutputFile: string
-} => {
+export const getNativeToken = (network: Network) => {
+  const tokens = getTokens(network)
+  let wrappedNativeToken
+  if (
+    network.name === 'mainnet' ||
+    network.name === 'kovan' ||
+    network.name === 'rinkeby' ||
+    network.name === 'ropsten'
+  ) {
+    wrappedNativeToken = tokens.erc20.WETH
+  } else {
+    wrappedNativeToken = tokens.erc20.WMATIC
+  }
+  return wrappedNativeToken
+}
+
+export const getDappAddresses = (network: Network) =>
+  dapps[getNetworkName(network)]
+
+export const getNFT = (network: Network) => {
   const distributionsOutputFile = path.resolve(
     path.join(
       __dirname,

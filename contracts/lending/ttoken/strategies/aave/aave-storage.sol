@@ -7,6 +7,7 @@ struct Store {
     IAToken aToken;
     uint16 balanceRatioMax;
     uint16 balanceRatioMin;
+    address LP_ADDRESS_PROVIDER_ADDRESS;
 }
 
 bytes32 constant POSITION = keccak256("ttoken.strategy.aave.storage.position");

@@ -1,7 +1,12 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getNetworkName, getTokens } from '../config'
+import {
+  getDappAddresses,
+  getNativeToken,
+  getNetworkName,
+  getTokens,
+} from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -30,8 +35,8 @@ const deployProtocol: DeployFunction = async (hre) => {
   const nftDictionary = await contracts.get('TellerNFTDictionary')
 
   const tokens = getTokens(network)
-  const wrappedNativeToken =
-    networkName == 'polygon' ? tokens.erc20.WMATIC : tokens.erc20.WETH
+  const wrappedNativeToken = getNativeToken(network)
+  const dappAddresses = getDappAddresses(network)
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -142,10 +147,11 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'NFTFacet',
       skipIfAlreadyDeployed: false,
     },
-    // // Dapps
+    // Dapps
     {
       contract: 'AaveFacet',
       skipIfAlreadyDeployed: true,
+      args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
     {
       contract: 'PoolTogetherFacet',
@@ -164,6 +170,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'UniswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.uniswapV2RouterAddress],
         },
         {
           contract: 'CompoundFacet',
@@ -174,11 +181,15 @@ const deployProtocol: DeployFunction = async (hre) => {
       break
 
     case 'polygon':
+    case 'polygon_mumbai':
+    case 'localhost':
+    case 'hardhat':
       facets.push(
         // Dapps
         {
           contract: 'SushiswapFacet',
           skipIfAlreadyDeployed: true,
+          args: [dappAddresses.sushiswapV2RouterAddress],
         }
       )
 

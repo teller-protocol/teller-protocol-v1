@@ -61,6 +61,12 @@ const networkUrls: { [network: string]: string } = {
   polygon_mumbai: MATIC_MUMBAI_KEY!,
 }
 
+const networkForkingBlock: { [network: string]: number } = {
+  mainnet: 12648380,
+  polygon: 14891625,
+  polygon_mumbai: 14244031,
+}
+
 const getLatestDeploymentBlock = (networkName: string): number =>
   parseInt(
     fs
@@ -205,7 +211,7 @@ export default <HardhatUserConfig>{
           : {
               enabled: true,
               url: networkUrls[FORKING_NETWORK],
-              blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
+              blockNumber: networkForkingBlock[FORKING_NETWORK],
             },
     }),
     localhost: networkConfig({
