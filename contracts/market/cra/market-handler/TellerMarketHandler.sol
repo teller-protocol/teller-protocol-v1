@@ -6,8 +6,9 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { MarketHandler } from "./MarketHandler.sol";
+import { Rates } from "../../data/states.sol";
 
-contract TellerMarketHandler is MarketHandler {
+contract TellerMarketHandler is MarketHandler, Rates {
     constructor(
         uint16 maxInterestRate,
         uint16 collateralRatio,
@@ -26,7 +27,6 @@ contract TellerMarketHandler is MarketHandler {
         )
     {
         uint256 amount = 0;
-
         // get amount for user based on market score
         if (marketScore >= 5 && marketScore < 7) {
             amount = _loanAmount(18000, 10000, 7, 5, marketScore);
@@ -45,7 +45,7 @@ contract TellerMarketHandler is MarketHandler {
                     2);
 
         // Illinois interest rate for testing
-        uint16 sampleCappedInterestRate = 900;
+        uint16 sampleCappedInterestRate = rates[uint16(request.request.code)];
 
         bool useLegalIR = interestRate > sampleCappedInterestRate;
 
