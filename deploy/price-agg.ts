@@ -3,9 +3,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getChainlink, getNetworkName, getTokens } from '../config'
+import { Tokens } from '../types/custom/config-types'
 import {
   ChainlinkPricer,
   ENSRegistry,
+  IsaLPPricer,
   PriceAggregator,
   PublicResolver,
 } from '../types/typechain'
@@ -25,10 +27,13 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
   const priceAgg = await deploy<PriceAggregator>({
     contract: 'PriceAggregator',
     args: [tokens.all.WETH, chainlinkPricer.address],
+    skipIfAlreadyDeployed: true,
     hre,
   })
 
   await addCompoundPricer(priceAgg, hre)
+  await addAavePricer(priceAgg, hre)
+  await addPoolTogetherPricer(priceAgg, hre)
 
   log('')
 }
@@ -57,6 +62,7 @@ const deployChainlinkPricer = async (
   const chainlinkPricer = await deploy<ChainlinkPricer>({
     contract: 'ChainlinkPricer',
     args: [resolverAddress],
+    skipIfAlreadyDeployed: true,
     hre,
   })
 
@@ -71,11 +77,13 @@ const deployChainlinkENS = async (
 
   const ensRegistry = await deploy<ENSRegistry>({
     contract: 'ENSRegistry',
+    skipIfAlreadyDeployed: true,
     hre,
   })
   const resolver = await deploy<PublicResolver>({
     contract: 'PublicResolver',
     args: [ensRegistry.address, DUMMY_ADDRESS],
+    skipIfAlreadyDeployed: true,
     hre,
   })
 
@@ -144,22 +152,92 @@ const addCompoundPricer = async (
   priceAgg: PriceAggregator,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { all: allTokens, compound: cTokens } = getTokens(hre.network)
+  const { all: allTokens, compound: tokens } = getTokens(hre.network)
 
-  if (cTokens != null) {
-    const tokens = Object.values(cTokens)
+  if (tokens == null) return
 
-    const compoundPricer = await deploy({
-      contract: 'CompoundPricer',
-      args: [allTokens.WETH, cTokens.CETH],
-      hre,
-    })
+  const pricer = await deploy<IsaLPPricer>({
+    contract: 'CompoundPricer',
+    args: [allTokens.WETH, tokens.CETH],
+    skipIfAlreadyDeployed: true,
+    hre,
+  })
 
-    if (compoundPricer.deployResult.newlyDeployed) {
-      await priceAgg
-        .connect(await hre.getNamedSigner('deployer'))
-        .setAssetPricers(compoundPricer.address, tokens)
+  await addPricer({
+    priceAgg,
+    pricer,
+    tokens,
+    hre,
+  })
+}
+
+const addAavePricer = async (
+  priceAgg: PriceAggregator,
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
+  const { aave: tokens } = getTokens(hre.network)
+
+  const pricer = await deploy<IsaLPPricer>({
+    contract: 'AavePricer',
+    skipIfAlreadyDeployed: true,
+    hre,
+  })
+
+  await addPricer({
+    priceAgg,
+    pricer,
+    tokens,
+    hre,
+  })
+}
+
+const addPoolTogetherPricer = async (
+  priceAgg: PriceAggregator,
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
+  const { poolTogether: tokens } = getTokens(hre.network)
+
+  const pricer = await deploy<IsaLPPricer>({
+    contract: 'PoolTogetherPricer',
+    skipIfAlreadyDeployed: true,
+    hre,
+  })
+
+  await addPricer({
+    priceAgg,
+    pricer,
+    tokens,
+    hre,
+  })
+}
+
+interface AddPricerArgs {
+  priceAgg: PriceAggregator
+  pricer: IsaLPPricer
+  tokens?: Tokens
+  hre: HardhatRuntimeEnvironment
+}
+
+const addPricer = async (args: AddPricerArgs): Promise<void> => {
+  const { priceAgg, pricer, tokens, hre } = args
+
+  // Check if the tokens map exists
+  if (tokens == null) return
+
+  // Loop each token address and check if any need to be set
+  const tokensToSet: string[] = []
+  for (const tokenAddress of Object.values(tokens)) {
+    const pricerAddress = await priceAgg.saLPPricer(tokenAddress)
+    if (pricerAddress !== pricer.address) {
+      tokensToSet.push(tokenAddress)
     }
+  }
+
+  // Set pricer for tokens if needed
+  if (tokensToSet.length > 0) {
+    await priceAgg
+      .connect(await hre.getNamedSigner('deployer'))
+      .setAssetPricers(pricer.address, tokensToSet)
   }
 }
 

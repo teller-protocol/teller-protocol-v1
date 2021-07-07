@@ -274,7 +274,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
      */
     function getLiquidationReward(uint256 loanID)
         external
-        view
         returns (uint256 inLending_, uint256 inCollateral_)
     {
         (inLending_, ) = RepayLib.getLiquidationReward(
@@ -297,7 +296,6 @@ library RepayLib {
      */
     function isLiquidable(uint256 loanID, uint256 collateralAmount)
         internal
-        view
         returns (bool)
     {
         Loan storage loan = LibLoans.loan(loanID);
@@ -327,7 +325,6 @@ library RepayLib {
      */
     function getLiquidationReward(uint256 loanID, uint256 collateralAmount)
         internal
-        view
         returns (uint256 reward_, uint256 collateralValue_)
     {
         uint256 amountToLiquidate = LibLoans.debt(loanID).principalOwed +

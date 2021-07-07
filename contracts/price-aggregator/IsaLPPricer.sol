@@ -10,7 +10,7 @@ interface IsaLPPricer {
     function getRateFor(address saLPToken) external view returns (uint256);
 
     /**
-     * @notice It calculates the value of a token amount into another.
+     * @notice It calculates the value of the protocol token amount into the underlying asset.
      * @param saLPToken address of the single asset liquidity provider token
      * @param amount Amount of the token to convert into the underlying asset.
      * @return Value of the saLP token in the underlying asset.
@@ -21,12 +21,19 @@ interface IsaLPPricer {
         returns (uint256);
 
     /**
+     * @notice It calculates the balance of the underlying asset for {account}.
+     * @param saLPToken Address of the single asset liquidity provider token.
+     * @param account Address of the account to get the balance of.
+     * @return Balance of the underlying asset.
+     */
+    function getBalanceOfUnderlying(address saLPToken, address account)
+        external
+        returns (uint256);
+
+    /**
      * @notice Gets the underlying asset address for the {saLPToken}.
      * @param saLPToken address of the single asset liquidity provider token.
-     * @return underlying_ address of the underlying asset. Null address if token not supported.
+     * @return Address of the underlying asset.
      */
-    function getUnderlying(address saLPToken)
-        external
-        view
-        returns (address underlying_);
+    function getUnderlying(address saLPToken) external view returns (address);
 }

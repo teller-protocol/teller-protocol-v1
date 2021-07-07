@@ -11,25 +11,17 @@ import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Libraries
-import {
-    CacheLib,
-    Cache,
-    CacheType
-} from "../../shared/libraries/CacheLib.sol";
+import { CacheLib, Cache, CacheType } from "../../shared/libraries/CacheLib.sol";
 import { AssetCTokenLib } from "./libraries/AssetCTokenLib.sol";
 import { AssetATokenLib } from "./libraries/AssetATokenLib.sol";
 import { AssetPPoolLib } from "./libraries/AssetPPoolLib.sol";
-import {
-    PoolTogetherLib
-} from "../../escrow/dapps/libraries/PoolTogetherLib.sol";
+import { PoolTogetherLib } from "../../escrow/dapps/libraries/PoolTogetherLib.sol";
 import { MaxLoanAmountLib } from "./libraries/MaxLoanAmountLib.sol";
 import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
-import {
-    PrizePoolInterface
-} from "../../escrow/dapps/interfaces/PrizePoolInterface.sol";
+import { PrizePoolInterface } from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 
 /**
  * @notice View function to get asset setting values.

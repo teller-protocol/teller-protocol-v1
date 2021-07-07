@@ -417,9 +417,8 @@ const collateralNeeded = async (
   args: CollateralNeededArgs
 ): Promise<BigNumber> => {
   const { diamond, details } = args
-  const { neededInCollateralTokens } = await diamond.getCollateralNeededInfo(
-    details.loan.id
-  )
+  const { neededInCollateralTokens } =
+    await diamond.callStatic.getCollateralNeededInfo(details.loan.id)
   return neededInCollateralTokens
 }
 interface CollateralCurrentArgs extends CommonLoanArgs {}

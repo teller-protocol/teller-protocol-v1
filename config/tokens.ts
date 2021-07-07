@@ -11,7 +11,8 @@ const mainnetTokens: NetworkTokens = {
     ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
   },
   poolTogether: {
-    PCDAI: '0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a',
+    PTDAI: '0x334cbb5858417aee161b53ee0d5349ccf54514cf',
+    PTDAIS: '0x0A2E7f69fe9588fa7fBa5F5864236883Cd4AaC6d',
   },
   yearn: {
     YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
@@ -43,7 +44,8 @@ const polygonTokens: NetworkTokens = {
     AETH: '0x28424507fefb6f7f8E9D3860F56504E4e5f5f390', //amWETH
   },
   poolTogether: {
-    PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
+    PTDAI: '0x3e35681E6439961EC7F2b1ABaB6b967D6a645270',
+    PTDAIS: '0xB102A0Ba3707A94a64CE63c7BeA8039680e1ad5C',
   },
   erc20: {
     // Aave
@@ -86,9 +88,6 @@ export const tokens: Record<string, NetworkTokens> = {
       CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
       CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
     },
-    poolTogether: {
-      PCDAI: '0x4706856FA8Bb747D50b4EF8547FE51Ab5Edc4Ac2',
-    },
     erc20: {
       // Compound
       // Aave
@@ -126,9 +125,6 @@ export const tokens: Record<string, NetworkTokens> = {
       ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e', // amDAI
       AUSDC: '0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9',
       AETH: '0x7aE20397Ca327721F013BB9e140C707F82871b56', //amWETH
-    },
-    poolTogether: {
-      PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
     },
     erc20: {
       // Aave
