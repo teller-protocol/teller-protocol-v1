@@ -51,8 +51,6 @@ contract TellerMarketHandler is MarketHandler, Rates {
 
         if (useLegalIR) {
             userInterestRate = sampleCappedInterestRate;
-            // 10 * 2500 = 25000
-            // 25000 / (1499 / (901)) = 15690 final loan amount
             userLoanAmount =
                 (amount) /
                 (interestRate / (sampleCappedInterestRate + 1));
