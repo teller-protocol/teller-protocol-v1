@@ -38,11 +38,11 @@ export const TREE_STRUCTURE = {
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.LEND.AAVE': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.POLYGON,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.LEND.POOL_TOGETHER': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.POLYGON,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.SWAP.UNISWAP': {
@@ -94,8 +94,7 @@ export interface TestAction {
 export interface TestArgs {
   actionTarget?: number
   dappAction?: number
-  // rewindStateTo: string | null
-  //shouldPass: boolean
+  loanType?: number
   nft?: boolean
 }
 
