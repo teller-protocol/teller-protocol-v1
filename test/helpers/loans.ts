@@ -630,6 +630,7 @@ export const borrowWithZKCRA = async (
     collateralAmount: collAmount,
     collateralRatio: 5000,
     duration: moment.duration(1, 'day').asSeconds(),
+    code: 2,
   }
 
   // teller market address
