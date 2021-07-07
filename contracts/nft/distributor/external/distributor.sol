@@ -8,7 +8,7 @@ import "../internal/distributor.sol";
 contract ext_distributor_NFT_v1 is sto_NFTDistributor, int_distributor_NFT_v1 {
     /**
      * @notice It gets the TellerNFT diamond instance used to mint.
-     * @return nft_ return the NFT instance
+     * @return nft_ returns the NFT instance
      */
     function nft() external view returns (ITellerNFT nft_) {
         nft_ = distributorStore().nft;

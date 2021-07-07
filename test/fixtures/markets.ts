@@ -26,7 +26,9 @@ export const fundedMarket = hre.deployments.createFixture(
     const { assetSym = 'DAI', amount, tags = [] } = opts ?? {}
 
     tags.push('markets')
-    await deployments.fixture(tags)
+    await deployments.fixture(tags, {
+      keepExistingDeployments: true,
+    })
 
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
     const lendingToken = await tokens.get(assetSym)

@@ -3,7 +3,7 @@ import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getTokens } from '../config'
-import { ITellerDiamond } from '../types/typechain'
+import { PriceAggregator } from '../types/typechain'
 
 interface GetPricesArgs {
   src: string
@@ -32,7 +32,7 @@ export const getPrice = async (
   }
   const { [srcStr]: srcAddress, [dstStr]: dstAddress } = getTokens(network).all
 
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+  const priceAgg = await contracts.get<PriceAggregator>('PriceAggregator')
 
   const src = await tokens.get(srcStr)
   const dst = await tokens.get(dstStr)
@@ -42,11 +42,11 @@ export const getPrice = async (
   log(``)
   log(`Price for ${srcStr}/${dstStr}`, { indent: 1 })
 
-  const answer = await diamond.getPriceFor(srcAddress, dstAddress)
+  const answer = await priceAgg.getPriceFor(srcAddress, dstAddress)
   const price = FN.from(answer).divUnsafe(FN.from(dstFactor))
   let value = price
   if (args.amount) {
-    const valueFor = await diamond.getValueFor(
+    const valueFor = await priceAgg.getValueFor(
       srcAddress,
       dstAddress,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string

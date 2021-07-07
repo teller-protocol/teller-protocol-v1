@@ -9,7 +9,7 @@ const mainnetPlatformSettings: PlatformSettings = {
   },
   RequiredSubmissionsPercentage: {
     processOnDeployment: true,
-    value: 8000,
+    value: 100,
     min: 0,
     max: 10000,
   },
@@ -253,4 +253,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
   hardhat: mainnetPlatformSettings,
   localhost: mainnetPlatformSettings,
   mainnet: mainnetPlatformSettings,
+  polygon: mainnetPlatformSettings,
+  polygon_mumbai: mainnetPlatformSettings,
 }

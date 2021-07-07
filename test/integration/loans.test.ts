@@ -7,6 +7,7 @@ import { getMarkets, getNFT } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
+import { fundedMarket } from '../fixtures'
 import {
   LoanType,
   takeOutLoanWithNfts,
@@ -27,15 +28,15 @@ describe('Loans', () => {
     let borrower: Signer
 
     before(async () => {
-      await hre.deployments.fixture(['market'], {
-        keepExistingDeployments: true,
-      })
+      ;({ diamond } = await fundedMarket({
+        assetSym: market.lendingToken,
+        amount: 100000,
+      }))
 
-      diamond = await contracts.get('TellerDiamond')
       deployer = await getNamedSigner('deployer')
     })
     // tests for merged loan functions
-    describe.only('merge create loan', () => {
+    describe('merge create loan', () => {
       let helpers: any = null
       before(async () => {
         // update percentage submission percentage value to 0 for this test

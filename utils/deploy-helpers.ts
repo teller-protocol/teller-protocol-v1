@@ -20,9 +20,11 @@ export interface DeployArgs extends CommonDeployArgs {
   mock?: boolean
 }
 
+type DeployedContract<C extends Contract> = C & { deployResult: DeployResult }
+
 export const deploy = async <C extends Contract>(
   args: DeployArgs
-): Promise<C> => {
+): Promise<DeployedContract<C>> => {
   const { hre, skipIfAlreadyDeployed = true, indent = 1 } = args
   const {
     deployments: { deploy, getOrNull },
@@ -34,12 +36,13 @@ export const deploy = async <C extends Contract>(
   const contractDeployName = args.name ?? args.contract
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
+  let result: DeployResult
 
   if (!existingContract || (existingContract && !skipIfAlreadyDeployed)) {
     // If marked as mock, prepend "Mock" to the contract name
     const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
 
-    const result = await deploy(contractDeployName, {
+    result = await deploy(contractDeployName, {
       ...args,
       contract: contractName,
       from: deployer,
@@ -48,16 +51,21 @@ export const deploy = async <C extends Contract>(
     contractAddress = result.address
     await onDeployResult({ result, name: contractDeployName, hre, indent })
   } else {
+    result = { ...existingContract, newlyDeployed: false }
     contractAddress = existingContract.address
     await onDeployResult({
-      result: { ...existingContract, newlyDeployed: false },
+      result,
       name: contractDeployName,
       hre,
       indent,
     })
   }
 
-  return (await ethers.getContractAt(args.contract, contractAddress)) as C
+  const contract = (await hre.contracts.get(args.contract, {
+    at: contractAddress,
+  })) as DeployedContract<C>
+  contract.deployResult = result
+  return contract
 }
 
 export interface DiamondExecuteArgs<F, A> {

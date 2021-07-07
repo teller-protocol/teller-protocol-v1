@@ -85,18 +85,32 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
   .setAction(forkNetwork)
 
 subtask('fork:fund-deployer').setAction(async (args, hre) => {
-  const { ethers } = hre
+  const { ethers, network } = hre
 
   const [mainAccount] = await hre.getUnnamedAccounts()
   const { deployer } = await hre.getNamedAccounts()
   if (
     ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
   ) {
-    await getFunds({
-      to: deployer,
-      tokenSym: 'ETH',
-      amount: hre.ethers.utils.parseEther('1000'),
-      hre,
-    })
+    if (
+      network.name === 'mainnet' ||
+      network.name === 'kovan' ||
+      network.name === 'rinkeby' ||
+      network.name === 'ropsten'
+    ) {
+      await getFunds({
+        to: deployer,
+        tokenSym: 'ETH',
+        amount: hre.ethers.utils.parseEther('1000'),
+        hre,
+      })
+    } else {
+      await getFunds({
+        to: deployer,
+        tokenSym: 'MATIC',
+        amount: hre.ethers.utils.parseEther('10000'),
+        hre,
+      })
+    }
   }
 })

@@ -35,8 +35,13 @@ const createAssetSettings: DeployFunction = async (hre) => {
         let value: string
         let cacheType: CacheType
         switch (setting.type) {
-          case AssetType.Address:
+          case AssetType.Token:
             value = tokens.all[setting.value]
+            cacheType = CacheType.Address
+            break
+
+          case AssetType.Address:
+            value = setting.value
             cacheType = CacheType.Address
             break
 

@@ -7,7 +7,7 @@ import {
     Cache,
     CacheType
 } from "../../../shared/libraries/CacheLib.sol";
-import { IAToken } from "../../../escrow/dapps/interfaces/IAToken.sol";
+import { IAToken } from "../../../shared/interfaces/IAToken.sol";
 
 // Storage
 import { AppStorageLib } from "../../../storage/app.sol";

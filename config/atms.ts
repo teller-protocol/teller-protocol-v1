@@ -30,4 +30,6 @@ export const atms: Record<string, ATMs> = {
   hardhat: mainnetATMs,
   localhost: mainnetATMs,
   mainnet: mainnetATMs,
+  polygon: mainnetATMs,
+  polygon_mumbai: mainnetATMs,
 }

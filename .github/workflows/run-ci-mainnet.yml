@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   test:
-    name: Build Project
+    name: Build Project - Mainnet
     runs-on: ubuntu-latest
     environment: testing-keys
     env:
@@ -28,9 +28,9 @@ jobs:
         with:
           node-version: '14'
           registry-url: 'https://registry.npmjs.org/'
-      - name: Install dependencies
+      - name: Install dependencies - Mainnet
         run: |
           yarn --network-concurrency 1
-      - name: Compiling and Executing Tests
+      - name: Compiling and Executing Tests - Mainnet
         run: |
           yarn test mainnet
