@@ -79,7 +79,6 @@ library LibLoans {
 
     function getCollateralNeeded(uint256 loanID)
         internal
-        view
         returns (uint256 _needed)
     {
         (, _needed, ) = getCollateralNeededInfo(loanID);
@@ -94,7 +93,6 @@ library LibLoans {
      */
     function getCollateralNeededInfo(uint256 loanID)
         internal
-        view
         returns (
             uint256 neededInLendingTokens,
             uint256 neededInCollateralTokens,
@@ -130,7 +128,6 @@ library LibLoans {
      */
     function getCollateralNeededInTokens(uint256 loanID)
         internal
-        view
         returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (loan(loanID).collateralRatio == 0) {

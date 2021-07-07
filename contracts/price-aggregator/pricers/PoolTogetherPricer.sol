@@ -3,23 +3,16 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IsaLPPricer } from "../IsaLPPricer.sol";
-import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
+import { PrizePoolInterface } from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
+import { IControlledToken } from "../../shared/interfaces/pooltogether/IControlledToken.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract CompoundPricer is IsaLPPricer {
-    // Compounds exchange rate is scaled by 18 decimals (10^18)
-    uint256 internal constant EXCHANGE_RATE_SCALE = 1e18;
-    uint256 internal constant CTOKEN_DECIMALS = 1e8;
-    address public immutable wETH;
-    address public immutable cETH;
-
-    constructor(address wETHAddress, address cETHAddress) {
-        wETH = wETHAddress;
-        cETH = cETHAddress;
-    }
-
+contract PoolTogetherPricer is IsaLPPricer {
+    // TODO: not currently being used
     /**
-     * @notice It returns the exchange rate of the single asset liquidity provider token.
+     * @notice It returns the exchange rate of the aToken to the underlying asset.
+     * @dev The exchange ratio for Aave tokens is always 1:1, however the token balance is compounded silently
+     *  using an index at the time of their last deposit. See {AavePricer.getBalanceOfUnderlying}
      * @param saLPToken address of the single asset liquidity provider token.
      * @return Exchange rate for 1 saLP token in the underlying asset.
      */
@@ -29,13 +22,13 @@ contract CompoundPricer is IsaLPPricer {
         override
         returns (uint256)
     {
-        return
-            (ICErc20(saLPToken).exchangeRateStored() * CTOKEN_DECIMALS) /
-            EXCHANGE_RATE_SCALE;
+        return 0;
     }
 
+    // TODO: not currently being used
     /**
      * @notice It calculates the value of the protocol token amount into the underlying asset.
+     * @dev The value of an Aave token is always the same as the underlying asset amount. See {AavePricer.getRateFor}
      * @param saLPToken address of the single asset liquidity provider token
      * @param amount Amount of the token to convert into the underlying asset.
      * @return Value of the saLP token in the underlying asset.
@@ -46,7 +39,7 @@ contract CompoundPricer is IsaLPPricer {
         override
         returns (uint256)
     {
-        return (amount * getRateFor(saLPToken)) / EXCHANGE_RATE_SCALE;
+        return 0;
     }
 
     /**
@@ -60,14 +53,14 @@ contract CompoundPricer is IsaLPPricer {
         override
         returns (uint256)
     {
-        return ICErc20(saLPToken).balanceOfUnderlying(account);
+        return _getPrizePool(saLPToken).balanceOfCredit(account, saLPToken);
     }
 
     /**
      * @notice Gets the underlying asset address for the Compound token.
      * @dev cETH is the only Compound token that does not support the {underlying} function.
-     * @param saLPToken Address of the Compound token.
-     * @return Address of the underlying saLPToken asset. Null address if token not supported.
+     * @param saLPToken address of the Compound token.
+     * @return address of the underlying saLPToken asset.
      */
     function getUnderlying(address saLPToken)
         public
@@ -75,14 +68,14 @@ contract CompoundPricer is IsaLPPricer {
         override
         returns (address)
     {
-        if (saLPToken == cETH) {
-            return wETH;
-        }
+        return _getPrizePool(saLPToken).token();
+    }
 
-        (bool success, bytes memory data) = saLPToken.staticcall(
-            abi.encodeWithSelector(ICErc20.underlying.selector)
-        );
-        require(success, "Teller: unsupported cToken");
-        return abi.decode(data, (address));
+    function _getPrizePool(address saLPToken)
+        private
+        view
+        returns (PrizePoolInterface)
+    {
+        return IControlledToken(saLPToken).controller();
     }
 }

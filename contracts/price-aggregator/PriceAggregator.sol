@@ -64,6 +64,32 @@ contract PriceAggregator {
     }
 
     /**
+     * @notice It calculates the value of the {src} token balance in {dst} token for the {account}.
+     * @param account Address of the account to get the balance value of.
+     * @param src Source token address.
+     * @param dst Destination token address.
+     * @return Value of the {src} token balance denoted in {dst} tokens.
+     */
+    function getBalanceOfFor(
+        address account,
+        address src,
+        address dst
+    ) external returns (uint256) {
+        IsaLPPricer srcPricer = saLPPricer[src];
+        IsaLPPricer dstPricer = saLPPricer[dst];
+
+        uint256 srcBalance;
+        if (address(srcPricer) == address(0)) {
+            srcBalance = ERC20(src).balanceOf(account);
+        } else {
+            srcBalance = srcPricer.getBalanceOfUnderlying(src, account);
+            src = srcPricer.getUnderlying(src);
+        }
+
+        return _valueFor(src, srcBalance, uint256(_priceFor(src, dst)));
+    }
+
+    /**
      * @notice It calculates the value of a token amount into another.
      * @param src Source token address.
      * @param amount Amount of the source token to convert into the destination token.
