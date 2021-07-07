@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 // Libraries
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
-import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
@@ -12,6 +11,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ILoansEscrow } from "../escrow/ILoansEscrow.sol";
 
 // Storage
+import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LibEscrow {
@@ -98,7 +98,7 @@ library LibEscrow {
                     loanID,
                     EnumerableSet.at(tokens, i)
                 );
-                value_ += PriceAggLib.valueFor(
+                value_ += AppStorageLib.store().priceAggregator.getValueFor(
                     EnumerableSet.at(tokens, i),
                     lendingToken,
                     tokenBal

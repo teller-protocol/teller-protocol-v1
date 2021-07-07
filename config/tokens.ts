@@ -7,16 +7,22 @@ const mainnetTokens: NetworkTokens = {
     CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
     CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
   },
+  aave: {
+    ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
+  },
+  poolTogether: {
+    PCDAI: '0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a',
+  },
+  yearn: {
+    YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
+  },
   erc20: {
     // Compound
     COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
     // Aave
     AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-    ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
     // Pool Together
-    PCDAI: '0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a',
     // Yearn
-    YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
     // ERC20
     WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -31,17 +37,18 @@ const mainnetTokens: NetworkTokens = {
 }
 
 const polygonTokens: NetworkTokens = {
-  compound: {
-    ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e',
+  aave: {
+    ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e', // amDAI
     AUSDC: '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F',
     AETH: '0x28424507fefb6f7f8E9D3860F56504E4e5f5f390', //amWETH
+  },
+  poolTogether: {
+    PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
   },
   erc20: {
     // Aave
     AAVE: '0xD6DF932A45C0f255f85145f286eA0b292B21C90B',
-    ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e', // amDAI
     // Pool Together
-    PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
     // ERC20
     WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
     WMATIC: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
@@ -64,11 +71,8 @@ export const tokens: Record<string, NetworkTokens> = {
       // Compound
       COMP: '0x61460874a7196d6a22d1ee4922473664b3e95270',
       // Aave
-      ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
-      PCDAI: '0x0000000000000000000000000000000000000000',
       // Yearn
-      YDAI: '0x0000000000000000000000000000000000000000',
       // ERC20
       WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
@@ -82,15 +86,14 @@ export const tokens: Record<string, NetworkTokens> = {
       CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
       CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
     },
+    poolTogether: {
+      PCDAI: '0x4706856FA8Bb747D50b4EF8547FE51Ab5Edc4Ac2',
+    },
     erc20: {
       // Compound
-      COMP: '0x0000000000000000000000000000000000000000',
       // Aave
-      ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
-      PCDAI: '0x4706856FA8Bb747D50b4EF8547FE51Ab5Edc4Ac2',
       // Yearn
-      YDAI: '0x0000000000000000000000000000000000000000',
       // ERC20
       WETH: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
       DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
@@ -108,11 +111,8 @@ export const tokens: Record<string, NetworkTokens> = {
       // Compound
       COMP: '0xf76d4a441e4ba86a923ce32b89aff89dbccaa075',
       // Aave
-      ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
-      PCDAI: '0x0000000000000000000000000000000000000000',
       // Yearn
-      YDAI: '0x0000000000000000000000000000000000000000',
       // ERC20
       WETH: '0xc778417e063141139fce010982780140aa0cd5ab',
       DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
@@ -122,17 +122,18 @@ export const tokens: Record<string, NetworkTokens> = {
   },
   polygon: polygonTokens,
   polygon_mumbai: {
-    compound: {
-      ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e',
+    aave: {
+      ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e', // amDAI
       AUSDC: '0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9',
       AETH: '0x7aE20397Ca327721F013BB9e140C707F82871b56', //amWETH
+    },
+    poolTogether: {
+      PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
     },
     erc20: {
       // Aave
       AAVE: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-      ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e', // amDAI
       // Pool Together
-      PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
       // ERC20
       WETH: '0x3C68CE8504087f89c640D02d133646d98e64ddd9',
       WMATIC: '0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889',
