@@ -27,6 +27,7 @@ contract TellerMarketHandler is MarketHandler, Rates {
         )
     {
         uint256 amount = 0;
+
         // get amount for user based on market score
         if (marketScore >= 5 && marketScore < 7) {
             amount = _loanAmount(18000, 10000, 7, 5, marketScore);
@@ -41,8 +42,7 @@ contract TellerMarketHandler is MarketHandler, Rates {
 
         uint16 interestRate =
             baseInterestRate *
-                ((maxCollateralRatio / request.request.collateralRatio + 1) /
-                    2);
+                ((maxCollateralRatio / request.request.collateralRatio) / 2);
 
         // Illinois interest rate for testing
         uint16 sampleCappedInterestRate = rates[uint16(request.request.code)];
