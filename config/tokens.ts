@@ -30,6 +30,29 @@ const mainnetTokens: NetworkTokens = {
   },
 }
 
+const polygonTokens: NetworkTokens = {
+  compound: {
+    ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e',
+    AUSDC: '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F',
+    AETH: '0x28424507fefb6f7f8E9D3860F56504E4e5f5f390', //amWETH
+  },
+  erc20: {
+    // Aave
+    AAVE: '0xD6DF932A45C0f255f85145f286eA0b292B21C90B',
+    ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e', // amDAI
+    // Pool Together
+    PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
+    // ERC20
+    WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    WMATIC: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
+    DAI: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
+    USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+    LINK: '0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39',
+    WBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
+  },
+}
+
 export const tokens: Record<string, NetworkTokens> = {
   kovan: {
     compound: {
@@ -97,28 +120,7 @@ export const tokens: Record<string, NetworkTokens> = {
       LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280',
     },
   },
-  polygon: {
-    compound: {
-      ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e',
-      AUSDC: '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F',
-      AETH: '0x28424507fefb6f7f8E9D3860F56504E4e5f5f390', //amWETH
-    },
-    erc20: {
-      // Aave
-      AAVE: '0xD6DF932A45C0f255f85145f286eA0b292B21C90B',
-      ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e', // amDAI
-      // Pool Together
-      PCDAI: '0xfecfa775643eb8c0f755491ba4569e501764da51',
-      // ERC20
-      WETH: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-      WMATIC: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
-      DAI: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-      USDC: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-      USDT: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-      LINK: '0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39',
-      WBTC: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
-    },
-  },
+  polygon: polygonTokens,
   polygon_mumbai: {
     compound: {
       ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e',
@@ -141,7 +143,7 @@ export const tokens: Record<string, NetworkTokens> = {
       WBTC: '0x0d787a4a1548f673ed375445535a6c7A1EE56180',
     },
   },
-  hardhat: mainnetTokens,
-  localhost: mainnetTokens,
+  hardhat: polygonTokens,
+  localhost: polygonTokens,
   mainnet: mainnetTokens,
 }

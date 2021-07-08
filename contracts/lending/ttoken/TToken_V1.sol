@@ -2,12 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    CONTROLLER,
-    ADMIN,
-    EXCHANGE_RATE_FACTOR,
-    ONE_HUNDRED_PERCENT
-} from "./data.sol";
+import { CONTROLLER, ADMIN, EXCHANGE_RATE_FACTOR } from "./data.sol";
 import { ITTokenStrategy } from "./strategies/ITTokenStrategy.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -16,34 +11,29 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import { ITToken } from "./ITToken.sol";
-import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Libraries
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    ERC165Checker
-} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import { ReentryMods } from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
-import "./storage.sol" as Storage;
+import "./token-storage.sol" as Storage;
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-contract TToken_V1 is ITToken {
-    function() pure returns (Storage.Store storage) private constant s =
+contract TToken_V1 is ITToken, ReentryMods {
+    function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 
     /* Modifiers */
 
     /**
-     * @notice Checks if the LP is restricted or has the CONTROLLER role.
+     * @notice Checks if the LP is restricted or the message sender has the CONTROLLER role.
      *
      * The LP being restricted means that only the Teller protocol may
      *  lend/borrow funds.
@@ -67,7 +57,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice The token that is the underlying assets for this Teller token.
+     * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token that is the underlying asset
      */
     function underlying() public view override returns (ERC20) {
@@ -88,8 +78,8 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
-     * @return rate_ The current exchange rate.
+     * @notice It calculates the current scaled exchange rate for a whole Teller Token based of the underlying token balance.
+     * @return rate_ The current exchange rate, scaled by the EXCHANGE_RATE_FACTOR.
      */
     function exchangeRate() public override returns (uint256 rate_) {
         if (totalSupply() == 0) {
@@ -104,17 +94,16 @@ contract TToken_V1 is ITToken {
      * @return totalSupply_ the total supply denoted in the underlying asset.
      */
     function totalUnderlyingSupply() public override returns (uint256) {
-        bytes memory data =
-            _delegateStrategy(
-                abi.encodeWithSelector(
-                    ITTokenStrategy.totalUnderlyingSupply.selector
-                )
-            );
+        bytes memory data = _delegateStrategy(
+            abi.encodeWithSelector(
+                ITTokenStrategy.totalUnderlyingSupply.selector
+            )
+        );
         return abi.decode(data, (uint256));
     }
 
     /**
-     * @notice It calculates the market state values across a given markets.
+     * @notice It calculates the market state values across a given market.
      * @notice Returns values that represent the global state across the market.
      * @return totalSupplied Total amount of the underlying asset supplied.
      * @return totalBorrowed Total amount borrowed through loans.
@@ -155,7 +144,7 @@ contract TToken_V1 is ITToken {
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider the StD ratio.
-     * @return ratio_ Whether debt ratio for lending pool is valid.
+     * @return ratio_ The debt ratio for lending pool.
      */
     function debtRatioFor(uint256 newLoanAmount)
         external
@@ -176,6 +165,7 @@ contract TToken_V1 is ITToken {
      */
     function fundLoan(address recipient, uint256 amount)
         external
+        virtual
         override
         authorized(CONTROLLER, _msgSender())
     {
@@ -195,6 +185,7 @@ contract TToken_V1 is ITToken {
 
         // Transfer tokens to recipient
         SafeERC20.safeTransfer(s().underlying, recipient, amount);
+        emit LoanFunded(recipient, amount);
     }
 
     /**
@@ -209,9 +200,11 @@ contract TToken_V1 is ITToken {
     {
         s().totalRepaid += amount;
         s().totalInterestRepaid += interestAmount;
+        emit LoanPaymentMade(_msgSender(), amount, interestAmount);
     }
 
     /**
+     * @dev The tToken contract needs to have been granted sufficient allowance to transfer the amount being used to mint.
      * @notice Deposit underlying token amount into LP and mint tokens.
      * @param amount The amount of underlying tokens to use to mint.
      * @return Amount of TTokens minted.
@@ -220,6 +213,7 @@ contract TToken_V1 is ITToken {
         external
         override
         notRestricted
+        nonReentry(keccak256("MINT"))
         returns (uint256)
     {
         require(amount > 0, "Teller: cannot mint 0");
@@ -230,6 +224,8 @@ contract TToken_V1 is ITToken {
 
         // Calculate amount of tokens to mint
         uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate());
+
+        require(mintAmount > 0, "Teller: amount to be minted cannot be 0");
 
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
@@ -248,10 +244,14 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
+     * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
-    function redeem(uint256 amount) external override {
+    function redeem(uint256 amount)
+        external
+        override
+        nonReentry(keccak256("REDEEM"))
+    {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= balanceOf(_msgSender()),
@@ -260,6 +260,11 @@ contract TToken_V1 is ITToken {
 
         // Accrue interest and calculate exchange rate
         uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
+        require(
+            underlyingAmount > 0,
+            "Teller: underlying teller token value to be redeemed cannot be 0"
+        );
+
         require(
             underlyingAmount <= totalUnderlyingSupply(),
             "Teller: redeem ttoken lp not enough supply"
@@ -273,7 +278,11 @@ contract TToken_V1 is ITToken {
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
-    function redeemUnderlying(uint256 amount) external override {
+    function redeemUnderlying(uint256 amount)
+        external
+        override
+        nonReentry(keccak256("REDEEM"))
+    {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= totalUnderlyingSupply(),
@@ -282,7 +291,7 @@ contract TToken_V1 is ITToken {
 
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
-        uint256 tokenValue = _valueOfUnderlying(amount, rate);
+        uint256 tokenValue = _valueOfUnderlying(amount, rate) + 1;
 
         // Make sure sender has adequate balance
         require(
@@ -332,7 +341,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Sets a new strategy to use for balancing funds.
+     * @notice Sets or updates a strategy to use for balancing funds.
      * @param strategy Address to the new strategy contract. Must implement the {ITTokenStrategy} interface.
      * @param initData Optional data to initialize the strategy.
      *
@@ -355,6 +364,7 @@ contract TToken_V1 is ITToken {
         if (initData.length > 0) {
             _delegateStrategy(initData);
         }
+        emit StrategySet(strategy, _msgSender());
     }
 
     /**
@@ -366,7 +376,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Sets the restricted state of the platform.
+     * @notice Sets the restricted state of the tToken.
      * @param state boolean value that resembles the platform's state
      */
     function restrict(bool state)
@@ -375,12 +385,16 @@ contract TToken_V1 is ITToken {
         authorized(ADMIN, _msgSender())
     {
         s().restricted = state;
+        emit PlatformRestricted(state, _msgSender());
     }
 
     /**
      * @notice it initializes the Teller Token
      * @param admin address of the admin to the respective Teller Token
      * @param underlying address of the ERC20 token
+     *
+     * Requirements:
+     *  - Underlying token must implement `name`, `symbol` and `decimals`
      */
     function initialize(address admin, address underlying)
         external
@@ -424,7 +438,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice it retrives the value in the underlying tokens
+     * @notice it retrieves the value in the underlying tokens
      *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)
@@ -439,8 +453,6 @@ contract TToken_V1 is ITToken {
      * @notice Delegates data to call on the strategy contract.
      * @param callData Data to call the strategy contract with.
      *
-     * Requirements:
-     *  - Sender must have ADMIN role
      */
     function _delegateStrategy(bytes memory callData)
         internal

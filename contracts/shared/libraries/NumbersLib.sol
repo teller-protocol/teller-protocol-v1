@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Libraries
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 /**
  * @dev Utility library for uint256 numbers
  *
@@ -53,6 +56,9 @@ library NumbersLib {
         pure
         returns (uint16)
     {
-        return num2 == 0 ? 0 : uint16((num1 * ONE_HUNDRED_PERCENT) / num2);
+        return
+            num2 == 0
+                ? 0
+                : SafeCast.toUint16((num1 * ONE_HUNDRED_PERCENT) / num2);
     }
 }

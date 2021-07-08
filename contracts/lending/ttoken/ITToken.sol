@@ -2,13 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    ERC20Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {
-    RolesFacet
-} from "../../contexts2/access-control/roles/RolesFacet.sol";
+import { RolesFacet } from "../../contexts2/access-control/roles/RolesFacet.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
@@ -35,7 +31,43 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
-     * @notice The token that is the underlying assets for this Teller token.
+     * @notice This event is emitted when a loan has been taken out through the Teller Diamond.
+     * @param recipient The address receiving the borrowed funds.
+     * @param totalBorrowed The total amount being loaned out by the tToken.
+     */
+    event LoanFunded(address indexed recipient, uint256 totalBorrowed);
+
+    /**
+     * @notice This event is emitted when a loan has been repaid through the Teller Diamond.
+     * @param sender The address making the payment to the tToken.
+     * @param principlePayment The amount paid back towards the principle loaned out by the tToken.
+     * @param interestPayment The amount paid back towards the interest owed to the tToken.
+     */
+    event LoanPaymentMade(
+        address indexed sender,
+        uint256 principlePayment,
+        uint256 interestPayment
+    );
+
+    /**
+     * @notice This event is emitted when a new investment management strategy has been set for a Teller token.
+     * @param strategyAddress The address of the new strategy set for managing the underlying assets held by the tToken.
+     * @param sender The address of the sender setting the token strategy.
+     */
+    event StrategySet(address strategyAddress, address indexed sender);
+
+    /**
+     * @notice This event is emitted when the platform restriction is switched
+     * @param restriction Boolean representing the state of the restriction
+     * @param investmentManager address of the investment manager flipping the switch
+     */
+    event PlatformRestricted(
+        bool restriction,
+        address indexed investmentManager
+    );
+
+    /**
+     * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token
      */
     function underlying() external view virtual returns (ERC20);
@@ -51,7 +83,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 balance_);
 
     /**
-     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @notice It calculates the current exchange rate for a whole Teller Token based off the underlying token balance.
      * @return rate_ The current exchange rate.
      */
     function exchangeRate() external virtual returns (uint256 rate_);
@@ -96,7 +128,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider the StD ratio.
-     * @return ratio_ Whether debt ratio for lending pool is valid.
+     * @return ratio_ The debt ratio for lending pool.
      */
     function debtRatioFor(uint256 newLoanAmount)
         external
@@ -128,7 +160,7 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         returns (uint256 mintAmount_);
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
+     * @notice Redeem supplied Teller tokens for underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
     function redeem(uint256 amount) external virtual;

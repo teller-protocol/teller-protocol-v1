@@ -2,9 +2,7 @@
 pragma solidity ^0.8.0;
 
 // contracts
-import {
-    RolesMods
-} from "../../../../contexts2/access-control/roles/RolesMods.sol";
+import { RolesMods } from "../../../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../../data.sol";
 
 // Interfaces
@@ -12,14 +10,14 @@ import { ICErc20 } from "../../../../shared/interfaces/ICErc20.sol";
 import { TTokenStrategy } from "../TTokenStrategy.sol";
 
 // Libraries
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
+import { LibMeta } from "../../../../shared/libraries/LibMeta.sol";
+import { LibCompound } from "../../../../escrow/dapps/libraries/LibCompound.sol";
 
 // Storage
-import "../../storage.sol" as TokenStorage;
-import "./storage.sol" as CompoundStorage;
+import "../../token-storage.sol" as TokenStorage;
+import "./compound-storage.sol" as CompoundStorage;
 
 contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     /**
@@ -56,15 +54,19 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * (storedRatio > balanceRatioMax) or withdraw to keep the ratio within that range.
      */
     function rebalance() public override {
-        (uint256 storedBal, uint256 compoundBal, uint16 storedRatio) =
-            _getBalanceInfo();
+        (
+            uint256 storedBal,
+            uint256 compoundBal,
+            uint16 storedRatio
+        ) = _getBalanceInfo();
         if (storedRatio > compoundStore().balanceRatioMax) {
             // Calculate median ratio to rebalance to
-            uint16 medianRatio =
-                (compoundStore().balanceRatioMax +
-                    compoundStore().balanceRatioMin) / 2;
-            uint256 requiredBal =
-                NumbersLib.percent(storedBal + compoundBal, medianRatio);
+            uint16 medianRatio = (compoundStore().balanceRatioMax +
+                compoundStore().balanceRatioMin) / 2;
+            uint256 requiredBal = NumbersLib.percent(
+                storedBal + compoundBal,
+                medianRatio
+            );
             uint256 amountToDeposit = storedBal - requiredBal;
 
             // Allow Compound to take underlying tokens
@@ -75,14 +77,18 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
             );
 
             // Deposit tokens into Compound
-            compoundStore().cToken.mint(amountToDeposit);
+            require(
+                compoundStore().cToken.mint(amountToDeposit) ==
+                    LibCompound.NO_ERROR,
+                "Teller: Strategy deposit error - Compound"
+            );
 
-            emit StrategyRebalanced(NAME, msg.sender);
+            emit StrategyRebalanced(NAME, _msgSender());
         } else if (storedRatio < compoundStore().balanceRatioMin) {
             // Withdraw tokens from Compound
-            _withdraw(0, storedBal, compoundBal, storedRatio);
+            _withdraw(0, storedBal, compoundBal);
 
-            emit StrategyRebalanced(NAME, msg.sender);
+            emit StrategyRebalanced(NAME, _msgSender());
         }
     }
 
@@ -93,17 +99,16 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @param amount Amount of underlying tokens that must be available.
      */
     function withdraw(uint256 amount) external override {
-        (uint256 storedBal, uint256 compoundBal, uint16 storedRatio) =
-            _getBalanceInfo();
+        (uint256 storedBal, uint256 compoundBal, ) = _getBalanceInfo();
         if (storedBal < amount) {
-            _withdraw(amount, storedBal, compoundBal, storedRatio);
+            _withdraw(amount, storedBal, compoundBal);
         }
     }
 
     /**
      * @notice it gets balances and the current ratio of the underlying asset stored on the TToken.
      * @return storedBalance_ returns the total stored balance of the current underlying token
-     * @return compoundBalance_ returns the total stored balance
+     * @return compoundBalance_ returns the amount of underlying value stored in Compound
      * @return storedRatio_ ratio of current storedBalance_ over storedBalance_ and compoundBalance_
      */
     function _getBalanceInfo()
@@ -130,21 +135,22 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
     function _withdraw(
         uint256 amount,
         uint256 storedBal,
-        uint256 compoundBal,
-        uint16 storedRatio
+        uint256 compoundBal
     ) internal {
         // Calculate amount to rebalance
-        uint16 medianRatio =
-            (compoundStore().balanceRatioMax +
-                compoundStore().balanceRatioMin) / 2;
-        uint256 requiredBal =
-            NumbersLib.percent(
-                storedBal + compoundBal - amount,
-                medianRatio - storedRatio
-            );
-        uint256 redeemAmount = requiredBal - storedBal + amount;
+        uint16 medianRatio = (compoundStore().balanceRatioMax +
+            compoundStore().balanceRatioMin) / 2;
+        uint256 requiredBal = NumbersLib.percent(
+            storedBal + compoundBal - amount,
+            medianRatio
+        );
+        uint256 redeemAmount = requiredBal + amount - storedBal;
         // Withdraw tokens from Compound if needed
-        compoundStore().cToken.redeemUnderlying(redeemAmount);
+        require(
+            compoundStore().cToken.redeemUnderlying(redeemAmount) ==
+                LibCompound.NO_ERROR,
+            "Teller: Strategy withdraw error - Compound"
+        );
     }
 
     /**
@@ -152,14 +158,20 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @param cTokenAddress Address of the Compound token that has the same underlying asset as the TToken.
      * @param balanceRatioMin Percentage indicating the _ limit of underlying token balance should remain on the TToken
      * @param balanceRatioMax Percentage indicating the _ limit of underlying token balance should remain on the TToken
+     * @dev Note that the balanceRatio percentages have to be scaled by ONE_HUNDRED_PERCENT
      */
     function init(
         address cTokenAddress,
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
     ) external {
+        require(
+            balanceRatioMax > balanceRatioMin,
+            "Teller: Max ratio balance should be greater than Min ratio balance"
+        );
         compoundStore().cToken = ICErc20(cTokenAddress);
         compoundStore().balanceRatioMin = balanceRatioMin;
         compoundStore().balanceRatioMax = balanceRatioMax;
+        emit StrategyInitialized(NAME, cTokenAddress, LibMeta.msgSender());
     }
 }
