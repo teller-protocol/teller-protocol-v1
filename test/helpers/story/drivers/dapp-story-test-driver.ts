@@ -80,10 +80,11 @@ export default class DappStoryTestDriver extends StoryTestDriver {
             shouldPass = false
           }
           if (shouldPass) {
-            // await LoanStoryTestDriver.takeOutLoan(hre, {})
             await DappStoryTestDriver.lendAave(hre, loan)
           } else {
-            await DappStoryTestDriver.lendAave(hre, loan)
+            await DappStoryTestDriver.lendAave(hre, loan).catch((error) => {
+              expect(error).to.exist
+            })
           }
         })
         tests.push(newTest)
@@ -220,7 +221,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
     const aDaiBalance = await aToken.balanceOf(escrowAddress)
 
-    aDaiBalance.eq(0).should.eql(false, '')
+    aDaiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
     tokenAddresses.should.include(aToken.address)
