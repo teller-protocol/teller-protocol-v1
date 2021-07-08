@@ -169,7 +169,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
         const newTest = new Test('SUSHISWAP Swap DAPP', async () => {
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
-          let shouldPass = true
+          let shouldPass = false
           //read the state and determine if this should pass
           if (!loan) shouldPass = false
           const { details, diamond } = loan
@@ -205,7 +205,9 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const aToken = await contracts.get<IAToken>('IAToken', {
       at: await diamond.getAssetAToken(details.lendingToken.address),
     })
-    const borrowedAmount = details.lendingToken.balanceOf(details.borrower.address)
+    const borrowedAmount = details.lendingToken.balanceOf(
+      details.borrower.address
+    )
     await diamond
       .connect(details.borrower.signer)
       .aaveDeposit(

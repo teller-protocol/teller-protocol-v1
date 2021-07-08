@@ -10,7 +10,6 @@ import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import { IAaveLendingPool } from "../../shared/interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract AaveFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
@@ -89,8 +88,6 @@ contract AaveFacet is PausableMods, DappMods {
                 address(escrow),
                 0
             );
-        console.log(IERC20(tokenAddress).balanceOf(address(escrow)));
-        console.log(amount);
         escrow.callDapp(address(aaveLendingPool), callData);
 
         uint256 aTokenBalanceAfterDeposit = aToken.balanceOf(address(escrow));
