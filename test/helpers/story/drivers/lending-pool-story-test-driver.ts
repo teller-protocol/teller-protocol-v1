@@ -4,7 +4,9 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ITToken } from "../../../../types/typechain"
+import { getMarkets } from '../../../../config'
+import { ITToken } from '../../../../types/typechain'
+import { fundedMarket } from '../../../fixtures'
 import { fundLender, getFunds } from '../../get-funds'
 import { getLPHelpers } from '../../lending-pool'
 import {
@@ -28,13 +30,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     scenario: TestScenario,
     parentSuite: Mocha.Suite
   ): Mocha.Suite {
-    // let allTests: Array<Test> = []
-
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
-      const testsForAction: Test[] =
-        LPStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
+      const testsForAction: Test[] = LPStoryTestDriver.generateTestsForAction(
+        hre,
+        action,
+        parentSuite
+      )
 
       //allTests = allTests.concat(testsForAction)
 
@@ -57,7 +60,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case 'LEND': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -71,13 +74,13 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             await expect(await helpers.deposit()).to.be.reverted
           }
-        }))
+        })
 
         tests.push(newTest)
         break
       }
       case 'WITHDRAW': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -89,7 +92,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           } else {
             await expect(await helpers.withdraw()).to.be.reverted
           }
-        }))
+        })
         tests.push(newTest)
         break
       }

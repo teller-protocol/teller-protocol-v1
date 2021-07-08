@@ -3,7 +3,9 @@ import { solidity } from 'ethereum-waffle'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
+import { getMarkets } from '../../../../config'
 import { IAToken, ICErc20 } from '../../../../types/typechain'
+import { fundedMarket } from '../../../fixtures'
 import { getFunds } from '../../get-funds'
 import { LoanHelpersReturn } from '../../loans'
 import { TestAction, TestScenario } from '../story-helpers'
@@ -24,8 +26,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     scenario: TestScenario,
     parentSuite: Mocha.Suite
   ): Mocha.Suite {
-    // let allTests: Array<Test> = []
-
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
@@ -80,11 +80,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
             shouldPass = false
           }
           if (shouldPass) {
+            // await LoanStoryTestDriver.takeOutLoan(hre, {})
             await DappStoryTestDriver.lendAave(hre, loan)
-            // expect().to.not.be.reverted
           } else {
             await DappStoryTestDriver.lendAave(hre, loan)
-            // await expect(await DappStoryTestDriver.lendAave(hre, loan)).to.be.reverted
           }
         })
         tests.push(newTest)
@@ -206,6 +205,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const aToken = await contracts.get<IAToken>('IAToken', {
       at: await diamond.getAssetAToken(details.lendingToken.address),
     })
+    const borrowedAmount = details.lendingToken.balanceOf(details.borrower.address)
     await diamond
       .connect(details.borrower.signer)
       .aaveDeposit(

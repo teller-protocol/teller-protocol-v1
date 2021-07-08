@@ -14,6 +14,7 @@ import {
 
 // Interfaces
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
+import "hardhat/console.sol";
 
 contract SushiswapFacet is PausableMods, DappMods {
     /**

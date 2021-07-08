@@ -18,6 +18,7 @@ export const generateStoryDomains = (): TestScenarioDomain[] => {
       domainName: key,
       scenarios: scenarioArray,
     }
+    console.log('scenarioArray: %o', scenarioArray)
     proceduralScenarioDomains.push(newSDomain)
   }
   return proceduralScenarioDomains
@@ -50,7 +51,7 @@ const generateDomainScenarios = (
   const splitStructure: string[] = key.split('.')
   const domain = splitStructure[0]
   const actions: TestAction[] = []
-  const parentactions: TestAction[] = []
+
   const action = splitStructure[splitStructure.length - 1]
   const test: TestAction = {
     actionParentType: domain == 'DAPP' ? splitStructure[1] : undefined,
@@ -62,15 +63,18 @@ const generateDomainScenarios = (
   testCases.push({ domain, actions })
   if (value.parents) {
     value.parents.map((value) => {
-      parentactions.unshift(parseParents(value))
+      parseParents(value, testCases)
     })
-    parentactions.push(test)
-    testCases.push({ domain, actions: parentactions })
+    testCases.push({ domain, actions: actions })
   }
   return testCases
 }
 
-const parseParents = (structure: string): TestAction => {
+const parseParents = (
+  structure: string,
+  testCases: TestScenario[]
+): TestAction => {
+  const parentactions: TestAction[] = []
   const structureSplit = structure.split('.')
   const domain = structureSplit[0]
   const action = structureSplit[structureSplit.length - 1]
@@ -80,5 +84,7 @@ const parseParents = (structure: string): TestAction => {
     suiteName: `${domain} ${action} test`,
     args: {},
   }
+  parentactions.push(test)
+  testCases.push({ domain, actions: parentactions })
   return test
 }

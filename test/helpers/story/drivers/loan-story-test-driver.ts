@@ -38,8 +38,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     scenario: TestScenario,
     parentSuite: Mocha.Suite
   ): Mocha.Suite {
-    // let allTests: Array<Test> = []
-
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
@@ -76,18 +74,16 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           const allBorrowerLoans = await diamond.getBorrowerLoans(
             await borrower.getAddress()
           )
-          console.log({ allBorrowerLoans })
           if (allBorrowerLoans.length > 1) {
             shouldPass = false
           }
           if (shouldPass) {
-            // expect().to.exist
-            // LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
-            //   await hre.evm.snapshot()
             await LoanStoryTestDriver.takeOutLoan(hre, args)
           } else {
             args.loanType = LoanType.OVER_COLLATERALIZED
-            await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.reverted
+            await LoanStoryTestDriver.takeOutLoan(hre, args).catch((error) => {
+              expect(error).to.exist
+            })
           }
         })
         tests.push(newTest)
@@ -158,8 +154,6 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     args: TestArgs
   ): Promise<ContractTransaction> => {
     const markets = getMarkets(hre.network)
-
-    console.log({ markets })
     const market = markets[0]
     const { diamond } = await fundedMarket(hre, {
       assetSym: market.lendingToken,
@@ -214,6 +208,7 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     // ).to.be.greaterThan(0)
     if (allBorrowerLoans.length == 0) throw Error('No borrower loans')
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+    console.log({ loanID: loanID.toString() })
     return await loanHelpers(hre, loanID)
   }
 
