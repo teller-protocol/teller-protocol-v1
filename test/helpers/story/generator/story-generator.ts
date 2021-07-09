@@ -18,8 +18,10 @@ export const generateStoryDomains = (): TestScenarioDomain[] => {
       domainName: key,
       scenarios: scenarioArray,
     }
+    console.log('sdomain: %o', newSDomain)
     proceduralScenarioDomains.push(newSDomain)
   }
+  // console.log("story gen: %o", proceduralScenarioDomains)
   return proceduralScenarioDomains
 }
 

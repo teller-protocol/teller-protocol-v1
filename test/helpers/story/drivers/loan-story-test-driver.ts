@@ -77,18 +77,16 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           const allBorrowerLoans = await diamond.getBorrowerLoans(
             await borrower.getAddress()
           )
-          console.log({ allBorrowerLoans })
-          if (allBorrowerLoans.length > 1) {
+          if (allBorrowerLoans.length > 1 || allBorrowerLoans.length < 1) {
             shouldPass = false
           }
           if (shouldPass) {
-            // expect().to.exist
-            // LoanSnapshots[STORY_DOMAINS.LOAN.TAKE_OUT] =
-            //   await hre.evm.snapshot()
             await LoanStoryTestDriver.takeOutLoan(hre, args)
           } else {
             args.loanType = LoanType.OVER_COLLATERALIZED
-            await LoanStoryTestDriver.takeOutLoan(hre, args).should.be.reverted
+            await LoanStoryTestDriver.takeOutLoan(hre, args).catch((error) => {
+              expect(error).to.exist
+            })
           }
         }))
         tests.push(newTest)
@@ -203,10 +201,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const allBorrowerLoans = await diamond.getBorrowerLoans(
       await borrower.getAddress()
     )
-    // expect(
-    //   allBorrowerLoans.length,
-    //   'allBorrowerLoans must be greater than 0'
-    // ).to.be.greaterThan(0)
+    expect(
+      allBorrowerLoans.length,
+      'allBorrowerLoans must be greater than 0'
+    ).to.be.greaterThan(0)
     if (allBorrowerLoans.length == 0) throw Error('No borrower loans')
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
     return await loanHelpers(hre, loanID)
