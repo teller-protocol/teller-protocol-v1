@@ -38,11 +38,15 @@ export const TREE_STRUCTURE = {
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.LEND.AAVE': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.ALL,
+    parents: ['LOAN.TAKE_OUT'],
+  },
+  'DAPP.LEND.YEARN': {
+    network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.LEND.POOL_TOGETHER': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.SWAP.UNISWAP': {
