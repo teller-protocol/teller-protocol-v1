@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { IAToken,IERC20 } from '../../../../types/typechain'
+import { IAToken, IERC20 } from '../../../../types/typechain'
 import { LoanHelpersReturn } from '../../loans'
 import { TestAction, TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
@@ -282,23 +282,18 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       await diamond.getLoanEscrow(details.loan.id)
     )
 
-    console.log({
-      lent: details.loan.borrowedAmount,
-      borrowed: details.loan.borrowedAmount.toString(),
-    })
-
     await diamond
       .connect(details.borrower.signer)
       .poolTogetherDepositTicket(
         details.loan.id,
         details.loan.lendingToken,
-        borrowedAmount
+        details.loan.borrowedAmount
       )
 
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
     const daiBalance = await details.lendingToken.balanceOf(escrowAddress)
-    daiBalance.should.be.eql('0')
+    daiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
     tokenAddresses.should.include(poolTicket.address)

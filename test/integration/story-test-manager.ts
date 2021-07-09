@@ -21,7 +21,6 @@ export const generateAllStoryTests = (
       'Story Test Suite - '.concat(storyDomain.domainName)
     )
     for (const scenario of storyDomain.scenarios) {
-      console.log('scenario: %o', scenario)
       generateTests(hre, scenario, suiteInstance)
     }
   }

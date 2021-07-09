@@ -70,9 +70,10 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           if (shouldPass) {
             // expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
             const deposit = await helpers.deposit()
-            await helpers.deposit()
           } else {
-            await expect(await helpers.deposit()).to.be.reverted
+            await helpers.deposit().catch((error) => {
+              expect(error).to.exist
+            })
           }
         })
 
@@ -86,11 +87,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
           const shouldPass = true
           //read the state and determine if this should pass
+          // if()
 
           if (shouldPass) {
             await helpers.withdraw()
           } else {
-            await expect(await helpers.withdraw()).to.be.reverted
+            await helpers.withdraw().catch((error) => {
+              expect(error).to.exist
+            })
           }
         })
         tests.push(newTest)
@@ -110,8 +114,15 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const tToken: ITToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
-    const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
-    const depositAmount = maxTVL
+    // const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
+    // const depositAmount = maxTVL
+    console.log({
+      lent: details.loan.borrowedAmount.toString(),
+      bal: (
+        await details.lendingToken.balanceOf(await borrower.getAddress())
+      ).toString(),
+      token: await details.lendingToken.symbol(),
+    })
     await fundLender({
       token: details.lendingToken,
       amount: BigNumber.from(100),
@@ -121,7 +132,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       diamond,
       lendingToken: details.lendingToken,
       tToken,
-      amount: BigNumber.from(100),
+      amount: null,
     })
     return helpers
   }
