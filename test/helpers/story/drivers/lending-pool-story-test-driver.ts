@@ -4,7 +4,9 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ITToken } from "../../../../types/typechain"
+import { getMarkets } from '../../../../config'
+import { ITToken } from '../../../../types/typechain'
+import { fundedMarket } from '../../../fixtures'
 import { fundLender, getFunds } from '../../get-funds'
 import { getLPHelpers } from '../../lending-pool'
 import {
@@ -28,13 +30,14 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     scenario: TestScenario,
     parentSuite: Mocha.Suite
   ): Mocha.Suite {
-    // let allTests: Array<Test> = []
-
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
-      const testsForAction: Test[] =
-        LPStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
+      const testsForAction: Test[] = LPStoryTestDriver.generateTestsForAction(
+        hre,
+        action,
+        parentSuite
+      )
 
       //allTests = allTests.concat(testsForAction)
 
@@ -57,7 +60,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
 
     switch (actionType) {
       case 'LEND': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
@@ -67,29 +70,33 @@ export default class LPStoryTestDriver extends StoryTestDriver {
           if (shouldPass) {
             // expect(await depositWithArgs(hre, lpArgs)).to.not.throw()
             const deposit = await helpers.deposit()
-            await helpers.deposit()
           } else {
-            await expect(await helpers.deposit()).to.be.reverted
+            await helpers.deposit().catch((error) => {
+              expect(error).to.exist
+            })
           }
-        }))
+        })
 
         tests.push(newTest)
         break
       }
       case 'WITHDRAW': {
-        const newTest = new Test(action.suiteName, (async () => {
+        const newTest = new Test(action.suiteName, async () => {
           const helpers: ReturnType<typeof getLPHelpers> =
             await LPStoryTestDriver.createLPArgs(hre)
 
           const shouldPass = true
           //read the state and determine if this should pass
+          // if()
 
           if (shouldPass) {
             await helpers.withdraw()
           } else {
-            await expect(await helpers.withdraw()).to.be.reverted
+            await helpers.withdraw().catch((error) => {
+              expect(error).to.exist
+            })
           }
-        }))
+        })
         tests.push(newTest)
         break
       }
@@ -107,8 +114,15 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const tToken: ITToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
-    const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
-    const depositAmount = maxTVL
+    // const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
+    // const depositAmount = maxTVL
+    console.log({
+      lent: details.loan.borrowedAmount.toString(),
+      bal: (
+        await details.lendingToken.balanceOf(await borrower.getAddress())
+      ).toString(),
+      token: await details.lendingToken.symbol(),
+    })
     await fundLender({
       token: details.lendingToken,
       amount: BigNumber.from(100),
@@ -118,7 +132,7 @@ export default class LPStoryTestDriver extends StoryTestDriver {
       diamond,
       lendingToken: details.lendingToken,
       tToken,
-      amount: BigNumber.from(100),
+      amount: null,
     })
     return helpers
   }
