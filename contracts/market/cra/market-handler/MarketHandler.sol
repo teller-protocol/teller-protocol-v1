@@ -21,6 +21,7 @@ abstract contract MarketHandler {
 
     // signature related variables
     mapping(bytes32 => bool) public usedCommitments;
+    mapping(bytes32 => uint16) public stateCappedInterestRate;
     EnumerableSet.AddressSet internal providers;
 
     modifier onlyAdmin() {
