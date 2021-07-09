@@ -12,7 +12,6 @@ import { ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
 import { getFunds } from '../../get-funds'
 import {
-  CreateLoanArgs,
   loanHelpers,
   LoanHelpersReturn,
   LoanType,
@@ -202,10 +201,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
     const allBorrowerLoans = await diamond.getBorrowerLoans(
       await borrower.getAddress()
     )
-    // expect(
-    //   allBorrowerLoans.length,
-    //   'allBorrowerLoans must be greater than 0'
-    // ).to.be.greaterThan(0)
+    expect(
+      allBorrowerLoans.length,
+      'allBorrowerLoans must be greater than 0'
+    ).to.be.greaterThan(0)
     if (allBorrowerLoans.length == 0) throw Error('No borrower loans')
     const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
     console.log({ loanID: loanID.toString() })
