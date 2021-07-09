@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import { Provider } from "./cra/Provider.sol";
+import { DataProvider } from "./cra/DataProvider.sol";
 
 contract ProviderFactoryFacet {
-    address private admin;
-    Provider[] private providers;
+    address public admin;
+    DataProvider[] public providers;
 
     modifier onlyAdmin() {
         require(admin == msg.sender, "Only the admin can call this!");
         _;
     }
 
-    // whichever address that deployst the provider factory facet is the admin of the factory
+    // whichever address that deploys the provider factory facet is the admin of the factory
     constructor() {
         admin = msg.sender;
     }
@@ -22,7 +22,11 @@ contract ProviderFactoryFacet {
      * admin of the said provider.
      */
     function createProvider() public {
-        Provider provider = new Provider();
+        DataProvider provider = new DataProvider(msg.sender);
         providers.push(provider);
+    }
+
+    function getProviders() public view returns (DataProvider[] memory) {
+        return providers;
     }
 }

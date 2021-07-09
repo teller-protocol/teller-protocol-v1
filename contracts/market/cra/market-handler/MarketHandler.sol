@@ -2,7 +2,7 @@
 pragma solidity ^0.8.3;
 
 import { LoanRequest } from "../../../storage/market.sol";
-import { Provider } from "../Provider.sol";
+import { DataProvider } from "../DataProvider.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -32,13 +32,11 @@ abstract contract MarketHandler {
         uint16 maxInterestRate_,
         uint16 maxCollateralRatio_,
         uint256 maxLoanAmount_
-    ) // provider addresses
-    {
+    ) {
         admins[msg.sender] = true;
         maxInterestRate = maxInterestRate_;
         maxCollateralRatio = maxCollateralRatio_;
         maxLoanAmount = maxLoanAmount_;
-        // addProviders(addresses)
     }
 
     /**
@@ -60,7 +58,7 @@ abstract contract MarketHandler {
             uint256 userLoanAmount
         );
 
-    function addCommitment(bytes32 commitment) public onlyAdmin {
+    function addCommitment(bytes32 commitment) public {
         usedCommitments[commitment] = true;
     }
 

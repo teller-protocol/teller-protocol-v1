@@ -10,6 +10,7 @@ import { MarketHandler } from "../cra/market-handler/MarketHandler.sol";
 import { LibLoans } from "../libraries/LibLoans.sol";
 import { Verifier } from "../cra/verifier.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { DataProvider } from "./DataProvider.sol";
 
 library ProcessRequestLib {
     /**
@@ -43,8 +44,12 @@ library ProcessRequestLib {
             Verifier.verifyTx(request.snarkProof, request.snarkWitnesses),
             "Proof not verified"
         );
+
+        // signatures length
+        uint8 signaturesLength = marketHandler.numberOfSignaturesRequired();
+
         // get variable amount of commitments from market handler
-        bytes32[] memory commitments = new bytes32[](0);
+        bytes32[] memory commitments = new bytes32[](signaturesLength);
 
         // constructing our commitments to verify with our signature data
         for (uint8 i = 0; i < commitments.length; i++) {
@@ -69,12 +74,14 @@ library ProcessRequestLib {
         _verifySignatures(
             commitments,
             request.dataProviderSignatures,
-            request.marketHandlerAddress
+            request.marketHandlerAddress,
+            request.providers
         );
 
         // The second witness item (after identifier) is the market
         // score
         uint256 marketScore = uint256(request.snarkWitnesses[1]);
+        require(marketScore > 5, "Teller: market score not high enough");
 
         // Let the market handle the loan request and disperse the loan.
 
@@ -86,20 +93,18 @@ library ProcessRequestLib {
             marketScore,
             request
         );
-        interestRate = 1000;
-        collateralRatio = 15000;
-        maxLoanAmount = 25000;
         return (interestRate, collateralRatio, maxLoanAmount);
     }
 
     function _verifySignatures(
         bytes32[] memory commitments,
         DataProviderSignature[] memory signatureData,
-        address marketHandlerAddress
+        address marketHandlerAddress,
+        address[] memory providers
     ) private {
         MarketHandler marketHandler = MarketHandler(marketHandlerAddress);
-        for (uint256 i = 0; i < signatureData.length; i++) {
-            bytes32 providerId = bytes32(i);
+        for (uint256 i = 0; i < commitments.length; i++) {
+            address providerAddress = providers[i];
             require(
                 signatureData[i].signedAt > block.timestamp - 5 days,
                 "Signed at less than max age"
@@ -113,7 +118,7 @@ library ProcessRequestLib {
             _validateSignature(
                 signatureData[i].signature,
                 commitments[i],
-                providerId
+                providerAddress
             );
         }
     }
@@ -122,13 +127,13 @@ library ProcessRequestLib {
      * @notice It validates whether a signature is valid or not.
      * @param signature signature to validate.
      * @param commitment used to recover the signer.
-     * @param providerId the expected signer address.
+     * @param providerAddress the provider address to check for the recovered signer.
      */
     function _validateSignature(
         Signature memory signature,
         bytes32 commitment,
-        bytes32 providerId
-    ) private pure {
+        address providerAddress
+    ) private view {
         address recoveredSigner =
             ECDSA.recover(
                 keccak256(
@@ -141,9 +146,10 @@ library ProcessRequestLib {
                 signature.r,
                 signature.s
             );
-        // require(
-        //     MarketLib.p(providerId).signer[recoveredSigner],
-        //     "Teller: not valid signature"
-        // );
+        DataProvider provider = DataProvider(providerAddress);
+        require(
+            provider.signers(recoveredSigner),
+            "Teller: not valid signature"
+        );
     }
 }

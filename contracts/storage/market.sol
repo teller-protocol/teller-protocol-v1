@@ -72,6 +72,7 @@ struct LoanRequest {
     Verifier.Proof snarkProof;
     uint256[26] snarkWitnesses;
     DataProviderSignature[] dataProviderSignatures;
+    address[] providers;
 }
 
 /**

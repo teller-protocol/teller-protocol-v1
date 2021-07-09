@@ -153,17 +153,26 @@ describe('Loans', () => {
         expect(loanStatus).to.equal(2)
       })
     })
-    describe('create loan w/ zkCRA', async () => {
+    describe.only('create loan w/ zkCRA', async () => {
       // declare computation and proof variables to be used throughout the test
       let goodScoreComputation: ComputationResult
       let goodProof_: Proof
       let badProof_: Proof
       let helpers: any
+      let numberOfSignaturesRequired_: any
+      let providerAddresses_: any
       before(async () => {
         // we fill the necessary config information (admins mostly) into our providers
         // and market
         console.log('filling zkCRAConfigInfo')
-        await fillZKCRAConfigInfo()
+        const { numberOfSignaturesRequired, providerAddresses } =
+          await fillZKCRAConfigInfo({ numberOfProviders: 2 })
+        numberOfSignaturesRequired_ = numberOfSignaturesRequired
+        providerAddresses_ = providerAddresses
+        console.log(
+          'number of signatures required: ' + numberOfSignaturesRequired_
+        )
+        console.log('provider addresses: ' + providerAddresses_)
       })
       describe('good score', async () => {
         // check if computation and proof exist
@@ -176,10 +185,13 @@ describe('Loans', () => {
         it('uses witness, output and proof to take out a loan with a good score', async () => {
           const { getHelpers } = await borrowWithZKCRA({
             proof: goodProof_,
+            providerAddresses: providerAddresses_,
           })
           helpers = await getHelpers()
+          const takenOutLoan = helpers.details.loan
+          console.log(takenOutLoan)
           // check if loan exists
-          expect(helpers.details.loan).to.exist
+          expect(takenOutLoan).to.exist
         })
       })
       describe('bad score', async () => {
@@ -193,6 +205,7 @@ describe('Loans', () => {
         it('take out a loan should fail with bad score', async () => {
           const { tx } = await borrowWithZKCRA({
             proof: badProof_,
+            providerAddresses: providerAddresses_,
           })
           await tx.should.be.revertedWith('market score not high enough!')
         })

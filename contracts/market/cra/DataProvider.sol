@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-contract Provider {
+contract DataProvider {
     mapping(address => bool) public admins;
     mapping(address => bool) public signers;
 
@@ -10,8 +10,8 @@ contract Provider {
         _;
     }
 
-    constructor() {
-        admins[msg.sender] = true;
+    constructor(address initAdmin) {
+        admins[initAdmin] = true;
     }
 
     /**

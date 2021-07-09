@@ -116,14 +116,19 @@ interface CreateLoanArgs {
   nft?: boolean
 }
 
+interface ZKCRAConfigArgs {
+  numberOfProviders: any
+}
+
 interface CreateLoanWithZKCRA {
   proof: Proof
   computation?: ComputationResult
+  providerAddresses?: any
 }
 
-interface ZKCRAHelpersReturn {
-  computation: ComputationResult
-  proof: Proof
+interface ZKCRAConfigReturn {
+  numberOfSignaturesRequired: any
+  providerAddresses: string[]
 }
 export interface CreateLoanReturn {
   tx: Promise<ContractTransaction>
@@ -353,39 +358,49 @@ export const takeOutLoanWithNfts = async (
 }
 
 // we fill zkCRAConfigInfo before we sign
-export const fillZKCRAConfigInfo = async () => {
+export const fillZKCRAConfigInfo = async (
+  args: ZKCRAConfigArgs
+): Promise<ZKCRAConfigReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
   // get signers (providers)
   const { craSigner } = await getNamedAccounts()
 
   const deployer = await getNamedSigner('deployer')
-  await diamond.connect(deployer).initializeMarketAdmins()
+  const providerAddresses_ = []
 
-  // create config
-  const maxAge_ = moment.duration(10, 'hours').asSeconds()
-  for (let i = 0; i < 3; i++) {
-    console.log('setting provider #' + i)
-    const config = {
-      marketId:
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-      providerId:
-        '0x000000000000000000000000000000000000000000000000000000000000000' +
-        i.toString(),
-      maxAge: maxAge_,
-      signer: craSigner,
-      signerValue: true,
-    }
-    // set market provider config in a loop
-    await diamond
+  // create random provider
+  for (let i = 0; i < args.numberOfProviders; i++) {
+    await diamond.connect(deployer).createProvider()
+    const providerAddress = await diamond
       .connect(deployer)
-      .setProviderInformation(
-        config.providerId,
-        config.maxAge,
-        config.signer,
-        config.signerValue
-      )
-    console.log('provider config #' + i + ' set.')
+      .providers(i.toString())
+    providerAddresses_.push(providerAddress)
+    const provider = await contracts.get('DataProvider', {
+      at: providerAddress,
+    })
+    console.log('about to set signer #' + i.toString())
+    await provider.connect(deployer).functions.setSigner(craSigner, true)
+  }
+
+  // getting tellerMarketHandler contract
+  const marketHandlerAddress = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
+  const tellerMarketHandler = await contracts.get('MarketHandler', {
+    at: marketHandlerAddress,
+  })
+
+  await tellerMarketHandler
+    .connect(deployer)
+    .functions.addProviders(providerAddresses_)
+
+  // number of signatures required
+  const numberOfSignaturesRequired_ = await tellerMarketHandler
+    .connect(deployer)
+    .numberOfSignaturesRequired()
+
+  return {
+    numberOfSignaturesRequired: numberOfSignaturesRequired_,
+    providerAddresses: providerAddresses_,
   }
 }
 
@@ -400,6 +415,7 @@ export const outputCraValues = async (
   let proof: Proof
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
+  console.log('provider initialized')
   // zok file to compile
   const source = `import "hashes/sha256/256bitPadded.zok" as sha256
     def main(private u32[3][8] data, public field identifier) -> (u32, u32[3][8]):
@@ -430,7 +446,9 @@ export const outputCraValues = async (
   // console.log(compArtifact)
 
   // compile into circuit
+  console.log('about to compile source')
   compilationArtifacts = provider.compile(source)
+  console.log('compiled source')
   // const programArray = compilationArtifacts.program
   // const programBuffer = programArray.buffer
   // const objectToAdd = {
@@ -469,6 +487,7 @@ export const outputCraValues = async (
       identifier.toString(),
     ])
   }
+  console.log('witness computed')
 
   // compute proof
   const provingKey = new Uint8Array(
@@ -481,6 +500,7 @@ export const outputCraValues = async (
     computation.witness,
     provingKey
   )
+  console.log('proof generated')
   return {
     computation: computation,
     proof: proof,
@@ -491,7 +511,7 @@ export const borrowWithZKCRA = async (
   args: CreateLoanWithZKCRA
 ): Promise<CreateLoanReturn> => {
   // get proof and witness from args
-  const { proof, computation } = args
+  const { proof, computation, providerAddresses } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
@@ -518,7 +538,6 @@ export const borrowWithZKCRA = async (
       .join('')
   // get the signer
   const signer = await getNamedSigner('craSigner')
-  const signerAddress = await signer.getAddress()
   // get the time stamp
   const timestampOne = moment().unix()
   // create our message
@@ -560,21 +579,15 @@ export const borrowWithZKCRA = async (
     },
     signedAt: timestampTwo,
   }
-  console.log(signatureDataTwo)
 
   // third signature
   const timestampThree = moment().unix()
   const messageThree = ethers.BigNumber.from(thirdInput)
     .xor(timestampThree)
     .toHexString()
-  console.log({
-    messageThree: BigNumber.from(messageThree.toString()).toString(),
-  })
   const credentialsSignerThree = await signer.signMessage(
     ethers.utils.arrayify(messageThree)
   )
-  console.log('message three done')
-  console.log('credentials')
   const sigThree = ethers.utils.splitSignature(credentialsSignerThree)
   const signatureDataThree = {
     signature: {
@@ -585,15 +598,10 @@ export const borrowWithZKCRA = async (
     signedAt: timestampThree,
   }
 
-  console.log('all our signature data created')
-
   // all borrow variables
-  const marketId_ =
-    '0x0000000000000000000000000000000000000000000000000000000000000000'
   const proof_ = proof.proof
   const witness_ = proof.inputs
   const borrower = (await getNamedAccounts()).borrower
-  const signerBorrower = ethers.provider.getSigner(borrower)
 
   // get tokens
   const lendToken = '0x6b175474e89094c44da98b954eedeac495271d0f'
@@ -621,6 +629,7 @@ export const borrowWithZKCRA = async (
 
   // teller market address
   const marketHandlerAddress_ = '0x2858023076c86347CDd7DEa4F38aa215cbbCa91b'
+  console.log('taking out loan')
   // create loan request object
   const loanRequest = {
     request: request_,
@@ -632,6 +641,7 @@ export const borrowWithZKCRA = async (
       signatureDataTwo,
       signatureDataThree,
     ],
+    providers: providerAddresses,
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))

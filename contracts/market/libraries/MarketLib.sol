@@ -21,8 +21,8 @@ import {
 } from "../../storage/market.sol";
 import { Verifier } from "../cra/verifier.sol";
 import { LibLoans } from "../libraries/LibLoans.sol";
+
 // import reentry guard
-import "hardhat/console.sol";
 
 library MarketLib {
     // function s() internal pure returns (MarketStorage storage s_) {

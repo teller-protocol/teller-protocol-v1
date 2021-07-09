@@ -58,9 +58,6 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-// hardhat helpers
-import "hardhat/console.sol";
-
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
@@ -237,8 +234,6 @@ library CreateLoanLib {
                 request.request.duration,
             "Teller: max loan duration exceeded"
         );
-
-        // address of processRequestLib: 0xe7168c514A022345ed07E4Fad73eC3921C2b7bDb
         // Get consensus values from request
         (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
             ProcessRequestLib.processMarketRequest(request);
