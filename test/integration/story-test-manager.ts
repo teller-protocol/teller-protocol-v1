@@ -10,8 +10,7 @@ import {
 export const generateAllStoryTests = (
   hre: HardhatRuntimeEnvironment
 ): Mocha => {
-  const allTestStoryDomains: TestScenarioDomain[] =
-    generateStoryDomains()
+  const allTestStoryDomains: TestScenarioDomain[] = generateStoryDomains()
 
   const mochaInstance = new Mocha()
   mochaInstance.timeout(300000)

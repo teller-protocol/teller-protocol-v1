@@ -8,7 +8,9 @@ import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 // Libraries
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { LibSwapper } from "./libraries/LibSwapper.sol";
-import { ChainlinkLib } from "../../price-aggregator/chainlink/ChainlinkLib.sol";
+import {
+    ChainlinkLib
+} from "../../price-aggregator/chainlink/ChainlinkLib.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
@@ -70,19 +72,21 @@ contract UniswapFacet is PausableMods, DappMods {
         LibEscrow.e(loanID).setTokenAllowance(src, UNISWAP_ROUTER_ADDRESS);
 
         // Encode data for LoansEscrow to call
-        bytes memory callData = abi.encodeWithSelector(
-            IUniswapV2Router.swapExactTokensForTokens.selector,
-            sourceAmount,
-            minDestination,
-            path,
-            address(LibEscrow.e(loanID)),
-            block.timestamp
-        );
+        bytes memory callData =
+            abi.encodeWithSelector(
+                IUniswapV2Router.swapExactTokensForTokens.selector,
+                sourceAmount,
+                minDestination,
+                path,
+                address(LibEscrow.e(loanID)),
+                block.timestamp
+            );
         // Call Escrow to do swap get the response amounts
-        uint256[] memory amounts = abi.decode(
-            LibEscrow.e(loanID).callDapp(UNISWAP_ROUTER_ADDRESS, callData),
-            (uint256[])
-        );
+        uint256[] memory amounts =
+            abi.decode(
+                LibEscrow.e(loanID).callDapp(UNISWAP_ROUTER_ADDRESS, callData),
+                (uint256[])
+            );
         uint256 destinationAmount = amounts[amounts.length - 1];
 
         LibEscrow.tokenUpdated(loanID, src);

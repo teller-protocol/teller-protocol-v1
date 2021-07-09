@@ -31,7 +31,7 @@ export const TREE_STRUCTURE = {
   },
   'LENDING_POOL.WITHDRAW': {
     network: STORY_NETWORKS.ALL,
-    parents: ['LENDING_POOL.LEND', 'LOAN.TAKE_OUT'],
+    parents: ['LOAN.TAKE_OUT', 'LENDING_POOL.LEND'],
   },
   'DAPP.LEND.COMPOUND': {
     network: STORY_NETWORKS.ALL,

@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
-import { ReentryMods } from "../contexts2/access-control/reentry/ReentryMods.sol";
+import {
+    ReentryMods
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -13,11 +15,19 @@ import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
-import { PlatformSettingsLib } from "../settings/platform/libraries/PlatformSettingsLib.sol";
-import { MaxDebtRatioLib } from "../settings/asset/libraries/MaxDebtRatioLib.sol";
-import { MaxLoanAmountLib } from "../settings/asset/libraries/MaxLoanAmountLib.sol";
+import {
+    PlatformSettingsLib
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    MaxDebtRatioLib
+} from "../settings/asset/libraries/MaxDebtRatioLib.sol";
+import {
+    MaxLoanAmountLib
+} from "../settings/asset/libraries/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
@@ -26,11 +36,19 @@ import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Proxy
-import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {
+    BeaconProxy
+} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // Storage
-import { LoanRequest, LoanStatus, LoanTerms, Loan, MarketStorageLib } from "../storage/market.sol";
+import {
+    LoanRequest,
+    LoanStatus,
+    LoanTerms,
+    Loan,
+    MarketStorageLib
+} from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
 contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
@@ -191,11 +209,8 @@ library CreateLoanLib {
         );
 
         // Get consensus values from request
-        (
-            uint16 interestRate,
-            uint16 collateralRatio,
-            uint256 maxLoanAmount
-        ) = LibConsensus.processLoanTerms(request);
+        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
+            LibConsensus.processLoanTerms(request);
 
         // Perform loan value checks
         require(
@@ -243,17 +258,15 @@ library CreateLoanLib {
      * @return id_ the new ID requested, which stores it in the loan data
      */
     function newID() internal returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib
-        .store()
-        .loanIDCounter;
+        Counters.Counter storage counter =
+            MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
     }
 
     function currentID() internal view returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib
-        .store()
-        .loanIDCounter;
+        Counters.Counter storage counter =
+            MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
     }
 

@@ -4,11 +4,9 @@ import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
 
-import { ICErc20, IERC20 } from '../../../../types/typechain'
-import { fundedMarket } from '../../../fixtures'
-import { fundLender, getFunds } from '../../get-funds'
+import { IAToken, IERC20 } from '../../../../types/typechain'
 import { LoanHelpersReturn } from '../../loans'
-import { TestAction,TestScenario } from '../story-helpers'
+import { TestAction, TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import StoryTestDriver from './story-test-driver'
 
@@ -26,13 +24,14 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     scenario: TestScenario,
     parentSuite: Mocha.Suite
   ): Mocha.Suite {
-    // let allTests: Array<Test> = []
-
     const scenarioActions = scenario.actions
 
     for (const action of scenarioActions) {
-      const testsForAction: Test[] =
-        DappStoryTestDriver.generateTestsForAction(hre, action, parentSuite)
+      const testsForAction: Test[] = DappStoryTestDriver.generateTestsForAction(
+        hre,
+        action,
+        parentSuite
+      )
       for (const test of testsForAction) {
         parentSuite.addTest(test)
       }
@@ -71,14 +70,27 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const { getNamedSigner } = hre
     switch (actionType) {
       case 'AAVE': {
-        const newTest = new Test('AAVE Lend DAPP', (async () => {
-          expect(1).to.equal(1)
-        }))
+        const newTest = new Test('AAVE Lend DAPP', async () => {
+          const { getNamedSigner } = hre
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          let shouldPass = true
+          if (!loan) {
+            shouldPass = false
+          }
+          if (shouldPass) {
+            await DappStoryTestDriver.lendAave(hre, loan)
+          } else {
+            await DappStoryTestDriver.lendAave(hre, loan).catch((error) => {
+              expect(error).to.exist
+            })
+          }
+        })
         tests.push(newTest)
         break
       }
       case 'COMPOUND': {
-        const newTest = new Test('COMPOUND Lend DAPP', (async () => {
+        const newTest = new Test('COMPOUND Lend DAPP', async () => {
           expect(1).to.equal(1)
           // const borrower = await getNamedSigner('borrower')
           // const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
@@ -112,27 +124,34 @@ export default class DappStoryTestDriver extends StoryTestDriver {
 
           // const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
           // tokenAddresses.should.include(cToken.address)
-        }))
+        })
         tests.push(newTest)
         break
       }
       case 'POOL_TOGETHER': {
-        const newTest = new Test('POOL_TOGETHER Lend DAPP', (async () => {
+        const newTest = new Test('POOL_TOGETHER Lend DAPP', async () => {
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           const { details, diamond } = loan
           let shouldPass = true
-          const borrowedAmount = (await details.lendingToken.balanceOf(await diamond.getLoanEscrow(details.loan.id))).toString()
-          if(borrowedAmount != details.loan.borrowedAmount.toString()) shouldPass = false
+          const borrowedAmount = (
+            await details.lendingToken.balanceOf(
+              await diamond.getLoanEscrow(details.loan.id)
+            )
+          ).toString()
+          if (borrowedAmount != details.loan.borrowedAmount.toString())
+            shouldPass = false
           if (shouldPass) {
             const tx = await DappStoryTestDriver.lendPoolTogether(hre, loan)
             expect(tx).to.exist
           } else {
-            await DappStoryTestDriver.lendPoolTogether(hre, loan).catch((error) => {
-              expect(error).to.exist
-            })
+            await DappStoryTestDriver.lendPoolTogether(hre, loan).catch(
+              (error) => {
+                expect(error).to.exist
+              }
+            )
           }
-        }))
+        })
         tests.push(newTest)
         break
       }
@@ -150,40 +169,45 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const dapp = action.actionType
     switch (dapp) {
       case 'UNISWAP': {
-        const newTest = new Test('UNISWAP Swap DAPP', (async () => {
-          const borrower = await getNamedSigner('borrower')
-          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
-          let shouldPass = true
-          //read the state and determine if this should pass
-          if(!loan) shouldPass = false
-          if (shouldPass) {
-            await DappStoryTestDriver.swapUniSwap(hre, loan)
-          } else {
-            await expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.be.reverted
-          }
-        }))
-        tests.push(newTest)
-        break
-      }
-      case 'SUSHISWAP': {
-        const newTest = new Test('SUSHISWAP Swap DAPP', (async () => {
+        const newTest = new Test('UNISWAP Swap DAPP', async () => {
           const borrower = await getNamedSigner('borrower')
           const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
           let shouldPass = true
           //read the state and determine if this should pass
           if (!loan) shouldPass = false
+          if (shouldPass) {
+            await DappStoryTestDriver.swapUniSwap(hre, loan)
+          } else {
+            await expect(await DappStoryTestDriver.swapUniSwap(hre, loan)).to.be
+              .reverted
+          }
+        })
+        tests.push(newTest)
+        break
+      }
+      case 'SUSHISWAP': {
+        const newTest = new Test('SUSHISWAP Swap DAPP', async () => {
+          const borrower = await getNamedSigner('borrower')
+          const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+          let shouldPass = false
+          //read the state and determine if this should pass
+          if (!loan) shouldPass = false
           const { details, diamond } = loan
           const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-          const lendingBalBefore = await details.lendingToken.balanceOf(escrowAddress)
-          if(lendingBalBefore.lte(0)) shouldPass = false
+          const lendingBalBefore = await details.lendingToken.balanceOf(
+            escrowAddress
+          )
+          if (lendingBalBefore.lte(0)) shouldPass = false
           if (shouldPass) {
             await DappStoryTestDriver.swapSushiSwap(hre, loan)
           } else {
-            await DappStoryTestDriver.swapSushiSwap(hre, loan).catch((error) => {
-              expect(error).to.exist
-            })
+            await DappStoryTestDriver.swapSushiSwap(hre, loan).catch(
+              (error) => {
+                expect(error).to.exist
+              }
+            )
           }
-        }))
+        })
         tests.push(newTest)
         break
       }
@@ -192,35 +216,93 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     }
   }
 
-  static async lendPoolTogether(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+  static async lendAave(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const aToken = await contracts.get<IAToken>('IAToken', {
+      at: await diamond.getAssetAToken(details.lendingToken.address),
+    })
+    const borrowedAmount = details.lendingToken.balanceOf(
+      details.borrower.address
+    )
+    await diamond
+      .connect(details.borrower.signer)
+      .aaveDeposit(
+        details.loan.id,
+        details.loan.lendingToken,
+        details.loan.borrowedAmount
+      )
+
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const aDaiBalance = await aToken.balanceOf(escrowAddress)
+
+    aDaiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.include(aToken.address)
+  }
+
+  static async withdrawAave(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
+    const { contracts } = hre
+    const { details, diamond } = loan
+    const aToken = await contracts.get<IAToken>('IAToken', {
+      at: await diamond.getAssetAToken(details.lendingToken.address),
+    })
+    await diamond
+      .connect(details.borrower.signer)
+      .aaveWithdrawAll(details.loan.id, details.lendingToken.address)
+
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+
+    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+    tokenAddresses.should.not.include(aToken.address)
+
+    const aDaiBalance = await aToken.balanceOf(escrowAddress)
+    aDaiBalance.eq(0).should.eql(true, '')
+  }
+
+  static async lendPoolTogether(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
     const { contracts } = hre
     const { details, diamond } = loan
     const poolTicket = await contracts.get<IERC20>('IERC20', {
       at: await diamond.getAssetPPoolTicket(details.lendingToken.address),
     })
 
-    const borrowedAmount = (await details.lendingToken.balanceOf(await diamond.getLoanEscrow(details.loan.id)))
-
-    console.log({lent: details.loan.borrowedAmount, borrowed: details.loan.borrowedAmount.toString()})
+    const borrowedAmount = await details.lendingToken.balanceOf(
+      await diamond.getLoanEscrow(details.loan.id)
+    )
 
     await diamond
       .connect(details.borrower.signer)
       .poolTogetherDepositTicket(
         details.loan.id,
         details.loan.lendingToken,
-        borrowedAmount
+        details.loan.borrowedAmount
       )
 
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
     const daiBalance = await details.lendingToken.balanceOf(escrowAddress)
-    daiBalance.should.be.eql('0')
+    daiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
     tokenAddresses.should.include(poolTicket.address)
   }
 
-  static async withdrawPoolTogether(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+  static async withdrawPoolTogether(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
     const { contracts } = hre
     const { details, diamond } = loan
     const poolTicket = await contracts.get<IERC20>('IERC20', {
@@ -237,7 +319,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     daiBalance.should.be.gt('0')
   }
 
-  static async swapSushiSwap(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+  static async swapSushiSwap(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
     const { tokens } = hre
     const { details, diamond } = loan
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
@@ -276,18 +361,19 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       .should.eql(
         true,
         'Loan escrow has lending token balance after swapping full amount'
-    )
+      )
   }
 
-  static async swapUniSwap(hre: HardhatRuntimeEnvironment, loan: LoanHelpersReturn): Promise<void> {
+  static async swapUniSwap(
+    hre: HardhatRuntimeEnvironment,
+    loan: LoanHelpersReturn
+  ): Promise<void> {
     const { tokens } = hre
     const { details, diamond } = loan
     const link = await tokens.get('LINK')
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
-    const lendingBalBefore = await details.lendingToken.balanceOf(
-      escrowAddress
-    )
+    const lendingBalBefore = await details.lendingToken.balanceOf(escrowAddress)
     lendingBalBefore
       .gt(0)
       .should.eql(true, 'Loan escrow should have a lending token balance')
@@ -315,14 +401,12 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       .gt(0)
       .should.eql(true, 'Swap token balance not positive after swap')
 
-    const lendingBalAfter = await details.lendingToken.balanceOf(
-      escrowAddress
-    )
+    const lendingBalAfter = await details.lendingToken.balanceOf(escrowAddress)
     lendingBalAfter
       .eq(0)
       .should.eql(
         true,
         'Loan escrow has lending token balance after swapping full amount'
-      ) 
+      )
   }
 }

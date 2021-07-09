@@ -41,9 +41,8 @@ task('test').setAction(async (args, hre, runSuper) => {
  env: HardhatRuntimeEnvironment,
  runSuper: RunSuperFunction<ArgsT>*/
 
-subtask(TASK_TEST_RUN_MOCHA_TESTS)
-
-  .setAction(async ({ }: { testFiles: string[] }, hre) => {
+subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
+  async ({}: { testFiles: string[] }, hre) => {
     //custom code
     const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
@@ -74,4 +73,5 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS)
     }*/
 
     return fileTestFailures
-  })
+  }
+)
