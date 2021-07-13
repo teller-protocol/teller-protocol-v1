@@ -137,11 +137,20 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'NFTFacet',
       skipIfAlreadyDeployed: false,
     },
-    // // Dapps
-    // {
-    //   contract: 'AaveFacet',
-    //   skipIfAlreadyDeployed: true,
-    // },
+    {
+      contract: 'MockNFTMainnetBridgingToPolygonFacet',
+      // random addresses for testing. won't do anything
+      args: [
+        '0x98ca52786e967d1469090adc075416948ca004a7',
+        '0x98ca52786e967d1469090adc075416948ca004a7',
+      ],
+      skipIfAlreadyDeployed: false,
+    },
+    {
+      contract: 'MockNFTPolygonBridgingToMainnetFacet',
+      args: ['0x98ca52786e967d1469090adc075416948ca004a7'],
+      skipIfAlreadyDeployed: false,
+    },
   ]
 
   // Network specify Facets
@@ -184,6 +193,8 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
+  console.log('Diamond address *****')
+  console.log(diamond.address)
 
   await addAuthorizedAddresses(hre, diamond)
 }
@@ -249,7 +260,7 @@ const deployLoansEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -302,7 +313,7 @@ const deployCollateralEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -355,7 +366,7 @@ const deployTTokenBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    indent: 4
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({

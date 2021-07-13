@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { TellerNFT } from "../nft/TellerNFT.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 import "../nft/TellerNFTDictionary.sol";
@@ -71,4 +70,31 @@ contract NFTFacet is RolesMods {
     {
         NFTLib.s().nftDictionary = TellerNFTDictionary(dictAddress);
     }
+
+    // create a new facet
+    // create initNFTBridge() ->
+    //      setApprovalForAll() -> on nfts belonging to ERC721 predicate
+    //
+    // create bridgeNFTToPolygon()
+    //      call unstake function()
+    //      encode [ownedNFTs, borrower] -> depositData
+    //      call depositFor()
+    //          rootChainManager contract -> (diamond.address (polygon), tellerNFTAddress(mainnet), depositData)
+    //
+    //
+    // create stakeNFTsOnBehalfOf(uint256[] tokenIds, address user) ->  EnumerableSet.add(s().stakedNFTs[owner], nftID);
+
+    // call stakeNFTs() -> on polytellernft
+    // call childchainmanager -> deposit() ^ same parameters
+    // call init() ->
+    //      set deployer as depositor only for tests
+
+    // create bridgeNFTToMainnet()
+    //      call withdrawBatch function()
+    //
+
+    // steps
+    // approval - automatic
+    // mockMainnetFacet -> bridgeNFTToPolygon(). called from tests
+    // polyTellerNFT -> deposit(). called from tests
 }
