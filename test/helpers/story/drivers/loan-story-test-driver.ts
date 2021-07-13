@@ -7,7 +7,7 @@ import moment from 'moment'
 import Prando from 'prando'
 
 import { getMarkets } from '../../../../config'
-import { getPlatformSetting } from '../../../../tasks'
+import { getPlatformSetting, updatePlatformSetting } from '../../../../tasks'
 import { ITellerDiamond } from '../../../../types/typechain'
 import { fundedMarket } from '../../../fixtures'
 import { getFunds } from '../../get-funds'
@@ -154,10 +154,33 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
   ): Promise<ContractTransaction> => {
     const markets = getMarkets(hre.network)
     const market = markets[0]
-    const { diamond } = await fundedMarket(hre, {
-      assetSym: market.lendingToken,
-      amount: 100000,
-    })
+    switch (process.env.FORKING_NETWORK) {
+      case 'mainnet':
+      case 'kovan':
+      case 'rinkeby':
+      case 'ropsten':
+        const { deployments } = hre
+        await deployments.fixture('markets', {
+          keepExistingDeployments: true,
+        })
+        const percentageSubmission = {
+          name: 'RequiredSubmissionsPercentage',
+          value: 0,
+        }
+        await updatePlatformSetting(percentageSubmission, hre)
+        break
+      case 'polygon':
+      case 'polygon_mumbai':
+        const { diamond } = await fundedMarket(hre, {
+          assetSym: market.lendingToken,
+          amount: 100000,
+        })
+        break
+      default:
+        throw new Error(
+          `Forking network is invalid: ${process.env.FORKING_NETWORK}`
+        )
+    }
     // Advance time
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',

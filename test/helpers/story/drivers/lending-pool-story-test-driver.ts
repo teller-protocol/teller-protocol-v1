@@ -6,15 +6,9 @@ import { Test } from 'mocha'
 
 import { getMarkets } from '../../../../config'
 import { ITToken } from '../../../../types/typechain'
-import { fundedMarket } from '../../../fixtures'
 import { fundLender, getFunds } from '../../get-funds'
 import { getLPHelpers } from '../../lending-pool'
-import {
-  LoanSnapshots,
-  STORY_DOMAINS,
-  TestAction,
-  TestScenario,
-} from '../story-helpers'
+import { TestAction, TestScenario } from '../story-helpers'
 import LoanStoryTestDriver from './loan-story-test-driver'
 import StoryTestDriver from './story-test-driver'
 chai.should()
