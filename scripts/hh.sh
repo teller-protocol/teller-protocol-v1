@@ -11,7 +11,7 @@
 
 echo
 
-available_networks=('mainnet' 'rinkeby' 'kovan' 'ropsten')
+available_networks=('mainnet' 'rinkeby' 'kovan' 'ropsten', 'polygon')
 
 ## Exit and display help output
 show_main_help() {

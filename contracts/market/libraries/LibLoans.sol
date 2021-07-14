@@ -4,20 +4,11 @@ pragma solidity ^0.8.0;
 // Libraries
 import { LibEscrow } from "../../escrow/libraries/LibEscrow.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
-import {
-    PlatformSettingsLib
-} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
-import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
+import { PlatformSettingsLib } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 
 // Storage
-import {
-    MarketStorageLib,
-    MarketStorage,
-    Loan,
-    LoanStatus,
-    LoanDebt,
-    LoanTerms
-} from "../../storage/market.sol";
+import { AppStorageLib } from "../../storage/app.sol";
+import { MarketStorageLib, MarketStorage, Loan, LoanStatus, LoanDebt, LoanTerms } from "../../storage/market.sol";
 
 library LibLoans {
     using NumbersLib for int256;
@@ -33,7 +24,7 @@ library LibLoans {
     /**
      * @notice it returns the loan
      * @param loanID the ID of the respective loan
-     * @return l_ the loan 
+     * @return l_ the loan
      */
     function loan(uint256 loanID) internal view returns (Loan storage l_) {
         l_ = s().loans[loanID];
@@ -85,10 +76,9 @@ library LibLoans {
     {
         return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
-    
+
     function getCollateralNeeded(uint256 loanID)
         internal
-        view
         returns (uint256 _needed)
     {
         (, _needed, ) = getCollateralNeededInfo(loanID);
@@ -103,7 +93,6 @@ library LibLoans {
      */
     function getCollateralNeededInfo(uint256 loanID)
         internal
-        view
         returns (
             uint256 neededInLendingTokens,
             uint256 neededInCollateralTokens,
@@ -118,7 +107,10 @@ library LibLoans {
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
-            neededInCollateralTokens = PriceAggLib.valueFor(
+            neededInCollateralTokens = AppStorageLib
+            .store()
+            .priceAggregator
+            .getValueFor(
                 loan(loanID).lendingToken,
                 loan(loanID).collateralToken,
                 neededInLendingTokens
@@ -136,7 +128,6 @@ library LibLoans {
      */
     function getCollateralNeededInTokens(uint256 loanID)
         internal
-        view
         returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (loan(loanID).collateralRatio == 0) {
@@ -158,10 +149,9 @@ library LibLoans {
                 loan(loanID).collateralRatio
             );
         } else if (loan(loanID).status == LoanStatus.Active) {
-            uint16 requiredRatio =
-                loan(loanID).collateralRatio -
-                    getInterestRatio(loanID) -
-                    uint16(PlatformSettingsLib.getCollateralBufferValue());
+            uint16 requiredRatio = loan(loanID).collateralRatio -
+                getInterestRatio(loanID) -
+                uint16(PlatformSettingsLib.getCollateralBufferValue());
 
             neededInLendingTokens =
                 debt(loanID).principalOwed +

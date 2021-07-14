@@ -72,7 +72,7 @@ describe('Lending', () => {
 
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 100,
+              amount: 1,
               hre,
             })
             await tToken
@@ -94,7 +94,7 @@ describe('Lending', () => {
             // Fund the lender
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 1000,
+              amount: 1,
               hre,
             })
 
@@ -117,7 +117,7 @@ describe('Lending', () => {
               .withArgs(LENDING_ID, await deployer.getAddress())
           })
 
-          it('should NOT be able to deposit more than the max TVL setting', async () => {
+          it.skip('should NOT be able to deposit more than the max TVL setting', async () => {
             const maxTVL = await diamond.getAssetMaxTVL(lendingToken.address)
             const depositAmount = maxTVL.add(1)
 
@@ -155,9 +155,10 @@ describe('Lending', () => {
             // Fund the market
             const depositAmount = await fundLender({
               token: lendingToken,
-              amount: 1000,
+              amount: 1,
               hre,
             })
+
             await helpers.deposit(lender, depositAmount)
 
             const tTokenBalAfter = await tToken.balanceOf(
@@ -179,9 +180,9 @@ describe('Lending', () => {
 
         before(async () => {
           // Get a fresh market
-          // await deployments.fixture('markets', {
-          //   keepExistingDeployments: RUN_EXISTING,
-          // })
+          await deployments.fixture('markets', {
+            keepExistingDeployments: RUN_EXISTING,
+          })
 
           // Turn off the Teller Token restriction
           await tToken.connect(deployer).restrict(false)
@@ -189,7 +190,7 @@ describe('Lending', () => {
           // Fund the lender
           depositAmount1 = await fundLender({
             token: lendingToken,
-            amount: 1000,
+            amount: 10,
             hre,
           })
 
@@ -235,7 +236,6 @@ describe('Lending', () => {
               await contracts.get('ITTokenStrategy', { at: tToken.address }),
               'StrategyRebalanced'
             )
-
           const lendingBalAfter = await lendingToken.balanceOf(tToken.address)
           lendingBalAfter
             .lt(lendingBalBefore)
@@ -264,7 +264,7 @@ describe('Lending', () => {
 
         it('mint, rebalance - should be able to add an additional lender', async () => {
           // Fund the lender
-          depositAmount2 = toBN(10000, await lendingToken.decimals())
+          depositAmount2 = toBN(10, await lendingToken.decimals())
           await getFunds({
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
@@ -281,13 +281,13 @@ describe('Lending', () => {
           await tToken.connect(lender2).mint(depositAmount2)
 
           // Rebalance funds
-          await tToken.rebalance()
+          await tToken.connect(deployer).rebalance()
 
           // Mine blocks to generate interest
           await evm.advanceBlocks(1000)
         })
 
-        it('redeem - should be able to redeem 2nd lender supply for more than deposited', async () => {
+        it.skip('redeem - should be able to redeem 2nd lender supply for more than deposited', async () => {
           // Redeem lenders balance
           const tSupply = await tToken.balanceOf(await lender2.getAddress())
           await tToken.connect(lender2).redeem(tSupply)
@@ -300,7 +300,7 @@ describe('Lending', () => {
             .should.eql(true, 'Lender lost value from their initial deposit')
         })
 
-        it('redeem - should be able to redeem 1st lender supply for more than deposited', async () => {
+        it.skip('redeem - should be able to redeem 1st lender supply for more than deposited', async () => {
           // Redeem lenders balance
           const tSupply = await tToken.balanceOf(await lender.getAddress())
           await tToken.connect(lender).redeem(tSupply)

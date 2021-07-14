@@ -2,14 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import {
-    CacheLib,
-    Cache,
-    CacheType
-} from "../../../shared/libraries/CacheLib.sol";
-import {
-    PrizePoolInterface
-} from "../../../escrow/dapps/interfaces/PrizePoolInterface.sol";
+import { CacheLib, Cache, CacheType } from "../../../shared/libraries/CacheLib.sol";
+import { PrizePoolInterface } from "../../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 
 // Storage
 import { AppStorageLib } from "../../../storage/app.sol";
@@ -20,7 +14,7 @@ import { AppStorageLib } from "../../../storage/app.sol";
  * @author develop@teller.finance
  */
 library AssetPPoolLib {
-    bytes32 private constant NAME = keccak256("pPoolAddress");
+    bytes32 private constant NAME = keccak256("pPool");
 
     function s(address asset) private view returns (Cache storage) {
         return AppStorageLib.store().assetSettings[asset];
