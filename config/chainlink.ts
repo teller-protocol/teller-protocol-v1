@@ -65,6 +65,11 @@ const polygonChainlink: Chainlink = {
     quoteTokenName: 'ETH',
     address: '0xefb7e6be8356cCc6827799B6A7348eE674A80EaE',
   },
+  USDT_ETH: {
+    baseTokenName: 'USDT',
+    quoteTokenName: 'ETH',
+    address: '0xf9d5AAC6E5572AEFa6bd64108ff86a222F69B64d',
+  },
   DAI_ETH: {
     baseTokenName: 'DAI',
     quoteTokenName: 'ETH',

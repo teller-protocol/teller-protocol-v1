@@ -6,9 +6,11 @@ const mainnetTokens: NetworkTokens = {
     CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
     CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
     CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
+    CUSDT: '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9',
   },
   aave: {
     ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
+    AUSDT: '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811',
   },
   poolTogether: {
     PTDAI: '0x334cbb5858417aee161b53ee0d5349ccf54514cf',
@@ -42,10 +44,12 @@ const polygonTokens: NetworkTokens = {
     ADAI: '0x27F8D03b3a2196956ED754baDc28D73be8830A6e', // amDAI
     AUSDC: '0x1a13F4Ca1d028320A707D99520AbFefca3998b7F',
     AETH: '0x28424507fefb6f7f8E9D3860F56504E4e5f5f390', //amWETH
+    AUSDT: '0x60D55F02A771d515e077c9C2403a1ef324885CeC', // amUSDT
   },
   poolTogether: {
     PTDAI: '0x3e35681E6439961EC7F2b1ABaB6b967D6a645270',
     PTDAIS: '0xB102A0Ba3707A94a64CE63c7BeA8039680e1ad5C',
+    PTUSDT: '0x9ecB26631098973834925eb453De1908Ea4bdD4e',
   },
   erc20: {
     // Aave
@@ -68,6 +72,7 @@ export const tokens: Record<string, NetworkTokens> = {
       CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
       CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
       CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
+      CUSDT: '0x3f0a0ea2f86bae6362cf9799b523ba06647da018',
     },
     erc20: {
       // Compound
@@ -79,6 +84,7 @@ export const tokens: Record<string, NetworkTokens> = {
       WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
       USDC: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
+      USDT: '0xA68895Df8F959F5827A6B6427C0176044A4beba6',
       LINK: '0xa36085F69e2889c224210F603D836748e7dC0088',
     },
   },
@@ -87,6 +93,7 @@ export const tokens: Record<string, NetworkTokens> = {
       CDAI: '0x6D7F0754FFeb405d23C51CE938289d4835bE3b14',
       CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
       CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
+      CUSDT: '0x2fb298bdbef468638ad6653ff8376575ea41e768',
     },
     erc20: {
       // Compound
@@ -97,6 +104,7 @@ export const tokens: Record<string, NetworkTokens> = {
       WETH: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
       DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
       USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
+      USDT: '0x3B00Ef435fA4FcFF5C209a37d1f3dcff37c705aD',
       LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
     },
   },
@@ -105,6 +113,7 @@ export const tokens: Record<string, NetworkTokens> = {
       CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
       CUSDC: '0x8aF93cae804cC220D1A608d4FA54D1b6ca5EB361',
       CETH: '0xbe839b6d93e3ea47effcca1f27841c917a8794f3',
+      CUSDT: '0xf6958cf3127e62d3eb26c79f4f45d3f3b2ccded4',
     },
     erc20: {
       // Compound
@@ -116,6 +125,7 @@ export const tokens: Record<string, NetworkTokens> = {
       WETH: '0xc778417e063141139fce010982780140aa0cd5ab',
       DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
       USDC: '0x0D9C8723B343A8368BebE0B5E89273fF8D712e3C',
+      USDT: '0x516de3a7A567d81737e3a46ec4FF9cFD1fcb0136',
       LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280',
     },
   },
@@ -125,6 +135,7 @@ export const tokens: Record<string, NetworkTokens> = {
       ADAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e', // amDAI
       AUSDC: '0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9',
       AETH: '0x7aE20397Ca327721F013BB9e140C707F82871b56', //amWETH
+      AUSDT: '0xF8744C0bD8C7adeA522d6DDE2298b17284A79D1b', //amUSDT
     },
     erc20: {
       // Aave

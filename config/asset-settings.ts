@@ -58,11 +58,22 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
+    USDT: [
+      { key: 'aToken', value: 'AUSDT', type: AssetType.Token },
+      {
+        key: 'pPool',
+        value: '0x481f1BA81f7C01400831DfF18215961C3530D118',
+        type: AssetType.Address,
+      },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
     USDC: [
       { key: 'cToken', value: 'CUSDC', type: AssetType.Token },
       {
         key: 'pPool',
-        value: '0xde5275536231eCa2Dd506B9ccD73C028e16a9a32',
+        value: '0xde9ec95d7708b8319ccca4b8bc92c0a3b70bf416',
         type: AssetType.Address,
       },
     ],
@@ -74,6 +85,17 @@ export const assetSettings: Record<string, AssetSettings> = {
       {
         key: 'pPool',
         value: '0xFECFa775643eb8C0F755491Ba4569e501764DA51',
+        type: AssetType.Address,
+      },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDT: [
+      { key: 'aToken', value: 'AUSDT', type: AssetType.Token },
+      {
+        key: 'pPool',
+        value: '0x887E17D791Dcb44BfdDa3023D26F7a04Ca9C7EF4',
         type: AssetType.Address,
       },
       { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
