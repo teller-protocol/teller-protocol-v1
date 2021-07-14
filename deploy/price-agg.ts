@@ -99,17 +99,27 @@ const deployChainlinkENS = async (
     await ensRegistry
       .connect(deployer)
       .setSubnodeOwner(Buffer.alloc(32), tldLabel, deployerAddress)
+      .then(({ wait }) => wait())
     await ensRegistry
       .connect(deployer)
       .setSubnodeOwner(tldNode, dataLabel, deployerAddress)
-    await ensRegistry.connect(deployer).setResolver(tldNode, resolver.address)
-    await ensRegistry.connect(deployer).setResolver(dataNode, resolver.address)
+      .then(({ wait }) => wait())
+    await ensRegistry
+      .connect(deployer)
+      .setResolver(tldNode, resolver.address)
+      .then(({ wait }) => wait())
+    await ensRegistry
+      .connect(deployer)
+      .setResolver(dataNode, resolver.address)
+      .then(({ wait }) => wait())
     await resolver
       .connect(deployer)
       ['setAddr(bytes32,address)'](tldNode, resolver.address)
+      .then(({ wait }) => wait())
     await resolver
       .connect(deployer)
       ['setAddr(bytes32,address)'](dataNode, resolver.address)
+      .then(({ wait }) => wait())
   }
 
   hre.log('')
@@ -133,6 +143,7 @@ const deployChainlinkENS = async (
       await ensRegistry
         .connect(deployer)
         .setSubnodeOwner(dataNode, chainlinkAggLabel, deployerAddress)
+        .then(({ wait }) => wait())
       const receipt = await resolver
         .connect(deployer)
         ['setAddr(bytes32,address)'](chainlinkAggNode, config.address)
@@ -238,6 +249,7 @@ const addPricer = async (args: AddPricerArgs): Promise<void> => {
     await priceAgg
       .connect(await hre.getNamedSigner('deployer'))
       .setAssetPricers(pricer.address, tokensToSet)
+      .then(({ wait }) => wait())
   }
 }
 
