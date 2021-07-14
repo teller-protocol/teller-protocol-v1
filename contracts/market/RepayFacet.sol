@@ -4,28 +4,19 @@ pragma solidity ^0.8.0;
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
-import {
-    ReentryMods
-} from "../contexts2/access-control/reentry/ReentryMods.sol";
+import { ReentryMods } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
 import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
 // Libraries
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
-import {
-    PlatformSettingsLib
-} from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import { PlatformSettingsLib } from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
@@ -303,6 +294,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
 }
 
 library RepayLib {
+    uint256 immutable SECONDS_PER_MONTH = 2592000;
+
     /**
      * @notice It checks if a loan can be liquidated.
      * @param loanID The loan ID to check.
@@ -325,6 +318,15 @@ library RepayLib {
             if (neededInCollateral > collateralAmount) {
                 return true;
             }
+        }
+
+        //if the loan is from an NFT, an additional 30 days grace is given
+        if (
+            /*loan.type == NFT_TYPE &&*/
+            block.timestamp <
+            loan.loanStartTime + loan.duration + SECONDS_PER_MONTH
+        ) {
+            return false;
         }
 
         // Otherwise, check if the loan has expired
