@@ -32,6 +32,7 @@ import {
     Loan,
     LoanStatus
 } from "../storage/market.sol";
+import { NFTStorageLib, NFTStorage } from "../storage/nft.sol";
 
 contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     /**
@@ -294,7 +295,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
 }
 
 library RepayLib {
-    uint256 immutable SECONDS_PER_MONTH = 2592000;
+    uint256 constant SECONDS_PER_MONTH = 2592000;
 
     /**
      * @notice It checks if a loan can be liquidated.
@@ -322,7 +323,7 @@ library RepayLib {
 
         //if the loan is from an NFT, an additional 30 days grace is given
         if (
-            /*loan.type == NFT_TYPE &&*/
+            loanUsesTellerNFT(loan) &&
             block.timestamp <
             loan.loanStartTime + loan.duration + SECONDS_PER_MONTH
         ) {
@@ -331,6 +332,14 @@ library RepayLib {
 
         // Otherwise, check if the loan has expired
         return block.timestamp >= loan.loanStartTime + loan.duration;
+    }
+
+    function loanUsesTellerNFT(Loan storage loan) internal view returns (bool) {
+        EnumerableSet.UintSet storage nftSet = NFTStorageLib.store().loanNFTs[
+            loan.id
+        ];
+
+        return EnumerableSet.length(nftSet) > 0;
     }
 
     /**
