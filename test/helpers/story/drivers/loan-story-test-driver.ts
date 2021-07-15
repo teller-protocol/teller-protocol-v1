@@ -159,8 +159,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       case 'kovan':
       case 'rinkeby':
       case 'ropsten':
+        const tags: string[] = []
+        tags.push('markets')
         const { deployments } = hre
-        await deployments.fixture('markets', {
+        await deployments.fixture(tags, {
           keepExistingDeployments: true,
         })
         const percentageSubmission = {

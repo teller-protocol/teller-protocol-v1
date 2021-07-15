@@ -8,7 +8,7 @@ import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { AssetPPoolLib } from "../../settings/asset/libraries/AssetPPoolLib.sol";
 import { PoolTogetherLib } from "./libraries/PoolTogetherLib.sol";
-import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
+import { PrizePoolInterface } from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 

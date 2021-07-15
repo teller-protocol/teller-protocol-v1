@@ -65,11 +65,12 @@ export const getTokens = (
 export const getNativeToken = (network: Network): string => {
   const tokens = getTokens(network)
   let wrappedNativeToken: string
+  const networkName = getNetworkName(network)
   if (
-    network.name === 'mainnet' ||
-    network.name === 'kovan' ||
-    network.name === 'rinkeby' ||
-    network.name === 'ropsten'
+    networkName === 'mainnet' ||
+    networkName === 'kovan' ||
+    networkName === 'rinkeby' ||
+    networkName === 'ropsten'
   ) {
     wrappedNativeToken = tokens.erc20.WETH
   } else {
@@ -81,14 +82,14 @@ export const getNativeToken = (network: Network): string => {
 export const getDappAddresses = (network: Network): Tokens =>
   dapps[getNetworkName(network)]
 
-export interface NftObject {
+export const getNFT = (
+  network: Network
+): {
   tiers: TierInfo[]
   merkleTrees: NFTMerkleTree
   distributionsOutputFile: string
-}
-
-export const getNFT = (network: Network): NftObject => {
-  const distributionsOutputFile: string = path.resolve(
+} => {
+  const distributionsOutputFile = path.resolve(
     path.join(
       __dirname,
       '../deployments',

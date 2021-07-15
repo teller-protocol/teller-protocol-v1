@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { Loan, LoanDebt, LoanTerms } from "../storage/market.sol";
@@ -94,7 +92,6 @@ contract LoanDataFacet {
      */
     function getCollateralNeededInfo(uint256 loanID)
         external
-        view
         returns (
             uint256 neededInLendingTokens,
             uint256 neededInCollateralTokens,
@@ -122,11 +119,7 @@ contract LoanDataFacet {
      * @param loanID the identifier of the respective escrow's loan
      * @return the total value of the loan escrow
      */
-    function getLoanEscrowValue(uint256 loanID)
-        external
-        view
-        returns (uint256)
-    {
+    function getLoanEscrowValue(uint256 loanID) external returns (uint256) {
         return LibEscrow.calculateTotalValue(loanID);
     }
 
@@ -140,8 +133,8 @@ contract LoanDataFacet {
         view
         returns (address[] memory tokens_)
     {
-        EnumerableSet.AddressSet storage escrowTokens =
-            LibEscrow.getEscrowTokens(loanID);
+        EnumerableSet.AddressSet storage escrowTokens = LibEscrow
+        .getEscrowTokens(loanID);
         tokens_ = new address[](EnumerableSet.length(escrowTokens));
         for (uint256 i; i < tokens_.length; i++) {
             tokens_[i] = EnumerableSet.at(escrowTokens, i);

@@ -77,12 +77,12 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
                 0 // TODO get referral code from Aave when applicable
             );
 
-            emit StrategyRebalanced(NAME, msg.sender);
-        } else {
+            emit StrategyRebalanced(NAME, _msgSender());
+        } else if (storedRatio > aaveStore().balanceRatioMin) {
             // Withdraw tokens from Aave
-            _withdraw(0, storedBal, aaveBal, storedRatio);
+            _withdraw(0, storedBal, aaveBal);
 
-            emit StrategyRebalanced(NAME, msg.sender);
+            emit StrategyRebalanced(NAME, _msgSender());
         }
     }
 
@@ -93,13 +93,9 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
      * @param amount Amount of underlying tokens that must be available.
      */
     function withdraw(uint256 amount) external override {
-        (
-            uint256 storedBal,
-            uint256 aaveBal,
-            uint16 storedRatio
-        ) = _getBalanceInfo();
+        (uint256 storedBal, uint256 aaveBal, ) = _getBalanceInfo();
         if (storedBal < amount) {
-            _withdraw(amount, storedBal, aaveBal, storedRatio);
+            _withdraw(amount, storedBal, aaveBal);
         }
     }
 
@@ -128,8 +124,7 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
     function _withdraw(
         uint256 amount,
         uint256 storedBal,
-        uint256 aaveBal,
-        uint16 storedRatio
+        uint256 aaveBal
     ) internal {
         // Calculate amount to rebalance
         uint16 medianRatio = (aaveStore().balanceRatioMax +
@@ -138,7 +133,7 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
             storedBal + aaveBal - amount,
             medianRatio
         );
-        uint256 redeemAmount = requiredBal - storedBal + amount;
+        uint256 redeemAmount = requiredBal + amount - storedBal;
         // Withdraw tokens from the Aave lending pool if needed
         IAaveLendingPool lendingPool = LibDapps.getAaveLendingPool(
             aaveStore().LP_ADDRESS_PROVIDER_ADDRESS

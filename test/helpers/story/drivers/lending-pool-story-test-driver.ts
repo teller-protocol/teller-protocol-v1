@@ -108,8 +108,12 @@ export default class LPStoryTestDriver extends StoryTestDriver {
     const tToken: ITToken = await contracts.get('ITToken', {
       at: await diamond.getTTokenFor(details.lendingToken.address),
     })
-    // const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
-    // const depositAmount = maxTVL
+    const maxTVL = await diamond.getAssetMaxTVL(details.lendingToken.address)
+    const depositAmount = maxTVL.sub(details.loan.borrowedAmount)
+    console.log({
+      maxTVL: maxTVL.toString(),
+      depositAmount: depositAmount.toString(),
+    })
     console.log({
       lent: details.loan.borrowedAmount.toString(),
       bal: (

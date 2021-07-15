@@ -151,7 +151,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 
         // Pay in collateral
         if (collateralAmount > 0) {
-            LibCollateral.deposit(loan.id, collateralAmount);
+            LibCollateral.deposit(loan.id, collateralToken, collateralAmount);
         }
 
         // Check that enough collateral has been provided for this loan
