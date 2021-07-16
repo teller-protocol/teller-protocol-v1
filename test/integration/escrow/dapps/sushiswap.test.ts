@@ -14,7 +14,7 @@ chai.use(solidity)
 
 const { tokens, getNamedSigner, evm } = hre
 
-describe('SushiswapDapp', () => {
+describe.skip('SushiswapDapp', () => {
   let diamond: ITellerDiamond
   let lendingToken: ERC20
   let link: ERC20

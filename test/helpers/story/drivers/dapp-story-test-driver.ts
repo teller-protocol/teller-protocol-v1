@@ -267,7 +267,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     daiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-    console.log({ tokenAddresses })
     // tokenAddresses.should.include(aToken.address)
   }
 
@@ -284,7 +283,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-    console.log({ tokenAddresses })
     // tokenAddresses.should.not.include(aToken.address)
 
     const daiBalance = await details.lendingToken.balanceOf(escrowAddress)
@@ -299,16 +297,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const { details, diamond } = loan
     const aToken = await contracts.get<IAToken>('IAToken', {
       at: await diamond.getAssetAToken(details.lendingToken.address),
-    })
-    const borrowedAmount = await details.lendingToken.balanceOf(
-      details.borrower.address
-    )
-
-    console.log({
-      loanID: details.loan.id,
-      lendingToken: await details.lendingToken.symbol(),
-      borrowedAmount: details.loan.borrowedAmount.toString(),
-      lendingBorrowed: borrowedAmount.toString(),
     })
     await diamond
       .connect(details.borrower.signer)
@@ -359,15 +347,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const poolTicket = await contracts.get<IERC20>('IERC20', {
       at: await diamond.getAssetPPoolTicket(details.lendingToken.address),
     })
-
-    const borrowedAmount = await details.lendingToken.balanceOf(
-      await diamond.getLoanEscrow(details.loan.id)
-    )
-
-    console.log({
-      borrowed: borrowedAmount.toString(),
-      lendingToken: details.lendingToken.symbol(),
-    })
     await diamond
       .connect(details.borrower.signer)
       .poolTogetherDepositTicket(
@@ -379,10 +358,6 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
     const daiBalance = await details.lendingToken.balanceOf(escrowAddress)
-    console.log({
-      borrowed: details.loan.borrowedAmount.toString(),
-      daiBalance: daiBalance.toString(),
-    })
     daiBalance.eq(details.loan.borrowedAmount).should.eql(false, '')
 
     const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)

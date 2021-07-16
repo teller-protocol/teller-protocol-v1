@@ -142,7 +142,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'YearnFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'PoolTogetherFacet',
