@@ -24,7 +24,7 @@ describe('AaveDapp', () => {
       let aToken: IAToken
 
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100000,
         }))

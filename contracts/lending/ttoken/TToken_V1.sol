@@ -13,10 +13,16 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ITToken } from "./ITToken.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ERC165Checker
+} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { ReentryMods } from "../../contexts2/access-control/reentry/ReentryMods.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
@@ -38,7 +44,7 @@ contract TToken_V1 is ITToken, ReentryMods {
      * The LP being restricted means that only the Teller protocol may
      *  lend/borrow funds.
      */
-    modifier notRestricted {
+    modifier notRestricted() {
         require(
             !s().restricted || RolesLib.hasRole(CONTROLLER, _msgSender()),
             "Teller: platform restricted"

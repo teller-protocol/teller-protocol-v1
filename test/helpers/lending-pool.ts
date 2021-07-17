@@ -13,11 +13,16 @@ export interface LPHelperArgs {
   tToken: ITToken
 }
 
+export interface LPHelpersReturn {
+  deposit: ReturnType<typeof depositWithArgs>,
+  withdraw: ReturnType<typeof withdrawWithArgs>,
+}
+
 /**
  * Creates all LP test helper functions.
  * @param args {LPHelperArgs}
  */
-export const getLPHelpers = (args: LPHelperArgs) => ({
+export const getLPHelpers = (args: LPHelperArgs): LPHelpersReturn => ({
   deposit: depositWithArgs(args),
   withdraw: withdrawWithArgs(args),
   // createLoan: creatLoanWithArgs(args),

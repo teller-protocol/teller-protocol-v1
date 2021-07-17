@@ -28,7 +28,7 @@ describe('Loans', () => {
     let borrower: Signer
 
     before(async () => {
-      ;({ diamond } = await fundedMarket({
+      ({ diamond } = await fundedMarket({
         assetSym: market.lendingToken,
         amount: 100000,
       }))

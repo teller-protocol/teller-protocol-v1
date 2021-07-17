@@ -21,7 +21,13 @@ struct LoanTerms {
     uint32 termsExpiry;
 }
 
-enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
+enum LoanStatus {
+    NonExistent,
+    TermsSet,
+    Active,
+    Closed,
+    Liquidated
+}
 
 struct Loan {
     // Account that owns the loan

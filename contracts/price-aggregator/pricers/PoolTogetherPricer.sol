@@ -3,8 +3,12 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IsaLPPricer } from "../IsaLPPricer.sol";
-import { PrizePoolInterface } from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
-import { IControlledToken } from "../../shared/interfaces/pooltogether/IControlledToken.sol";
+import {
+    PrizePoolInterface
+} from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
+import {
+    IControlledToken
+} from "../../shared/interfaces/pooltogether/IControlledToken.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract PoolTogetherPricer is IsaLPPricer {
