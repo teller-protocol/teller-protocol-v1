@@ -39,19 +39,21 @@ contract ent_claim_NFTDistributor_v1 is
 
             // Mark it claimed and send the token.
             _setClaimed(requests[i].merkleIndex, requests[i].nodeIndex);
-            uint256 tierIndex =
-                distributorStore().merkleRoots[requests[i].merkleIndex]
-                    .tierIndex;
+            uint256 tierIndex = distributorStore()
+            .merkleRoots[requests[i].merkleIndex]
+            .tierIndex;
             for (uint256 j; j < requests[i].amount; j++) {
                 distributorStore().nft.mint(tierIndex, account);
             }
 
             //Find the newly minted tokens and add to memory
-            uint256[] memory postOwnedTokens =
-                distributorStore().nft.getOwnedTokens(account);
+            uint256[] memory postOwnedTokens = distributorStore()
+            .nft
+            .getOwnedTokens(account);
 
-            uint256[] memory newlyMintedTokenIds =
-                new uint256[](requests[i].amount);
+            uint256[] memory newlyMintedTokenIds = new uint256[](
+                requests[i].amount
+            );
 
             uint256 offset = postOwnedTokens.length - requests[i].amount;
 

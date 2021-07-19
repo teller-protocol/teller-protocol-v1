@@ -1,12 +1,11 @@
-import colors from 'colors'
-import * as ethers from 'ethers'
-import { task } from 'hardhat/config'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import colors from "colors"
+import * as ethers from "ethers"
+import { task } from "hardhat/config"
+import { HardhatRuntimeEnvironment } from "hardhat/types"
 
-import { getNFT } from '../../config'
-import { ITellerNFT, TellerNFT } from '../../types/typechain'
-import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
-import { NULL_ADDRESS } from '../../utils/consts'
+import { getNFT } from "../../config"
+import { ITellerNFT, TellerNFT, TellerNFTDictionary } from "../../types/typechain"
+import { NULL_ADDRESS } from "../../utils/consts"
 
 interface AddTiersArgs {
   sendTx?: boolean
@@ -74,18 +73,11 @@ export const addTiers = async (
   if (await nftDictionary._tokenTierMappingCompressedSet()) {
     log(`${'already'.yellow} set.`)
   } else {
-    // iterate through all tokens to get their tierIndex  (run a task)
-    const promise = new Promise<string[]>((resolve) => {
-      void (async () => {
-        const claimedNFTData = await getAllTellerNFTTierData(hre)
-
-        const compressedTierData =
-          compressTokenTierMappingsFromArray(claimedNFTData)
-        resolve(compressedTierData)
-      })()
-    })
     const intervalID = setInterval(() => log('.', { nl: false }), 5000)
-    const compressedTierData = await promise
+
+    // iterate through all tokens to get their tierIndex  (run a task)
+    const compressedTierData =
+      compressTokenTierMappingsFromArray(await getAllTellerNFTTierData(hre))
     if (compressedTierData == null) {
       throw new Error('Failed to compress token tier data')
     }

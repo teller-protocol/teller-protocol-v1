@@ -10,6 +10,7 @@
     {
       "files": "*.sol",
       "options": {
+        "compiler": "0.8.0",
         "tabWidth": 4,
         "singleQuote": false,
         "explicitTypes": "always",
@@ -19,7 +20,6 @@
     {
       "files": "*.ts",
       "options": {
-        "printWidth": 80
       }
     }
   ]

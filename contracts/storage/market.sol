@@ -3,9 +3,7 @@ pragma solidity ^0.8.0;
 
 // Libraries
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../shared/libraries/NumbersList.sol";
 
 // Interfaces
@@ -21,7 +19,13 @@ struct LoanTerms {
     uint32 termsExpiry;
 }
 
-enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
+enum LoanStatus {
+    NonExistent,
+    TermsSet,
+    Active,
+    Closed,
+    Liquidated
+}
 
 struct Loan {
     // Account that owns the loan

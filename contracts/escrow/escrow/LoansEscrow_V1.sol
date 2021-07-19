@@ -9,21 +9,17 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Libraries
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 // Proxy
-import {
-    InitializeableBeaconProxy
-} from "../../shared/proxy/beacon/InitializeableBeaconProxy.sol";
+import { InitializeableBeaconProxy } from "../../shared/proxy/beacon/InitializeableBeaconProxy.sol";
 import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 
 contract LoansEscrow_V1 is ILoansEscrow {
     address public owner;
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(owner == msg.sender, "Teller: loan escrow not owner");
         _;
     }

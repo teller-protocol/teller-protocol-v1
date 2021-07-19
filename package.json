@@ -8,8 +8,8 @@
     "test": "test() { TS_NODE_TRANSPILE_ONLY=1 TESTING=1 yarn hf \"$1\" test; }; test",
     "fork": "fork() { TS_NODE_TRANSPILE_ONLY=1 yarn hf \"$1\" fork; }; fork",
     "lint": "eslint .",
-    "lint:fix": "yarn lint --fix",
-    "format:write": "prettier --write",
+    "lint:fix": "eslint . --fix",
+    "format:write": "prettier --write '**/*.sol' && eslint --fix --quiet '**/*.ts'",
     "compile": "COMPILING=true yarn hh compile",
     "build": "yarn compile && yarn types && yarn tsc",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
@@ -70,7 +70,7 @@
     "moment": "^2.29.1",
     "prando": "^6.0.1",
     "prettier": "^2.3.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.7",
+    "prettier-plugin-solidity": "git://github.com/teller-protocol/prettier-plugin-solidity#0496eb6483e0081530010882b8632c29b3f773e9",
     "solhint": "^3.3.4",
     "solhint-plugin-prettier": "^0.0.5",
     "ts-generator": "^0.1.1",
@@ -84,7 +84,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,ts,sol}": [
+    "*.sol": [
       "prettier --write"
     ],
     "*.{js,ts}": [

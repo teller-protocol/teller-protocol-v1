@@ -14,9 +14,9 @@ export interface LPHelperArgs {
   amount: BigNumber | null
 }
 
-interface LPHelpersReturn {
-  deposit: ReturnType<typeof depositWithArgs>
-  withdraw: ReturnType<typeof withdrawWithArgs>
+export interface LPHelpersReturn {
+  deposit: ReturnType<typeof depositWithArgs>,
+  withdraw: ReturnType<typeof withdrawWithArgs>,
 }
 
 /**

@@ -2,24 +2,13 @@
 pragma solidity ^0.8.0;
 
 import { AppStorageLib } from "../../storage/app.sol";
-import {
-    MarketStorageLib,
-    MarketStorage,
-    LoanRequest,
-    LoanUserRequest,
-    LoanConsensusResponse,
-    Signature
-} from "../../storage/market.sol";
+import { MarketStorageLib, MarketStorage, LoanRequest, LoanUserRequest, LoanConsensusResponse, Signature } from "../../storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
-import {
-    PlatformSettingsLib
-} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
+import { PlatformSettingsLib } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 library LibConsensus {
     using NumbersList for NumbersList.Values;
@@ -57,8 +46,9 @@ library LibConsensus {
         )
     {
         // get the signers from the asset address
-        EnumerableSet.AddressSet storage signers =
-            s().signers[request.request.assetAddress];
+        EnumerableSet.AddressSet storage signers = s().signers[
+            request.request.assetAddress
+        ];
 
         require(
             uint256(
@@ -128,8 +118,9 @@ library LibConsensus {
         }
 
         // get maximum tolerance value in order to receive the interestRate, collateralRatio and maxLoanAmount
-        uint16 tolerance =
-            uint16(PlatformSettingsLib.getMaximumToleranceValue());
+        uint16 tolerance = uint16(
+            PlatformSettingsLib.getMaximumToleranceValue()
+        );
         interestRate = uint16(
             _getConsensus(termSubmissions.interestRate, tolerance)
         );
@@ -162,8 +153,9 @@ library LibConsensus {
 
         require(
             uint256(
-                s().loans[uint256(borrowerLoans[numberOfLoans - 1])]
-                    .loanStartTime
+                s()
+                .loans[uint256(borrowerLoans[numberOfLoans - 1])]
+                .loanStartTime
             ) +
                 PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=
                 block.timestamp,

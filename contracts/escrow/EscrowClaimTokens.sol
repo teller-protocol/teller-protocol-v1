@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
 
 // Interfaces
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
@@ -46,8 +44,9 @@ contract EscrowClaimTokens is PausableMods {
     function __claimEscrowTokens(uint256 loanID) internal {
         __claimToken(loanID, LibLoans.loan(loanID).lendingToken);
 
-        EnumerableSet.AddressSet storage tokens =
-            MarketStorageLib.store().escrowTokens[loanID];
+        EnumerableSet.AddressSet storage tokens = MarketStorageLib
+        .store()
+        .escrowTokens[loanID];
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
             __claimToken(loanID, EnumerableSet.at(tokens, i));
         }

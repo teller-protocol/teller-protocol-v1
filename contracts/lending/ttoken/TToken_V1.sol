@@ -38,7 +38,7 @@ contract TToken_V1 is ITToken, ReentryMods {
      * The LP being restricted means that only the Teller protocol may
      *  lend/borrow funds.
      */
-    modifier notRestricted {
+    modifier notRestricted() {
         require(
             !s().restricted || RolesLib.hasRole(CONTROLLER, _msgSender()),
             "Teller: platform restricted"
