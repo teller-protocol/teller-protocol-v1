@@ -1,5 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
+import { getNetworkName } from '../config'
 import {
   ITellerNFT,
   ITellerNFTDistributor,
@@ -13,8 +14,9 @@ import {
 } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, run, log, contracts, ethers } = hre
+  const { getNamedSigner, run, log, network, contracts, ethers } = hre
   const deployer = await getNamedSigner('deployer')
+  const networkName = getNetworkName(network)
   // Make sure contracts are compiled
   await run('compile')
 
@@ -40,6 +42,22 @@ const deployNFT: DeployFunction = async (hre) => {
       },
     },
   })
+
+  if (networkName === 'polygon' || networkName === 'polygon_mumbai') {
+    const polyTellerNft = await deploy<PolyTellerNFT>({
+      contract: 'PolyTellerNFT',
+      hre,
+      proxy: {
+        proxyContract: 'OpenZeppelinTransparentProxy',
+        execute: {
+          init: {
+            methodName: 'initialize',
+            args: [[await deployer.getAddress()]],
+          },
+        },
+      },
+    })
+  }
 
   //call initialize on the dictionary
 
