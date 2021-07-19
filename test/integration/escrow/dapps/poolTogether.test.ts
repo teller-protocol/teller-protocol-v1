@@ -24,7 +24,7 @@ describe('poolTogether Dapp', () => {
       let poolTicket: IERC20
 
       before(async () => {
-        ;({ diamond, lendingToken } = await fundedMarket({
+        ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 1000000,
         }))

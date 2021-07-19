@@ -94,8 +94,9 @@ contract YearnFacet is PausableMods, DappMods {
         IVault iVault = LibDapps.getYVault(tokenAddress);
         uint256 price = iVault.getPricePerShare();
         uint256 shares = amount / price;
-        uint256 tokenBalanceBeforeWithdrawal =
-            IERC20(tokenAddress).balanceOf(address(this));
+        uint256 tokenBalanceBeforeWithdrawal = IERC20(tokenAddress).balanceOf(
+            address(this)
+        );
         require(
             shares >= iVault.balanceOf(address(this)),
             "INSUFFICIENT_DEPOSIT"
@@ -104,8 +105,9 @@ contract YearnFacet is PausableMods, DappMods {
         bytes memory callData = abi.encode(IVault.withdraw.selector, shares);
         LibDapps.s().loanEscrows[loanID].callDapp(address(iVault), callData);
 
-        uint256 tokenBalanceAfterWithdrawal =
-            IERC20(tokenAddress).balanceOf(address(this));
+        uint256 tokenBalanceAfterWithdrawal = IERC20(tokenAddress).balanceOf(
+            address(this)
+        );
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
@@ -134,14 +136,16 @@ contract YearnFacet is PausableMods, DappMods {
         onlyBorrower(loanID)
     {
         IVault iVault = LibDapps.getYVault(tokenAddress);
-        uint256 tokenBalanceBeforeWithdrawal =
-            IERC20(tokenAddress).balanceOf(address(this));
+        uint256 tokenBalanceBeforeWithdrawal = IERC20(tokenAddress).balanceOf(
+            address(this)
+        );
 
         bytes memory callData = abi.encode(IVault.withdrawAll.selector);
         LibDapps.s().loanEscrows[loanID].callDapp(address(iVault), callData);
 
-        uint256 tokenBalanceAfterWithdrawal =
-            IERC20(tokenAddress).balanceOf(address(this));
+        uint256 tokenBalanceAfterWithdrawal = IERC20(tokenAddress).balanceOf(
+            address(this)
+        );
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"

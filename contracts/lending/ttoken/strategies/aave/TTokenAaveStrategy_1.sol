@@ -2,16 +2,22 @@
 pragma solidity ^0.8.0;
 
 // contracts
-import { RolesMods } from "../../../../contexts2/access-control/roles/RolesMods.sol";
+import {
+    RolesMods
+} from "../../../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../../data.sol";
 
 // Interfaces
 import { IAToken } from "../../../../shared/interfaces/IAToken.sol";
-import { IAaveLendingPool } from "../../../../shared/interfaces/IAaveLendingPool.sol";
+import {
+    IAaveLendingPool
+} from "../../../../shared/interfaces/IAaveLendingPool.sol";
 import { TTokenStrategy } from "../TTokenStrategy.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibDapps } from "../../../../escrow/dapps/libraries/LibDapps.sol";
 

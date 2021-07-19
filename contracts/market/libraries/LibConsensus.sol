@@ -57,8 +57,9 @@ library LibConsensus {
         )
     {
         // get the signers from the asset address
-        EnumerableSet.AddressSet storage signers =
-            s().signers[request.request.assetAddress];
+        EnumerableSet.AddressSet storage signers = s().signers[
+            request.request.assetAddress
+        ];
 
         require(
             uint256(
@@ -128,8 +129,9 @@ library LibConsensus {
         }
 
         // get maximum tolerance value in order to receive the interestRate, collateralRatio and maxLoanAmount
-        uint16 tolerance =
-            uint16(PlatformSettingsLib.getMaximumToleranceValue());
+        uint16 tolerance = uint16(
+            PlatformSettingsLib.getMaximumToleranceValue()
+        );
         interestRate = uint16(
             _getConsensus(termSubmissions.interestRate, tolerance)
         );
@@ -162,7 +164,8 @@ library LibConsensus {
 
         require(
             uint256(
-                s().loans[uint256(borrowerLoans[numberOfLoans - 1])]
+                s()
+                    .loans[uint256(borrowerLoans[numberOfLoans - 1])]
                     .loanStartTime
             ) +
                 PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=

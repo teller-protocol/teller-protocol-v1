@@ -2,8 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { CacheLib, Cache, CacheType } from "../../../shared/libraries/CacheLib.sol";
-import { PrizePoolInterface } from "../../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
+import {
+    CacheLib,
+    Cache,
+    CacheType
+} from "../../../shared/libraries/CacheLib.sol";
+import {
+    PrizePoolInterface
+} from "../../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 
 // Storage
 import { AppStorageLib } from "../../../storage/app.sol";

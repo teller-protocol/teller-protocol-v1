@@ -3,10 +3,14 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IUniswapV2Router } from "../../../shared/interfaces/IUniswapV2Router.sol";
+import {
+    IUniswapV2Router
+} from "../../../shared/interfaces/IUniswapV2Router.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 library LibSwapper {
     /**
@@ -29,13 +33,13 @@ library LibSwapper {
             sourceAmount
         );
         uint256[] memory amounts = IUniswapV2Router(routerAddress)
-        .swapExactTokensForTokens(
-            sourceAmount,
-            minDestination,
-            path,
-            address(this),
-            block.timestamp
-        );
+            .swapExactTokensForTokens(
+                sourceAmount,
+                minDestination,
+                path,
+                address(this),
+                block.timestamp
+            );
 
         return amounts[amounts.length - 1];
     }

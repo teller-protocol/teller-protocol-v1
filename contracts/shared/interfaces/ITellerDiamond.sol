@@ -5,9 +5,15 @@ import { IDiamondCut } from "./IDiamondCut.sol";
 import { IDiamondLoupe } from "./IDiamondLoupe.sol";
 
 import { SettingsFacet } from "../../settings/SettingsFacet.sol";
-import { PlatformSettingsFacet } from "../../settings/platform/PlatformSettingsFacet.sol";
-import { AssetSettingsDataFacet } from "../../settings/asset/AssetSettingsDataFacet.sol";
-import { AssetSettingsFacet } from "../../settings/asset/AssetSettingsFacet.sol";
+import {
+    PlatformSettingsFacet
+} from "../../settings/platform/PlatformSettingsFacet.sol";
+import {
+    AssetSettingsDataFacet
+} from "../../settings/asset/AssetSettingsDataFacet.sol";
+import {
+    AssetSettingsFacet
+} from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";

@@ -105,10 +105,9 @@ library LibCollateral {
         // Check if collateral escrow exists
         if (address(e(token)) == address(0)) {
             // Create escrow
-            address escrow = AppStorageLib
-            .store()
-            .collateralEscrowBeacon
-            .cloneProxy("");
+            address escrow = AppStorageLib.store()
+                .collateralEscrowBeacon
+                .cloneProxy("");
             ICollateralEscrow(escrow).init(
                 token,
                 // Check if collateral token is the base network token

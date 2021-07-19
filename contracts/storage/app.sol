@@ -6,9 +6,13 @@ import { TellerNFT } from "../nft/TellerNFT.sol";
 import { PriceAggregator } from "../price-aggregator/PriceAggregator.sol";
 
 // Libraries
-import { PlatformSetting } from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    PlatformSetting
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { Cache } from "../shared/libraries/CacheLib.sol";
-import { UpgradeableBeaconFactory } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
+import {
+    UpgradeableBeaconFactory
+} from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 
 struct AppStorage {
     // is it initialized

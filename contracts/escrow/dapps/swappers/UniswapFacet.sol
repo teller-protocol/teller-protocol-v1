@@ -8,7 +8,9 @@ import { AbstractUniSwapper } from "./AbstractUniSwapper.sol";
 import { LibEscrow } from "../../libraries/LibEscrow.sol";
 
 // Interfaces
-import { IUniswapV2Router } from "../../../shared/interfaces/IUniswapV2Router.sol";
+import {
+    IUniswapV2Router
+} from "../../../shared/interfaces/IUniswapV2Router.sol";
 
 contract UniswapFacet is AbstractUniSwapper {
     /**
