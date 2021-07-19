@@ -75,23 +75,23 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Settings
     {
       contract: 'SettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'PlatformSettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'AssetSettingsDataFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'AssetSettingsFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'PausableFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Pricing
     {
@@ -101,7 +101,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Lending
     {
       contract: 'LendingFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Loans
     {
@@ -122,7 +122,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'SignersFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // Dapps
     {
