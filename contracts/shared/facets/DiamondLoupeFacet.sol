@@ -8,7 +8,9 @@ pragma solidity ^0.8.0;
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {
+    IERC165
+} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     // Diamond Loupe Functions
@@ -30,8 +32,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
             address facetAddress_ = ds.facetAddresses[i];
             facets_[i].facetAddress = facetAddress_;
             facets_[i].functionSelectors = ds
-            .facetFunctionSelectors[facetAddress_]
-            .functionSelectors;
+                .facetFunctionSelectors[facetAddress_]
+                .functionSelectors;
         }
     }
 
@@ -46,8 +48,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         facetFunctionSelectors_ = ds
-        .facetFunctionSelectors[_facet]
-        .functionSelectors;
+            .facetFunctionSelectors[_facet]
+            .functionSelectors;
     }
 
     /// @notice Get all the facet addresses used by a diamond.
@@ -74,8 +76,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         facetAddress_ = ds
-        .selectorToFacetAndPosition[_functionSelector]
-        .facetAddress;
+            .selectorToFacetAndPosition[_functionSelector]
+            .facetAddress;
     }
 
     // This implements ERC-165.

@@ -13,10 +13,16 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ITToken } from "./ITToken.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ERC165Checker
+} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { ReentryMods } from "../../contexts2/access-control/reentry/ReentryMods.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage

@@ -12,7 +12,7 @@ abstract contract int_isAdminForRole_AccessControl_v1 is
         returns (bool isAdminForRole_)
     {
         isAdminForRole_ = accessControlRolesStore()
-        .roles[accessControlRolesStore().roles[role].adminRole]
-        .members[account];
+            .roles[accessControlRolesStore().roles[role].adminRole]
+            .members[account];
     }
 }

@@ -4,19 +4,28 @@ pragma solidity ^0.8.0;
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
-import { ReentryMods } from "../contexts2/access-control/reentry/ReentryMods.sol";
+import {
+    ReentryMods
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
 import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
 // Libraries
-import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    IERC20,
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
-import { PlatformSettingsLib } from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    PlatformSettingsLib
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
@@ -26,7 +35,12 @@ import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
-import { MarketStorageLib, MarketStorage, Loan, LoanStatus } from "../storage/market.sol";
+import {
+    MarketStorageLib,
+    MarketStorage,
+    Loan,
+    LoanStatus
+} from "../storage/market.sol";
 
 contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     /**
@@ -238,7 +252,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
 
         // Calculate the reward before repaying the loan
         (uint256 rewardInLending, uint256 collateralInLending) = RepayLib
-        .getLiquidationReward(loanID, collateralAmount);
+            .getLiquidationReward(loanID, collateralAmount);
 
         // The liquidator pays the amount still owed on the loan
         uint256 amountToLiquidate = LibLoans.debt(loanID).principalOwed +
@@ -307,7 +321,7 @@ library RepayLib {
         if (loan.collateralRatio > 0) {
             // If loan has a collateral ratio, check how much is needed
             (, uint256 neededInCollateral, ) = LoanDataFacet(address(this))
-            .getCollateralNeededInfo(loanID);
+                .getCollateralNeededInfo(loanID);
             if (neededInCollateral > collateralAmount) {
                 return true;
             }
@@ -339,14 +353,13 @@ library RepayLib {
 
         // Calculate available collateral for reward
         if (collateralAmount > 0) {
-            collateralValue_ = AppStorageLib
-            .store()
-            .priceAggregator
-            .getValueFor(
-                LibLoans.loan(loanID).collateralToken,
-                LibLoans.loan(loanID).lendingToken,
-                collateralAmount
-            );
+            collateralValue_ = AppStorageLib.store()
+                .priceAggregator
+                .getValueFor(
+                    LibLoans.loan(loanID).collateralToken,
+                    LibLoans.loan(loanID).lendingToken,
+                    collateralAmount
+                );
             reward_ += collateralValue_;
         }
 
@@ -386,14 +399,13 @@ library RepayLib {
         // if the lending reward is less than the collateral lending tokens, then aggregate
         // the value for the lending token with the collateral token and send it to the liquidator
         if (rewardInLending <= collateralInLending) {
-            uint256 rewardInCollateral = AppStorageLib
-            .store()
-            .priceAggregator
-            .getValueFor(
-                LibLoans.loan(loanID).lendingToken,
-                LibLoans.loan(loanID).collateralToken,
-                rewardInLending
-            );
+            uint256 rewardInCollateral = AppStorageLib.store()
+                .priceAggregator
+                .getValueFor(
+                    LibLoans.loan(loanID).lendingToken,
+                    LibLoans.loan(loanID).collateralToken,
+                    rewardInLending
+                );
 
             LibCollateral.withdraw(loanID, rewardInCollateral, liquidator);
         } else {
@@ -420,9 +432,8 @@ library RepayLib {
         address recipient,
         uint256 value
     ) private {
-        EnumerableSet.AddressSet storage tokens = MarketStorageLib
-        .store()
-        .escrowTokens[loanID];
+        EnumerableSet.AddressSet storage tokens = MarketStorageLib.store()
+            .escrowTokens[loanID];
         uint256 valueLeftToTransfer = value;
 
         // Start with the lending token
@@ -471,14 +482,13 @@ library RepayLib {
             if (token == LibLoans.loan(loanID).lendingToken) {
                 balanceInLending = balance;
             } else {
-                balanceInLending = AppStorageLib
-                .store()
-                .priceAggregator
-                .getValueFor(
-                    token,
-                    LibLoans.loan(loanID).lendingToken,
-                    balance
-                );
+                balanceInLending = AppStorageLib.store()
+                    .priceAggregator
+                    .getValueFor(
+                        token,
+                        LibLoans.loan(loanID).lendingToken,
+                        balance
+                    );
             }
 
             if (balanceInLending <= valueLeftToTransfer) {

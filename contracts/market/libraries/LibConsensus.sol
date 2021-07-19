@@ -2,13 +2,24 @@
 pragma solidity ^0.8.0;
 
 import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib, MarketStorage, LoanRequest, LoanUserRequest, LoanConsensusResponse, Signature } from "../../storage/market.sol";
+import {
+    MarketStorageLib,
+    MarketStorage,
+    LoanRequest,
+    LoanUserRequest,
+    LoanConsensusResponse,
+    Signature
+} from "../../storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
-import { PlatformSettingsLib } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    PlatformSettingsLib
+} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 library LibConsensus {
     using NumbersList for NumbersList.Values;
@@ -154,8 +165,8 @@ library LibConsensus {
         require(
             uint256(
                 s()
-                .loans[uint256(borrowerLoans[numberOfLoans - 1])]
-                .loanStartTime
+                    .loans[uint256(borrowerLoans[numberOfLoans - 1])]
+                    .loanStartTime
             ) +
                 PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=
                 block.timestamp,

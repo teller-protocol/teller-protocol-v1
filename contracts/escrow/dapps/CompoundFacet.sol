@@ -9,7 +9,9 @@ import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import { LibCompound } from "./libraries/LibCompound.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import { AssetCTokenLib } from "../../settings/asset/libraries/AssetCTokenLib.sol";
+import {
+    AssetCTokenLib
+} from "../../settings/asset/libraries/AssetCTokenLib.sol";
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";

@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import { AssetPPoolLib } from "../../../settings/asset/libraries/AssetPPoolLib.sol";
+import {
+    AssetPPoolLib
+} from "../../../settings/asset/libraries/AssetPPoolLib.sol";
 
 library PoolTogetherLib {
     /**

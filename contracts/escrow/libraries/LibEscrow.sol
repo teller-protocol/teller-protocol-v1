@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 // Libraries
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -93,11 +95,13 @@ library LibEscrow {
         EnumerableSet.AddressSet storage tokens = getEscrowTokens(loanID);
         if (EnumerableSet.length(tokens) > 0) {
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-                value_ += AppStorageLib.store().priceAggregator.getBalanceOfFor(
-                    address(e(loanID)),
-                    EnumerableSet.at(tokens, i),
-                    lendingToken
-                );
+                value_ += AppStorageLib.store()
+                    .priceAggregator
+                    .getBalanceOfFor(
+                        address(e(loanID)),
+                        EnumerableSet.at(tokens, i),
+                        lendingToken
+                    );
             }
         }
     }

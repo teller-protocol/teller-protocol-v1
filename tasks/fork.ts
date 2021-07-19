@@ -93,7 +93,6 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
     ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
   ) {
     const chain = process.env.FORKING_NETWORK
-    console.log({ chain })
     if (
       chain === 'mainnet' ||
       chain === 'kovan' ||

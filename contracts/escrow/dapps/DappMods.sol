@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 // Libraries
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
-import { PlatformSettingsLib } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    PlatformSettingsLib
+} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 
 abstract contract DappMods {
     /**

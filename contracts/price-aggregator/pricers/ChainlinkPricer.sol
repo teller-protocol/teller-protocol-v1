@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import { AggregatorV2V3Interface as ChainlinkAgg } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
+import {
+    AggregatorV2V3Interface as ChainlinkAgg
+} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries

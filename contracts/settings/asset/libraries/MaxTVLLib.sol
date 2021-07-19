@@ -2,7 +2,11 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { CacheLib, Cache, CacheType } from "../../../shared/libraries/CacheLib.sol";
+import {
+    CacheLib,
+    Cache,
+    CacheType
+} from "../../../shared/libraries/CacheLib.sol";
 
 // Storage
 import { AppStorageLib } from "../../../storage/app.sol";

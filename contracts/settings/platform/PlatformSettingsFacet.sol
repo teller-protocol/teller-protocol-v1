@@ -6,7 +6,10 @@ import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
 
 // Libraries
-import { PlatformSettingsLib, PlatformSetting } from "./libraries/PlatformSettingsLib.sol";
+import {
+    PlatformSettingsLib,
+    PlatformSetting
+} from "./libraries/PlatformSettingsLib.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 
 // Storage
