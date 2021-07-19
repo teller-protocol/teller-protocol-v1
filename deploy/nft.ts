@@ -1,6 +1,10 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
+import {
+  ITellerNFT,
+  ITellerNFTDistributor,
+  PolyTellerNFT,
+} from '../types/typechain'
 import { TellerNFTDictionary } from '../types/typechain'
 import {
   deploy,

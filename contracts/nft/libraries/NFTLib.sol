@@ -2,15 +2,11 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { TellerNFT } from "../TellerNFT.sol";
+import { TellerNFT } from "../bridging/TellerNFT.sol";
 
 // Libraries
-import {
-    MerkleProof
-} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
