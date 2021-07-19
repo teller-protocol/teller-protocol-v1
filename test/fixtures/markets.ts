@@ -9,6 +9,7 @@ export interface FundedMarketArgs {
   // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
   amount?: BigNumberish
   tags?: string[]
+  // fund?: boolean
 }
 
 export interface FundedMarketReturn {

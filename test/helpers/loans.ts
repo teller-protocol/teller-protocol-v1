@@ -8,8 +8,10 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
+import { getNativeToken } from '../../config'
 import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
 
 export enum LoanType {
@@ -182,6 +184,8 @@ export const takeOutLoanWithoutNfts = async (
   // collateral token
   const collateralToken =
     typeof collToken === 'string' ? await tokens.get(collToken) : collToken
+  const collateralIsNative =
+    collateralToken.address === getNativeToken(hre.network)
 
   // set borrower and loan amount
   const borrower = args.borrower ?? (await getNamedAccounts()).borrower
@@ -219,6 +223,18 @@ export const takeOutLoanWithoutNfts = async (
     hre
   )
   const collAmount = hre.toBN(collValue, await collateralToken.decimals())
+  const nativeAmount = collateralIsNative ? collAmount : BigNumber.from(0)
+  if (!collateralIsNative) {
+    await getFunds({
+      tokenSym: await collateralToken.symbol(),
+      amount: collAmount,
+      to: borrower,
+      hre,
+    })
+    await collateralToken
+      .connect(hre.ethers.provider.getSigner(borrower))
+      .approve(diamond.address, collAmount)
+  }
 
   // call the takeOutLoan function from the diamond
   const tx = diamond
@@ -227,7 +243,7 @@ export const takeOutLoanWithoutNfts = async (
       { request: craReturn.request, responses: craReturn.responses },
       collateralToken.address,
       collAmount,
-      { value: collAmount.toString() }
+      { value: nativeAmount.toString() }
     )
 
   // return our transaction and our helper variable
@@ -404,9 +420,8 @@ const collateralNeeded = async (
   args: CollateralNeededArgs
 ): Promise<BigNumber> => {
   const { diamond, details } = args
-  const { neededInCollateralTokens } = await diamond.getCollateralNeededInfo(
-    details.loan.id
-  )
+  const { neededInCollateralTokens } =
+    await diamond.callStatic.getCollateralNeededInfo(details.loan.id)
   return neededInCollateralTokens
 }
 interface CollateralCurrentArgs extends CommonLoanArgs {}

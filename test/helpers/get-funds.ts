@@ -40,7 +40,9 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     case 'polygon_mumbai':
       routerAddress = SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON
       path.push(tokenAddresses.WMATIC)
-      path.push(tokenAddresses.WETH)
+      if (args.tokenSym !== 'WETH') {
+        path.push(tokenAddresses.WETH)
+      }
       break
     default:
       throw new Error(

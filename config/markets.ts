@@ -28,14 +28,14 @@ const mainnetMarkets: Market[] = [
 
 const polygonMarkets: Market[] = [
   {
-    lendingToken: 'DAI',
+    lendingToken: 'USDT',
     collateralTokens: ['WMATIC', 'WETH'],
     strategy: {
       name: 'TTokenAaveStrategy_1',
       initArgs: [
         {
           type: 'TokenSymbol',
-          value: 'ADAI',
+          value: 'AUSDT',
         },
         {
           type: 'ProtocolAddressConstant',

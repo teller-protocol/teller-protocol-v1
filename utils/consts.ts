@@ -29,6 +29,7 @@ export enum CacheType {
 }
 
 export enum AssetType {
+  Token,
   Address,
   Amount,
   Bool,
