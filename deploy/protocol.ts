@@ -195,7 +195,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
-  // console.log("diamond functions: %o", diamond)
 
   await addAuthorizedAddresses(hre, diamond)
 }
