@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { TellerNFT } from "../nft/TellerNFT.sol";
+import { TellerNFT } from "../nft/bridging/TellerNFT.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
@@ -10,9 +10,7 @@ import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
 import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTFacet is RolesMods {
     /**

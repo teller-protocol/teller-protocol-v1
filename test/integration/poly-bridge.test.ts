@@ -19,12 +19,7 @@ import {
   updatePlatformSetting,
 } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import {
-  ITellerDiamond,
-  PolyTellerNFT,
-  RootChainManager,
-  TellerNFT,
-} from '../../types/typechain'
+import { ITellerDiamond, PolyTellerNFT, TellerNFT } from '../../types/typechain'
 
 chai.should()
 chai.use(solidity)
