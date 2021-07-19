@@ -10,9 +10,7 @@ import { ICollateralEscrow } from "./ICollateralEscrow.sol";
 import { IWETH } from "../../shared/interfaces/IWETH.sol";
 
 // Libraries
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {

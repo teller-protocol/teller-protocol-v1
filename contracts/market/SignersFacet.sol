@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import { MarketStorageLib } from "../storage/market.sol";
 
 // Libraries
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract SignersFacet {
     /**

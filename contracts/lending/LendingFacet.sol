@@ -3,9 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
-import {
-    ReentryMods
-} from "../contexts2/access-control/reentry/ReentryMods.sol";
+import { ReentryMods } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
@@ -13,13 +11,8 @@ import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 import { ITToken } from "./ttoken/ITToken.sol";
 
 // Libraries
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    SafeERC20Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IERC20, SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 

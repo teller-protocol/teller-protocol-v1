@@ -6,11 +6,7 @@ import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
 
 // Libraries
-import {
-    CacheLib,
-    Cache,
-    CacheType
-} from "../../shared/libraries/CacheLib.sol";
+import { CacheLib, Cache, CacheType } from "../../shared/libraries/CacheLib.sol";
 import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage

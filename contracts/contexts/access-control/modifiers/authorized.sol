@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {
-    int_requireAuthorization_AccessControl_v1
-} from "../internal/require-authorization.sol";
+import { int_requireAuthorization_AccessControl_v1 } from "../internal/require-authorization.sol";
 
 abstract contract mod_authorized_AccessControl_v1 is
     int_requireAuthorization_AccessControl_v1
