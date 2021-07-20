@@ -20,7 +20,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('NFT tests', () => {
+describe.only('NFT tests', () => {
   let deployer: Signer
   let diamond: ITellerDiamond
   let borrowerSigner: Signer
@@ -88,11 +88,13 @@ describe('NFT tests', () => {
       for (let i = 0; i < ownedNFTs.length; i++) {
         expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
       }
+    })
+    it('should unstake NFTs from the wrong address and fail', async () => {
+      // unstake all of our staked nfts from the wrong address
+      await diamond
+        .connect(deployer)
+        .unstakeNFTs(stakedNFTs)
+        .should.be.revertedWith('Teller: not the owner of the NFT ID!')
+    })
   })
-  it("should unstake NFTs from the wrong address and fail", async () => {
-    // unstake all of our staked nfts from the wrong address
-    const tx = await diamond.connect(deployer).unstakeNFTs(stakedNFTs)
-    await tx.should.be.revertedWith('Teller: not the owner of the NFT ID!')
-  })
-})
 })
