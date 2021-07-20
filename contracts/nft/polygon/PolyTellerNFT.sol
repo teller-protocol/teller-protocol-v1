@@ -2,15 +2,11 @@
 pragma solidity ^0.8.3;
 
 // Interfaces
-import "./TellerNFT.sol";
+import "../TellerNFT.sol";
 import { ITellerDiamond } from "../../shared/interfaces/ITellerDiamond.sol";
 
 // Address utility
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import {
-    MockNFTMainnetBridgingToPolygonFacet
-} from "../mock/MockNFTMainnetBridgingToPolygonFacet.sol";
-import "hardhat/console.sol";
 
 contract PolyTellerNFT is TellerNFT {
     bytes32 DEPOSITOR = keccak256("DEPOSITOR");

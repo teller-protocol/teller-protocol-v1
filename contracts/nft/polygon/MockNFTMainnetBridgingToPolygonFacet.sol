@@ -3,7 +3,7 @@ pragma solidity ^0.8.3;
 
 import {
     NFTMainnetBridgingToPolygonFacet
-} from "../NFTMainnetBridgingToPolygonFacet.sol";
+} from "./NFTMainnetBridgingToPolygonFacet.sol";
 import { NFTLib } from "../libraries/NFTLib.sol";
 
 contract MockNFTMainnetBridgingToPolygonFacet is
