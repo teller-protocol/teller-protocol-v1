@@ -78,9 +78,10 @@
     "@ensdomains/buffer" "^0.0.10"
     "@openzeppelin/contracts" "^4.1.0"
 
-"@ensdomains/ens-contracts@ensdomains/ens-contracts":
+"@ensdomains/ens-contracts@^0.0.5":
   version "0.0.5"
-  resolved "https://codeload.github.com/ensdomains/ens-contracts/tar.gz/13049a24aa5e24e3df51d9ae0c86b01652453cd3"
+  resolved "https://registry.yarnpkg.com/@ensdomains/ens-contracts/-/ens-contracts-0.0.5.tgz#9668828746cbc70df578da83ce27897a19f0d1da"
+  integrity sha512-p7U2ZzftSScYUvG26dOAynKb362s2SMz/G7hWnBziQekzh38irLHQ8vR8I0HxaRbDb0MS4rNYruq/rT5GGcwzA==
   dependencies:
     "@ensdomains/buffer" "^0.0.13"
     "@ensdomains/solsha1" "0.0.3"
@@ -9889,9 +9890,9 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-"prettier-plugin-solidity@git://github.com/prettier-solidity/prettier-plugin-solidity#4a8881d4be52180359eef8b240aad1f2e822c6ec":
-  version "1.0.0-beta.15"
-  resolved "git://github.com/prettier-solidity/prettier-plugin-solidity#4a8881d4be52180359eef8b240aad1f2e822c6ec"
+"prettier-plugin-solidity@git://github.com/teller-protocol/prettier-plugin-solidity#0496eb6483e0081530010882b8632c29b3f773e9":
+  version "1.0.0-beta.16"
+  resolved "git://github.com/teller-protocol/prettier-plugin-solidity#0496eb6483e0081530010882b8632c29b3f773e9"
   dependencies:
     "@solidity-parser/parser" "^0.13.2"
     emoji-regex "^9.2.2"
