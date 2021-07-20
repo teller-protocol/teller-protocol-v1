@@ -307,12 +307,10 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     })
     const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
     const compBefore = await Comptroller.compAccrued(escrowAddress)
-    console.log({compBefore: compBefore.toString()})
     await diamond
       .connect(details.borrower.signer)
       .compoundClaimComp(details.loan.id)
     const compafter = await Comptroller.compAccrued(escrowAddress)
-    console.log({compafter: compafter.toString()})
     expect(compafter.toString()).to.equal('0')
   }
 
