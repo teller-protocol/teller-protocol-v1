@@ -56,48 +56,7 @@ task('test').setAction(async (args, hre, runSuper) => {
 })
 
 
-
-
-// Load remote contract address and ABI data  
-
-
-function findRemoteContracts(  ): RemoteContract[] {
-
-  const remoteContracts:RemoteContract[] = []
-  
-  const preCompilesPath = 'deployments/hardhat'
-  for (const fileName of fs.readdirSync(preCompilesPath)){
-    const artifactPath = path.join(process.cwd(), preCompilesPath, fileName) 
-     
-    if(fileName.startsWith('.') || !fileName.endsWith('.json'))continue
-
-    try{ 
-
-    const preDeployed =  JSON.parse( fs.readFileSync(artifactPath, 'utf8' ) )
-     
-    if (preDeployed.address){
-      remoteContracts.push({
-        name: preDeployed.artifactName,
-        abi: preDeployed.abi,
-        address: preDeployed.address
-      })
-    } 
-
-    }catch(e){
-      console.error('Could not parse artifact file: ',e)
-    }
-
-  //console.log('preDeployed',preDeployed.artifactName)
-
-  }
-return remoteContracts
-}
-
-
-
-
-
-
+ 
 
 
 async function runStoryTests( { testFiles }: { testFiles: string[] }, hre:HardhatRuntimeEnvironment ): Promise<number> {
@@ -258,7 +217,7 @@ function getDefaultOptions(hre: HardhatRuntimeEnvironment): EthGasReporterConfig
  * @param  {HardhatRuntimeEnvironment} hre
  * @return {any}
  */
-function getOptions(hre: HardhatRuntimeEnvironment): any {
+function getGasReporterOptions(hre: HardhatRuntimeEnvironment): any {
   return { ...getDefaultOptions(hre), ...(hre.config as any).gasReporter }
 }
 
@@ -298,9 +257,9 @@ function getOptions(hre: HardhatRuntimeEnvironment): any {
  */
  subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
   async (args: any, hre, runSuper) => {
-    const options = getOptions(hre)
+    const options = getGasReporterOptions(hre)
     options.getContracts = getContracts.bind(null, hre.artifacts, options.excludeContracts)
-    options.remoteContracts = findRemoteContracts()
+    //options.remoteContracts = findRemoteContracts()
 
      
     if (options.enabled) {
