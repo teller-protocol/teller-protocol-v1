@@ -20,7 +20,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.only('NFT tests', () => {
+describe('NFT tests', () => {
   let deployer: Signer
   let diamond: ITellerDiamond
   let borrowerSigner: Signer
