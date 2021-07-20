@@ -95,6 +95,10 @@ const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
   return config
 }
 
+
+
+
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
   etherscan: {
@@ -143,6 +147,7 @@ export default <HardhatUserConfig>{
     noColors: !!SAVE_GAS_REPORT,
     showMethodSig: false,
     showTimeSpent: true,
+    onlyCalledMethods: false
   },
   namedAccounts: {
     deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',

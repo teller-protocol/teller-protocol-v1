@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
 import { task } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
@@ -20,6 +21,9 @@ import {
 
 let mochaConfig
 let resolvedQualifiedNames: string[]
+
+
+
 let resolvedRemoteContracts: RemoteContract[] = []
 
 
@@ -40,12 +44,56 @@ task('test').setAction(async (args, hre, runSuper) => {
   // Disable logging
   process.env.DISABLE_LOGS = 'true'
 
+
+  
+
+
   // Run the actual test task
   await runSuper({
     ...args,
     deployFixture: true,
   })
 })
+
+
+
+
+// Load remote contract address and ABI data  
+
+
+function findRemoteContracts(  ): RemoteContract[] {
+
+  const remoteContracts:RemoteContract[] = []
+  
+  const preCompilesPath = 'deployments/hardhat'
+  for (const fileName of fs.readdirSync(preCompilesPath)){
+    const artifactPath = path.join(process.cwd(), preCompilesPath, fileName) 
+     
+    if(fileName.startsWith('.') || !fileName.endsWith('.json'))continue
+
+    try{ 
+
+    const preDeployed =  JSON.parse( fs.readFileSync(artifactPath, 'utf8' ) )
+     
+    if (preDeployed.address){
+      remoteContracts.push({
+        name: preDeployed.artifactName,
+        abi: preDeployed.abi,
+        address: preDeployed.address
+      })
+    } 
+
+    }catch(e){
+      console.error('Could not parse artifact file: ',e)
+    }
+
+  //console.log('preDeployed',preDeployed.artifactName)
+
+  }
+return remoteContracts
+}
+
+
 
 
 
@@ -158,6 +206,8 @@ function getDefaultOptions(hre: HardhatRuntimeEnvironment): EthGasReporterConfig
   const contracts = []
 
   for (const qualifiedName of resolvedQualifiedNames) {
+
+    
     if (shouldSkipContract(qualifiedName, skippable)){
       continue
     }
@@ -184,6 +234,9 @@ function getDefaultOptions(hre: HardhatRuntimeEnvironment): EthGasReporterConfig
   }
 
   for (const remoteContract of resolvedRemoteContracts){
+
+    //console.log('remoteContract ', remoteContract)
+
     contracts.push({
       name: remoteContract.name,
       artifact: {
@@ -247,23 +300,30 @@ function getOptions(hre: HardhatRuntimeEnvironment): any {
   async (args: any, hre, runSuper) => {
     const options = getOptions(hre)
     options.getContracts = getContracts.bind(null, hre.artifacts, options.excludeContracts)
+    options.remoteContracts = findRemoteContracts()
 
-    
-
+     
     if (options.enabled) {
       mochaConfig = hre.config.mocha || {}
       mochaConfig.reporter = "eth-gas-reporter"
       mochaConfig.reporterOptions = options
 
       if (hre.network.name === HARDHAT_NETWORK_NAME || options.fast){
+
+        
+
+        
+
         const wrappedDataProvider= new EGRDataCollectionProvider(hre.network.provider,mochaConfig)
         hre.network.provider = new BackwardsCompatibilityProviderAdapter(wrappedDataProvider)
 
         const asyncProvider = new EGRAsyncApiProvider(hre.network.provider)
         resolvedRemoteContracts = await getResolvedRemoteContracts(
           asyncProvider,
-          options.remoteContracts
-        )
+          options.remoteContracts 
+        )  
+
+        console.log('resolvedRemoteContracts found: ', resolvedRemoteContracts.length  )
 
         mochaConfig.reporterOptions.provider = asyncProvider
         mochaConfig.reporterOptions.blockLimit = (hre.network.config as any).blockGasLimit as number
@@ -272,6 +332,8 @@ function getOptions(hre: HardhatRuntimeEnvironment): any {
 
       hre.config.mocha = mochaConfig
       resolvedQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames()
+
+     // console.log('resolvedQualifiedNames', resolvedQualifiedNames)
     }
 
 
