@@ -18,15 +18,7 @@ import {
   EGRAsyncApiProvider,
   EGRDataCollectionProvider} from "./test-helper"
 
-
-let mochaConfig
-let resolvedQualifiedNames: string[]
-
-
-
-const resolvedRemoteContracts: RemoteContract[] = []
-
-
+ 
 
 task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
@@ -59,7 +51,7 @@ task('test').setAction(async (args, hre, runSuper) => {
  
 
 
-async function runStoryTests( { testFiles }: { testFiles: string[] }, hre:HardhatRuntimeEnvironment ): Promise<number> {
+async function runStoryTests(  hre:HardhatRuntimeEnvironment ): Promise<number> {
   
   let mochaInstance = new Mocha(hre.config.mocha)
   mochaInstance.timeout(19000)
@@ -100,152 +92,7 @@ async function runStoryTests( { testFiles }: { testFiles: string[] }, hre:Hardha
 }
  
 
-/**
- * Sets reporter options to pass to eth-gas-reporter:
- * > url to connect to client with
- * > artifact format (hardhat)
- * > solc compiler info
- * @param  {HardhatRuntimeEnvironment} hre
- * @return {EthGasReporterConfig}
- */
-function getDefaultOptions(hre: HardhatRuntimeEnvironment): EthGasReporterConfig {
-  const defaultUrl = "http://localhost:8545"
-  const defaultCompiler = hre.config.solidity.compilers[0]
 
-  let url: any
-  // Resolve URL
-  if ((hre.network.config as HttpNetworkConfig).url) {
-    url = (hre.network.config as HttpNetworkConfig).url
-  } else {
-    url = defaultUrl
-  }
-
-  return {
-    enabled: true,
-    url: url as string,
-    metadata: {
-      compiler: {
-        version: defaultCompiler.version
-      },
-      settings: {
-        optimizer: {
-          enabled: defaultCompiler.settings.optimizer.enabled,
-          runs: defaultCompiler.settings.optimizer.runs
-        }
-      }
-    }
-  }
-}
-
-
-
-
-/**
- * Filters out contracts to exclude from report
- * @param  {string}   qualifiedName HRE artifact identifier
- * @param  {string[]} skippable      excludeContracts option values
- * @return {boolean}
- */
- function shouldSkipContract(qualifiedName: string, skippable: string[]): boolean {
-  for (const item of skippable){
-    if (qualifiedName.includes(item)) return true
-  }
-  return false
-}
-
-
-/**
- * Method passed to eth-gas-reporter to resolve artifact resources. Loads
- * and processes JSON artifacts
- * @param  {HardhatRuntimeEnvironment} hre.artifacts
- * @param  {String[]}                  skippable    contract *not* to track
- * @return {object[]}                  objects w/ abi and bytecode
- */
- function getContracts(artifacts: Artifacts, skippable: string[] = []) : any[] {
-  const contracts = []
-
-  for (const qualifiedName of resolvedQualifiedNames) {
-
-    
-    if (shouldSkipContract(qualifiedName, skippable)){
-      continue
-    }
-
-    let name: string
-    let artifact = artifacts.readArtifactSync(qualifiedName)
-
-    // Prefer simple names
-    try {
-      artifact = artifacts.readArtifactSync(artifact.contractName)
-      name = artifact.contractName
-    } catch (e) {
-      name = qualifiedName
-    }
-
-    contracts.push({
-      name: name,
-      artifact: {
-        abi: artifact.abi,
-        bytecode: artifact.bytecode,
-        deployedBytecode: artifact.deployedBytecode
-      }
-    })
-  }
-
-  for (const remoteContract of resolvedRemoteContracts){
-
-    //console.log('remoteContract ', remoteContract)
-
-    contracts.push({
-      name: remoteContract.name,
-      artifact: {
-        abi: remoteContract.abi,
-        bytecode: remoteContract.bytecode,
-        bytecodeHash: remoteContract.bytecodeHash,
-        deployedBytecode: remoteContract.deployedBytecode
-      }
-    })
-  }
-  return contracts
-}
-
-
-
-
- /**
- * Merges GasReporter defaults with user's GasReporter config
- * @param  {HardhatRuntimeEnvironment} hre
- * @return {any}
- */
-function getGasReporterOptions(hre: HardhatRuntimeEnvironment): any {
-  return { ...getDefaultOptions(hre), ...(hre.config as any).gasReporter }
-}
-
-
-/**
- * Fetches remote bytecode at address and hashes it so these addresses can be
- * added to the tracking at eth-gas-reporter synchronously on init.
- * @param  {EGRAsyncApiProvider}   provider
- * @param  {RemoteContract[] = []} remoteContracts
- * @return {Promise<RemoteContract[]>}
- */
- async function getResolvedRemoteContracts(
-  provider: EGRAsyncApiProvider,
-  remoteContracts: RemoteContract[] = []
-) : Promise <RemoteContract[]> {
-  for (const contract of remoteContracts){
-    let code
-    try {
-      contract.bytecode = await provider.getCode(contract.address)
-      contract.deployedBytecode = contract.bytecode
-      contract.bytecodeHash = sha1(contract.bytecode)
-    } catch (error){
-      console.log(`Warning: failed to fetch bytecode for remote contract: ${contract.name}`)
-      console.log(`Error was: ${error}\n`)
-    }
-  }
-  return remoteContracts
-}
 
 
 // https://github.com/cgewecke/hardhat-gas-reporter/blob/master/src/index.ts
@@ -257,89 +104,13 @@ function getGasReporterOptions(hre: HardhatRuntimeEnvironment): any {
  */
  subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
   async (args: any, hre, runSuper) => {
-
-     //custom code
-    /* const storyMochaInstance: Mocha = generateAllStoryTests(hre)
-
-     console.log('\n\n\n\n')
  
-     await new Promise<number>((resolve, _) => {
-       storyMochaInstance.run(resolve)
-     })
- 
-     console.log('\n\n\n\n')
-     const tsFiles = await glob(path.join(hre.config.paths.tests, '**\/*.ts'))
- 
-     const mochaInstance = new Mocha()
-     mochaInstance.timeout(30000)
- 
-     tsFiles.forEach((file: string) => {
-       mochaInstance.addFile(file)
-     })
- 
-     const fileTestFailures = await new Promise<number>((resolve, _) => {
-       mochaInstance.run(resolve)
-     })
- 
-     console.log('Completed all tests.')
-   */ 
-
- 
-     const testFiles: string[] = []
-
-     await runStoryTests({testFiles},hre)
-      
-  
- 
-     //  fileTestFailures
-
+    await runStoryTests( hre )       
    
-      await runSuper() 
+    await runSuper() 
+
   }
 )
 
 
-
-// https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
-/**
- * Overrides TASK_TEST_RUN_MOCHA_TEST to (conditionally) use eth-gas-reporter as
- * the mocha test reporter and passes mocha relevant options. These are listed
- * on the `gasReporter` of the user's config.
- */
-/*
- taskArgs: ArgsT,
- env: HardhatRuntimeEnvironment,
- runSuper: RunSuperFunction<ArgsT>*/
-
-/*
-subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
-  async ({}: { testFiles: string[] }, hre) => {
-    //custom code
-    const storyMochaInstance: Mocha = generateAllStoryTests(hre)
-
-    console.log('\n\n\n\n')
-
-    await new Promise<number>((resolve, _) => {
-      storyMochaInstance.run(resolve)
-    })
-
-    console.log('\n\n\n\n')
-    const tsFiles = await glob(path.join(hre.config.paths.tests, '**\/*.ts'))
-
-    const mochaInstance = new Mocha()
-    mochaInstance.timeout(30000)
-
-    tsFiles.forEach((file: string) => {
-      mochaInstance.addFile(file)
-    })
-
-    const fileTestFailures = await new Promise<number>((resolve, _) => {
-      mochaInstance.run(resolve)
-    })
-
-    console.log('Completed all tests.')
  
-
-    return fileTestFailures
-  } 
-)*/
