@@ -76,4 +76,23 @@ describe('NFT tests', () => {
       expect(stakedNFTs.length).to.equal(0)
     })
   })
+  describe('unstakes NFTs from the wrong address', () => {
+    it('should stake NFTs', async () => {
+      // stake NFTs on behalf of user
+      await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
+
+      // get staked
+      stakedNFTs = await diamond.getStakedNFTs(borrower)
+
+      // every tokenId of the owned NFT should equate a token ID from the stakedNFT
+      for (let i = 0; i < ownedNFTs.length; i++) {
+        expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
+      }
+  })
+  it("should unstake NFTs from the wrong address and fail", async () => {
+    // unstake all of our staked nfts from the wrong address
+    const tx = await diamond.connect(deployer).unstakeNFTs(stakedNFTs)
+    await tx.should.be.revertedWith('Teller: not the owner of the NFT ID!')
+  })
+})
 })
