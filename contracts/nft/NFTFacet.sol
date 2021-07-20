@@ -51,8 +51,12 @@ contract NFTFacet is RolesMods {
      */
     function unstakeNFTs(uint256[] calldata nftIDs) external {
         for (uint256 i; i < nftIDs.length; i++) {
-            // Unstake NFTs
-            NFTLib.unstake(nftIDs[i]);
+            // Unstake NFTs by requiring that removing of the staked NFTs by
+            // the msg.sender is a success. If it isn't, we revert
+            require(
+                NFTLib.unstake(nftIDs[i]),
+                "Teller: not the owner of the NFT ID!"
+            );
             NFTLib.nft().transferFrom(address(this), msg.sender, nftIDs[i]);
         }
     }
