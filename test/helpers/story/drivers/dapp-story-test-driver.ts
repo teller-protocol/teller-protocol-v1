@@ -269,7 +269,12 @@ export default class DappStoryTestDriver extends StoryTestDriver {
           const { details, diamond } = loan
           let shouldPass = true
           await hre.evm.advanceTime(details.loan.duration)
-          const compBefore = await diamond.compoundCalculateComp(details.loan.id)
+          const dappAddresses = getDappAddresses(network)
+          const Comptroller = await contracts.get<IComptroller>('IComptroller', {
+            at: dappAddresses.compoundComptrollerAddress,
+          })
+          const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+          const compBefore = await Comptroller.compAccrued(escrowAddress)
 
           //read the state and determine if this should pass
           if (!loan) shouldPass = false
@@ -300,12 +305,13 @@ export default class DappStoryTestDriver extends StoryTestDriver {
     const Comptroller = await contracts.get<IComptroller>('IComptroller', {
       at: dappAddresses.compoundComptrollerAddress,
     })
-    const compBefore = await diamond.compoundCalculateComp(details.loan.id)
+    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+    const compBefore = await Comptroller.compAccrued(escrowAddress)
     console.log({compBefore: compBefore.toString()})
     await diamond
       .connect(details.borrower.signer)
       .compoundClaimComp(details.loan.id)
-    const compafter = await diamond.compoundCalculateComp(details.loan.id)
+    const compafter = await Comptroller.compAccrued(escrowAddress)
     console.log({compafter: compafter.toString()})
     expect(compafter.toString()).to.equal('0')
   }
