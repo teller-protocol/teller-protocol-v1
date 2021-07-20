@@ -7,7 +7,9 @@ import { TellerNFT } from "./bridging/TellerNFT.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { NFTStorageLib, NFTStorage } from "../storage/nft.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
     // immutable and constant addresses

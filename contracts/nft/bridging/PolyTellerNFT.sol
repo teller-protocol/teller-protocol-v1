@@ -7,7 +7,9 @@ import { ITellerDiamond } from "../../shared/interfaces/ITellerDiamond.sol";
 
 // Address utility
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { MockNFTMainnetBridgingToPolygonFacet } from "../mock/MockNFTMainnetBridgingToPolygonFacet.sol";
+import {
+    MockNFTMainnetBridgingToPolygonFacet
+} from "../mock/MockNFTMainnetBridgingToPolygonFacet.sol";
 import "hardhat/console.sol";
 
 contract PolyTellerNFT is TellerNFT {
