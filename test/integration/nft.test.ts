@@ -52,7 +52,7 @@ describe('NFT tests', () => {
       .connect(borrowerSigner)
       .setApprovalForAll(diamond.address, true)
   })
-  describe.only('unstakes NFTs after staking them', () => {
+  describe('unstakes NFTs after staking them', () => {
     it('should stake NFTs', async () => {
       // stake NFTs on behalf of user
       await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
