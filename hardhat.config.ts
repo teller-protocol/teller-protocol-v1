@@ -182,7 +182,7 @@ export default <HardhatUserConfig>{
     showMethodSig: false,
     showTimeSpent: true,
     onlyCalledMethods: false,
-    remoteContracts: getRemoteContracts('hardhat')
+   // remoteContracts: getRemoteContracts('hardhat')
   },
   namedAccounts: {
     deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',

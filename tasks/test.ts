@@ -24,7 +24,7 @@ let resolvedQualifiedNames: string[]
 
 
 
-let resolvedRemoteContracts: RemoteContract[] = []
+const resolvedRemoteContracts: RemoteContract[] = []
 
 
 
@@ -257,49 +257,44 @@ function getGasReporterOptions(hre: HardhatRuntimeEnvironment): any {
  */
  subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
   async (args: any, hre, runSuper) => {
-    const options = getGasReporterOptions(hre)
-    options.getContracts = getContracts.bind(null, hre.artifacts, options.excludeContracts)
-    //options.remoteContracts = findRemoteContracts()
 
-     
-    if (options.enabled) {
-      mochaConfig = hre.config.mocha || {}
-      mochaConfig.reporter = "eth-gas-reporter"
-      mochaConfig.reporterOptions = options
+     //custom code
+    /* const storyMochaInstance: Mocha = generateAllStoryTests(hre)
 
-      if (hre.network.name === HARDHAT_NETWORK_NAME || options.fast){
-
-        
-
-        
-
-        const wrappedDataProvider= new EGRDataCollectionProvider(hre.network.provider,mochaConfig)
-        hre.network.provider = new BackwardsCompatibilityProviderAdapter(wrappedDataProvider)
-
-        const asyncProvider = new EGRAsyncApiProvider(hre.network.provider)
-        resolvedRemoteContracts = await getResolvedRemoteContracts(
-          asyncProvider,
-          options.remoteContracts 
-        )  
-
-        console.log('resolvedRemoteContracts found: ', resolvedRemoteContracts.length  )
-
-        mochaConfig.reporterOptions.provider = asyncProvider
-        mochaConfig.reporterOptions.blockLimit = (hre.network.config as any).blockGasLimit as number
-    ///    mochaConfig.attachments = {};
-      }
-
-      hre.config.mocha = mochaConfig
-      resolvedQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames()
-
-     // console.log('resolvedQualifiedNames', resolvedQualifiedNames)
-    }
-
+     console.log('\n\n\n\n')
+ 
+     await new Promise<number>((resolve, _) => {
+       storyMochaInstance.run(resolve)
+     })
+ 
+     console.log('\n\n\n\n')
+     const tsFiles = await glob(path.join(hre.config.paths.tests, '**\/*.ts'))
+ 
+     const mochaInstance = new Mocha()
+     mochaInstance.timeout(30000)
+ 
+     tsFiles.forEach((file: string) => {
+       mochaInstance.addFile(file)
+     })
+ 
+     const fileTestFailures = await new Promise<number>((resolve, _) => {
+       mochaInstance.run(resolve)
+     })
+ 
+     console.log('Completed all tests.')
+   */ 
 
  
-    const testFiles: string[] = []
+     const testFiles: string[] = []
 
-    return await runStoryTests({testFiles},hre)
+     await runStoryTests({testFiles},hre)
+      
+  
+ 
+     //  fileTestFailures
+
+   
+      await runSuper() 
   }
 )
 
