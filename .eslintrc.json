@@ -4,7 +4,6 @@
     "standard-kit/prettier/typescript",
     "standard-kit/prettier/node"
   ],
-  "ignorePatterns": ["artifacts/**", "cache/**", "docs/**", "types/**", ""],
   "parserOptions": {
     "project": "tsconfig.json"
   },
