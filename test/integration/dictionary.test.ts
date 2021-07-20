@@ -21,7 +21,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.skip('NFT Dictionary', () => {
+describe.only('NFT Dictionary', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
