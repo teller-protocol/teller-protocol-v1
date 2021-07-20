@@ -54,6 +54,44 @@ const mainnetChainlink: Chainlink = {
   },
 }
 
+const polygonChainlink: Chainlink = {
+  MATIC_ETH: {
+    baseTokenName: 'MATIC',
+    quoteTokenName: 'ETH',
+    address: '0x327e23A4855b6F663a28c5161541d69Af8973302',
+  },
+  USDC_ETH: {
+    baseTokenName: 'USDC',
+    quoteTokenName: 'ETH',
+    address: '0xefb7e6be8356cCc6827799B6A7348eE674A80EaE',
+  },
+  USDT_ETH: {
+    baseTokenName: 'USDT',
+    quoteTokenName: 'ETH',
+    address: '0xf9d5AAC6E5572AEFa6bd64108ff86a222F69B64d',
+  },
+  DAI_ETH: {
+    baseTokenName: 'DAI',
+    quoteTokenName: 'ETH',
+    address: '0xFC539A559e170f848323e19dfD66007520510085',
+  },
+  LINK_ETH: {
+    baseTokenName: 'LINK',
+    quoteTokenName: 'ETH',
+    address: '0xb77fa460604b9C6435A235D057F7D319AC83cb53',
+  },
+  AAVE_ETH: {
+    baseTokenName: 'AAVE',
+    quoteTokenName: 'ETH',
+    address: '0xbE23a3AA13038CfC28aFd0ECe4FdE379fE7fBfc4',
+  },
+  SUSHI_USDC: {
+    baseTokenName: 'SUSHI',
+    quoteTokenName: 'USDC',
+    address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
+  },
+}
+
 export const chainlink: Record<string, Chainlink> = {
   kovan: {
     ETH_USDC: {
@@ -121,71 +159,30 @@ export const chainlink: Record<string, Chainlink> = {
       address: '0xD4d78d8e18d4717F5eE8801335eE5b5B97a4b824',
     },
   },
-  polygon: {
-    MATIC_ETH: {
-      baseTokenName: 'WMATIC',
-      quoteTokenName: 'WETH',
-      address: '0x327e23A4855b6F663a28c5161541d69Af8973302',
-    },
-    MATIC_DAI: {
-      baseTokenName: 'WMATIC',
-      quoteTokenName: 'DAI',
-      address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',
-    },
-    USDC_ETH: {
-      baseTokenName: 'USDC',
-      quoteTokenName: 'WETH',
-      address: '0xefb7e6be8356cCc6827799B6A7348eE674A80EaE',
-    },
-    DAI_ETH: {
-      baseTokenName: 'DAI',
-      quoteTokenName: 'WETH',
-      address: '0xFC539A559e170f848323e19dfD66007520510085',
-    },
-    LINK_DAI: {
-      baseTokenName: 'LINK',
-      quoteTokenName: 'DAI',
-      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD
-    },
-    LINK_USDC: {
-      baseTokenName: 'LINK',
-      quoteTokenName: 'USDC',
-      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD
-    },
-    AAVE_ETH: {
-      baseTokenName: 'AAVE',
-      quoteTokenName: 'WETH',
-      address: '0xbE23a3AA13038CfC28aFd0ECe4FdE379fE7fBfc4',
-    },
-    // SUSHI_USD: {
-    //   baseTokenName: 'SUSHI',
-    //   quoteTokenName: 'USDC',
-    //   address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
-    // },
-  },
+  polygon: polygonChainlink,
   polygon_mumbai: {
     USDC_MATIC: {
-      baseTokenName: 'WMATIC',
+      baseTokenName: 'MATIC',
       quoteTokenName: 'USDC',
       address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada', // MATIC-USD
     },
     DAI_MATIC: {
-      baseTokenName: 'WMATIC',
+      baseTokenName: 'MATIC',
       quoteTokenName: 'DAI',
       address: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada', // MATIC-USD
     },
     USDC_ETH: {
-      baseTokenName: 'WETH',
+      baseTokenName: 'ETH',
       quoteTokenName: 'USDC',
       address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
     },
     DAI_ETH: {
-      baseTokenName: 'WETH',
+      baseTokenName: 'ETH',
       quoteTokenName: 'DAI',
       address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
     },
   },
-  hardhat: mainnetChainlink,
-  localhost: mainnetChainlink,
+  hardhat: polygonChainlink,
+  localhost: polygonChainlink,
   mainnet: mainnetChainlink,
 }

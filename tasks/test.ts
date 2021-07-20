@@ -1,4 +1,3 @@
-//import  sha1 from 'sha1'
 import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
 import { task } from 'hardhat/config'
 import { subtask } from 'hardhat/config'
@@ -48,16 +47,9 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 })
 
-// https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
-/**
- * Overrides TASK_TEST_RUN_MOCHA_TEST to (conditionally) use eth-gas-reporter as
- * the mocha test reporter and passes mocha relevant options. These are listed
- * on the `gasReporter` of the user's config.
- */
-/*
- taskArgs: ArgsT,
- env: HardhatRuntimeEnvironment,
- runSuper: RunSuperFunction<ArgsT>*/
+
+
+
 
 
 async function runStoryTests( { testFiles }: { testFiles: string[] }, hre:HardhatRuntimeEnvironment ): Promise<number> {
@@ -289,3 +281,49 @@ function getOptions(hre: HardhatRuntimeEnvironment): any {
     return await runStoryTests({testFiles},hre)
   }
 )
+
+
+
+// https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
+/**
+ * Overrides TASK_TEST_RUN_MOCHA_TEST to (conditionally) use eth-gas-reporter as
+ * the mocha test reporter and passes mocha relevant options. These are listed
+ * on the `gasReporter` of the user's config.
+ */
+/*
+ taskArgs: ArgsT,
+ env: HardhatRuntimeEnvironment,
+ runSuper: RunSuperFunction<ArgsT>*/
+
+/*
+subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
+  async ({}: { testFiles: string[] }, hre) => {
+    //custom code
+    const storyMochaInstance: Mocha = generateAllStoryTests(hre)
+
+    console.log('\n\n\n\n')
+
+    await new Promise<number>((resolve, _) => {
+      storyMochaInstance.run(resolve)
+    })
+
+    console.log('\n\n\n\n')
+    const tsFiles = await glob(path.join(hre.config.paths.tests, '**\/*.ts'))
+
+    const mochaInstance = new Mocha()
+    mochaInstance.timeout(30000)
+
+    tsFiles.forEach((file: string) => {
+      mochaInstance.addFile(file)
+    })
+
+    const fileTestFailures = await new Promise<number>((resolve, _) => {
+      mochaInstance.run(resolve)
+    })
+
+    console.log('Completed all tests.')
+ 
+
+    return fileTestFailures
+  } 
+)*/

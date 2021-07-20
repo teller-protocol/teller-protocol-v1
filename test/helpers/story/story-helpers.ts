@@ -6,11 +6,11 @@ import LoanStoryTestDriver from './drivers/loan-story-test-driver'
 
 export const LoanSnapshots: { [key: number]: () => Promise<void> } = {}
 
-export const STORY_DOMAINS = {
-  LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
-  LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
-  DAPP: { LEND: 0, SWAP: 1 },
-}
+// export const STORY_DOMAINS = {
+//   LOAN: { TAKE_OUT: 0, REPAY: 1, LIQUIDATE: 2 },
+//   LENDING_POOL: { LEND: 0, WITHDRAW: 1 },
+//   DAPP: { LEND: 0, SWAP: 1 },
+// }
 
 export const STORY_NETWORKS = {
   POLYGON: 'polygon',
@@ -31,18 +31,22 @@ export const TREE_STRUCTURE = {
   },
   'LENDING_POOL.WITHDRAW': {
     network: STORY_NETWORKS.ALL,
-    parents: ['LENDING_POOL.LEND', 'LOAN.TAKE_OUT'],
+    parents: ['LOAN.TAKE_OUT', 'LENDING_POOL.LEND'],
   },
   'DAPP.LEND.COMPOUND': {
-    network: STORY_NETWORKS.ALL,
+    network: STORY_NETWORKS.MAINNET,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.LEND.AAVE': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],
   },
+  // 'DAPP.LEND.YEARN': {
+  //   network: STORY_NETWORKS.MAINNET,
+  //   parents: ['LOAN.TAKE_OUT'],
+  // },
   'DAPP.LEND.POOL_TOGETHER': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.SWAP.UNISWAP': {
@@ -55,17 +59,17 @@ export const TREE_STRUCTURE = {
   },
 }
 
-export const DAPP_ACTION_TARGETS = {
-  LEND: {
-    COMPOUND: 0,
-    AAVE: 1,
-    POOL_TOGETHER: 2,
-  },
-  SWAP: {
-    UNISWAP: 0,
-    SUSHISWAP: 1,
-  },
-}
+// export const DAPP_ACTION_TARGETS = {
+//   LEND: {
+//     COMPOUND: 0,
+//     AAVE: 1,
+//     POOL_TOGETHER: 2,
+//   },
+//   SWAP: {
+//     UNISWAP: 0,
+//     SUSHISWAP: 1,
+//   },
+// }
 
 export interface StoryValues {
   network: string
@@ -94,8 +98,7 @@ export interface TestAction {
 export interface TestArgs {
   actionTarget?: number
   dappAction?: number
-  // rewindStateTo: string | null
-  //shouldPass: boolean
+  loanType?: number
   nft?: boolean
 }
 

@@ -497,6 +497,6 @@ export const nftMerkleTree: Record<string, NFTMerkleTree> = {
   hardhat: testnetNFTMerkle,
   localhost: testnetNFTMerkle,
   mainnet: mainnetNFTMerkle,
-  polygon: mainnetNFTMerkle,
+  polygon: testnetNFTMerkle,
   polygon_mumbai: testnetNFTMerkle,
 }

@@ -29,7 +29,7 @@ import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
 import {
     PrizePoolInterface
-} from "../../escrow/dapps/interfaces/PrizePoolInterface.sol";
+} from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 
 /**
  * @notice View function to get asset setting values.

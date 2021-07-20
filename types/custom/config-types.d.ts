@@ -53,7 +53,7 @@ interface Market {
 interface MarketStrategy {
   name: string
   initArgs: Array<{
-    type: 'TokenSymbol' | 'Address' | 'Number'
+    type: 'TokenSymbol' | 'Address' | 'Number' | 'ProtocolAddressConstant'
     value: any
   }>
 }
@@ -100,7 +100,10 @@ export interface Signers extends Array<Address> {}
 
 export interface NetworkTokens {
   erc20: Tokens
-  compound: Tokens // TODO: Rename/refactor for agnostic strategy token/tokens
+  compound?: Tokens
+  aave?: Tokens
+  poolTogether?: Tokens
+  yearn?: Tokens
 }
 
 export interface Tokens {

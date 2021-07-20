@@ -9,6 +9,7 @@ import {
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { TellerNFTDictionary } from "../nft/TellerNFTDictionary.sol";
+import { PriceAggregator } from "../price-aggregator/PriceAggregator.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
@@ -20,15 +21,8 @@ import { NFTLib } from "../nft/libraries/NFTLib.sol";
 // Storage
 import { AppStorageLib, AppStorage } from "../storage/app.sol";
 
-struct InitAssets {
-    string sym;
-    address addr;
-}
-
 struct InitArgs {
     address admin;
-    InitAssets[] assets;
-    address[] cTokens;
     address tellerNFT;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
@@ -36,6 +30,7 @@ struct InitArgs {
     address nftLiquidationController;
     address wrappedNativeToken;
     address nftDictionary;
+    address priceAggregator;
 }
 
 contract SettingsFacet is RolesMods {
@@ -119,6 +114,7 @@ contract SettingsFacet is RolesMods {
      */
     function getNFTLiquidationController()
         external
+        view
         returns (address controller_)
     {
         controller_ = AppStorageLib.store().nftLiquidationController;
@@ -137,13 +133,6 @@ contract SettingsFacet is RolesMods {
         RolesLib.grantRole(ADMIN, _args.admin);
         RolesLib.grantRole(PAUSER, _args.admin);
 
-        for (uint256 i; i < _args.assets.length; i++) {
-            s.assetAddresses[_args.assets[i].sym] = _args.assets[i].addr;
-        }
-        for (uint256 i; i < _args.cTokens.length; i++) {
-            s.cTokenRegistry[_args.cTokens[i]] = true;
-        }
-
         s.nft = TellerNFT(_args.tellerNFT);
         s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(
@@ -152,6 +141,7 @@ contract SettingsFacet is RolesMods {
         s.tTokenBeacon = UpgradeableBeaconFactory(_args.tTokenBeacon);
         s.nftLiquidationController = _args.nftLiquidationController;
         s.wrappedNativeToken = _args.wrappedNativeToken;
+        s.priceAggregator = PriceAggregator(_args.priceAggregator);
 
         NFTLib.s().nftDictionary = TellerNFTDictionary(_args.nftDictionary);
     }

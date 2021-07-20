@@ -57,11 +57,10 @@ contract CompoundFacet is PausableMods, DappMods {
 
         LibEscrow.e(loanID).setTokenAllowance(tokenAddress, address(cToken));
 
-        bytes memory result =
-            LibEscrow.e(loanID).callDapp(
-                address(cToken),
-                abi.encodeWithSelector(ICErc20.mint.selector, amount)
-            );
+        bytes memory result = LibEscrow.e(loanID).callDapp(
+            address(cToken),
+            abi.encodeWithSelector(ICErc20.mint.selector, amount)
+        );
 
         require(
             abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
@@ -137,8 +136,10 @@ contract CompoundFacet is PausableMods, DappMods {
         address tokenAddress,
         bytes memory callData
     ) private {
-        bytes memory result =
-            LibEscrow.e(loanID).callDapp(cTokenAddress, callData);
+        bytes memory result = LibEscrow.e(loanID).callDapp(
+            cTokenAddress,
+            callData
+        );
 
         require(
             abi.decode(result, (uint256)) !=

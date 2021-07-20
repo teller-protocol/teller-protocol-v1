@@ -327,7 +327,6 @@
 //         const nftAfter = await nft.getOwnedTokens(
 //           '0x95143890162bd671d77ae9b771881a1cb76c29a4'
 //         )
-//         console.log({ nftBefore, nftAfter, liquidatorLendBefore })
 //         nftAfter.length.should.greaterThan(nftBefore.length)
 //       })
 //     })

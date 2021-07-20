@@ -28,14 +28,18 @@ const mainnetMarkets: Market[] = [
 
 const polygonMarkets: Market[] = [
   {
-    lendingToken: 'DAI',
+    lendingToken: 'USDT',
     collateralTokens: ['WMATIC', 'WETH'],
     strategy: {
       name: 'TTokenAaveStrategy_1',
       initArgs: [
         {
           type: 'TokenSymbol',
-          value: 'ADAI',
+          value: 'AUSDT',
+        },
+        {
+          type: 'ProtocolAddressConstant',
+          value: 'aaveLendingPoolAddressProvider',
         },
         {
           // Balance Ratio Min
@@ -128,8 +132,8 @@ export const markets: Record<string, Market[]> = {
       },
     },
   ],
-  hardhat: mainnetMarkets,
-  localhost: mainnetMarkets,
+  hardhat: polygonMarkets,
+  localhost: polygonMarkets,
   mainnet: mainnetMarkets,
   polygon: polygonMarkets,
   polygon_mumbai: polygonMarkets,

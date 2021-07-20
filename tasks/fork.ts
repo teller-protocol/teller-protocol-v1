@@ -92,18 +92,24 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
   if (
     ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
   ) {
-    if (network.name !== 'polygon') {
+    const chain = process.env.FORKING_NETWORK
+    if (
+      chain === 'mainnet' ||
+      chain === 'kovan' ||
+      chain === 'rinkeby' ||
+      chain === 'ropsten'
+    ) {
       await getFunds({
         to: deployer,
-        tokenSym: 'MATIC',
-        amount: hre.ethers.utils.parseEther('10000'),
+        tokenSym: 'ETH',
+        amount: hre.ethers.utils.parseEther('1000'),
         hre,
       })
     } else {
       await getFunds({
         to: deployer,
-        tokenSym: 'ETH',
-        amount: hre.ethers.utils.parseEther('1000'),
+        tokenSym: 'MATIC',
+        amount: hre.ethers.utils.parseEther('10000'),
         hre,
       })
     }

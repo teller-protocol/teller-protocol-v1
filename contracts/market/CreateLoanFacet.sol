@@ -169,7 +169,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 
         // Pay in collateral
         if (collateralAmount > 0) {
-            LibCollateral.deposit(loan.id, collateralAmount);
+            LibCollateral.deposit(loan.id, collateralToken, collateralAmount);
         }
 
         // Check that enough collateral has been provided for this loan
@@ -209,8 +209,11 @@ library CreateLoanLib {
         );
 
         // Get consensus values from request
-        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
-            LibConsensus.processLoanTerms(request);
+        (
+            uint16 interestRate,
+            uint16 collateralRatio,
+            uint256 maxLoanAmount
+        ) = LibConsensus.processLoanTerms(request);
 
         // Perform loan value checks
         require(
@@ -258,15 +261,15 @@ library CreateLoanLib {
      * @return id_ the new ID requested, which stores it in the loan data
      */
     function newID() internal returns (uint256 id_) {
-        Counters.Counter storage counter =
-            MarketStorageLib.store().loanIDCounter;
+        Counters.Counter storage counter = MarketStorageLib.store()
+            .loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
     }
 
     function currentID() internal view returns (uint256 id_) {
-        Counters.Counter storage counter =
-            MarketStorageLib.store().loanIDCounter;
+        Counters.Counter storage counter = MarketStorageLib.store()
+            .loanIDCounter;
         id_ = Counters.current(counter);
     }
 

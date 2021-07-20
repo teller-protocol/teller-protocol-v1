@@ -30,35 +30,45 @@ library LibDapps {
     }
 
     /**
-        @notice Grabs the Aave lending pool instance from the Aave lending pool address provider
-        @return IAaveLendingPool instance address
+        @notice Grabs the Aave lending pool instance from the Aave lending pool address provider.
+        @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
+        @return IAaveLendingPool instance address.
      */
-    function getAaveLendingPool() internal view returns (IAaveLendingPool) {
+    function getAaveLendingPool(address aaveLPAddressProvider)
+        internal
+        view
+        returns (IAaveLendingPool)
+    {
         return
             IAaveLendingPool(
-                IAaveLendingPoolAddressesProvider(
-                    0xd05e3E715d945B59290df0ae8eF85c1BdB684744 // Polygon mainnet
-                )
+                IAaveLendingPoolAddressesProvider(aaveLPAddressProvider)
                     .getLendingPool()
-            ); // LP address provider contract is immutable and the address will never change
+            ); // LP address provider contract is immutable on each deployed network and the address will never change
     }
 
     /**
-        @notice Grabs the aToken instance from the lending pool
-        @param tokenAddress The underlying asset address to get the aToken for
-        @return IAToken instance
+        @notice Grabs the aToken instance from the lending pool.
+        @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
+        @param tokenAddress The underlying asset address to get the aToken for.
+        @return IAToken instance.
      */
-    function getAToken(address tokenAddress) internal view returns (IAToken) {
+    function getAToken(address aaveLPAddressProvider, address tokenAddress)
+        internal
+        view
+        returns (IAToken)
+    {
         return
             IAToken(
-                getAaveLendingPool().getReserveData(tokenAddress).aTokenAddress
+                getAaveLendingPool(aaveLPAddressProvider).getReserveData(
+                    tokenAddress
+                ).aTokenAddress
             );
     }
 
     /**
-        @notice Grabs the yVault address for a token from the asset settings
-        @param tokenAddress The underlying token address for the associated yVault
-        @return yVault instance
+        @notice Grabs the yVault address for a token from the asset settings.
+        @param tokenAddress The underlying token address for the associated yVault.
+        @return yVault instance.
      */
     function getYVault(address tokenAddress) internal view returns (IVault) {
         return

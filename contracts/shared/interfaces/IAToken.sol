@@ -3,6 +3,12 @@ pragma solidity ^0.8.0;
 
 interface IAToken {
     /**
+     * @dev Returns the underlying token address
+     * @return address of the underlying token
+     */
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+
+    /**
      * @dev Mints `amount` aTokens to `user`
      * @param user The address receiving the minted tokens
      * @param amount The amount of tokens getting minted

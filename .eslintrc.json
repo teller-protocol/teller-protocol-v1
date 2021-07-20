@@ -8,6 +8,7 @@
   "parserOptions": {
     "project": "tsconfig.json"
   },
+  "ignorePatterns": ["artifacts/**", "cache/**", "docs/**", "types/**"],
   "plugins": ["prettier", "simple-import-sort", "@typescript-eslint"],
   "rules": {
     "@typescript-eslint/no-empty-interface": "off",
@@ -20,12 +21,12 @@
       }
     ],
     "@typescript-eslint/no-extraneous-class": "off",
-    "@typescript-eslint/no-non-null-assertion": "warn",
-    "@typescript-eslint/no-unused-expressions": "off",
     "@typescript-eslint/promise-function-async": "off",
-    "@typescript-eslint/require-array-sort-compare": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/require-array-sort-compare":  "off",
     "arrow-parens": "error",
     "no-extra-semi": "error",
     "no-unused-vars": "off",
