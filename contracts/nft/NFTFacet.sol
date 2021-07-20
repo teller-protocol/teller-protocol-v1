@@ -10,7 +10,9 @@ import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
 import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTFacet is RolesMods {
     /**
