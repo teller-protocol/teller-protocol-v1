@@ -38,10 +38,8 @@ contract NFTMainnetBridgingToPolygonFacet {
      * @param staked are the tokens sent by the user staked?
      */
     function __bridgePolygonDepositFor(bytes memory tokenData, bool staked)
-        internal
-        virtual
+        private
     {
-        bytes memory encodedData;
         if (tokenData.length == 32) {
             uint256 tokenId = abi.decode(tokenData, (uint256));
             if (staked) {
@@ -49,12 +47,6 @@ contract NFTMainnetBridgingToPolygonFacet {
             } else {
                 NFTLib.nft().transferFrom(msg.sender, address(this), tokenId);
             }
-            encodedData = abi.encodeWithSignature(
-                "depositFor(address,address,bytes)",
-                msg.sender,
-                address(TELLER_NFT),
-                abi.encode(tokenId)
-            );
         } else {
             uint256[] memory tokenIds = abi.decode(tokenData, (uint256[]));
             if (staked) {
@@ -70,27 +62,28 @@ contract NFTMainnetBridgingToPolygonFacet {
                     );
                 }
             }
-            // call the depositFor funciton at the rootChainManager
-            encodedData = abi.encodeWithSignature(
+        }
+
+        __depositFor(tokenData);
+    }
+
+    function __depositFor(bytes memory tokenData) internal virtual {
+        // Deposit tokens by calling the RootChainManager which then has the ERC721_PREDICATE transfer the tokens
+        Address.functionCall(
+            ROOT_CHAIN_MANAGER,
+            abi.encodeWithSignature(
                 "depositFor(address,address,bytes)",
                 msg.sender,
                 address(TELLER_NFT),
-                abi.encode(tokenIds)
-            );
-        }
-
-        // root chain manager
-        Address.functionCall(ROOT_CHAIN_MANAGER, encodedData);
+                tokenData
+            )
+        );
     }
 
     /**
-     * @notice it initializes our NFTBridge by approving all of our tokens from our ERC721_Predicate
+     * @notice it initializes our NFTBridge by approving all NFTs to the Polygon ERC721_Predicate
      */
     function initNFTBridge() external {
-        __initNFTBridge();
-    }
-
-    function __initNFTBridge() internal virtual {
         TELLER_NFT.setApprovalForAll(ERC721_PREDICATE, true);
     }
 
@@ -104,27 +97,25 @@ contract NFTMainnetBridgingToPolygonFacet {
             NFTLib.s().stakedNFTs[msg.sender],
             tokenId
         );
-        if (isStaked) {
-            __bridgePolygonDepositFor(abi.encode(tokenId), true);
-        } else {
-            __bridgePolygonDepositFor(abi.encode(tokenId), false);
-        }
+        __bridgePolygonDepositFor(abi.encode(tokenId), isStaked);
     }
 
     /**
      * @notice gets all of our NFTs (staked and unstaked) then sends them to be bridged
      */
     function bridgeAllNFTs() external {
-        uint256[] memory stakedTokenIds = NFTLib.stakedNFTs(msg.sender);
-        uint256[] memory unstakedTokenIds = TELLER_NFT.getOwnedTokens(
-            msg.sender
-        );
-        if (stakedTokenIds.length > 0) {
-            __bridgePolygonDepositFor(abi.encode(stakedTokenIds), true);
+        uint256[] memory tokenIDs;
+
+        // Staked tokens
+        tokenIDs = NFTLib.stakedNFTs(msg.sender);
+        if (tokenIDs.length > 0) {
+            __bridgePolygonDepositFor(abi.encode(tokenIDs), true);
         }
 
-        if (unstakedTokenIds.length > 0) {
-            __bridgePolygonDepositFor(abi.encode(unstakedTokenIds), false);
+        // Unstaked (aka in the user's wallet) tokens
+        tokenIDs = TELLER_NFT.getOwnedTokens(msg.sender);
+        if (tokenIDs.length > 0) {
+            __bridgePolygonDepositFor(abi.encode(tokenIDs), false);
         }
     }
 }
