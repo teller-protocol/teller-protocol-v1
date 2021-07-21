@@ -131,6 +131,11 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
     {
+      contract: 'AaveClaimAaveFacet',
+      skipIfAlreadyDeployed: false,
+      args: [dappAddresses.aaveIncentivesControllerAddress],
+    },
+    {
       contract: 'PoolTogetherFacet',
       skipIfAlreadyDeployed: false,
     },
