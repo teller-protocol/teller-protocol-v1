@@ -5,24 +5,11 @@ import { subtask } from 'hardhat/config'
 import {
   BackwardsCompatibilityProviderAdapter
 } from "hardhat/internal/core/providers/backwards-compatibility"
-import { glob } from 'hardhat/internal/util/glob'
-import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 import { Artifacts, HardhatRuntimeEnvironment, HttpNetworkConfig } from 'hardhat/types'
-import { EthGasReporterConfig, RemoteContract } from "hardhat-gas-reporter/src/types"
- import Mocha from 'mocha'
-import path from 'path'
-import sha1 from "sha1"
+  import Mocha from 'mocha'
 
 import { generateAllStoryTests } from '../test/integration/story-test-manager'
-import {
-  EGRAsyncApiProvider,
-  EGRDataCollectionProvider} from "./test-helper"
-
  
-
-let mochaConfig
-let resolvedQualifiedNames: string[]
-const resolvedRemoteContracts: RemoteContract[] = []
 
   task('test').setAction(async (args, hre, runSuper) => {
     const { run } = hre
