@@ -13,7 +13,8 @@ import { AppStorageLib } from "../../../storage/app.sol";
 
 abstract contract AbstractSwapper is PausableMods, DappMods {
     function __isValidPath(address src, address dst) internal returns (bool) {
-        ChainlinkPricer chainlinkPricer = AppStorageLib.store()
+        ChainlinkPricer chainlinkPricer = AppStorageLib
+            .store()
             .priceAggregator
             .chainlinkPricer();
         return
