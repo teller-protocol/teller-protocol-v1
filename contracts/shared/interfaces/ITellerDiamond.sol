@@ -23,6 +23,9 @@ import { SignersFacet } from "../../market/SignersFacet.sol";
 import { NFTFacet } from "../../nft/NFTFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
+import {
+    CompoundClaimCompFacet
+} from "../../escrow/dapps/CompoundClaimComp.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 
@@ -40,6 +43,7 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     CompoundFacet,
+    CompoundClaimCompFacet,
     AaveFacet,
     PoolTogetherFacet,
     IDiamondCut,
