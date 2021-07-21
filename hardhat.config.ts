@@ -181,7 +181,7 @@ export default <HardhatUserConfig>{
     noColors: !!SAVE_GAS_REPORT,
     showMethodSig: false,
     showTimeSpent: true,
-    onlyCalledMethods: false,
+    //onlyCalledMethods: false,
    // remoteContracts: getRemoteContracts('hardhat')
   },
   namedAccounts: {
