@@ -23,6 +23,8 @@ import {
     const { run } = hre
   
     const chain = process.env.FORKING_NETWORK
+
+    
     if (chain == null) {
       throw new Error(`Invalid network to fork and run tests on: ${chain}`)
     }
@@ -30,7 +32,7 @@ import {
     // Fork the deployment files into the 'hardhat' network
     await run('fork', {
       chain,
-      onlyDeployment: false,
+      onlyDeployment: true,
     })
   
     // Disable logging
@@ -38,7 +40,7 @@ import {
   
     // Run the actual test task
     await runSuper({
-      ...args,
-      deployFixture: true,
+      ...args//,
+    //  deployFixture: true,
     })
   })
