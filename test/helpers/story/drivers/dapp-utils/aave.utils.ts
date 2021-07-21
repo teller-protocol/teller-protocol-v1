@@ -139,7 +139,7 @@ export const aaveClaimTest = async (
   )
   //read the state and determine if this should pass
   if (!loan) shouldPass = false
-  // if (aaveBefore.lte(0)) shouldPass = false
+  if (aaveBefore.lte(0)) shouldPass = false
   if (shouldPass) {
     await claimAave(hre, loan)
   } else {
