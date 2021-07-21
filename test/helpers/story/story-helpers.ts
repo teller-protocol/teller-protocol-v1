@@ -46,7 +46,7 @@ export const TREE_STRUCTURE = {
     parents: ['LOAN.TAKE_OUT'],
   },
   'DAPP.CLAIM.AAVE': {
-    network: STORY_NETWORKS.MAINNET,
+    network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT', 'DAPP.LEND.AAVE'],
   },
   // 'DAPP.LEND.YEARN': {
