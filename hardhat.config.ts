@@ -183,6 +183,7 @@ export default <HardhatUserConfig>{
     noColors: !!SAVE_GAS_REPORT,
     showMethodSig: false,
     showTimeSpent: true,
+  //  preventCallback: true 
     //onlyCalledMethods: false,
    // remoteContracts: getRemoteContracts('hardhat')
   },

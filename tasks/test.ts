@@ -9,7 +9,7 @@ import { glob } from 'hardhat/internal/util/glob'
 import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 import { Artifacts, HardhatRuntimeEnvironment, HttpNetworkConfig } from 'hardhat/types'
 import { EthGasReporterConfig, RemoteContract } from "hardhat-gas-reporter/src/types"
-import Mocha from 'mocha'
+ import Mocha from 'mocha'
 import path from 'path'
 import sha1 from "sha1"
 
@@ -18,7 +18,19 @@ import {
   EGRAsyncApiProvider,
   EGRDataCollectionProvider} from "./test-helper"
 
+ /*
+  const origRun = Mocha.prototype.run
+
+        Mocha.prototype.run =    function(resolve?: (failures:number) => void) : Mocha.Runner {
+          // add our suite tests
+         // this.addSuite(...)
+
+         console.log('we overloaded the prototype')
+
+           runStoryTests(this,require('hardhat'))
  
+          return origRun.call(this, resolve)
+        }*/
 
 
 let mochaConfig
@@ -52,44 +64,17 @@ const resolvedRemoteContracts: RemoteContract[] = []
   })
 
 
-  async function runStoryTests( mochaInstance: Mocha,  hre:HardhatRuntimeEnvironment ): Promise<number> {
-  
-   // let mochaInstance = new Mocha(hre.config.mocha)
-    //mochaInstance.timeout(9000)
+    function runStoryTests( mochaInstance: Mocha,  hre:HardhatRuntimeEnvironment ):  number {
+   
   
     //custom code
     const storyMochaInstance: Mocha = generateAllStoryTests(mochaInstance, hre)
   
     console.log('\n\n\n\n')
-  
-   // const testFailures = await new Promise<number>((resolve, _) => {
-    //  storyMochaInstance.run(resolve)
-    //})
-  
-    //console.log('\n\n\n\n')
-    //const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
-  
-    /*mochaInstance = new Mocha(hre.config.mocha)
-    mochaInstance.timeout(49000)
-  
-    tsFiles.forEach((file: string) => {
-      mochaInstance.addFile(file)
-    })
-  
-    const fileTestFailures = await new Promise<number>((resolve, _) => {
-      mochaInstance.run(resolve)
-    })*/
-  
-  
-  
+   
   
     console.log('Completed all tests.')
-  
-    /*if(testFailures > 0){
-      return testFailures
-    }*/
-  
-    // return testFailures
+   
 
     return 0 
   }
@@ -129,24 +114,31 @@ const resolvedRemoteContracts: RemoteContract[] = []
         console.log('meep 1 ')
 
 
-        //run the gas reporter plugin 
-        await runSuper()  
+        
 
 
-        const { default: Mocha } = await import("mocha")
+       // const { default: Mocha } = await import("mocha")
 
-      //  const { default: Mocha } = await Promise.resolve().then(() => __importStar(require("mocha")));
-        const mocha = new Mocha(hre.config.mocha)
+
+
+      
+       //run the gas reporter plugin 
+       await runSuper({testFiles })  
+ 
+
+
+
+         const mocha = new Mocha(hre.config.mocha)
 
         await runStoryTests(mocha,hre)
         
-        testFiles.forEach((file) => mocha.addFile(file))
+        //testFiles.forEach((file) => mocha.addFile(file))
         const testFailures = await new Promise((resolve, _) => {
             mocha.run(resolve)
-        })
+        }) 
         return testFailures
-
-     // return testFailures;
+ 
+     
   })
 
 /*

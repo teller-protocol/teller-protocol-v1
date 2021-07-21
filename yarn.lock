@@ -6707,8 +6707,9 @@ hardhat-contract-sizer@^2.0.2:
     murmur-128 "^0.2.1"
     qs "^6.9.4"
 
-"hardhat-gas-reporter@file:../hardhat-gas-reporter":
+"hardhat-gas-reporter@git://github.com/teller-protocol/hardhat-gas-reporter#77d587a3ac6ffe8809931e0e446b64fc49d8d371":
   version "1.0.4"
+  resolved "git://github.com/teller-protocol/hardhat-gas-reporter#77d587a3ac6ffe8809931e0e446b64fc49d8d371"
   dependencies:
     eth-gas-reporter "^0.2.20"
     sha1 "^1.1.1"
