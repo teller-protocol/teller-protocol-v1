@@ -1,9 +1,9 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { IERC20 } from "../../../../../types/typechain"
-import { LoanHelpersReturn } from "../../../loans"
+import { IERC20 } from '../../../../../types/typechain'
+import { LoanHelpersReturn } from '../../../loans'
 import LoanStoryTestDriver from '../loan-story-test-driver'
 chai.should()
 chai.use(solidity)
@@ -54,7 +54,7 @@ async function withdrawPoolTogether(
     daiBalance.should.be.gt('0')
   }
 
-export const pooltogetherLendTest = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
+export const poolTogetherLendTest = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   const { getNamedSigner } = hre
   const borrower = await getNamedSigner('borrower')
   const loan = await LoanStoryTestDriver.getLoan(hre, borrower)

@@ -1,12 +1,12 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getDappAddresses } from '../../../../../config'
-import { ICErc20, IComptroller } from "../../../../../types/typechain"
+import { ICErc20, IComptroller } from '../../../../../types/typechain'
 import { getFunds } from '../../../get-funds'
-import { LoanHelpersReturn } from "../../../loans"
+import { LoanHelpersReturn } from '../../../loans'
 import LoanStoryTestDriver from '../loan-story-test-driver'
 chai.should()
 chai.use(solidity)
@@ -68,7 +68,7 @@ async function lendCompound(
     tokenAddresses.should.not.include(cToken.address)
 
     const cDaiBalance = await cToken.balanceOf(escrowAddress)
-    cDaiBalance.eq(0).should.eql(true, '')
+    cDaiBalance.eq(0).should.eql(true, 'cDaiBalance should equal zero')
   }
 
  async function claimComp(

@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { LoanHelpersReturn } from "../../../loans"
+import { LoanHelpersReturn } from '../../../loans'
 import LoanStoryTestDriver from '../loan-story-test-driver'
 chai.should()
 chai.use(solidity)

@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { IAToken } from "../../../../../types/typechain"
 import { LoanHelpersReturn } from "../../../loans"

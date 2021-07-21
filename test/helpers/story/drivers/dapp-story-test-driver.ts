@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai'
+import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Test } from 'mocha'
@@ -6,7 +6,7 @@ import { Test } from 'mocha'
 import { TestAction, TestScenario } from '../story-helpers'
 import { aaveLendTest } from './dapp-utils/aave.utils'
 import { compoundClaimTest,compoundLendTest } from './dapp-utils/compound.utils'
-import { pooltogetherLendTest } from './dapp-utils/pooltogether.utils'
+import { poolTogetherLendTest } from './dapp-utils/poolTogether.utils'
 import { sushiswapSwapTest } from './dapp-utils/sushiswap.utils'
 import { uniswapSwapTest } from './dapp-utils/uniswap.utils'
 import { yearnLendTest } from './dapp-utils/yearn.utils'
@@ -96,7 +96,7 @@ export default class DappStoryTestDriver extends StoryTestDriver {
       }
       case 'POOL_TOGETHER': {
         const newTest = new Test('POOL_TOGETHER Lend DAPP', async () => {
-          await pooltogetherLendTest(hre)
+          await poolTogetherLendTest(hre)
         })
         tests.push(newTest)
         break
