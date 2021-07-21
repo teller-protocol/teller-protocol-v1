@@ -4,7 +4,6 @@ import { getNetworkName } from '../config'
 import {
   ITellerNFT,
   ITellerNFTDistributor,
-  PolyTellerNFT,
 } from '../types/typechain'
 import { TellerNFTDictionary } from '../types/typechain'
 import {
@@ -12,6 +11,7 @@ import {
   deployDiamond,
   DeployDiamondArgs,
 } from '../utils/deploy-helpers'
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const deployNFT: DeployFunction = async (hre) => {
   const { getNamedSigner, run, log, network, contracts, ethers } = hre
@@ -24,10 +24,31 @@ const deployNFT: DeployFunction = async (hre) => {
   log('********** Teller NFT **********', { indent: 1 })
   log('')
 
-  const nft = await deploy<ITellerNFT>({
-    contract: 'TellerNFT',
-    hre,
-  })
+  // Store list of addresses that should be added as minters
+  const minters: string[] = []
+
+  let nft: ITellerNFT
+  const isEthereum = ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(n => n === networkName)
+  if (isEthereum) {
+    nft = await deploy<ITellerNFT>({
+      contract: 'TellerNFT',
+      hre,
+    })
+  } else {
+    nft = await deploy<ITellerNFT>({
+      contract: 'PolyTellerNFT',
+      hre,
+      proxy: {
+        proxyContract: 'OpenZeppelinTransparentProxy',
+        execute: {
+          init: {
+            methodName: 'initialize',
+            args: [[await deployer.getAddress()]],
+          },
+        },
+      },
+    })
+  }
 
   const nftDictionary = await deploy<TellerNFTDictionary>({
     contract: 'TellerNFTDictionary',
@@ -43,23 +64,36 @@ const deployNFT: DeployFunction = async (hre) => {
     },
   })
 
-  if (networkName === 'polygon' || networkName === 'polygon_mumbai') {
-    const polyTellerNft = await deploy<PolyTellerNFT>({
-      contract: 'PolyTellerNFT',
-      hre,
-      proxy: {
-        proxyContract: 'OpenZeppelinTransparentProxy',
-        execute: {
-          init: {
-            methodName: 'initialize',
-            args: [[await deployer.getAddress()]],
-          },
-        },
-      },
-    })
+  await deployDistributor(hre)
+
+  log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
+
+  try {
+    if (isEthereum) {
+      minters.push(
+        nftDistributor.address,
+        await deployer.getAddress(),
+      )
+    }
+    const receipt = await nft
+      .initialize(minters)
+      .then(async ({ wait }) => await wait())
+    log(` with ${receipt.gasUsed} gas`)
+  } catch (err) {
+    log(' already initialized')
   }
 
-  //call initialize on the dictionary
+  await run('add-nft-tiers', { sendTx: true })
+  await run('add-nft-merkles', { sendTx: true })
+}
+
+const deployDistributor = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
+  const { ethers, contracts, getNamedSigner, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
+
+  const nft = await contracts.get<ITellerNFT>('TellerNFT')
+  const nftDictionary = await contracts.get<TellerNFTDictionary>('TellerNFTDictionary')
 
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
@@ -71,7 +105,7 @@ const deployNFT: DeployFunction = async (hre) => {
     const upgradeExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-    >['execute'] = undefined
+      >['execute'] = undefined
 
     execute = upgradeExecute
   } catch {
@@ -79,7 +113,7 @@ const deployNFT: DeployFunction = async (hre) => {
     const initExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-    >['execute'] = {
+      >['execute'] = {
       methodName: executeMethod,
       args: [nft.address, nftDictionary.address, await deployer.getAddress()],
     }
@@ -127,24 +161,6 @@ const deployNFT: DeployFunction = async (hre) => {
 
     log('Done.')
   }
-
-  log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
-
-  try {
-    const minters: string[] = [
-      nftDistributor.address,
-      await deployer.getAddress(),
-    ]
-    const receipt = await nft
-      .initialize(minters)
-      .then(async ({ wait }) => await wait())
-    log(` with ${receipt.gasUsed} gas`)
-  } catch (err) {
-    log(' already initialized')
-  }
-
-  await run('add-nft-tiers', { sendTx: true })
-  await run('add-nft-merkles', { sendTx: true })
 }
 
 deployNFT.tags = ['nft']

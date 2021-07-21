@@ -9,16 +9,12 @@ import { ITellerDiamond } from "../../shared/interfaces/ITellerDiamond.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract PolyTellerNFT is TellerNFT {
+    address constant CHILD_CHAIN_MANAGER = 0x195fe6EE6639665CCeB15BCCeB9980FC445DFa0B;
+
     bytes32 DEPOSITOR = keccak256("DEPOSITOR");
 
     // limit batching of tokens due to gas limit restrictions
     uint256 public constant BATCH_LIMIT = 20;
-
-    // Link to the contract metadata
-    string private _metadataBaseURI;
-
-    // Hash to the contract metadata located on the {_metadataBaseURI}
-    string private _contractURIHash;
 
     // only the depositor
     modifier onlyDepositor() {
@@ -45,23 +41,11 @@ contract PolyTellerNFT is TellerNFT {
         override
         initializer
     {
-        // super.initialize(minters);
-        __ERC721_init("Teller NFT", "TNFT");
-        __AccessControl_init();
-
-        for (uint256 i; i < minters.length; i++) {
-            _setupRole(MINTER, minters[i]);
-        }
-
-        _metadataBaseURI = "https://gateway.pinata.cloud/ipfs/";
-        _contractURIHash = "QmWAfQFFwptzRUCdF2cBFJhcB2gfHJMd7TQt64dZUysk3R";
+        require(minters.length == 0, "Teller: poly nft cannot have minters");
+        TellerNFT.initialize(minters);
 
         // sets up a role for child chain manager to be the depositor
-        // TODO: uncomment below when mapping is complete
-        // _setupRole(DEPOSITOR, 0x195fe6EE6639665CCeB15BCCeB9980FC445DFa0B);
-
-        // for mock tests
-        _setupRole(DEPOSITOR, 0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5);
+        _setupRole(DEPOSITOR, CHILD_CHAIN_MANAGER);
     }
 
     /**
@@ -88,6 +72,14 @@ contract PolyTellerNFT is TellerNFT {
                 _mint(user, tokenIds[i]);
             }
         }
+    }
+
+    function _mint(address owner, uint256 tokenId) internal override {
+        // Set tier
+        _tokenTier[tokenId] = tierIndex;
+
+        // Set owner
+        _setOwner(owner, tokenId);
     }
 
     /**
