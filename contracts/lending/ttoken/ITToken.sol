@@ -2,13 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    ERC20Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {
-    RolesFacet
-} from "../../contexts2/access-control/roles/RolesFacet.sol";
+import { RolesFacet } from "../../contexts2/access-control/roles/RolesFacet.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
@@ -69,6 +65,13 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         bool restriction,
         address indexed investmentManager
     );
+
+    /**
+     * @notice The event is emitted when interest has been claimed at the end of Teller's Alpha
+     * @param recipient The address who has claimed the interest
+     * @param userReward The amount of interest claimed by the Alpha participant
+     */
+    event AlphaInterestClaimed(address recipient, uint256 userReward);
 
     /**
      * @notice The token that is the underlying asset for this Teller token.
