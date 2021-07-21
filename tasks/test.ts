@@ -63,17 +63,17 @@ const resolvedRemoteContracts: RemoteContract[] = []
     })
   })
 
-
-    function runStoryTests( mochaInstance: Mocha,  hre:HardhatRuntimeEnvironment ):  number {
+  
+    function createStoryTests( mochaInstance: Mocha,  hre:HardhatRuntimeEnvironment ):  number {
    
   
     //custom code
     const storyMochaInstance: Mocha = generateAllStoryTests(mochaInstance, hre)
   
-    console.log('\n\n\n\n')
+   // console.log('\n\n\n\n')
    
   
-    console.log('Completed all tests.')
+    //console.log('Completed story tests.')
    
 
     return 0 
@@ -96,41 +96,13 @@ const resolvedRemoteContracts: RemoteContract[] = []
  
   .setAction(async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
     
-    //get access to mocha instance
-    //add our tests to the same instance 
-
-
-   // await initGasReporter( hre )
-
-  /*  const { default: Mocha } = await import("mocha");
-    const mocha = new Mocha(hre.config.mocha);
-    testFiles.forEach((file) => mocha.addFile(file));
-
-    const testFailures = await new Promise<number>((resolve) => {
-      mocha.run(resolve);
-    }); */
-
-
-        console.log('meep 1 ')
-
-
-        
-
-
-       // const { default: Mocha } = await import("mocha")
-
-
-
-      
+  
        //run the gas reporter plugin 
        await runSuper({testFiles })  
- 
-
-
-
+  
          const mocha = new Mocha(hre.config.mocha)
 
-        await runStoryTests(mocha,hre)
+        await createStoryTests(mocha,hre)  //adds them to mocha as suite 
         
         //testFiles.forEach((file) => mocha.addFile(file))
         const testFailures = await new Promise((resolve, _) => {
@@ -140,141 +112,4 @@ const resolvedRemoteContracts: RemoteContract[] = []
  
      
   })
-
-/*
-
-  async function initGasReporter(hre: HardhatRuntimeEnvironment) : Promise<any> {
  
-    const options = getGasReporterOptions(hre);
-    options.getContracts = getContracts.bind(null, hre.artifacts, options.excludeContracts);
-
-    if (options.enabled) {
-      mochaConfig = hre.config.mocha || {};
-      mochaConfig.reporter = "eth-gas-reporter";
-      mochaConfig.reporterOptions = options;
-
-      if (hre.network.name === HARDHAT_NETWORK_NAME || options.fast){
-        const wrappedDataProvider= new EGRDataCollectionProvider(hre.network.provider,mochaConfig);
-        hre.network.provider = new BackwardsCompatibilityProviderAdapter(wrappedDataProvider);
-
-        const asyncProvider = new EGRAsyncApiProvider(hre.network.provider);
-        resolvedRemoteContracts = await getResolvedRemoteContracts(
-          asyncProvider,
-          options.remoteContracts
-        );
-
-        mochaConfig.reporterOptions.provider = asyncProvider;
-        mochaConfig.reporterOptions.blockLimit = ( hre.network.config as any).blockGasLimit as number;
-     //   mochaConfig.attachments = {};
-      }
-
-      hre.config.mocha = mochaConfig;
-      resolvedQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames();
-    }
-  }
-
-  function getGasReporterOptions(hre: HardhatRuntimeEnvironment): any {
-    return { ...getDefaultOptions(hre), ...(hre.config as any).gasReporter };
-  }
-
- 
-function getDefaultOptions(hre: HardhatRuntimeEnvironment): EthGasReporterConfig {
-  const defaultUrl = "http://localhost:8545";
-  const defaultCompiler = hre.config.solidity.compilers[0]
-
-  let url: any;
-  // Resolve URL
-  if (( hre.network.config as HttpNetworkConfig).url) {
-    url = ( hre.network.config as HttpNetworkConfig).url;
-  } else {
-    url = defaultUrl;
-  }
-
-  return {
-    enabled: true,
-    url:  url as string,
-    metadata: {
-      compiler: {
-        version: defaultCompiler.version
-      },
-      settings: {
-        optimizer: {
-          enabled: defaultCompiler.settings.optimizer.enabled,
-          runs: defaultCompiler.settings.optimizer.runs
-        }
-      }
-    }
-  }
-}
- 
- async function getResolvedRemoteContracts(
-  provider: EGRAsyncApiProvider,
-  remoteContracts: RemoteContract[] = []
-) : Promise <RemoteContract[]> {
-  for (const contract of remoteContracts){
-    let code;
-    try {
-      contract.bytecode = await provider.getCode(contract.address);
-      contract.deployedBytecode = contract.bytecode;
-      contract.bytecodeHash = sha1(contract.bytecode);
-    } catch (error){
-      console.log(`Warning: failed to fetch bytecode for remote contract: ${contract.name}`)
-      console.log(`Error was: ${error}\n`);
-    }
-  }
-  return remoteContracts;
-}
-
-
- 
- function getContracts(artifacts: Artifacts, skippable: string[] = []) : any[] {
-  const contracts = [];
-
-  for (const qualifiedName of resolvedQualifiedNames) {
-    if (shouldSkipContract(qualifiedName, skippable)){
-      continue;
-    }
-
-    let name: string;
-    let artifact = artifacts.readArtifactSync(qualifiedName)
-
-    // Prefer simple names
-    try {
-      artifact = artifacts.readArtifactSync(artifact.contractName);
-      name = artifact.contractName;
-    } catch (e) {
-      name = qualifiedName;
-    }
-
-    contracts.push({
-      name: name,
-      artifact: {
-        abi: artifact.abi,
-        bytecode: artifact.bytecode,
-        deployedBytecode: artifact.deployedBytecode
-      }
-    });
-  }
-
-  for (const remoteContract of resolvedRemoteContracts){
-    contracts.push({
-      name: remoteContract.name,
-      artifact: {
-        abi: remoteContract.abi,
-        bytecode: remoteContract.bytecode,
-        bytecodeHash: remoteContract.bytecodeHash,
-        deployedBytecode: remoteContract.deployedBytecode
-      }
-    })
-  }
-  return contracts;
-}
-
-
- 
- function shouldSkipContract(qualifiedName: string, skippable: string[]): boolean {
-  for (const item of skippable){
-    if (qualifiedName.includes(item)) return true;
-  }
-  return false;
-}*/
