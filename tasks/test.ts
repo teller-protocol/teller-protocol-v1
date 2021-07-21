@@ -52,10 +52,10 @@ const resolvedRemoteContracts: RemoteContract[] = []
   })
 
 
-  async function runStoryTests(  hre:HardhatRuntimeEnvironment ): Promise<number> {
+  async function runStoryTests( mochaInstance: Mocha,  hre:HardhatRuntimeEnvironment ): Promise<number> {
   
-    const mochaInstance = new Mocha(hre.config.mocha)
-    mochaInstance.timeout(49000)
+   // let mochaInstance = new Mocha(hre.config.mocha)
+    //mochaInstance.timeout(9000)
   
     //custom code
     const storyMochaInstance: Mocha = generateAllStoryTests(mochaInstance, hre)
@@ -128,12 +128,18 @@ const resolvedRemoteContracts: RemoteContract[] = []
 
         console.log('meep 1 ')
 
+
+        //run the gas reporter plugin 
         await runSuper()  
+
 
         const { default: Mocha } = await import("mocha")
 
       //  const { default: Mocha } = await Promise.resolve().then(() => __importStar(require("mocha")));
         const mocha = new Mocha(hre.config.mocha)
+
+        await runStoryTests(mocha,hre)
+        
         testFiles.forEach((file) => mocha.addFile(file))
         const testFailures = await new Promise((resolve, _) => {
             mocha.run(resolve)
