@@ -18,20 +18,7 @@ import {
   EGRAsyncApiProvider,
   EGRDataCollectionProvider} from "./test-helper"
 
- /*
-  const origRun = Mocha.prototype.run
-
-        Mocha.prototype.run =    function(resolve?: (failures:number) => void) : Mocha.Runner {
-          // add our suite tests
-         // this.addSuite(...)
-
-         console.log('we overloaded the prototype')
-
-           runStoryTests(this,require('hardhat'))
  
-          return origRun.call(this, resolve)
-        }*/
-
 
 let mochaConfig
 let resolvedQualifiedNames: string[]
