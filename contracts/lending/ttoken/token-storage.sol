@@ -18,6 +18,12 @@ struct Store {
     uint8 decimals;
     // The status of token investment restriction
     bool restricted;
+    // The status of Teller Alpha running
+    bool alphaEnded;
+    // The total amount of interest earned by the protocol from disbursed loans
+    uint256 alphaInterestEarned;
+    // The status of alpha participants having claimed interest
+    mapping(address => bool) alphaInterestClaimed;
 }
 
 bytes32 constant POSITION = keccak256("ttoken.storage.position");
