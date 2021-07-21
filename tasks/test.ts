@@ -48,7 +48,7 @@ import {
 
   async function runStoryTests(  hre:HardhatRuntimeEnvironment ): Promise<number> {
   
-    let mochaInstance = new Mocha(hre.config.mocha)
+    const mochaInstance = new Mocha(hre.config.mocha)
     mochaInstance.timeout(49000)
   
     //custom code
@@ -63,8 +63,8 @@ import {
     console.log('\n\n\n\n')
     const tsFiles = await glob(path.join(hre.config.paths.tests, '**/*.ts'))
   
-    mochaInstance = new Mocha()
-    mochaInstance.timeout(19000)
+    /*mochaInstance = new Mocha(hre.config.mocha)
+    mochaInstance.timeout(49000)
   
     tsFiles.forEach((file: string) => {
       mochaInstance.addFile(file)
@@ -72,7 +72,7 @@ import {
   
     const fileTestFailures = await new Promise<number>((resolve, _) => {
       mochaInstance.run(resolve)
-    })
+    })*/
   
   
   
@@ -83,7 +83,7 @@ import {
       return testFailures
     }*/
   
-    return fileTestFailures
+    return testFailures
   }
    
   
@@ -100,7 +100,7 @@ import {
    subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
     async (args: any, hre, runSuper) => {
    
-     // await runStoryTests( hre )       
+      //await runStoryTests( hre )       
      
       return await runSuper() 
   
