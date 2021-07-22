@@ -88,7 +88,8 @@ contract NFTMainnetBridgingToPolygonFacet {
         } else {
             uint256[] memory tokenIds = abi.decode(tokenData, (uint256[]));
             for (uint256 i; i < tokenIds.length; i++) {
-                if (TELLER_NFT_V1.getOwnedTokens(msg.sender).length >= 1) {
+                (uint256 index, ) = TELLER_NFT_V1.getTokenTier(tokenIds[i]);
+                if (index >= 0) {
                     TELLER_NFT_V1.safeTransferFrom(msg.sender, V2, tokenIds[i]);
                 } else {
                     // mint from distributor

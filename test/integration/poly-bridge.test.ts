@@ -19,7 +19,12 @@ import {
   updatePlatformSetting,
 } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ITellerDiamond, PolyTellerNFT, TellerNFT } from '../../types/typechain'
+import {
+  ITellerDiamond,
+  MainnetTellerNFT,
+  PolyTellerNFT,
+  TellerNFT,
+} from '../../types/typechain'
 
 chai.should()
 chai.use(solidity)
@@ -38,6 +43,7 @@ describe.only('Bridging Assets to Polygon', () => {
     let deployer: Signer
     let diamond: ITellerDiamond
     let rootToken: TellerNFT
+    let rootTokenV2: MainnetTellerNFT
     let childToken: PolyTellerNFT
     let borrower: string
     let borrowerSigner: Signer
@@ -110,14 +116,25 @@ describe.only('Bridging Assets to Polygon', () => {
         })
         it('unstakes the nfts then "deposits" to polygon', async () => {
           // bridge all of our nfts
+          console.log('root tokens before migrating are owned by v1')
+          const ownedNFTsV1 = await rootToken
+            .getOwnedTokens(borrower)
+            .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+          console.log(ownedNFTsV1)
           await diamond.connect(borrowerSigner).bridgeAllNFTs()
 
+          console.log('root tokens after migrating are now owned by v2')
+          const ownedNFTsV2 = await rootTokenV2
+            .getOwnedTokens(borrower)
+            .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+          console.log(ownedNFTsV2)
+          
           // after unstaking our NFTs, it would make sense that the
           // length of our staked NFTs is zero
           const stakedNFTs = await diamond.getStakedNFTs(borrower)
           expect(stakedNFTs.length).to.equal(0)
 
-          // we also expect that the diamonds now own all our unstakded NFTs
+          // we also expect that the diamonds now own all our unstaked NFTs
           const ownedNFTs = await rootToken
             .getOwnedTokens(diamond.address)
             .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
