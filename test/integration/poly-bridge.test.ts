@@ -44,7 +44,7 @@ describe.only('Bridging Assets to Polygon', () => {
     let diamond: ITellerDiamond
     let rootToken: TellerNFT
     let rootTokenV2: MainnetTellerNFT
-    let childToken: PolyTellerNFT
+    // let childToken: PolyTellerNFT
     let borrower: string
     let borrowerSigner: Signer
     let ownedNFTs: BigNumber[]
@@ -55,7 +55,7 @@ describe.only('Bridging Assets to Polygon', () => {
         keepExistingDeployments: true,
       })
       rootToken = await contracts.get('TellerNFT')
-      childToken = await contracts.get('PolyTellerNFT')
+      // childToken = await contracts.get('PolyTellerNFT')
       diamond = await contracts.get('TellerDiamond')
       deployer = await getNamedSigner('deployer')
       borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
@@ -114,21 +114,10 @@ describe.only('Bridging Assets to Polygon', () => {
             expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
           }
         })
-        it('unstakes the nfts then "deposits" to polygon', async () => {
+        it('migrates any 721 token -> 1155 then bridges to polygon', async () => {
           // bridge all of our nfts
-          console.log('root tokens before migrating are owned by v1')
-          const ownedNFTsV1 = await rootToken
-            .getOwnedTokens(borrower)
-            .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-          console.log(ownedNFTsV1)
-          await diamond.connect(borrowerSigner).bridgeAllNFTs()
+          await diamond.connect(borrowerSigner).bridgeNFTs([[], []])
 
-          console.log('root tokens after migrating are now owned by v2')
-          const ownedNFTsV2 = await rootTokenV2
-            .getOwnedTokens(borrower)
-            .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-          console.log(ownedNFTsV2)
-          
           // after unstaking our NFTs, it would make sense that the
           // length of our staked NFTs is zero
           const stakedNFTs = await diamond.getStakedNFTs(borrower)
@@ -152,7 +141,7 @@ describe.only('Bridging Assets to Polygon', () => {
             [stakedNFTs]
           )
           // stake the nfts and "send them to" root chain manager
-          await childToken.connect(deployer).deposit(borrower, depositData)
+          // await childToken.connect(deployer).deposit(borrower, depositData)
         })
       })
       // describe('burns the tokens then "deposits" back to ethereum', () => {

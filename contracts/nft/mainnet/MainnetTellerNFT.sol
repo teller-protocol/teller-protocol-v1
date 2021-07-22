@@ -12,6 +12,8 @@ contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
     address public constant V1 = 0x2ceB85a2402C94305526ab108e7597a102D6C175;
     TellerNFTDictionary public constant DICT =
         TellerNFTDictionary(0x72733102AB139FB0367cc29D492c955A7c736079);
+    address public constant diamond =
+        0xc14D994fe7C5858c93936cc3bD42bb9467d6fB2C;
 
     /* Public Functions */
 
@@ -35,17 +37,24 @@ contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
         // Check which 721 token we received
         // We only care about V1 so we can migrate it
         if (_msgSender() == V1) {
-            // Convert V1 token ID and mint 1 new V2 token
-            _mint(from, _convertV1TokenId(tokenId), 1, "");
+            uint256 newTokenId;
+            // if the from address is the diamond address, we trust that we
+            // can decode the data into the newly converted token id .. otherwise
+            // we
+            if (from == diamond) {
+                newTokenId = abi.decode(data, (uint256));
+            } else {
+                newTokenId = convertV1TokenId(tokenId);
+            }
+            // Convert V1 token ID and mint 1 new V2 token to the diamond
+            _mint(from, newTokenId, 1, "");
         }
-
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
     /* Internal Functions */
-
-    function _convertV1TokenId(uint256 _tokenId)
-        internal
+    function convertV1TokenId(uint256 _tokenId)
+        public
         view
         returns (uint256 tokenId_)
     {

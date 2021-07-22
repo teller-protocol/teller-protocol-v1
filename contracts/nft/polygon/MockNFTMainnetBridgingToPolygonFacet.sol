@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import {
-    NFTMainnetBridgingToPolygonFacet
-} from "./NFTMainnetBridgingToPolygonFacet.sol";
+import { NFTMainnetBridgingToPolygonFacet } from "./NFTMainnetBridgingToPolygonFacet.sol";
 
 contract MockNFTMainnetBridgingToPolygonFacet is
     NFTMainnetBridgingToPolygonFacet
@@ -12,5 +10,5 @@ contract MockNFTMainnetBridgingToPolygonFacet is
         NFTMainnetBridgingToPolygonFacet(polygonNFT)
     {}
 
-    function __depositFor(bytes memory tokenData) internal override {}
+    function __depositFor(uint256[] memory tokenIds) internal override {}
 }

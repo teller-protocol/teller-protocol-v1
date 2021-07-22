@@ -13,6 +13,7 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 
 // Storage
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
+import "hardhat/console.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
     // immutable and constant addresses
@@ -23,12 +24,10 @@ contract NFTMainnetBridgingToPolygonFacet {
         0xD4888faB8bd39A663B63161F5eE1Eae31a25B653;
 
     // TELLER NFT V1
-    address public constant V1 = 0x2ceB85a2402C94305526ab108e7597a102D6C175;
     TellerNFT public constant TELLER_NFT_V1 =
         TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);
 
     // TELLER NFT V2
-    address public constant V2 = 0x98Ca52786e967d1469090AdC075416948Ca004A7;
     MainnetTellerNFT public constant TELLER_NFT_V2 =
         MainnetTellerNFT(0x98Ca52786e967d1469090AdC075416948Ca004A7);
 
@@ -36,75 +35,19 @@ contract NFTMainnetBridgingToPolygonFacet {
         POLYGON_NFT_ADDRESS = polygonNFT;
     }
 
-    /**
-     * @notice it unstakes our staked tokens, or transfers our unstaked tokens to the diamond
-     * before making a call to the RootChainManager
-     * @dev makes a function call to `depositFor` on the RootChainManager, which speaks to the
-     * ChildChainManager, calling our PolyTellerNFT.
-     * @param tokenData the tokenData that's decoded and bridged
-     * @param staked are the tokens sent by the user staked?
-     */
-    function __bridgePolygonDepositFor(bytes memory tokenData, bool staked)
-        private
-    {
-        if (tokenData.length == 32) {
-            uint256 tokenId = abi.decode(tokenData, (uint256));
-            if (staked) {
-                NFTLib.unstake(tokenId);
-            } else {
-                NFTLib.nft().transferFrom(msg.sender, address(this), tokenId);
-            }
-        } else {
-            uint256[] memory tokenIds = abi.decode(tokenData, (uint256[]));
-            if (staked) {
-                for (uint256 i; i < tokenIds.length; i++) {
-                    NFTLib.unstake(tokenIds[i]);
-                }
-            } else {
-                for (uint256 i; i < tokenIds.length; i++) {
-                    NFTLib.nft().transferFrom(
-                        msg.sender,
-                        address(this),
-                        tokenIds[i]
-                    );
-                }
-            }
+    function __depositFor(uint256[] memory tokenIds) internal virtual {
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+        for (uint256 i; i < amounts.length; i++) {
+            amounts[i] = 1;
         }
-
-        __depositFor(tokenData);
-    }
-
-    function __depositFor(bytes memory tokenData) internal virtual {
-        if (tokenData.length == 32) {
-            uint256 tokenId = abi.decode(tokenData, (uint256));
-            // if the owner (msg.sender) has their token in V1 ..
-            (uint256 index, ) = TELLER_NFT_V1.getTokenTier(tokenId);
-            if (index >= 0) {
-                // .. then we transfer it to v2
-                TELLER_NFT_V1.safeTransferFrom(msg.sender, V2, tokenId);
-            } else {
-                // mint from distributor
-            }
-        } else {
-            uint256[] memory tokenIds = abi.decode(tokenData, (uint256[]));
-            for (uint256 i; i < tokenIds.length; i++) {
-                (uint256 index, ) = TELLER_NFT_V1.getTokenTier(tokenIds[i]);
-                if (index >= 0) {
-                    TELLER_NFT_V1.safeTransferFrom(msg.sender, V2, tokenIds[i]);
-                } else {
-                    // mint from distributor
-                }
-            }
-        }
-
         // Deposit tokens by calling the RootChainManager which then has the ERC721_PREDICATE transfer the tokens
         Address.functionCall(
             ROOT_CHAIN_MANAGER,
             abi.encodeWithSignature(
                 "depositFor(address,address,bytes)",
                 msg.sender,
-                V2,
-                tokenData
+                address(TELLER_NFT_V2),
+                abi.encode(tokenIds, amounts)
             )
         );
     }
@@ -117,34 +60,49 @@ contract NFTMainnetBridgingToPolygonFacet {
     }
 
     /**
-     * @notice checks if tokenId is stake or unstaked, then calls the bridge function with the
-     * encoded tokenId
-     * @param tokenId the tokenId to encode and send to the bridge function
-     */
-    function bridgeNFT(uint256 tokenId) external {
-        bool isStaked = EnumerableSet.contains(
-            NFTLib.s().stakedNFTs[msg.sender],
-            tokenId
-        );
-        __bridgePolygonDepositFor(abi.encode(tokenId), isStaked);
-    }
-
-    /**
      * @notice gets all of our NFTs (staked and unstaked) then sends them to be bridged
      */
-    function bridgeAllNFTs() external {
-        uint256[] memory tokenIDs;
+    function bridgeNFTs(uint256[][2] calldata tokenIds) external {
+        EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
+            msg.sender
+        ];
 
-        // Staked tokens
-        tokenIDs = NFTLib.stakedNFTs(msg.sender);
-        if (tokenIDs.length > 0) {
-            __bridgePolygonDepositFor(abi.encode(tokenIDs), true);
+        // we are creating a new array so that we can overrwrite each element
+        // with a newTokenId.
+        uint256[][2] memory tokenIds_ = tokenIds;
+        for (uint256 i; i < tokenIds_[0].length; i++) {
+            if (EnumerableSet.contains(stakedNFTs, tokenIds_[0][i])) {
+                NFTLib.unstake(tokenIds_[0][i]);
+            } else if (TELLER_NFT_V1.ownerOf(tokenIds_[0][i]) == msg.sender) {
+                TELLER_NFT_V1.transferFrom(
+                    msg.sender,
+                    address(this),
+                    tokenIds_[0][i]
+                );
+            }
+            uint256 newTokenId = TELLER_NFT_V2.convertV1TokenId(
+                tokenIds_[0][i]
+            );
+            TELLER_NFT_V1.safeTransferFrom(
+                address(this),
+                address(TELLER_NFT_V2),
+                tokenIds_[0][i],
+                abi.encode(newTokenId)
+            );
+            tokenIds_[0][i] = newTokenId;
         }
+        __depositFor(tokenIds_[0]);
 
-        // Unstaked (aka in the user's wallet) tokens
-        tokenIDs = TELLER_NFT_V1.getOwnedTokens(msg.sender);
-        if (tokenIDs.length > 0) {
-            __bridgePolygonDepositFor(abi.encode(tokenIDs), false);
-        }
+        // checking v1 tokens whether they're staked or not
+        // tokenIDs[0] = NFTLib.stakedNFTs(msg.sender);
+        // if (tokenIDs.length > 0) {
+        //     __bridgePolygonDepositFor(abi.encode(tokenIDs), true);
+        // }
+
+        // // Unstaked (aka in the user's wallet) tokens
+        // tokenIDs = TELLER_NFT_V1.getOwnedTokens(msg.sender);
+        // if (tokenIDs.length > 0) {
+        //     __bridgePolygonDepositFor(abi.encode(tokenIDs), false);
+        // }
     }
 }
