@@ -9,9 +9,10 @@ import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
 import {
+  loanHelpers,
   LoanType,
   takeOutLoanWithNfts,
-  takeOutLoanWithoutNfts,
+  takeOutLoanWithoutNfts 
 } from '../helpers/loans'
 
 chai.should()
@@ -150,6 +151,24 @@ describe.skip('Loans', () => {
           const loanStatus = helpers.details.loan.status
           expect(loanStatus).to.equal(2)
         })
+
+
+
+        it('should be able to repay loan', async () => {
+
+          const loanId = 'loanId'
+          const lHelpers = await loanHelpers(loanId)
+
+          void await lHelpers.repay( 100, borrower )
+
+
+           
+          
+          
+          const loanStatus = helpers.details.loan.status
+          expect(loanStatus).to.equal(0)
+        })
+
       })
     })
   }
