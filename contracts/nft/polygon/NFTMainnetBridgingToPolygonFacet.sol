@@ -35,6 +35,12 @@ contract NFTMainnetBridgingToPolygonFacet {
         POLYGON_NFT_ADDRESS = polygonNFT;
     }
 
+    /**
+     * @notice it makes a function call to the ROOT_CHAIN_MANAGER "depositFor"
+     * function signature, which calls our PolyTellerNFT using the CHILD_CHAIN_MANAGER
+     * (after we map)
+     * @param tokenIds the token ids that we are depositing on ROOT_CHAIN_MANAGER
+     */
     function __depositFor(uint256[] memory tokenIds) internal virtual {
         uint256[] memory amounts = new uint256[](tokenIds.length);
         for (uint256 i; i < amounts.length; i++) {
@@ -60,7 +66,10 @@ contract NFTMainnetBridgingToPolygonFacet {
     }
 
     /**
-     * @notice gets all of our NFTs (staked and unstaked) then sends them to be bridged
+     * @notice gets all of our NFTs (staked and unstaked) migrates to ERC1155 (if ERC721), then
+     * bridges to polygon
+     * @param tokenIds the tokenIds that we are sending. First array is the ERC721, if any. Second array
+     * are our ERC-1155 tokenIDs
      */
     function bridgeNFTs(uint256[][2] calldata tokenIds) external {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
@@ -92,17 +101,5 @@ contract NFTMainnetBridgingToPolygonFacet {
             tokenIds_[0][i] = newTokenId;
         }
         __depositFor(tokenIds_[0]);
-
-        // checking v1 tokens whether they're staked or not
-        // tokenIDs[0] = NFTLib.stakedNFTs(msg.sender);
-        // if (tokenIDs.length > 0) {
-        //     __bridgePolygonDepositFor(abi.encode(tokenIDs), true);
-        // }
-
-        // // Unstaked (aka in the user's wallet) tokens
-        // tokenIDs = TELLER_NFT_V1.getOwnedTokens(msg.sender);
-        // if (tokenIDs.length > 0) {
-        //     __bridgePolygonDepositFor(abi.encode(tokenIDs), false);
-        // }
     }
 }
