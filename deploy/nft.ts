@@ -1,12 +1,13 @@
 import colors from 'colors'
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getNetworkName } from '../config'
 import {
   ITellerNFT,
-  ITellerNFTDistributor, TellerNFT
-} from "../types/typechain"
+  ITellerNFTDistributor,
+  MainnetTellerNFT,
+} from '../types/typechain'
 import { TellerNFTDictionary } from '../types/typechain'
 import {
   deploy,
@@ -24,7 +25,7 @@ const deployNFT: DeployFunction = async (hre) => {
   log('')
   log('********** Teller NFT **********', { indent: 1 })
   log('')
-
+  // 0x98Ca52786e967d1469090AdC075416948Ca004A7 -- teller_nft_v2
   await deploy<TellerNFTDictionary>({
     contract: 'TellerNFTDictionary',
     hre,
@@ -39,12 +40,13 @@ const deployNFT: DeployFunction = async (hre) => {
     },
   })
 
-
   // Store list of addresses that should be added as minters
   const nftName = 'TellerNFT_V2'
-  const isEthereum = ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some((n) => n === networkName)
+  const isEthereum = ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(
+    (n) => n === networkName
+  )
   if (isEthereum) {
-    const nft = await deploy<TellerNFT>({
+    const nft = await deploy<MainnetTellerNFT>({
       contract: 'MainnetTellerNFT',
       name: nftName,
       hre,
@@ -55,7 +57,7 @@ const deployNFT: DeployFunction = async (hre) => {
             methodName: 'initialize',
             args: [
               // Initial minters
-              [await deployer.getAddress()]
+              [await deployer.getAddress()],
             ],
           },
         },
@@ -105,7 +107,9 @@ const deployNFT: DeployFunction = async (hre) => {
   await run('add-nft-merkles', { sendTx: true })
 }
 
-const deployDistributor = async (hre: HardhatRuntimeEnvironment): Promise<ITellerNFTDistributor> => {
+const deployDistributor = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<ITellerNFTDistributor> => {
   const { ethers, contracts, getNamedSigner, log } = hre
 
   const deployer = await getNamedSigner('deployer')
@@ -122,7 +126,7 @@ const deployDistributor = async (hre: HardhatRuntimeEnvironment): Promise<ITelle
     const upgradeExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-      >['execute'] = undefined
+    >['execute'] = undefined
 
     execute = upgradeExecute
   } catch {
@@ -130,7 +134,7 @@ const deployDistributor = async (hre: HardhatRuntimeEnvironment): Promise<ITelle
     const initExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
-      >['execute'] = {
+    >['execute'] = {
       methodName: executeMethod,
       args: [nft.address, await deployer.getAddress()],
     }
