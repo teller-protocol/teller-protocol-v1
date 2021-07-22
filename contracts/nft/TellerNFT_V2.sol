@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 // Contracts
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -10,9 +9,9 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // Interfaces
-import "./ITellerNFT.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -31,7 +30,7 @@ import "./ITellerNFT.sol";
  *
  * @author develop@teller.finance
  */
-contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeable {
+contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     using Counters for Counters.Counter;
     using EnumerableSet for EnumerableSet.UintSet;
     using SafeMath for uint256;
@@ -48,11 +47,18 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
 
     /* State Variables */
 
+    struct Tier {
+        uint256 baseLoanSize;
+        address contributionAsset;
+        uint256 contributionSize;
+        uint8 contributionMultiplier;
+    }
+
     // It holds the total number of tokens in existence.
     uint256 public totalSupply;
 
     // It holds the total number of tiers.
-    uint128 internal _tierCounter;
+    uint128 internal _tierCount;
 
     // It holds how many tokens types exists in a tier.
     mapping(uint128 => uint256) internal _tierTokenCount;
@@ -64,9 +70,6 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
     mapping(uint256 => string) internal _idToUriHash;
     // It is a reverse lookup of the token ID given the metadata hash
     mapping(string => uint256) internal _uriHashToId;
-
-    // It holds a set of token IDs for an owner address.
-    mapping(address => EnumerableSet.UintSet) internal _ownerTokenIDs;
 
     // Hash to the contract metadata
     string private _contractURIHash;
@@ -81,12 +84,10 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override
+        override(ERC1155Upgradeable, AccessControlUpgradeable)
         returns (bool)
     {
-        return
-        interfaceId == type(ITellerNFT).interfaceId ||
-        super.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
 
     /**
@@ -99,8 +100,15 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function uri(uint256 tokenId) public view virtual override returns (string memory) {
-        return string(abi.encodePacked(super.uri(tokenId), _tokenURIHash(tokenId)));
+    function uri(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        return
+            string(abi.encodePacked(super.uri(tokenId), _idToUriHash[tokenId]));
     }
 
     /* External Functions */
@@ -109,52 +117,76 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      * @notice The contract metadata URI.
      * @return the contract URI hash
      */
-    function contractURI() external view override returns (string memory) {
+    function contractURI() external view returns (string memory) {
         // URI returned from parent just returns base URI
         return string(abi.encodePacked(super.uri(0), _contractURIHash));
     }
 
     /**
      * @notice It returns information about a Tier for a token ID.
-     * @param index Tier index to get info.
-     * @return tier_ the tier which belongs to the respective index
-     */
-    function getTier(uint256 index)
-        external
-        view
-        override
-        returns (Tier memory tier_)
-    {
-        tier_ = _tiers[index];
-    }
-
-    /**
-     * @notice It returns information about a Tier for a token ID.
      * @param tokenId ID of the token to get Tier info.
-     * @return index_ the index of the tier the tokenID belongs in
-     * @return tier_ the tier where the tokenID belongs in
+     * @return tierId_ the index of the tier the tokenId belongs to
+     * @return tierTokenId_ the tokenId in tier
      */
-    function getTokenTier(uint256 tokenId)
+    function getTokenTierId(uint256 tokenId)
         external
         view
-        override
-        returns (uint128 tierIndex_, uint128 tierTokenIndex_)
+        returns (uint128 tierId_, uint128 tierTokenId_)
     {
-        (tierIndex_, tierTokenIndex_) = _splitTokenId(tokenId);
+        (tierId_, tierTokenId_) = _splitTokenId(tokenId);
     }
 
     /**
-     * @notice It returns an array of hashes in a tier
-     * @param tierIndex the tier index to get the tier hashes
-     * @return hashes_ all the tokenID hashes
+     * @notice It returns Base Loan Size for a token ID.
+     * @param tokenId ID of the token to get info.
      */
-    function getTierHashes(uint256 tierIndex)
-        external
+    function tokenBaseLoanSize(uint256 tokenId) public view returns (uint256) {
+        (uint128 tierId, ) = _splitTokenId(tokenId);
+        return _tiers[tierId].baseLoanSize;
+    }
+
+    /**
+     * @notice It returns Contribution Asset for a token ID.
+     * @param tokenId ID of the token to get info.
+     */
+    function tokenContributionAsset(uint256 tokenId)
+        public
         view
-        override
-        returns (string[] memory hashes_)
+        returns (address)
     {
-        hashes_ = _tiers[tierIndex].hashes;
+        (uint128 tierId, ) = _splitTokenId(tokenId);
+        return _tiers[tierId].contributionAsset;
+    }
+
+    /**
+     * @notice It returns Contribution Size for a token ID.
+     * @param tokenId ID of the token to get info.
+     */
+    function tokenContributionSize(uint256 tokenId)
+        public
+        view
+        returns (uint256)
+    {
+        (uint128 tierId, ) = _splitTokenId(tokenId);
+        return _tiers[tierId].contributionSize;
+    }
+
+    /**
+     * @notice It returns Contribution Multiplier for a token ID.
+     * @param tokenId ID of the token to get info.
+     */
+    function tokenContributionMultiplier(uint256 tokenId)
+        public
+        view
+        returns (uint8)
+    {
+        (uint128 tierId, ) = _splitTokenId(tokenId);
+        return _tiers[tierId].contributionMultiplier;
+    }
+
+    struct TokenBalance {
+        uint256 tokenId;
+        uint256 balance;
     }
 
     /**
@@ -166,13 +198,35 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
     function getOwnedTokens(address owner)
         external
         view
-        override
-        returns (uint256[] memory owned_)
+        returns (TokenBalance[] memory owned_)
     {
-        EnumerableSet.UintSet storage set = _ownerTokenIDs[owner];
-        owned_ = new uint256[](set.length());
-        for (uint256 i; i < owned_.length; i++) {
-            owned_[i] = set.at(i);
+        uint256[] memory tokenIds = getTokenIds();
+        owned_ = new TokenBalance[](tokenIds.length);
+        for (uint256 i; i < tokenIds.length; i++) {
+            uint256 balance = balanceOf(owner, tokenIds[i]);
+            if (balance > 0) {
+                owned_[i] = TokenBalance(tokenIds[i], balance);
+            }
+        }
+    }
+
+    function getTokenIds() public view returns (uint256[] memory ids_) {
+        uint256 tokenCount;
+        for (uint128 tierId = 1; tierId <= _tierCount; tierId++) {
+            tokenCount += _tierTokenCount[tierId];
+        }
+
+        ids_ = new uint256[](tokenCount);
+        uint256 currentIndex;
+        for (uint128 tierId = 1; tierId < _tierCount; tierId++) {
+            for (
+                uint128 tierTokenId;
+                tierTokenId <= _tierTokenCount[tierId];
+                tierTokenId++
+            ) {
+                ids_[currentIndex] = _mergeTokenId(tierId, tierTokenId);
+                currentIndex++;
+            }
         }
     }
 
@@ -184,41 +238,47 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      * Requirements:
      *  - Caller must be an authorized minter
      */
-    function mint(uint256 tierIndex, address owner)
-        external
-        override
-        onlyRole(MINTER)
-    {
+    function mint(uint256 tierIndex, address owner) external onlyRole(MINTER) {
         // Get the token ID to mint for the user
         // On a fresh mint, the exact token ID minted is determined on tx execution
         //  with sudo randomness using the block number
-        uint128 tokenId = block.number % _tierTokenCount[tierIndex];
-
-        // Mint and set the token to the tier index
-        _safeMint(owner, tokenId);
-
-        // Set owner
-        _setOwner(owner, tokenId);
+        //        uint128 tokenId = block.number % _tierTokenCount[tierIndex];
+        //
+        //        // Mint and set the token to the tier index
+        //        _safeMint(owner, tokenId);
+        //
+        //        // Set owner
+        //        _setOwner(owner, tokenId);
     }
 
     /**
      * @notice Creates new Tiers to be minted with the given information.
      * @dev It auto increments the index of the next tier to add.
-     * @param newTier Information about the new tier to add.
+     * @param newTiers Information about the new tiers to add.
+     * @param tierHashes Metadata hashes belonging to the tiers.
      *
      * Requirements:
-     *  - Caller must have the {MINTER} role
+     *  - Caller must have the {ADMIN} role
      */
-    function createTiers(Tier[] calldata newTiers, string[][] calldata tierHashes) external override onlyRole(MINTER) {
-        require(newTiers.length == tierHashes.length, "Teller: array length mismatch");
+    function createTiers(
+        Tier[] calldata newTiers,
+        string[][] calldata tierHashes
+    ) external onlyRole(ADMIN) {
+        require(
+            newTiers.length == tierHashes.length,
+            "Teller: array length mismatch"
+        );
 
         for (uint256 i; i < newTiers.length; i++) {
             _createTier(newTiers[i], tierHashes[i]);
         }
     }
 
-    function _createTier(Tier calldata newTier, string[] calldata tierHashes) internal {
-        Tier storage tier = _tiers[++_tierCounter];
+    function _createTier(Tier calldata newTier, string[] calldata tierHashes)
+        internal
+    {
+        // Increment tier counter to use
+        Tier storage tier = _tiers[++_tierCount];
 
         tier.baseLoanSize = newTier.baseLoanSize;
         tier.contributionAsset = newTier.contributionAsset;
@@ -226,10 +286,10 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
         tier.contributionMultiplier = newTier.contributionMultiplier;
 
         // Store how many tokens are on the tier
-        _tierTokenCount.push(tierHashes.length);
+        _tierTokenCount[_tierCount] = tierHashes.length;
         // Set the token URI hash
         for (uint128 i; i < tierHashes.length; i++) {
-            uint256 tokenId = _mergeTokenId(_tierCounter, i);
+            uint256 tokenId = _mergeTokenId(_tierCount, i);
             _idToUriHash[tokenId] = tierHashes[i];
             _uriHashToId[tierHashes[i]] = tokenId;
         }
@@ -252,7 +312,6 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      */
     function setContractURIHash(string memory contractURIHash)
         public
-        override
         onlyRole(ADMIN)
     {
         _contractURIHash = contractURIHash;
@@ -262,12 +321,7 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      * @notice Initializes the TellerNFT.
      * @param minters The addresses that should allowed to mint tokens.
      */
-    function initialize(address[] calldata minters)
-        external
-        virtual
-        override
-        initializer
-    {
+    function initialize(address[] calldata minters) public virtual initializer {
         // Set the initial URI
         __ERC1155_init("https://gateway.pinata.cloud/ipfs/");
         __AccessControl_init();
@@ -356,14 +410,6 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
         }
     }
 
-    function _increaseSupply(address receiver, uint256 tokenId) internal {
-
-    }
-
-    function _decreaseSupply(address burner, uint256 tokenId) internal {
-
-    }
-
     /**
      * @dev Checks if a token ID exists. To exists the ID must have a URI hash associated.
      * @param tokenId ID of the token to check.
@@ -373,27 +419,16 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
     }
 
     /**
-     * @notice It returns the hash to use for the token URI.
-     * @param tokenId the tokenId to get the tokenURI hash
-     * @return the tokenURIHash of our NFT
-     */
-    function _tokenURIHash(uint256 tokenId)
-        internal
-        view
-        returns (string memory)
-    {
-        (uint128 tierId, uint128 tierTokenId) = _splitTokenId(tokenId);
-        string[] storage tierImageHashes = _tiers[tierId].hashes;
-        return tierImageHashes[tierTokenId % tierImageHashes.length];
-    }
-
-    /**
      * @dev Creates a V2 token ID from a tier ID and tier token ID.
      * @param tierId Index of the tier to use.
      * @param tierTokenId ID of the token within the given tier.
      * @return tokenId_ V2 NFT token ID.
      */
-    function _mergeTokenId(uint128 tierId, uint128 tierTokenId) internal pure returns (uint256 tokenId_) {
+    function _mergeTokenId(uint128 tierId, uint128 tierTokenId)
+        internal
+        pure
+        returns (uint256 tokenId_)
+    {
         tokenId_ = tierId * ID_PADDING;
         tokenId_ += tierTokenId;
     }
@@ -404,8 +439,12 @@ contract TellerNFT_V2 is ITellerNFT, ERC1155Upgradeable, AccessControlUpgradeabl
      * @return tierId_ Index of the token tier.
      * @return tierTokenId_ ID of the token within the tier.
      */
-    function _splitTokenId(uint256 tokenId) internal pure returns (uint128 tierId_, uint128 tierTokenId_) {
-        tierId_ = tokenId / ID_PADDING;
-        tierTokenId_ = tokenId % ID_PADDING;
+    function _splitTokenId(uint256 tokenId)
+        internal
+        pure
+        returns (uint128 tierId_, uint128 tierTokenId_)
+    {
+        tierId_ = SafeCast.toUint128(tokenId / ID_PADDING);
+        tierTokenId_ = SafeCast.toUint128(tokenId % ID_PADDING);
     }
 }

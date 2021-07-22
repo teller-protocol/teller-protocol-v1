@@ -1,34 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.3;
+pragma solidity ^0.8.0;
 
-// Interfaces
-import "../TellerNFT.sol";
-import { ITellerDiamond } from "../../shared/interfaces/ITellerDiamond.sol";
+// Contracts
+import { TellerNFT_V2 } from "../TellerNFT_V2.sol";
 
-// Address utility
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+contract PolyTellerNFT is TellerNFT_V2 {
+    address public immutable CHILD_CHAIN_MANAGER =
+        0x195fe6EE6639665CCeB15BCCeB9980FC445DFa0B;
 
-contract PolyTellerNFT is TellerNFT {
-    address constant CHILD_CHAIN_MANAGER = 0x195fe6EE6639665CCeB15BCCeB9980FC445DFa0B;
+    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
 
-    bytes32 DEPOSITOR = keccak256("DEPOSITOR");
-
-    // limit batching of tokens due to gas limit restrictions
-    uint256 public constant BATCH_LIMIT = 20;
-
-    // only the depositor
-    modifier onlyDepositor() {
-        require(hasRole(DEPOSITOR, msg.sender), "TellerNFT: not depositor");
-        _;
-    }
-
-    event WithdrawnBatch(address indexed user, uint256[] tokenIds);
-    event TransferWithMetadata(
-        address indexed from,
-        address indexed to,
-        uint256 indexed tokenId,
-        bytes metaData
-    );
+    constructor() {}
 
     /**
      * @notice it initializes the PolyTellerNFT by calling the TellerNFT with a
@@ -37,12 +19,13 @@ contract PolyTellerNFT is TellerNFT {
      * @param minters additional minters to add on the TellerNFT storage
      */
     function initialize(address[] calldata minters)
-        external
+        public
+        virtual
         override
         initializer
     {
-        require(minters.length == 0, "Teller: poly nft cannot have minters");
-        TellerNFT.initialize(minters);
+        require(minters.length == 0, "TellerNFT: cannot have minters");
+        super.initialize(minters);
 
         // sets up a role for child chain manager to be the depositor
         _setupRole(DEPOSITOR, CHILD_CHAIN_MANAGER);
@@ -58,99 +41,38 @@ contract PolyTellerNFT is TellerNFT {
      */
     function deposit(address user, bytes memory depositData)
         external
-        onlyDepositor
+        onlyRole(DEPOSITOR)
     {
-        // deposit single
-        if (depositData.length == 32) {
-            uint256 tokenId = abi.decode(depositData, (uint256));
-            _mint(user, tokenId);
-            // deposit batch
-        } else {
-            uint256[] memory tokenIds = abi.decode(depositData, (uint256[]));
-            uint256 length = tokenIds.length;
-            for (uint256 i; i < length; i++) {
-                _mint(user, tokenIds[i]);
-            }
-        }
-    }
+        require(user != address(0x0), "TellerNFT: INVALID_DEPOSIT_USER");
 
-    function _mint(address owner, uint256 tokenId) internal override {
-        // Set tier
-        _tokenTier[tokenId] = tierIndex;
+        (
+            uint256[] memory ids,
+            uint256[] memory amounts,
+            bytes memory data
+        ) = abi.decode(depositData, (uint256[], uint256[], bytes));
 
-        // Set owner
-        _setOwner(owner, tokenId);
+        _mintBatch(user, ids, amounts, data);
     }
 
     /**
-     * @notice called when user wants to withdraw multiple tokens back to root chain
+     * @notice called when user wants to withdraw single token back to root chain
      * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
-     * @param tokenIds tokenId list to withdraw
+     * @param id id to withdraw
+     * @param amount amount to withdraw
      */
-    function withdrawBatch(uint256[] calldata tokenIds) external {
-        address diamondAddress = 0xc14D994fe7C5858c93936cc3bD42bb9467d6fB2C;
-        // unstake first then withdraw
-        uint256 length = tokenIds.length;
-        require(length <= BATCH_LIMIT, "ChildERC721: EXCEEDS_BATCH_LIMIT");
-        for (uint256 i; i < length; i++) {
-            uint256 tokenId = tokenIds[i];
-            require(
-                _msgSender() == ownerOf(tokenId),
-                string(
-                    abi.encodePacked(
-                        "ChildERC721: INVALID_TOKEN_OWNER ",
-                        tokenId
-                    )
-                )
-            );
-            _burn(tokenId);
-        }
-        emit WithdrawnBatch(_msgSender(), tokenIds);
+    function withdraw(uint256 id, uint256 amount) external {
+        _burn(_msgSender(), id, amount);
     }
 
     /**
-     * @notice called when user wants to withdraw token back to root chain with arbitrary metadata
-     * @dev Should handle withraw by burning user's token.
-     *
-     * This transaction will be verified when exiting on root chain
-     *
-     * @param tokenId tokenId to withdraw
+     * @notice called when user wants to batch withdraw tokens back to root chain
+     * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
+     * @param ids ids to withdraw
+     * @param amounts amounts to withdraw
      */
-    function withdrawWithMetadata(uint256 tokenId) external {
-        require(
-            _msgSender() == ownerOf(tokenId),
-            "ChildERC721: INVALID_TOKEN_OWNER"
-        );
-
-        // Encoding metadata associated with tokenId & emitting event
-        emit TransferWithMetadata(
-            _msgSender(),
-            address(0),
-            tokenId,
-            this.encodeTokenMetadata(tokenId)
-        );
-
-        _burn(tokenId);
-    }
-
-    /**
-     * @notice This method is supposed to be called by client when withdrawing token with metadata
-     * and pass return value of this function as second paramter of `withdrawWithMetadata` method
-     *
-     * It can be overridden by clients to encode data in a different form, which needs to
-     * be decoded back by them correctly during exiting
-     *
-     * @param tokenId Token for which URI to be fetched
-     */
-    function encodeTokenMetadata(uint256 tokenId)
+    function withdrawBatch(uint256[] calldata ids, uint256[] calldata amounts)
         external
-        view
-        virtual
-        returns (bytes memory)
     {
-        // You're always free to change this default implementation
-        // and pack more data in byte array which can be decoded back
-        // in L1
-        return abi.encode(tokenURI(tokenId));
+        _burnBatch(_msgSender(), ids, amounts);
     }
 }
