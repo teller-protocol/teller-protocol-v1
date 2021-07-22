@@ -128,6 +128,9 @@ describe.skip('Loans', () => {
       })
 
       describe('with NFT', () => {
+
+       
+
         let helpers: any
         before(async () => {
           // Advance time
@@ -151,13 +154,19 @@ describe.skip('Loans', () => {
           // get loanStatus from helpers and check if it's equal to 2, which means it's active
           const loanStatus = helpers.details.loan.status
           expect(loanStatus).to.equal(2)
+
+           
+         
         })
 
 
 
         it('should be able to repay loan', async () => {
+          console.log('helpers.details.loan', helpers.details.loan)
+          const loanId =  helpers.details.loan.id 
 
-          const loanId = 'loanId'
+          console.log('loanId',loanId)
+
           const lHelpers = await loanHelpers(loanId)
 
           void await lHelpers.repay( 100, borrower )
