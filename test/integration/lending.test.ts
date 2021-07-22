@@ -6,7 +6,6 @@ import hre from 'hardhat'
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
-import { RUN_EXISTING } from '../helpers/env-helpers'
 import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
 
@@ -40,7 +39,7 @@ describe('Lending', () => {
     before(async () => {
       // Get a fresh market
       await deployments.fixture('markets', {
-        keepExistingDeployments: RUN_EXISTING,
+        keepExistingDeployments: false,
       })
 
       diamond = await contracts.get('TellerDiamond')
@@ -181,7 +180,7 @@ describe('Lending', () => {
         before(async () => {
           // Get a fresh market
           await deployments.fixture('markets', {
-            keepExistingDeployments: RUN_EXISTING,
+            keepExistingDeployments: false,
           })
 
           // Turn off the Teller Token restriction

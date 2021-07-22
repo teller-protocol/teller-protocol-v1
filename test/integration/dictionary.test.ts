@@ -26,27 +26,15 @@ describe('NFT Dictionary', () => {
 
   function testLoans(market: Market): void {
     let deployer: Signer
-    let diamond: ITellerDiamond
 
     before(async () => {
-      await hre.deployments.fixture(['market'], {
-        keepExistingDeployments: true,
+      await hre.deployments.fixture(['nft'], {
+        keepExistingDeployments: false,
       })
-
-      diamond = await contracts.get('TellerDiamond')
 
       deployer = await getNamedSigner('deployer')
     })
     describe('Dictionary test', () => {
-      beforeEach(async () => {
-        // Advance time
-        const { value: rateLimit } = await getPlatformSetting(
-          'RequestLoanTermsRateLimit',
-          hre
-        )
-        await evm.advanceTime(rateLimit)
-      })
-
       it('should be able to claim a token and add dictionary data', async () => {
         const { borrower, lender } = await getNamedAccounts()
 

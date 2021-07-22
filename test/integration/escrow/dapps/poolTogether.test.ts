@@ -27,6 +27,7 @@ describe('poolTogether Dapp', () => {
         ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 1000000,
+          keepExistingDeployments: false
         }))
         poolTicket = await contracts.get<IERC20>('IERC20', {
           at: await diamond.getAssetPPoolTicket(lendingToken.address),

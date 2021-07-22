@@ -3,14 +3,12 @@ import { solidity } from 'ethereum-waffle'
 import {
   contracts,
   deployments,
-  ethers,
   getNamedAccounts,
   getNamedSigner,
 } from 'hardhat'
 
 import { ITellerDiamond, SettingsFacet } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
-import { RUN_EXISTING } from './helpers/env-helpers'
 
 chai.should()
 chai.use(solidity)
@@ -18,7 +16,7 @@ chai.use(solidity)
 describe('Upgrading the Teller diamond', () => {
   it('Should be able to disable adding an authorized address', async () => {
     await deployments.fixture('protocol', {
-      keepExistingDeployments: RUN_EXISTING,
+      keepExistingDeployments: false,
     })
 
     const deployer = await getNamedSigner('deployer')

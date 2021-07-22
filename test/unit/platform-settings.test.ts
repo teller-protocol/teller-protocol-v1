@@ -5,7 +5,6 @@ import hre from 'hardhat'
 
 import { getPlatformSettings } from '../../config'
 import { ITellerDiamond } from '../../types/typechain'
-import { RUN_EXISTING } from '../helpers/env-helpers'
 chai.should()
 chai.use(solidity)
 
@@ -28,7 +27,7 @@ describe.skip('Platform Settings', () => {
   describe('updatePlatformSetting', () => {
     beforeEach(async () => {
       await deployments.fixture('platform-settings', {
-        keepExistingDeployments: RUN_EXISTING,
+        keepExistingDeployments: false,
       })
     })
 

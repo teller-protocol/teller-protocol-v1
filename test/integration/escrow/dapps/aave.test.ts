@@ -27,6 +27,7 @@ describe('AaveDapp', () => {
         ({ diamond, lendingToken } = await fundedMarket({
           assetSym: market.lendingToken,
           amount: 100000,
+          keepExistingDeployments: false
         }))
 
         aToken = await contracts.get<IAToken>('IAToken', {

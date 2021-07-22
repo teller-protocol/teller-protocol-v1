@@ -27,7 +27,7 @@ describe('PriceAggregator', () => {
     tokenAddresses.all[sym.toUpperCase()]
 
   before(async () => {
-    await deployments.fixture('protocol')
+    await deployments.fixture('price-agg')
 
     priceAgg = await contracts.get<PriceAggregator>('PriceAggregator')
     deployer = await getNamedSigner('deployer')
