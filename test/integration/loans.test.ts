@@ -33,6 +33,7 @@ describe.skip('Loans', () => {
       ({ diamond } = await fundedMarket(hre, {
         assetSym: market.lendingToken,
         amount: 100000,
+        keepExistingDeployments: false
       }))
 
       deployer = await getNamedSigner('deployer')
