@@ -8,14 +8,11 @@ import { IERC721ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/
 
 contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
     /* Constants */
-
     address public constant V1 = 0x2ceB85a2402C94305526ab108e7597a102D6C175;
     TellerNFTDictionary public constant DICT =
         TellerNFTDictionary(0x72733102AB139FB0367cc29D492c955A7c736079);
     address public constant diamond =
         0xc14D994fe7C5858c93936cc3bD42bb9467d6fB2C;
-
-    /* Public Functions */
 
     /* External Functions */
 
@@ -39,8 +36,7 @@ contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
         if (_msgSender() == V1) {
             uint256 newTokenId;
             // if the from address is the diamond address, we trust that we
-            // can decode the data into the newly converted token id .. otherwise
-            // we
+            // can decode the data into the newly converted token id
             if (from == diamond) {
                 newTokenId = abi.decode(data, (uint256));
             } else {
@@ -52,7 +48,13 @@ contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
-    /* Internal Functions */
+    /* Public Functions */
+
+    /**
+     * @notice it performs a reverse look up on by finding our ID using the
+     * tokenURI hash using the NFT dictionary. Required that the token id exists
+     * @param _tokenId the tokenId to look up
+     */
     function convertV1TokenId(uint256 _tokenId)
         public
         view

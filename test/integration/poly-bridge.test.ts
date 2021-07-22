@@ -2,7 +2,7 @@ import { MaticPOSClient } from '@maticnetwork/maticjs'
 import rootChainManagerAbi from '@maticnetwork/meta/network/mainnet/v1/artifacts/pos/RootChainManager.json'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { BigNumber, Contract, Signer } from 'ethers'
+import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import hre, {
   contracts,
   ethers,
@@ -51,7 +51,7 @@ describe.only('Bridging Assets to Polygon', () => {
     let unstakedNFTs: BigNumber[]
     let rootChainManager: Contract
     before(async () => {
-      await hre.deployments.fixture(['market'], {
+      await hre.deployments.fixture(['protocol'], {
         keepExistingDeployments: true,
       })
       rootToken = await contracts.get('TellerNFT')
@@ -76,10 +76,6 @@ describe.only('Bridging Assets to Polygon', () => {
     describe('Calling mapped contracts', () => {
       it('approves spending of tokens', async () => {
         const erc721Predicate = '0x74D83801586E9D3C4dc45FfCD30B54eA9C88cf9b'
-        await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
-        ownedNFTs = await rootToken
-          .getOwnedTokens(borrower)
-          .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
         for (let i = 0; i < ownedNFTs.length; i++) {
           await rootToken
             .connect(borrowerSigner)
@@ -116,7 +112,7 @@ describe.only('Bridging Assets to Polygon', () => {
         })
         it('migrates any 721 token -> 1155 then bridges to polygon', async () => {
           // bridge all of our nfts
-          await diamond.connect(borrowerSigner).bridgeNFTs([[], []])
+          await diamond.connect(borrowerSigner).bridgeNFTs([ownedNFTs, []])
 
           // after unstaking our NFTs, it would make sense that the
           // length of our staked NFTs is zero
@@ -124,11 +120,11 @@ describe.only('Bridging Assets to Polygon', () => {
           expect(stakedNFTs.length).to.equal(0)
 
           // we also expect that the diamonds now own all our unstaked NFTs
-          const ownedNFTs = await rootToken
+          const diamondOwnedNFTs = await rootToken
             .getOwnedTokens(diamond.address)
             .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-          for (let i = 0; i < ownedNFTs.length; i++) {
-            expect(await rootToken.ownerOf(ownedNFTs[i])).to.equal(
+          for (let i = 0; i < diamondOwnedNFTs.length; i++) {
+            expect(await rootToken.ownerOf(diamondOwnedNFTs[i])).to.equal(
               diamond.address
             )
           }
