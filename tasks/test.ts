@@ -20,6 +20,5 @@ task('test').setAction(async (args, hre, runSuper) => {
   // Run the actual test task
   await runSuper({
     ...args,
-    deployFixture: true,
   })
 })

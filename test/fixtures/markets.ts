@@ -10,6 +10,7 @@ export interface FundedMarketArgs {
   // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
   amount?: BigNumberish
   tags?: string[]
+  keepExistingDeployments?: boolean
 }
 
 export interface FundedMarketReturn {
@@ -23,11 +24,11 @@ export const fundedMarket = hre.deployments.createFixture(
     opts?: FundedMarketArgs
   ): Promise<FundedMarketReturn> => {
     const { contracts, deployments, getNamedSigner, toBN, tokens } = hre
-    const { assetSym = 'DAI', amount, tags = [] } = opts ?? {}
+    const { assetSym = 'DAI', amount, tags = [], keepExistingDeployments = true } = opts ?? {}
 
     tags.push('markets')
     await deployments.fixture(tags, {
-      keepExistingDeployments: true,
+      keepExistingDeployments,
     })
 
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')

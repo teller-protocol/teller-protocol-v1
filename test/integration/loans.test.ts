@@ -31,6 +31,7 @@ describe('Loans', () => {
       ({ diamond } = await fundedMarket({
         assetSym: market.lendingToken,
         amount: 100000,
+        keepExistingDeployments: false
       }))
 
       deployer = await getNamedSigner('deployer')

@@ -63,13 +63,14 @@ export const getTokens = (
 }
 
 export const getNativeToken = (network: Network): string => {
+  const networkName = getNetworkName(network)
   const tokens = getTokens(network)
   let wrappedNativeToken
   if (
-    network.name === 'mainnet' ||
-    network.name === 'kovan' ||
-    network.name === 'rinkeby' ||
-    network.name === 'ropsten'
+    networkName === 'mainnet' ||
+    networkName === 'kovan' ||
+    networkName === 'rinkeby' ||
+    networkName === 'ropsten'
   ) {
     wrappedNativeToken = tokens.erc20.WETH
   } else {
