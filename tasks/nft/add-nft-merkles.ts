@@ -86,6 +86,7 @@ export const addMerkles = async (
 
       if (!merkleRoots[i].tierIndex.eq(info.tierIndex)) {
         await nftDistributor
+          .connect(deployer)
           .moveMerkle(i, info.tierIndex)
           .then(({ wait }) => wait())
 
