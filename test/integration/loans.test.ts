@@ -178,12 +178,13 @@ describe.skip('Loans', () => {
           const lendingToken =
           typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
 
-          console.log('decimals', await lendingToken.decimals())
+          const lendingTokenDecimals = await lendingToken.decimals()
+          console.log('decimals', lendingTokenDecimals)
 
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 100000,
+            amount: 100 * 10^(lendingTokenDecimals),
             hre,
           })
 
@@ -195,14 +196,19 @@ describe.skip('Loans', () => {
           console.log('market.lendingToken',market.lendingToken)
 
 
+          const balanceLeftToRepay = helpers.details.loan[3].toString()
+          console.log('balanceLeftToRepay',balanceLeftToRepay)
+
+
           await lendingToken
           .connect(ethers.provider.getSigner(borrowerAddress))
-          .approve(diamond.address, 100)
+          .approve(diamond.address, balanceLeftToRepay)
 
-          void await lHelpers.repay( 100, borrower )
+          void await lHelpers.repay( balanceLeftToRepay, borrower )
 
+          //need to be able to ask the diamond how much I owe on the loan, and potentially how much I would recieve for repaying 
 
-           
+         
           
           
           const loanStatus = helpers.details.loan.status
