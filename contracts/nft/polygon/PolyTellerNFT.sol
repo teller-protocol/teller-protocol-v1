@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TellerNFT_V2 } from "../TellerNFT_V2.sol";
-import { ITellerDiamond } from "../../shared/interfaces/ITellerDiamond.sol";
 
 contract PolyTellerNFT is TellerNFT_V2 {
     address public immutable CHILD_CHAIN_MANAGER =

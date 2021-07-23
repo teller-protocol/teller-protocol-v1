@@ -6,12 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 // Libraries
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-
-// Interfaces
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -31,10 +26,6 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  * @author develop@teller.finance
  */
 contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
-    using Counters for Counters.Counter;
-    using EnumerableSet for EnumerableSet.UintSet;
-    using SafeMath for uint256;
-
     /* Constants */
 
     string public constant name = "Teller NFT";
@@ -51,20 +42,20 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         uint256 baseLoanSize;
         address contributionAsset;
         uint256 contributionSize;
-        uint8 contributionMultiplier;
+        uint16 contributionMultiplier;
     }
 
     // It holds the total number of tokens in existence.
     uint256 public totalSupply;
 
+    // It holds the information about a tier.
+    mapping(uint256 => Tier) public tiers;
+
     // It holds the total number of tiers.
-    uint128 internal _tierCount;
+    uint128 public tierCount;
 
     // It holds how many tokens types exists in a tier.
-    mapping(uint128 => uint256) internal _tierTokenCount;
-
-    // It holds the information about a tier.
-    mapping(uint256 => Tier) internal _tiers;
+    mapping(uint128 => uint256) public tierTokenCount;
 
     // It holds the URI hash containing the token metadata
     mapping(uint256 => string) internal _idToUriHash;
@@ -142,7 +133,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
      */
     function tokenBaseLoanSize(uint256 tokenId) public view returns (uint256) {
         (uint128 tierId, ) = _splitTokenId(tokenId);
-        return _tiers[tierId].baseLoanSize;
+        return tiers[tierId].baseLoanSize;
     }
 
     /**
@@ -155,7 +146,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         returns (address)
     {
         (uint128 tierId, ) = _splitTokenId(tokenId);
-        return _tiers[tierId].contributionAsset;
+        return tiers[tierId].contributionAsset;
     }
 
     /**
@@ -168,7 +159,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         returns (uint256)
     {
         (uint128 tierId, ) = _splitTokenId(tokenId);
-        return _tiers[tierId].contributionSize;
+        return tiers[tierId].contributionSize;
     }
 
     /**
@@ -178,10 +169,10 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     function tokenContributionMultiplier(uint256 tokenId)
         public
         view
-        returns (uint8)
+        returns (uint16)
     {
         (uint128 tierId, ) = _splitTokenId(tokenId);
-        return _tiers[tierId].contributionMultiplier;
+        return tiers[tierId].contributionMultiplier;
     }
 
     struct TokenBalance {
@@ -212,16 +203,16 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
     function getTokenIds() public view returns (uint256[] memory ids_) {
         uint256 tokenCount;
-        for (uint128 tierId = 1; tierId <= _tierCount; tierId++) {
-            tokenCount += _tierTokenCount[tierId];
+        for (uint128 tierId = 1; tierId <= tierCount; tierId++) {
+            tokenCount += tierTokenCount[tierId];
         }
 
         ids_ = new uint256[](tokenCount);
         uint256 currentIndex;
-        for (uint128 tierId = 1; tierId < _tierCount; tierId++) {
+        for (uint128 tierId = 1; tierId < tierCount; tierId++) {
             for (
                 uint128 tierTokenId;
-                tierTokenId <= _tierTokenCount[tierId];
+                tierTokenId <= tierTokenCount[tierId];
                 tierTokenId++
             ) {
                 ids_[currentIndex] = _mergeTokenId(tierId, tierTokenId);
@@ -242,7 +233,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         // Get the token ID to mint for the user
         // On a fresh mint, the exact token ID minted is determined on tx execution
         //  with sudo randomness using the block number
-        //        uint128 tokenId = block.number % _tierTokenCount[tierIndex];
+        //        uint128 tokenId = block.number % tierTokenCount[tierIndex];
         //
         //        // Mint and set the token to the tier index
         //        _safeMint(owner, tokenId);
@@ -278,18 +269,18 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         internal
     {
         // Increment tier counter to use
-        Tier storage tier = _tiers[++_tierCount];
-
+        tierCount++;
+        Tier storage tier = tiers[tierCount];
         tier.baseLoanSize = newTier.baseLoanSize;
         tier.contributionAsset = newTier.contributionAsset;
         tier.contributionSize = newTier.contributionSize;
         tier.contributionMultiplier = newTier.contributionMultiplier;
 
         // Store how many tokens are on the tier
-        _tierTokenCount[_tierCount] = tierHashes.length;
+        tierTokenCount[tierCount] = tierHashes.length;
         // Set the token URI hash
         for (uint128 i; i < tierHashes.length; i++) {
-            uint256 tokenId = _mergeTokenId(_tierCount, i);
+            uint256 tokenId = _mergeTokenId(tierCount, i);
             _idToUriHash[tokenId] = tierHashes[i];
             _uriHashToId[tierHashes[i]] = tokenId;
         }

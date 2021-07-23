@@ -71,34 +71,41 @@ export const addMerkles = async (
           star: true,
         }
       )
-    } else if (!merkleRoots[i].tierIndex.eq(info.tierIndex)) {
-      log('')
-      log(
-        `Merkle root at index ${i} NOT MATCH existing tier index on distributor`,
-        { indent: 4, star: true }
-      )
-      log(`Existing: ${merkleRoots[i].tierIndex.toString()}`, {
-        indent: 5,
-        star: true,
-      })
-      log(`New:      ${info.tierIndex.toString()}`, { indent: 5, star: true })
-      log('')
-      throw new Error('NFT Merkle does not match tier index on chain')
-    } else if (merkleRoots[i].merkleRoot != info.merkleRoot) {
-      log('')
-      log(
-        `Merkle root for tier ${info.tierIndex} NOT MATCH existing one on distributor`,
-        { indent: 4, star: true }
-      )
-      log(`Existing: ${merkleRoots[i].merkleRoot}`, { indent: 5, star: true })
-      log(`New:      ${info.merkleRoot}`, { indent: 5, star: true })
-      log('')
-      throw new Error('NFT Merkle root does not on chain')
-    } else if (merkleRoots[i].merkleRoot === info.merkleRoot) {
-      log(
-        `Merkle root for tier ${info.tierIndex} ALREADY added: ${info.merkleRoot}`,
-        { indent: 3, star: true }
-      )
+    } else {
+      if (merkleRoots[i].merkleRoot != info.merkleRoot) {
+        log('')
+        log(
+          `Merkle root for tier ${info.tierIndex} NOT MATCH existing one on distributor`,
+          { indent: 4, star: true }
+        )
+        log(`Existing: ${merkleRoots[i].merkleRoot}`, { indent: 5, star: true })
+        log(`New:      ${info.merkleRoot}`, { indent: 5, star: true })
+        log('')
+        throw new Error('NFT Merkle root does not on chain')
+      }
+
+      if (!merkleRoots[i].tierIndex.eq(info.tierIndex)) {
+        await nftDistributor
+          .moveMerkle(i, info.tierIndex)
+          .then(({ wait }) => wait())
+
+        log('')
+        log(
+          `Merkle root at index ${i} NOT MATCH existing tier index on distributor`,
+          { indent: 4, star: true }
+        )
+        log(`Existing: ${merkleRoots[i].tierIndex.toString()}`, {
+          indent: 5,
+          star: true,
+        })
+        log(`New:      ${info.tierIndex.toString()}`, { indent: 5, star: true })
+        log('')
+      } else if (merkleRoots[i].merkleRoot === info.merkleRoot) {
+        log(
+          `Merkle root for tier ${info.tierIndex} ALREADY added: ${info.merkleRoot}`,
+          { indent: 3, star: true }
+        )
+      }
     }
   }
 

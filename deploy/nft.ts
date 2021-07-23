@@ -25,20 +25,6 @@ const deployNFT: DeployFunction = async (hre) => {
   log('')
   log('********** Teller NFT **********', { indent: 1 })
   log('')
-  // 0x98Ca52786e967d1469090AdC075416948Ca004A7 -- teller_nft_v2
-  await deploy<TellerNFTDictionary>({
-    contract: 'TellerNFTDictionary',
-    hre,
-    proxy: {
-      proxyContract: 'OpenZeppelinTransparentProxy',
-      execute: {
-        init: {
-          methodName: 'initialize',
-          args: [await deployer.getAddress()],
-        },
-      },
-    },
-  })
 
   // Store list of addresses that should be added as minters
   const nftName = 'TellerNFT_V2'
