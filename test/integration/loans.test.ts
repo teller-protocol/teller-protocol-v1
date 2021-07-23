@@ -8,12 +8,14 @@ import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
+import { getFunds } from '../helpers/get-funds'
 import {
   loanHelpers,
   LoanType,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts 
 } from '../helpers/loans'
+
 
 chai.should()
 chai.use(solidity)
@@ -168,6 +170,34 @@ describe.skip('Loans', () => {
           console.log('loanId',loanId)
 
           const lHelpers = await loanHelpers(loanId)
+
+
+          //need to give fake ERC20 to borrower 
+          //and add fake ERC20 to the borrow escrow 
+
+          const lendingToken =
+          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+
+          console.log('decimals', await lendingToken.decimals())
+
+          await getFunds({
+            to: borrower,
+            tokenSym: market.lendingToken,
+            amount: 100000,
+            hre,
+          })
+
+          const borrowerAddress = await borrower.getAddress()
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+
+          console.log('balanceOf', borrowerBalance.toString() )
+
+          console.log('market.lendingToken',market.lendingToken)
+
+
+          await lendingToken
+          .connect(ethers.provider.getSigner(borrowerAddress))
+          .approve(diamond.address, 100)
 
           void await lHelpers.repay( 100, borrower )
 
