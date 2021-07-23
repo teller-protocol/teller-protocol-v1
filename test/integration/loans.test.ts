@@ -169,7 +169,7 @@ describe.skip('Loans', () => {
           const loanId =  helpers.details.loan.id 
           console.log('loanId',loanId)
 
-          let lHelpers = await loanHelpers(loanId)
+          const lHelpers = await loanHelpers(loanId)
 
           
           
@@ -211,8 +211,8 @@ describe.skip('Loans', () => {
 
           //need to be able to ask the diamond how much I owe on the loan, and potentially how much I would recieve for repaying 
 
-          
-          lHelpers = await loanHelpers(loanId)
+          await lHelpers.details.refresh()
+          //lHelpers = await loanHelpers(loanId)
 
           balanceLeftToRepay = lHelpers.details.loan[3].toString()
           console.log('balanceLeftToRepay 2',balanceLeftToRepay)
