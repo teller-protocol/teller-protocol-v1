@@ -165,11 +165,14 @@ describe.skip('Loans', () => {
 
         it('should be able to repay loan', async () => {
           console.log('helpers.details.loan', helpers.details.loan)
+          
           const loanId =  helpers.details.loan.id 
-
           console.log('loanId',loanId)
 
-          const lHelpers = await loanHelpers(loanId)
+          let lHelpers = await loanHelpers(loanId)
+
+          
+          
 
 
           //need to give fake ERC20 to borrower 
@@ -196,7 +199,7 @@ describe.skip('Loans', () => {
           console.log('market.lendingToken',market.lendingToken)
 
 
-          let balanceLeftToRepay = helpers.details.loan[3].toString()
+          let balanceLeftToRepay = lHelpers.details.loan[3].toString()
           console.log('balanceLeftToRepay',balanceLeftToRepay)
 
 
@@ -208,11 +211,13 @@ describe.skip('Loans', () => {
 
           //need to be able to ask the diamond how much I owe on the loan, and potentially how much I would recieve for repaying 
 
-         
-          balanceLeftToRepay = helpers.details.loan[3].toString()
+          
+          lHelpers = await loanHelpers(loanId)
+
+          balanceLeftToRepay = lHelpers.details.loan[3].toString()
           console.log('balanceLeftToRepay 2',balanceLeftToRepay)
           
-          const loanStatus = helpers.details.loan.status
+          const loanStatus = lHelpers.details.loan.status
           expect(loanStatus).to.equal(0)
         })
 
