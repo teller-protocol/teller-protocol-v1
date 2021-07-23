@@ -207,14 +207,14 @@ describe.skip('Loans', () => {
           .connect(ethers.provider.getSigner(borrowerAddress))
           .approve(diamond.address, balanceLeftToRepay)
 
-          void await lHelpers.repay( 200 , borrower )
+          void await lHelpers.repay( 100000000 , borrower )
 
           //need to be able to ask the diamond how much I owe on the loan, and potentially how much I would recieve for repaying 
 
           await lHelpers.details.refresh()
           //lHelpers = await loanHelpers(loanId)
 
-          balanceLeftToRepay = lHelpers.details.loan[3].toString()
+          balanceLeftToRepay = lHelpers.details.totalOwed.toString()
           console.log('balanceLeftToRepay 2',balanceLeftToRepay)
           
           const loanStatus = lHelpers.details.loan.status
