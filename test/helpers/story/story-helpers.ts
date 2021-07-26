@@ -45,10 +45,10 @@ export const TREE_STRUCTURE = {
     network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],
   },
-  'DAPP.LEND.YEARN': {
-    network: STORY_NETWORKS.MAINNET,
-    parents: ['LOAN.TAKE_OUT'],
-  },
+  // 'DAPP.LEND.YEARN': {
+  //   network: STORY_NETWORKS.MAINNET,
+  //   parents: ['LOAN.TAKE_OUT'],
+  // },
   'DAPP.LEND.POOL_TOGETHER': {
     network: STORY_NETWORKS.ALL,
     parents: ['LOAN.TAKE_OUT'],

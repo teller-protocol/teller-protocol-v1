@@ -167,11 +167,12 @@ const deployProtocol: DeployFunction = async (hre) => {
           contract: 'CompoundClaimCompFacet',
           skipIfAlreadyDeployed: false,
           args: [dappAddresses.compoundComptrollerAddress],
-        },
-        {
-          contract: 'YearnFacet',
-          skipIfAlreadyDeployed: false,
         }
+        // disable for now
+        // {
+        //   contract: 'YearnFacet',
+        //   skipIfAlreadyDeployed: false,
+        // }
       )
 
       break
