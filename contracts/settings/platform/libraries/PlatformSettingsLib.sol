@@ -96,6 +96,14 @@ library PlatformSettingsLib {
     }
 
     /**
+     * @notice It gets the current "ManagementFeePercent" setting's value
+     * @return value_ the current value.
+     */
+    function getManagementFeePercent() internal view returns (uint256 value_) {
+        value_ = s(NAMES.MANAGEMENT_FEE_PERCENT).value;
+    }
+
+    /**
      * @notice It gets the current "MaximumLoanDuration" setting's value
      * @return value_ the current value.
      */

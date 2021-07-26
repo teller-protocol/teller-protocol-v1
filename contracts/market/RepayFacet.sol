@@ -225,6 +225,13 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 // - Need to determine what the primary lended token was for this loan
                 // - Need to determine excess profit amount
 
+                console.log("primary lended token is ?? ");
+
+                /* NumbersLib.percent(
+                        amountToLiquidate,
+                        uint16(PlatformSettingsLib.getLiquidateRewardPercent())
+                    );*/
+
                 // Claim tokens in the escrow for the loan if any (EscrowClaimTokens.sol)
                 __claimEscrowTokens(loanID);
 

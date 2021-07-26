@@ -68,7 +68,7 @@ library LibLoans {
         returns (uint256 owed_)
     {
         if (loan(loanID).status == LoanStatus.Active) {
-            owed_ = debt(loanID).principalOwed + (debt(loanID).interestOwed);
+            owed_ = debt(loanID).principalOwed + debt(loanID).interestOwed;
         }
     }
 
@@ -116,7 +116,8 @@ library LibLoans {
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
-            neededInCollateralTokens = AppStorageLib.store()
+            neededInCollateralTokens = AppStorageLib
+                .store()
                 .priceAggregator
                 .getValueFor(
                     loan(loanID).lendingToken,
