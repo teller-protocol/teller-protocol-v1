@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import { PolyTellerNFT } from "./PolyTellerNFT.sol";
 
-contract MockPolyTellerNFT is PolyTellerNFT {
+contract PolyTellerNFTMock is PolyTellerNFT {
     function initialize(address[] calldata minters)
         public
         virtual

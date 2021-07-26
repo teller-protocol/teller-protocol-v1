@@ -3,7 +3,7 @@ pragma solidity ^0.8.3;
 
 import { NFTMainnetBridgingToPolygonFacet } from "./NFTMainnetBridgingToPolygonFacet.sol";
 
-contract MockNFTMainnetBridgingToPolygonFacet is
+contract NFTMainnetBridgingToPolygonFacetMock is
     NFTMainnetBridgingToPolygonFacet
 {
     constructor(address polygonNFT)
