@@ -197,13 +197,17 @@ contract TellerNFTDictionary is IStakeableNFT, AccessControlUpgradeable {
 
         uint256 offset = ((31 - (tokenId % 32)) * 8);
 
-        uint256 updateMaskShifted = 0x00000000000000000000000000000000000000000000000000000000000000FF <<
-                offset;
+
+            uint256 updateMaskShifted
+         = 0x00000000000000000000000000000000000000000000000000000000000000FF <<
+            offset;
 
         uint256 updateMaskShiftedNegated = ~updateMaskShifted;
 
-        uint256 tokenTierShifted = ((0x0000000000000000000000000000000000000000000000000000000000000000 |
-                tokenTier) << offset);
+
+            uint256 tokenTierShifted
+         = ((0x0000000000000000000000000000000000000000000000000000000000000000 |
+            tokenTier) << offset);
 
         uint256 existingRegisterClearedWithMask = existingRegister &
             updateMaskShiftedNegated;
