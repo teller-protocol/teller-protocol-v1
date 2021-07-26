@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 
 const { contracts, tokens, deployments, getNamedSigner, toBN } = hre
 
-describe.only('PriceAggregator', () => {
+describe('PriceAggregator', () => {
   let priceAgg: PriceAggregator
   let deployer: Signer
 
