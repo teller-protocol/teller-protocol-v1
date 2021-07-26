@@ -392,6 +392,10 @@ describe.skip('Loans', () => {
 
           //simulate earning profits on the loan here 
 
+          const feePct = await diamond.connect(borrower).getManagementFeePercent()
+          console.log('feePct', feePct )
+
+
 
 
           await lendingToken

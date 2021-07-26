@@ -37,6 +37,12 @@ const mainnetPlatformSettings: PlatformSettings = {
     min: 0,
     max: 10000,
   },
+  ManagementFeePercent: {
+    processOnDeployment: true,
+    value: 500,
+    min: 0,
+    max: 10000,
+  },
   MaximumLoanDuration: {
     processOnDeployment: true,
     value: 5184000,
@@ -96,6 +102,12 @@ export const platformSettings: Record<string, PlatformSettings> = {
       max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     LiquidateRewardPercent: {
+      processOnDeployment: true,
+      value: 500,
+      min: 0,
+      max: 10000,
+    },
+    ManagementFeePercent: {
       processOnDeployment: true,
       value: 500,
       min: 0,
@@ -163,6 +175,12 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 500,
       max: 10000,
     },
+    ManagementFeePercent: {
+      processOnDeployment: true,
+      value: 500,
+      min: 0,
+      max: 10000,
+    },
     MaximumLoanDuration: {
       processOnDeployment: true,
       value: 5184000,
@@ -220,6 +238,12 @@ export const platformSettings: Record<string, PlatformSettings> = {
       max: '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     LiquidateRewardPercent: {
+      processOnDeployment: true,
+      value: 500,
+      min: 0,
+      max: 10000,
+    },
+    ManagementFeePercent: {
       processOnDeployment: true,
       value: 500,
       min: 0,

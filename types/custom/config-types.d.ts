@@ -82,7 +82,8 @@ export interface PlatformSettings {
   MaximumTolerance: PlatformSetting
   ResponseExpiryLength: PlatformSetting
   TermsExpiryTime: PlatformSetting
-  LiquidateRewardPercent: PlatformSetting
+  LiquidateRewardPercent: PlatformSetting,
+  ManagementFeePercent: PlatformSetting,
   MaximumLoanDuration: PlatformSetting
   CollateralBuffer: PlatformSetting
   OverCollateralizedBuffer: PlatformSetting
