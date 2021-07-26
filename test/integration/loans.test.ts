@@ -28,6 +28,7 @@ describe.skip('Loans', () => {
     // let borrower: Signer
 
     before(async () => {
+      // eslint-disable-next-line
       ({ diamond } = await fundedMarket(hre, {
         assetSym: market.lendingToken,
         amount: 100000,

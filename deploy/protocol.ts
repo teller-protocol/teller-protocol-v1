@@ -141,10 +141,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
     {
-      contract: 'YearnFacet',
-      skipIfAlreadyDeployed: false,
-    },
-    {
       contract: 'PoolTogetherFacet',
       skipIfAlreadyDeployed: false,
     },
@@ -171,6 +167,10 @@ const deployProtocol: DeployFunction = async (hre) => {
           contract: 'CompoundClaimCompFacet',
           skipIfAlreadyDeployed: false,
           args: [dappAddresses.compoundComptrollerAddress],
+        },
+        {
+          contract: 'YearnFacet',
+          skipIfAlreadyDeployed: false,
         }
       )
 

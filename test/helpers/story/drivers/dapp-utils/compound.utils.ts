@@ -12,86 +12,85 @@ chai.should()
 chai.use(solidity)
 
 async function lendCompound(
-    hre: HardhatRuntimeEnvironment,
-    loan: LoanHelpersReturn
+  hre: HardhatRuntimeEnvironment,
+  loan: LoanHelpersReturn
 ): Promise<void> {
-    const {contracts} = hre
-    const { details, diamond } = loan
-    await details.lendingToken
-      .connect(details.borrower.signer)
-      .approve(
-        diamond.address,
-        BigNumber.from(details.loan.borrowedAmount).mul(2)
-      )
-    const cToken = await contracts.get<ICErc20>('ICErc20', {
-      at: await diamond.getAssetCToken(details.lendingToken.address),
-    })
-    await diamond
-      .connect(details.borrower.signer)
-      .compoundLend(
-        details.loan.id,
-        details.loan.lendingToken,
-        details.loan.borrowedAmount
-      )
-    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-    const cDaiBalance = await cToken.balanceOf(escrowAddress)
-    cDaiBalance.eq(0).should.eql(false, '')
+  const { contracts } = hre
+  const { details, diamond } = loan
+  await details.lendingToken
+    .connect(details.borrower.signer)
+    .approve(
+      diamond.address,
+      BigNumber.from(details.loan.borrowedAmount).mul(2)
+    )
+  const cToken = await contracts.get<ICErc20>('ICErc20', {
+    at: await diamond.getAssetCToken(details.lendingToken.address),
+  })
+  await diamond
+    .connect(details.borrower.signer)
+    .compoundLend(
+      details.loan.id,
+      details.loan.lendingToken,
+      details.loan.borrowedAmount
+    )
+  const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+  const cDaiBalance = await cToken.balanceOf(escrowAddress)
+  cDaiBalance.eq(0).should.eql(false, '')
 
-    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-    tokenAddresses.should.include(cToken.address)
-  }
+  const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+  tokenAddresses.should.include(cToken.address)
+}
 
-  async function withdrawCompound(
-    hre: HardhatRuntimeEnvironment,
-    loan: LoanHelpersReturn
-  ): Promise<void> {
-    const {contracts} = hre
-    const { details, diamond } = loan
-    await details.lendingToken
-      .connect(details.borrower.signer)
-      .approve(
-        diamond.address,
-        BigNumber.from(details.loan.borrowedAmount).mul(2)
-      )
-    const cToken = await contracts.get<ICErc20>('ICErc20', {
-      at: await diamond.getAssetCToken(details.lendingToken.address),
-    })
-    await diamond
-      .connect(details.borrower.signer)
-      .compoundRedeemAll(
-        details.loan.id,
-        details.lendingToken.address,
-      )
-    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+async function withdrawCompound(
+  hre: HardhatRuntimeEnvironment,
+  loan: LoanHelpersReturn
+): Promise<void> {
+  const { contracts } = hre
+  const { details, diamond } = loan
+  await details.lendingToken
+    .connect(details.borrower.signer)
+    .approve(
+      diamond.address,
+      BigNumber.from(details.loan.borrowedAmount).mul(2)
+    )
+  const cToken = await contracts.get<ICErc20>('ICErc20', {
+    at: await diamond.getAssetCToken(details.lendingToken.address),
+  })
+  await diamond
+    .connect(details.borrower.signer)
+    .compoundRedeemAll(details.loan.id, details.lendingToken.address)
+  const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
-    const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
-    tokenAddresses.should.not.include(cToken.address)
+  const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+  tokenAddresses.should.not.include(cToken.address)
 
-    const cDaiBalance = await cToken.balanceOf(escrowAddress)
-    cDaiBalance.eq(0).should.eql(true, 'cDaiBalance should equal zero')
-  }
+  const cDaiBalance = await cToken.balanceOf(escrowAddress)
+  cDaiBalance.eq(0).should.eql(true, 'cDaiBalance should equal zero')
+}
 
- async function claimComp(
-    hre: HardhatRuntimeEnvironment,
-    loan: LoanHelpersReturn
-  ): Promise<void> {
-    const { contracts, network } = hre
-    const { details, diamond } = loan
-    const dappAddresses = getDappAddresses(network)
-    const Comptroller = await contracts.get<IComptroller>('IComptroller', {
-      at: dappAddresses.compoundComptrollerAddress,
-    })
-    const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-   const compBefore = await Comptroller.compAccrued(escrowAddress)
-   expect(BigNumber.from(compBefore).gt(0)).to.equal(true)
-    await diamond
-      .connect(details.borrower.signer)
-      .compoundClaimComp(details.loan.id)
-    const compafter = await Comptroller.compAccrued(escrowAddress)
-    expect(compafter.toString()).to.equal('0')
-  }
+async function claimComp(
+  hre: HardhatRuntimeEnvironment,
+  loan: LoanHelpersReturn
+): Promise<void> {
+  const { contracts, network } = hre
+  const { details, diamond } = loan
+  const dappAddresses = getDappAddresses(network)
+  const Comptroller = await contracts.get<IComptroller>('IComptroller', {
+    at: dappAddresses.compoundComptrollerAddress,
+  })
+  const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+  const compBefore = await Comptroller.compAccrued(escrowAddress)
+  expect(BigNumber.from(compBefore).gt(0)).to.equal(true)
+  await diamond
+    .connect(details.borrower.signer)
+    .compoundClaimComp(details.loan.id)
+  const compafter = await Comptroller.compAccrued(escrowAddress)
+  expect(compafter.toString()).to.equal('0')
+}
 
-export const compoundLendTest = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
+export const compoundLendTest = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
   const { getNamedSigner } = hre
   const borrower = await getNamedSigner('borrower')
   const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
@@ -115,7 +114,9 @@ export const compoundLendTest = async (hre: HardhatRuntimeEnvironment): Promise<
   }
 }
 
-export const compoundClaimTest = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
+export const compoundClaimTest = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
   const { getNamedSigner, contracts, network } = hre
   const borrower = await getNamedSigner('borrower')
   const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
@@ -140,4 +141,3 @@ export const compoundClaimTest = async (hre: HardhatRuntimeEnvironment): Promise
     })
   }
 }
-

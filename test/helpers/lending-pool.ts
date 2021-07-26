@@ -15,8 +15,8 @@ export interface LPHelperArgs {
 }
 
 export interface LPHelpersReturn {
-  deposit: ReturnType<typeof depositWithArgs>,
-  withdraw: ReturnType<typeof withdrawWithArgs>,
+  deposit: ReturnType<typeof depositWithArgs>
+  withdraw: ReturnType<typeof withdrawWithArgs>
 }
 
 /**
