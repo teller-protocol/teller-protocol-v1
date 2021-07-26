@@ -11,6 +11,8 @@ import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
 import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
+import "hardhat/console.sol";
+
 // Libraries
 import {
     IERC20,
@@ -139,6 +141,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         bool isLiquidation
     ) private returns (uint256 leftToPay_) {
         require(amount > 0, "Teller: zero repay");
+
+        console.log("Trying to repay loan", amount);
 
         // calculate the actual amount to repay
         leftToPay_ =

@@ -1,3 +1,4 @@
+import { FunctionFragment } from '@ethersproject/abi'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
@@ -10,7 +11,8 @@ import { ITellerDiamond } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
-  loanHelpers,
+  LoanHelpersReturn,
+  //loanHelpers,
   LoanType,
   takeOutLoanWithNfts,
   takeOutLoanWithoutNfts 
@@ -133,7 +135,7 @@ describe.skip('Loans', () => {
 
        
 
-        let helpers: any
+       
         before(async () => {
           // Advance time
           const { value: rateLimit } = await getPlatformSetting(
@@ -148,7 +150,8 @@ describe.skip('Loans', () => {
             amount: 100,
             lendToken: market.lendingToken,
           })
-          helpers = await getHelpers()
+
+          const helpers: LoanHelpersReturn = await getHelpers()
 
           expect(helpers.details.loan).to.exist
         })
@@ -163,15 +166,28 @@ describe.skip('Loans', () => {
 
 
 
-        it('should be able to repay loan', async () => {
+        it('should be able to create and repay a loan', async () => {
+
+
+          const { getHelpers } = await takeOutLoanWithNfts({
+            amount: 100,  //should use raw amt not formatted.. oh well 
+            lendToken: market.lendingToken,
+          })
+
+          const helpers: LoanHelpersReturn = await getHelpers()
+
+
+          expect(helpers.details.loan).to.exist
+
+
+
+
           console.log('helpers.details.loan', helpers.details.loan)
           
           const loanId =  helpers.details.loan.id 
           console.log('loanId',loanId)
 
-          const lHelpers = await loanHelpers(loanId)
-
-          
+        //  const lHelpers = await loanHelpers(loanId)  
           
 
 
@@ -187,7 +203,7 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 100 * 10**(lendingTokenDecimals),
+            amount: 200 * 10**(lendingTokenDecimals),
             hre,
           })
 
@@ -199,7 +215,7 @@ describe.skip('Loans', () => {
           console.log('market.lendingToken',market.lendingToken)
 
 
-          let balanceLeftToRepay = lHelpers.details.loan[3].toString()
+          let balanceLeftToRepay = helpers.details.totalOwed.toString()
           console.log('balanceLeftToRepay',balanceLeftToRepay)
 
 
@@ -207,18 +223,32 @@ describe.skip('Loans', () => {
           .connect(ethers.provider.getSigner(borrowerAddress))
           .approve(diamond.address, balanceLeftToRepay)
 
-          void await lHelpers.repay( 100000000 , borrower )
+          //let response = await helpers.repay( 100000000 , borrower )  
 
-          //need to be able to ask the diamond how much I owe on the loan, and potentially how much I would recieve for repaying 
+          await diamond.connect( borrower ).repayLoan(loanId, 100010000)
 
-          await lHelpers.details.refresh()
-          //lHelpers = await loanHelpers(loanId)
+         
 
-          balanceLeftToRepay = lHelpers.details.totalOwed.toString()
+          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+
+
+          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
+
+
+          ///figure out why repayment is not working !
+
+           
+
+          //this refresh is not working 
+          await helpers.details.refresh()
+
+          balanceLeftToRepay = helpers.details.totalOwed.toString()
           console.log('balanceLeftToRepay 2',balanceLeftToRepay)
           
-          const loanStatus = lHelpers.details.loan.status
-          expect(loanStatus).to.equal(0)
+          const loanStatus = helpers.details.loan.status
+       //   expect(loanStatus).to.equal(3) //3 = repaid 
+
+          expect(parseInt( totalOwedAfterRepay.toString() ) ).to.equal(0) 
         })
 
       })
