@@ -142,7 +142,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     ) private returns (uint256 leftToPay_) {
         require(amount > 0, "Teller: zero repay");
 
-        console.log("Trying to repay loan", amount);
+        console.log("Trying to repay loan in EVM ", amount);
 
         // calculate the actual amount to repay
         leftToPay_ =
