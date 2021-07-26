@@ -18,6 +18,7 @@ const mainnetTokens: NetworkTokens = {
   },
   yearn: {
     YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
+    YUSDT: '0x7Da96a3891Add058AdA2E826306D812C638D87a7',
   },
   erc20: {
     // Compound

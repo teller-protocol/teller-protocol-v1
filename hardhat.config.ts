@@ -136,6 +136,7 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
+    enabled: true,
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,

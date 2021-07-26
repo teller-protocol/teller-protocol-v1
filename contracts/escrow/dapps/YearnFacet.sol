@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Storage
+// Contracts
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
+
+// Libraries
+import {
+    AssetYVaultLib
+} from "../../settings/asset/libraries/AssetYVaultLib.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+// Interfaces
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IVault } from "./interfaces/IVault.sol";
 
 contract YearnFacet is PausableMods, DappMods {
@@ -55,7 +64,7 @@ contract YearnFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
-        IVault iVault = LibDapps.getYVault(tokenAddress);
+        IVault iVault = AssetYVaultLib.get(tokenAddress);
         uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
 
@@ -91,7 +100,7 @@ contract YearnFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
-        IVault iVault = LibDapps.getYVault(tokenAddress);
+        IVault iVault = AssetYVaultLib.get(tokenAddress);
         uint256 price = iVault.getPricePerShare();
         uint256 shares = amount / price;
         uint256 tokenBalanceBeforeWithdrawal = IERC20(tokenAddress).balanceOf(
@@ -135,7 +144,7 @@ contract YearnFacet is PausableMods, DappMods {
         paused("", false)
         onlyBorrower(loanID)
     {
-        IVault iVault = LibDapps.getYVault(tokenAddress);
+        IVault iVault = AssetYVaultLib.get(tokenAddress);
         uint256 tokenBalanceBeforeWithdrawal = IERC20(tokenAddress).balanceOf(
             address(this)
         );
