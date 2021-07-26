@@ -3,7 +3,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
- import 'hardhat-gas-reporter'
+import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
@@ -14,10 +14,7 @@ import {
   HardhatNetworkUserConfig,
   NetworkUserConfig,
 } from 'hardhat/types'
-import { EthGasReporterConfig, RemoteContract } from "hardhat-gas-reporter/src/types"
 import path from 'path'
-
- 
 
 config()
 
@@ -98,43 +95,6 @@ const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
   return config
 }
 
-
-const getRemoteContracts = (networkType:string) : RemoteContract[] => {
-
-  const remoteContracts:RemoteContract[] = []
-  
-  const preCompilesPath = `deployments/${networkType.toLowerCase()}`
-  for (const fileName of fs.readdirSync(preCompilesPath)){
-    const artifactPath = path.join(process.cwd(), preCompilesPath, fileName) 
-     
-    if(fileName.startsWith('.') || !fileName.endsWith('.json'))continue
-
-    try{ 
-
-    const preDeployed =  JSON.parse( fs.readFileSync(artifactPath, 'utf8' ) )
-     
-    if (preDeployed.address){
-      remoteContracts.push({
-        name: preDeployed.artifactName,
-        abi: preDeployed.abi,
-        address: preDeployed.address
-      })
-    } 
-
-    }catch(e){
-      console.error('Could not parse artifact file: ',e)
-    }
-
-  //console.log('preDeployed',preDeployed.artifactName)
-
-  }
-
-  return remoteContracts
-}
-
-
-
-
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
   etherscan: {
@@ -176,16 +136,13 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
-    enabled: true, //enabled: (process.env.REPORT_GAS) ? true : false
+    enabled: true,
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
     noColors: !!SAVE_GAS_REPORT,
     showMethodSig: false,
     showTimeSpent: true,
-  //  preventCallback: true 
-    //onlyCalledMethods: false,
-   // remoteContracts: getRemoteContracts('hardhat')
   },
   namedAccounts: {
     deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
