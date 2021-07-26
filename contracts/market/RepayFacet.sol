@@ -220,7 +220,16 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                     );
                 }
 
+                uint256 mgmtFee = PlatformSettingsLib.getManagementFeePercent();
+                console.log("mgmtFee is  ", mgmtFee);
                 // Transfer profit fee
+
+                //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
+
+                // Multiply that
+
+                //reduce rewards from 'Claim Tokens' by the mgmt fee
+                //send manager fee to us
 
                 // - Need to determine what the primary lended token was for this loan
                 // - Need to determine excess profit amount
