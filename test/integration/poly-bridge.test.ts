@@ -21,9 +21,9 @@ import {
 import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
-  MainnetTellerNFT,
-  PolyTellerNFT,
   TellerNFT,
+  TellerNFTDictionary,
+  TellerNFTV2,
 } from '../../types/typechain'
 
 chai.should()
@@ -40,21 +40,25 @@ const maticPOSClient = new MaticPOSClient({
 describe.only('Bridging Assets to Polygon', () => {
   getMarkets(hre.network).forEach(testBridging)
   function testBridging(markets: Market): void {
+    // define needed variablez
     let deployer: Signer
     let diamond: ITellerDiamond
     let rootToken: TellerNFT
-    let rootTokenV2: MainnetTellerNFT
+    let rootTokenV2: TellerNFTV2
+    let tellerDictionary: TellerNFTDictionary
     // let childToken: PolyTellerNFT
     let borrower: string
     let borrowerSigner: Signer
     let ownedNFTs: BigNumber[]
-    let unstakedNFTs: BigNumber[]
     let rootChainManager: Contract
     before(async () => {
       await hre.deployments.fixture(['protocol'], {
         keepExistingDeployments: true,
       })
+      // declare variables
       rootToken = await contracts.get('TellerNFT')
+      rootTokenV2 = await contracts.get('TellerNFT_V2')
+      tellerDictionary = await contracts.get('TellerNFTDictionary')
       // childToken = await contracts.get('PolyTellerNFT')
       diamond = await contracts.get('TellerDiamond')
       deployer = await getNamedSigner('deployer')
@@ -65,11 +69,12 @@ describe.only('Bridging Assets to Polygon', () => {
         rootChainManagerAbi.abi,
         borrowerSigner
       )
+
+      // claim nfts 
       await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
+
+      // get owned nfts of borrower
       ownedNFTs = await rootToken
-        .getOwnedTokens(borrower)
-        .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-      unstakedNFTs = await rootToken
         .getOwnedTokens(borrower)
         .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
     })
@@ -101,22 +106,65 @@ describe.only('Bridging Assets to Polygon', () => {
     describe.only('Mock tests', () => {
       describe('stake, unstake, deposit to polygon', () => {
         it('stakes NFTs on behalf of the user', async () => {
+          // approve the user's tokens to transfer to the diamond (Stake)
           await rootToken
             .connect(borrowerSigner)
             .setApprovalForAll(diamond.address, true)
+
+          // stake the user's tokens
           await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
+
+          // get the staked NFTs
           const stakedNFTs = await diamond.getStakedNFTs(borrower)
           for (let i = 0; i < ownedNFTs.length; i++) {
             expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
           }
         })
         it('migrates any 721 token -> 1155 then bridges to polygon', async () => {
-          // bridge all of our nfts
+          // tokenURIs array
+          const tokenUris: string [] = []
+
+          // migrate and bridge all of our nfts
           await diamond.connect(borrowerSigner).bridgeNFTs([ownedNFTs, []])
+
+
+          // add to our uri & tier array
+          for (let i = 0; i < ownedNFTs.length; i++) {
+            const uri = await rootToken.tokenURI(ownedNFTs[i])
+            // const tier = await rootToken.getTier(ownedNFTs[i])
+            tokenUris.push(uri)
+          }
+
+          console.log(ownedNFTs)
+          for (let i = 0; i < ownedNFTs.length; i++) {
+            await ownedNFTs[i]
+          }
+          // get nfts after bridging
+          const ownedNFTsAfterBridging = await rootTokenV2.getOwnedTokens(diamond.address)
+            .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+
+          for (let i = 0; i < ownedNFTsAfterBridging.length; i++) {
+            const uri = await rootTokenV2.uri(ownedNFTsAfterBridging[i])
+            console.log(uri)
+            console.log(tokenUris[i])
+            expect(uri).to.equal(tokenUris[i])
+          }
+          // need to check if the 721 token that we bridged is equal to the same tier
+          // as the 1155 that we minted back to the diamond
+
+          // check the uri (should match) 721 = token uri. 1155 = tokenUri
+          // check contribution amount
+          // check contribution asset
+          // check contribution multiplier
+          // base loan size
+          // v2 = tiers 1-8
+          // v1 = tiers 0-11
+
+          // get staked NFTs of user before migration
+          const stakedNFTs = await diamond.getStakedNFTs(borrower)
 
           // after unstaking our NFTs, it would make sense that the
           // length of our staked NFTs is zero
-          const stakedNFTs = await diamond.getStakedNFTs(borrower)
           expect(stakedNFTs.length).to.equal(0)
 
           // we also expect that the diamonds now own all our unstaked NFTs

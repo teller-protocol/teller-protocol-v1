@@ -79,13 +79,13 @@ export interface DeployDiamondArgs<
   C extends Contract,
   F = string | undefined,
   A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
-> extends CommonDeployArgs {
+  > extends CommonDeployArgs {
   name: string
   facets: Facets
   owner?: string
   execute?: F extends keyof C['functions']
-    ? DiamondExecuteArgs<F, A>
-    : undefined
+  ? DiamondExecuteArgs<F, A>
+  : undefined
   onFacetDeployment?: (result: DeployResult) => Promise<void>
 }
 
@@ -163,8 +163,7 @@ const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
   if (result.newlyDeployed) {
     const gas = colors.cyan(`${result.receipt!.gasUsed} gas`)
     hre.log(
-      ` ${colors.green('new')} ${result.address} ${
-        result.receipt ? 'with ' + gas : ''
+      ` ${colors.green('new')} ${result.address} ${result.receipt ? 'with ' + gas : ''
       }`
     )
 
@@ -185,7 +184,7 @@ const saveDeploymentBlock = async (
   const deploymentBlockPath = `deployments/${networkName}/.latestDeploymentBlock`
   const lastDeployment = await disklet
     .getText(deploymentBlockPath)
-    .catch(() => {})
+    .catch(() => { })
   if (!lastDeployment || block > parseInt(lastDeployment)) {
     await disklet.setText(deploymentBlockPath, block.toString())
   }

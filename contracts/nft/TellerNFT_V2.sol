@@ -2,11 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {
+    ERC1155Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {
+    AccessControlUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 // Libraries
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -26,8 +33,8 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
  * @author develop@teller.finance
  */
 contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
+    using EnumerableSet for EnumerableSet.UintSet;
     /* Constants */
-
     string public constant name = "Teller NFT";
     string public constant symbol = "TNFT";
 
@@ -56,6 +63,9 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
     // It holds how many tokens types exists in a tier.
     mapping(uint128 => uint256) public tierTokenCount;
+
+    // It holds a set of tokenIds for an owner address
+    mapping(address => EnumerableSet.UintSet) internal _ownedTokenIds;
 
     // It holds the URI hash containing the token metadata
     mapping(uint256 => string) internal _idToUriHash;
@@ -175,11 +185,6 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         return tiers[tierId].contributionMultiplier;
     }
 
-    struct TokenBalance {
-        uint256 tokenId;
-        uint256 balance;
-    }
-
     /**
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
@@ -189,15 +194,12 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     function getOwnedTokens(address owner)
         external
         view
-        returns (TokenBalance[] memory owned_)
+        returns (uint256[] memory owned_)
     {
-        uint256[] memory tokenIds = getTokenIds();
-        owned_ = new TokenBalance[](tokenIds.length);
-        for (uint256 i; i < tokenIds.length; i++) {
-            uint256 balance = balanceOf(owner, tokenIds[i]);
-            if (balance > 0) {
-                owned_[i] = TokenBalance(tokenIds[i], balance);
-            }
+        EnumerableSet.UintSet storage set = _ownedTokenIds[owner];
+        owned_ = new uint256[](set.length());
+        for (uint256 i; i < owned_.length; i++) {
+            owned_[i] = set.at(i);
         }
     }
 
@@ -336,6 +338,27 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     /* Internal Functions */
 
     /**
+     * @notice it removes a token ID from the ownedTokenIds mapping if the balance of
+     * the user's tokenId is 0
+     * @param account the address to add the token id to
+     * @param id the token ID
+     */
+    function _removeOwnedTokenCheck(address account, uint256 id) private {
+        if (balanceOf(account, id) == 0) {
+            _ownedTokenIds[account].remove(id);
+        }
+    }
+
+    /**
+     * @notice it adds a token id to the ownedTokenIds mapping
+     * @param account the address to the add the token ID to
+     * @param id the token ID
+     */
+    function _addOwnedToken(address account, uint256 id) private {
+        _ownedTokenIds[account].add(id);
+    }
+
+    /**
      * @dev Runs super function and then increases total supply.
      *
      * See {ERC1155Upgradeable._mint}.
@@ -347,6 +370,9 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         bytes memory data
     ) internal override {
         super._mint(account, id, amount, data);
+
+        // add the id to the owned token ids of the user
+        _addOwnedToken(account, id);
 
         totalSupply += amount;
     }
@@ -366,6 +392,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
         for (uint256 i; i < amounts.length; i++) {
             totalSupply += amounts[i];
+            _addOwnedToken(to, ids[i]);
         }
     }
 
@@ -380,7 +407,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         uint256 amount
     ) internal override {
         super._burn(account, id, amount);
-
+        _removeOwnedTokenCheck(account, id);
         totalSupply -= amount;
     }
 
@@ -398,6 +425,42 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
         for (uint256 i; i < amounts.length; i++) {
             totalSupply -= amounts[i];
+            _removeOwnedTokenCheck(account, ids[i]);
+        }
+    }
+
+    /**
+     * @dev Transfers `amount` tokens of token type `id` from `from` to `to`.
+     *
+     * See {ERC1155Upgradeable._safeTransferFrom}.
+     */
+    function _safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal override {
+        super._safeTransferFrom(from, to, id, amount, data);
+        _removeOwnedTokenCheck(from, id);
+        _addOwnedToken(to, id);
+    }
+
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {_safeTransferFrom}.
+     *  See {ERC1155Upgradeable._safeBatchTransferFrom}
+     */
+    function _safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) internal override {
+        super._safeBatchTransferFrom(from, to, ids, amounts, data);
+        for (uint256 i; i < ids.length; i++) {
+            _removeOwnedTokenCheck(from, ids[i]);
+            _addOwnedToken(to, ids[i]);
         }
     }
 

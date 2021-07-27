@@ -58,8 +58,6 @@ export const addTiers = async (
   log('')
 
   if (tierDataToCreate.length > 0) {
-    // const data = nft.interface.encodeFunctionData('createTiers', [tierDataToCreate, tierHashesToCreate])
-    // console.log(data, data.length)
     for (let i = 0; i < tierDataToCreate.length; i += 2) {
       const receipt = await nft
         .connect(deployer)

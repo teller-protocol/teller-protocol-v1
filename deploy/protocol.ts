@@ -1,3 +1,4 @@
+import { HARDHAT_NETWORK_NAME } from 'hardhat/plugins'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -15,7 +16,6 @@ import {
   DeployDiamondArgs,
   Facets,
 } from '../utils/deploy-helpers'
-import { HARDHAT_NETWORK_NAME } from "hardhat/plugins";
 
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
@@ -146,11 +146,11 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     {
-      contract: 'NFTMainnetBridgingToPolygonFacet',
+      contract: 'NFTMainnetBridgingToPolygonFacetMock',
       // random addresses for testing. won't do anything
       args: ['0x98ca52786e967d1469090adc075416948ca004a7'],
       skipIfAlreadyDeployed: false,
-      mock: network.name === HARDHAT_NETWORK_NAME
+      mock: network.name === HARDHAT_NETWORK_NAME,
     },
   ]
 

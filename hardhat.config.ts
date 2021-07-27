@@ -204,6 +204,7 @@ export default <HardhatUserConfig>{
     hardhat: networkConfig({
       chainId: 31337,
       live: false,
+      allowUnlimitedContractSize: true,
       forking:
         FORKING_NETWORK == null
           ? undefined

@@ -2,19 +2,24 @@
 pragma solidity ^0.8.3;
 
 // Contracts
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import { IERC721ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {
+    ERC721Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {
+    IERC721ReceiverUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import { TellerNFT } from "../TellerNFT.sol";
 import { MainnetTellerNFT } from "../mainnet/MainnetTellerNFT.sol";
 
 // Libraries
 import { NFTLib } from "../libraries/NFTLib.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
-import "hardhat/console.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
     // immutable and constant addresses
