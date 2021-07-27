@@ -67,7 +67,7 @@ describe.only('Bridging Assets to Polygon', () => {
       )
 
       // claim nfts 
-      // await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
+      await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
 
       // get owned nfts of borrower
       ownedNFTs = await rootToken
@@ -88,15 +88,43 @@ describe.only('Bridging Assets to Polygon', () => {
           expect(erc721Predicate).to.equal(approved)
         }
       })
-      it('deposits tokens in the root', async () => {
+      it('bridges our NFTs', async () => {
+        // migrate and bridge all of our nfts
+        await diamond.connect(borrowerSigner).bridgeNFTs([ownedNFTs, []])
+        // add rest of the test here
+      })
+      it('stakes the NFTs on polygon', async () => {
+        // encode data
+        const stakedNFTs = await diamond.getStakedNFTs(borrower)
         const depositData = ethers.utils.defaultAbiCoder.encode(
-          ['uint256[]', 'address'],
-          [ownedNFTs, borrower]
+          ['uint256[]'],
+          [stakedNFTs]
         )
-        const tellerNFTAddress = '0x2ceB85a2402C94305526ab108e7597a102D6C175'
-        await rootChainManager
-          .connect(borrowerSigner)
-          .depositFor(borrower, tellerNFTAddress, depositData)
+        // stake the nfts on polygon
+        // await childToken.connect(deployer).deposit(borrower, depositData)
+      })
+      it('unstakes NFTs on polygon and burns them', async () => {
+        // const burnTx = await childToken
+        //   .connect(borrowerSigner)
+        //   .withdrawBatch(ownedNFTs)
+
+        // // from matic docs
+        // const exitCallData = await maticPOSClient.exitERC721(
+        //   JSON.stringify(burnTx),
+        //   {
+        //     from: diamond.address,
+        //     encodeAbi: true,
+        //   }
+        // )
+        // // exit call data
+        // await diamond.connect(borrowerSigner).exit(exitCallData)
+      })
+      it('stakes the NFTs on ethereum', async () => {
+        // await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
+        // const stakedNFTs = await diamond.getStakedNFTs(borrower)
+        // for (let i = 0; i < ownedNFTs.length; i++) {
+        //   expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
+        // }
       })
     })
     describe.only('Mock tests', () => {
@@ -116,42 +144,42 @@ describe.only('Bridging Assets to Polygon', () => {
             expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
           }
         })
-        // it('token data matches from v1 to v2', async () => {
-        //   for (let i = 0; i < 1000; i++) {
-        //     console.log(i)
-        //     const v1TokenURI = await rootToken.tokenURI(i)
-        //     const newTokenId = await rootTokenV2.convertV1TokenId(i)
-        //     const uri = await rootTokenV2.uri(newTokenId)
-        //     expect(uri).to.equal(v1TokenURI)
-        //   }
-        // })
-        // it('tier data matches between v1 and v2', async () => {
-        //   const filter = rootToken.filters.Transfer(NULL_ADDRESS, DUMMY_ADDRESS, null)
-        //   const arrayOfTiers = [0, 1, 2, 3, 8, 9, 10, 11]
-        //   const mintToken = async (tierIndex: number) => {
-        //     const receipt = await rootToken.connect(deployer).mint(tierIndex, DUMMY_ADDRESS).then(({ wait }) => wait())
-        //     const [event] = await rootToken.queryFilter(filter, receipt.blockHash)
-        //     console.log(event.args.tokenId)
-        //     await tellerDictionary.connect(deployer).setTokenTierForTokenId(event.args.tokenId, tierIndex)
-        //   }
+        it('tier data matches between v1 and v2', async () => {
+          // we use filter to get the Event that will be emitted when we mint the token
+          const filter = rootToken.filters.Transfer(NULL_ADDRESS, DUMMY_ADDRESS, null)
 
-        //   for (let i = 0; i < arrayOfTiers.length; i++) {
-        //     await mintToken(i)
-        //     await mintToken(i)
-        //     await mintToken(i)
-        //   }
+          // array of v1 tiers
+          const arrayOfTiers = [0, 1, 2, 3, 8, 9, 10, 11]
 
-        //   const tokenIds = await rootToken.getOwnedTokens(DUMMY_ADDRESS);
-        //   for (let i = 0; i < tokenIds.length; i++) {
-        //     const tier = await rootToken.getTokenTier(tokenIds[i])
-        //     const v1TokenURI = await rootToken.tokenURI(tokenIds[i])
-        //     const newTokenId = await rootTokenV2.convertV1TokenId(tokenIds[i])
-        //     console.log(tier.index_.toString(), tokenIds[i].toString(), newTokenId.toString());
-        //     const uri = await rootTokenV2.uri(newTokenId)
-        //     expect(uri).to.equal(v1TokenURI)
-        //   }
-        // })
-        it('bridges and migrates NFTs', async () => {
+          // mint the token on the tier index, then retrieve the emitted event using transaction's
+          // block hash
+          const mintToken = async (tierIndex: number) : Promise<void> => {
+            const receipt = await rootToken.connect(deployer).mint(tierIndex, DUMMY_ADDRESS).then(({ wait }) => wait())
+            const [event] = await rootToken.queryFilter(filter, receipt.blockHash)
+
+            // set the token tier that we just minted according to the tier index. so, minting 2nd NFT
+            // on tier 1 will result in ID = 20001
+            await tellerDictionary.connect(deployer).setTokenTierForTokenId(event.args.tokenId, tierIndex)
+          }
+
+          // mint 3 tokens on every tier for the DUMMY_ADDRESS
+          for (let i = 0; i < arrayOfTiers.length; i++) {
+            await mintToken(i)
+            await mintToken(i)
+            await mintToken(i)
+          }
+
+          // get our token ids and loop through it. for every loop, we check if the V1TokenURI
+          // is = to the URI of our V2 tokenId
+          const tokenIds = await rootToken.getOwnedTokens(DUMMY_ADDRESS)
+          for (let i = 0; i < tokenIds.length; i++) {
+            const v1TokenURI = await rootToken.tokenURI(tokenIds[i])
+            const newTokenId = await rootTokenV2.convertV1TokenId(tokenIds[i])
+            const uri = await rootTokenV2.uri(newTokenId)
+            expect(uri).to.equal(v1TokenURI)
+          }
+        })
+        it('migrates an NFT from V1 to V2', async () => {
           // mint the token, then transfer it to v2
           await rootToken.connect(deployer).mint(0, borrower)
           const [nftId] = await rootToken.getOwnedTokens(borrower)
@@ -165,68 +193,8 @@ describe.only('Bridging Assets to Polygon', () => {
           await rootToken.connect(borrowerSigner)['safeTransferFrom(address,address,uint256)'](borrower, rootTokenV2.address, nftId)
           const v2TokensAfter = await rootTokenV2.getOwnedTokens(borrower)
           expect(v2TokensAfter.length).to.equal(1)
-
-          // // // migrate and bridge all of our nfts
-          // // await diamond.connect(borrowerSigner).bridgeNFTs([ownedNFTs, []])
-
-
-          // console.log(ownedNFTs)
-          // for (let i = 0; i < ownedNFTs.length; i++) {
-          //   await ownedNFTs[i]
-          // }
-
-          // const stakedNFTs = await diamond.getStakedNFTs(borrower)
-
-          // // after unstaking our NFTs, it would make sense that the
-          // // length of our staked NFTs is zero
-          // expect(stakedNFTs.length).to.equal(0)
-
-          // // we also expect that the diamonds now own all our unstaked NFTs
-          // const diamondOwnedNFTs = await rootToken
-          //   .getOwnedTokens(diamond.address)
-          //   .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
-          // for (let i = 0; i < diamondOwnedNFTs.length; i++) {
-          //   expect(await rootToken.ownerOf(diamondOwnedNFTs[i])).to.equal(
-          //     diamond.address
-          //   )
-          // }
-        })
-        it('stakes the NFTs on "polygon"', async () => {
-          // encode data
-          const stakedNFTs = await diamond.getStakedNFTs(borrower)
-          const depositData = ethers.utils.defaultAbiCoder.encode(
-            ['uint256[]'],
-            [stakedNFTs]
-          )
-          // stake the nfts and "send them to" root chain manager
-          // await childToken.connect(deployer).deposit(borrower, depositData)
         })
       })
-      // describe('burns the tokens then "deposits" back to ethereum', () => {
-      //   it('unstakes NFTs on polygon and burns them', async () => {
-      //     const burnTx = await childToken
-      //       .connect(borrowerSigner)
-      //       .withdrawBatch(ownedNFTs)
-
-      //     // from matic docs
-      //     const exitCallData = await maticPOSClient.exitERC721(
-      //       JSON.stringify(burnTx),
-      //       {
-      //         from: diamond.address,
-      //         encodeAbi: true,
-      //       }
-      //     )
-      //     // exit call data
-      //     await diamond.connect(borrowerSigner).exit(exitCallData)
-      //   })
-      //   it('stakes the NFTs on ethereum', async () => {
-      //     await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
-      //     const stakedNFTs = await diamond.getStakedNFTs(borrower)
-      //     for (let i = 0; i < ownedNFTs.length; i++) {
-      //       expect(ownedNFTs[i]).to.equal(stakedNFTs[i])
-      //     }
-      //   })
-      // })
     })
   }
 })

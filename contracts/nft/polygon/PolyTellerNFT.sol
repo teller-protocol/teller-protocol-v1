@@ -36,12 +36,13 @@ contract PolyTellerNFT is TellerNFT_V2 {
         onlyRole(DEPOSITOR)
     {
         require(user != address(0x0), "TellerNFT: INVALID_DEPOSIT_USER");
-
         (
             uint256[] memory ids,
             uint256[] memory amounts,
             bytes memory data
         ) = abi.decode(depositData, (uint256[], uint256[], bytes));
+
+        // TODO: Stake tokens here
 
         _mintBatch(user, ids, amounts, data);
     }
