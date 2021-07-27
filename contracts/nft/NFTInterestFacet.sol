@@ -7,6 +7,9 @@ import { NFTFacet } from "./NFTFacet.sol";
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTInterestFacet is NFTFacet {
     /**
@@ -18,13 +21,10 @@ contract NFTInterestFacet is NFTFacet {
         view
         returns (uint16 claimableInterestPercent)
     {
-        uint256[] memory stakedNFTs = NFTLib.stakedNFTs(nftOwner);
-        uint256[] memory diamondNFTs = NFTLib.nft().getOwnedTokens(
-            address(this)
+        uint256 userNFTs = EnumerableSet.length(
+            NFTLib.s().stakedNFTs[nftOwner]
         );
-        claimableInterestPercent = NumbersLib.ratioOf(
-            stakedNFTs.length,
-            diamondNFTs.length
-        );
+        uint256 diamondNFTs = NFTLib.nft().balanceOf(address(this));
+        claimableInterestPercent = NumbersLib.ratioOf(userNFTs, diamondNFTs);
     }
 }
