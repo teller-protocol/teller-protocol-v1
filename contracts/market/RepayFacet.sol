@@ -261,13 +261,14 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 if (
                     lendingTokenBalance > LibLoans.loan(loanID).borrowedAmount
                 ) {
+                    //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
+
                     excessProfits =
                         lendingTokenBalance -
                         LibLoans.loan(loanID).borrowedAmount;
                 }
 
-                // excessProfits = 2000;  //stub
-
+                // Multiply that
                 uint256 amountForManagementFee = NumbersLib.percent(
                     excessProfits,
                     uint16(PlatformSettingsLib.getManagementFeePercent())
@@ -295,10 +296,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 lendingTokenBalance = LibEscrow.balanceOf(loanID, lendingToken);
 
                 console.log("lendingTokenBalance 2  ", lendingTokenBalance);
-
-                //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
-
-                // Multiply that
 
                 //reduce rewards from 'Claim Tokens' by the mgmt fee
                 //send manager fee to us

@@ -461,20 +461,21 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 200 * 10**(lendingTokenDecimals),
+            amount: 230 * 10**(lendingTokenDecimals),
             hre,
           })
           
-
+          
           //simulate that excess profit was made by the user on the borrowed money 
           const borrowedFundsEscrowAddress = helpers.details.loan[1]
-          await getFunds({
-            to: borrowedFundsEscrowAddress,
-            tokenSym: market.lendingToken,
-            amount: 30 * 10**(lendingTokenDecimals),
-            hre,
-          })
- 
+
+          console.log('add funds to borrowed escrow ',borrowedFundsEscrowAddress) 
+          await lendingToken.transfer(borrowedFundsEscrowAddress,  30 * 10**(lendingTokenDecimals)    )
+        
+          
+          const loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress) 
+
+          
 
           const borrowerAddress = await borrower.getAddress()
           const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
