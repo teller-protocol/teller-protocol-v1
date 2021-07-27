@@ -421,7 +421,7 @@ describe.skip('Loans', () => {
 
           console.log('balanceOf After', borrowerBalance.toString() )
 
-          expect(parseInt(borrowerBalance.toString())).to.equal(200000000)
+          expect(parseInt(borrowerBalance.toString())).to.equal(499980000)
 
            
           expect(loanData.status  ).to.equal(3) //3 = repaid 

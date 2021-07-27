@@ -224,6 +224,42 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 console.log("mgmtFee is  ", mgmtFee);
                 // Transfer profit fee
 
+                address lendingToken = LibLoans.loan(loanID).lendingToken;
+
+                uint256 lendingTokenBalance = LibEscrow.balanceOf(
+                    loanID,
+                    lendingToken
+                );
+                console.log("lendingTokenBalance 1  ", lendingTokenBalance);
+
+                uint256 amountForManagementFee = NumbersLib.percent(
+                    lendingTokenBalance,
+                    uint16(PlatformSettingsLib.getManagementFeePercent())
+                );
+
+                console.log("primary lended token is ", lendingToken);
+
+                console.log(
+                    "amountForManagementFee is  ",
+                    amountForManagementFee
+                );
+
+                if (amountForManagementFee > 0) {
+                    /*LibEscrow.e(loanID).claimToken(
+                        lendingToken,
+                        address(tToken),  //send to the liq pool 
+                        amountForManagementFee
+                    );*/
+
+                    SafeERC20.safeTransferFrom(
+                        IERC20(lendingToken),
+                        sender,
+                        address(tToken), //send to the liq pool
+                        amountForManagementFee
+                    );
+                }
+                console.log("lendingTokenBalance 2  ", lendingTokenBalance);
+
                 //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
 
                 // Multiply that
@@ -231,10 +267,10 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 //reduce rewards from 'Claim Tokens' by the mgmt fee
                 //send manager fee to us
 
+                //Primary Lended Token
+
                 // - Need to determine what the primary lended token was for this loan
                 // - Need to determine excess profit amount
-
-                console.log("primary lended token is ?? ");
 
                 /* NumbersLib.percent(
                         amountToLiquidate,
