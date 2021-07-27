@@ -7,14 +7,16 @@ import { CONTROLLER } from "./data.sol";
 import { ITTokenStrategy } from "./strategies/ITTokenStrategy.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-contract TToken_V3 is TToken_V2 {
+abstract contract TToken_V3 is TToken_V2 {
     /**
      * @notice Called by the Teller Diamond contract at the end of the protocol's Alpha.
      */
@@ -33,6 +35,7 @@ contract TToken_V3 is TToken_V2 {
 
     function claimAlphaInterest(address recipient, uint16 percent)
         external
+        override
         authorized(CONTROLLER, _msgSender())
     {
         require(s().alphaEnded, "Teller: alpha not ended");

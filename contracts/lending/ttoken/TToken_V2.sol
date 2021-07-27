@@ -15,7 +15,7 @@ import {
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-contract TToken_V2 is TToken_V1 {
+abstract contract TToken_V2 is TToken_V1 {
     /**
      * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
      * @param recipient The account to send the funds to.
