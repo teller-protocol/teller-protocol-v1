@@ -2,18 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {
-    ERC1155Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {
-    AccessControlUpgradeable
-} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 // Libraries
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -69,6 +63,7 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
     // It holds the URI hash containing the token metadata
     mapping(uint256 => string) internal _idToUriHash;
+
     // It is a reverse lookup of the token ID given the metadata hash
     mapping(string => uint256) internal _uriHashToId;
 
@@ -203,26 +198,6 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         }
     }
 
-    function getTokenIds() public view returns (uint256[] memory ids_) {
-        uint256 tokenCount;
-        for (uint128 tierId = 1; tierId <= tierCount; tierId++) {
-            tokenCount += tierTokenCount[tierId];
-        }
-
-        ids_ = new uint256[](tokenCount);
-        uint256 currentIndex;
-        for (uint128 tierId = 1; tierId < tierCount; tierId++) {
-            for (
-                uint128 tierTokenId;
-                tierTokenId <= tierTokenCount[tierId];
-                tierTokenId++
-            ) {
-                ids_[currentIndex] = _mergeTokenId(tierId, tierTokenId);
-                currentIndex++;
-            }
-        }
-    }
-
     /**
      * @notice It mints a new token for a Tier index.
      * @param tierIndex Tier to mint token on.
@@ -267,6 +242,12 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         }
     }
 
+    /**
+     * @notice creates the tier along with the tier hashes, then saves the tokenId
+     * information in id -> hash and hash -> id mappings
+     * @param newTier the Tier struct containing all the tier information
+     * @param tierHashes the tier hashes to add to the tier
+     */
     function _createTier(Tier calldata newTier, string[] calldata tierHashes)
         internal
     {
