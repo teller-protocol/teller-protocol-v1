@@ -15,6 +15,7 @@ import {
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 library NFTLib {
     function s() internal pure returns (NFTStorage storage s_) {
@@ -129,5 +130,19 @@ library NFTLib {
             // Restake the NFT
             EnumerableSet.add(s().stakedNFTs[owner], EnumerableSet.at(nfts, i));
         }
+    }
+
+    /**
+     * @notice It returns the claimable interest % for a user's staked NFTs.
+     * @param nftOwner The address of the NFT owner.
+     */
+    function calculateClaimableInterestPercent(address nftOwner)
+        internal
+        view
+        returns (uint16 claimableInterestPercent)
+    {
+        uint256 userNFTs = EnumerableSet.length(s().stakedNFTs[nftOwner]);
+        uint256 diamondNFTs = nft().balanceOf(address(this));
+        claimableInterestPercent = NumbersLib.ratioOf(userNFTs, diamondNFTs);
     }
 }
