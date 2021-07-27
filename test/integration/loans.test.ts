@@ -301,7 +301,7 @@ describe.skip('Loans', () => {
 
 
           const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay)
+          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
 
 
           await lendingToken
@@ -324,7 +324,7 @@ describe.skip('Loans', () => {
           console.log('balanceOf After', borrowerBalance.toString() )
 
          
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay)
+          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
            
           expect(loanData.status  ).to.equal(3) //3 = repaid 
 
@@ -386,24 +386,17 @@ describe.skip('Loans', () => {
 
 
           const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay)
+          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
 
 
 
-          //simulate earning profits on the loan here 
-
-          //const feePct = await diamond.connect(borrower).getPlatformSetting('MANAGEMENT_FEE_PERCENT')
-          //console.log('feePct', feePct )
-
-
-
+          
 
           await lendingToken
           .connect(ethers.provider.getSigner(borrowerAddress))
           .approve(diamond.address, balanceLeftToRepay)
 
-          //let response = await helpers.repay( 100000000 , borrower )  
-
+         
           await diamond.connect( borrower ).repayLoan(loanId, 100010000)
 
           
@@ -417,7 +410,106 @@ describe.skip('Loans', () => {
           console.log('loanData',  ) 
 
          
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay)
+          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
+
+          console.log('balanceOf After', borrowerBalance.toString() )
+
+          expect(parseInt(borrowerBalance.toString())).to.equal(499980000)
+
+           
+          expect(loanData.status  ).to.equal(3) //3 = repaid 
+
+          expect(parseInt( totalOwedAfterRepay.toString() ) ).to.equal(0) 
+        })
+
+
+
+        it('should be able to create, earn profits on, and repay a loan with excess profit ', async () => {
+
+
+          const { getHelpers } = await takeOutLoanWithNfts({
+            amount: 100,  //should use raw amt not formatted.. oh well 
+            lendToken: market.lendingToken,
+          })
+
+          const helpers: LoanHelpersReturn = await getHelpers()
+
+
+          expect(helpers.details.loan).to.exist
+
+
+
+
+         // console.log('helpers.details.loan', helpers.details.loan)
+          
+          const loanId =  helpers.details.loan.id 
+          console.log('loanId',loanId)
+
+        //  const lHelpers = await loanHelpers(loanId)  
+          
+
+
+          //need to give fake ERC20 to borrower 
+          //and add fake ERC20 to the borrow escrow 
+
+          const lendingToken =
+          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+
+          const lendingTokenDecimals = await lendingToken.decimals()
+          console.log('decimals', lendingTokenDecimals)
+
+          await getFunds({
+            to: borrower,
+            tokenSym: market.lendingToken,
+            amount: 200 * 10**(lendingTokenDecimals),
+            hre,
+          })
+          
+
+          //simulate that excess profit was made by the user on the borrowed money 
+          const borrowedFundsEscrowAddress = helpers.details.loan[1]
+          await getFunds({
+            to: borrowedFundsEscrowAddress,
+            tokenSym: market.lendingToken,
+            amount: 30 * 10**(lendingTokenDecimals),
+            hre,
+          })
+ 
+
+          const borrowerAddress = await borrower.getAddress()
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+
+          console.log('balanceOf', borrowerBalance.toString() )
+
+          console.log('market.lendingToken',market.lendingToken)
+
+
+          const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
+          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
+
+
+
+          
+
+          await lendingToken
+          .connect(ethers.provider.getSigner(borrowerAddress))
+          .approve(diamond.address, balanceLeftToRepay)
+
+         
+          await diamond.connect( borrower ).repayLoan(loanId, 100010000)
+
+          
+          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+
+
+          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
+
+
+          const loanData = await diamond.getLoan(loanId)
+          console.log('loanData',  ) 
+
+         
+          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
 
           console.log('balanceOf After', borrowerBalance.toString() )
 

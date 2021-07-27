@@ -266,7 +266,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                         LibLoans.loan(loanID).borrowedAmount;
                 }
 
-                //excessProfits = 2000;  //stub
+                // excessProfits = 2000;  //stub
 
                 uint256 amountForManagementFee = NumbersLib.percent(
                     excessProfits,

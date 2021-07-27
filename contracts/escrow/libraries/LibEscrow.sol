@@ -16,6 +16,8 @@ import { ILoansEscrow } from "../escrow/ILoansEscrow.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
+import "hardhat/console.sol";
+
 library LibEscrow {
     function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
@@ -53,6 +55,7 @@ library LibEscrow {
         view
         returns (uint256)
     {
+        console.log("e loan id", address(e(loanID)));
         return exists(loanID) ? IERC20(token).balanceOf(address(e(loanID))) : 0;
     }
 
@@ -95,9 +98,7 @@ library LibEscrow {
         EnumerableSet.AddressSet storage tokens = getEscrowTokens(loanID);
         if (EnumerableSet.length(tokens) > 0) {
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-                value_ += AppStorageLib.store()
-                    .priceAggregator
-                    .getBalanceOfFor(
+                value_ += AppStorageLib.store().priceAggregator.getBalanceOfFor(
                         address(e(loanID)),
                         EnumerableSet.at(tokens, i),
                         lendingToken
