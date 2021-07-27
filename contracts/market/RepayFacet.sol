@@ -224,6 +224,25 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 console.log("mgmtFee is  ", mgmtFee);
                 // Transfer profit fee
 
+                /*
+                    Any assets we claim, send it to the ttoken 
+                    Could we record that in a way ? 
+                */
+
+                /*
+                Most logic that exists:  liquidator comes in. pays out loan , we pay him in a value of lending token
+                but for any value of token that exists in the Escrow. 
+                Take that logic and re-use it for the management fee.   
+
+                [see bottom of repay facat in library]  PayoutLiquidatorInValueOf - uses price aggregator 
+
+                -> rely on the ttoken contract to swap stuff.   
+
+
+                1. If you pay a loan off normally, only the lendingtoken is used for the mgmt fee 
+                2. If you are a liquidator, mgmt fee is paid for other types of tokens 
+                */
+
                 address lendingToken = LibLoans.loan(loanID).lendingToken;
 
                 uint256 lendingTokenBalance = LibEscrow.balanceOf(
@@ -232,32 +251,49 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 );
                 console.log("lendingTokenBalance 1  ", lendingTokenBalance);
 
+                console.log(
+                    "borrowedAmount 1  ",
+                    LibLoans.loan(loanID).borrowedAmount
+                );
+
+                uint256 excessProfits = 0;
+
+                if (
+                    lendingTokenBalance > LibLoans.loan(loanID).borrowedAmount
+                ) {
+                    excessProfits =
+                        lendingTokenBalance -
+                        LibLoans.loan(loanID).borrowedAmount;
+                }
+
+                //excessProfits = 2000;  //stub
+
                 uint256 amountForManagementFee = NumbersLib.percent(
-                    lendingTokenBalance,
+                    excessProfits,
                     uint16(PlatformSettingsLib.getManagementFeePercent())
                 );
 
                 console.log("primary lended token is ", lendingToken);
+
+                console.log("excessProfits is ", excessProfits);
 
                 console.log(
                     "amountForManagementFee is  ",
                     amountForManagementFee
                 );
 
+                ///transfer amount exceeds balance !!
                 if (amountForManagementFee > 0) {
-                    /*LibEscrow.e(loanID).claimToken(
+                    LibEscrow.e(loanID).claimToken(
                         lendingToken,
-                        address(tToken),  //send to the liq pool 
-                        amountForManagementFee
-                    );*/
-
-                    SafeERC20.safeTransferFrom(
-                        IERC20(lendingToken),
-                        sender,
-                        address(tToken), //send to the liq pool
+                        address(tToken), //send to the liq pool , from the escrow of the loan balance
                         amountForManagementFee
                     );
+                    console.log("safeTransferFrom    ", amountForManagementFee);
                 }
+
+                lendingTokenBalance = LibEscrow.balanceOf(loanID, lendingToken);
+
                 console.log("lendingTokenBalance 2  ", lendingTokenBalance);
 
                 //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
