@@ -6,25 +6,31 @@ import { NFTFacet } from "./NFTFacet.sol";
 
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";
-import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
 
 contract NFTInterestFacet is NFTFacet {
+    /**
+     * @notice It claims the interest earned by the caller's staked NFTs
+     * @param assetAddress The address of the lending asset against which the NFTs are staked
+     */
+    function claimNFTInterest(address assetAddress) external {
+        uint16 claimableInterestPercent = NFTLib
+            .calculateClaimableInterestPercent(msg.sender);
+        LendingLib.tToken(assetAddress).claimAlphaInterest(
+            msg.sender,
+            claimableInterestPercent
+        );
+    }
+
     /**
      * @notice It returns the claimable interest % for a user's staked NFTs.
      * @param nftOwner The address of the NFT owner.
      */
     function getClaimableInterestPercent(address nftOwner)
-        external
+        public
         view
-        returns (uint16 claimableInterestPercent)
+        returns (uint16)
     {
-        uint256 userNFTs = EnumerableSet.length(
-            NFTLib.s().stakedNFTs[nftOwner]
-        );
-        uint256 diamondNFTs = NFTLib.nft().balanceOf(address(this));
-        claimableInterestPercent = NumbersLib.ratioOf(userNFTs, diamondNFTs);
+        return NFTLib.calculateClaimableInterestPercent(nftOwner);
     }
 }

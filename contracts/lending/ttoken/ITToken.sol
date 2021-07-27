@@ -2,9 +2,13 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {
+    ERC20Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { RolesFacet } from "../../contexts2/access-control/roles/RolesFacet.sol";
+import {
+    RolesFacet
+} from "../../contexts2/access-control/roles/RolesFacet.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
@@ -215,4 +219,14 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
      * @param underlying address of the ERC20 token
      */
     function initialize(address admin, address underlying) external virtual;
+
+    /**
+     * @notice Called by the Teller Diamond contract at the end of Alpha for recipient's earned interest.
+     * @param recipient The address of the alpha participant claiming the interest.
+     * @param percent The proportional amount of interest earned by the recipient.
+     */
+
+    function claimAlphaInterest(address recipient, uint16 percent)
+        external
+        virtual;
 }
