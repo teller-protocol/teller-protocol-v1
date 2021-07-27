@@ -2,12 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import { AccessControlUpgradeable } from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {
+    ERC1155Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {
+    AccessControlUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 // Libraries
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -26,8 +32,9 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
  *
  * @author develop@teller.finance
  */
-contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
+abstract contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     using EnumerableSet for EnumerableSet.UintSet;
+
     /* Constants */
     string public constant name = "Teller NFT";
     string public constant symbol = "TNFT";
@@ -35,7 +42,6 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     uint256 private constant ID_PADDING = 10000;
 
     bytes32 public constant ADMIN = keccak256("ADMIN");
-    bytes32 public constant MINTER = keccak256("MINTER");
 
     /* State Variables */
 
@@ -199,27 +205,6 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
     }
 
     /**
-     * @notice It mints a new token for a Tier index.
-     * @param tierIndex Tier to mint token on.
-     * @param owner The owner of the new token.
-     *
-     * Requirements:
-     *  - Caller must be an authorized minter
-     */
-    function mint(uint256 tierIndex, address owner) external onlyRole(MINTER) {
-        // Get the token ID to mint for the user
-        // On a fresh mint, the exact token ID minted is determined on tx execution
-        //  with sudo randomness using the block number
-        //        uint128 tokenId = block.number % tierTokenCount[tierIndex];
-        //
-        //        // Mint and set the token to the tier index
-        //        _safeMint(owner, tokenId);
-        //
-        //        // Set owner
-        //        _setOwner(owner, tokenId);
-    }
-
-    /**
      * @notice Creates new Tiers to be minted with the given information.
      * @dev It auto increments the index of the next tier to add.
      * @param newTiers Information about the new tiers to add.
@@ -293,9 +278,9 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
 
     /**
      * @notice Initializes the TellerNFT.
-     * @param minters The addresses that should allowed to mint tokens.
+     * @param data Bytes to init the token with.
      */
-    function initialize(address[] calldata minters) public virtual initializer {
+    function initialize(bytes calldata data) public virtual initializer {
         // Set the initial URI
         __ERC1155_init("https://gateway.pinata.cloud/ipfs/");
         __AccessControl_init();
@@ -305,16 +290,17 @@ contract TellerNFT_V2 is ERC1155Upgradeable, AccessControlUpgradeable {
         // Set the initial admin
         _setupRole(ADMIN, _msgSender());
 
-        // Set admin role for minters
-        _setRoleAdmin(MINTER, ADMIN);
-        // Set the initial minters
-        for (uint256 i; i < minters.length; i++) {
-            _setupRole(MINTER, minters[i]);
-        }
-
         // Set initial contract URI hash
         setContractURIHash("QmWAfQFFwptzRUCdF2cBFJhcB2gfHJMd7TQt64dZUysk3R");
+
+        __TellerNFT_V2_init_unchained(data);
     }
+
+    function __TellerNFT_V2_init_unchained(bytes calldata data)
+        internal
+        virtual
+        initializer
+    {}
 
     /* Internal Functions */
 

@@ -8,7 +8,6 @@ import {
   ITellerNFTDistributor,
   MainnetTellerNFT,
 } from '../types/typechain'
-import { TellerNFTDictionary } from '../types/typechain'
 import {
   deploy,
   deployDiamond,
@@ -43,7 +42,9 @@ const deployNFT: DeployFunction = async (hre) => {
             methodName: 'initialize',
             args: [
               // Initial minters
-              [await deployer.getAddress()],
+              ethers.utils.defaultAbiCoder.encode(
+                ['address[]'], [[await deployer.getAddress()]]
+              ),
             ],
           },
         },
@@ -82,7 +83,7 @@ const deployNFT: DeployFunction = async (hre) => {
         execute: {
           init: {
             methodName: 'initialize',
-            args: [[]],
+            args: [],
           },
         },
       },

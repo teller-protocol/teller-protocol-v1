@@ -5,9 +5,8 @@ pragma solidity ^0.8.0;
 import { PolyTellerNFT } from "./PolyTellerNFT.sol";
 
 contract PolyTellerNFTMock is PolyTellerNFT {
-    function initialize(address[] calldata minters)
-        public
-        virtual
+    function __TellerNFT_V2_init_unchained(bytes calldata data)
+        internal
         override
         initializer
     {

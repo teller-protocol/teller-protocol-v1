@@ -11,21 +11,15 @@ contract PolyTellerNFT is TellerNFT_V2 {
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
 
     /**
-     * @notice it initializes the PolyTellerNFT by calling the TellerNFT with a
-     * a set of minters and additionally adding a DEPOSITOR role for the ChildChainManager
-     * address
-     * @param minters additional minters to add on the TellerNFT storage
+     * @notice It initializes the PolyTellerNFT adding a DEPOSITOR role for
+     * the ChildChainManager address.
      */
-    function initialize(address[] calldata minters)
-        public
+    function __TellerNFT_V2_init_unchained(bytes calldata data)
+        internal
         virtual
         override
         initializer
     {
-        require(minters.length == 0, "TellerNFT: cannot have minters");
-        super.initialize(minters);
-
-        // sets up a role for child chain manager to be the depositor
         _setupRole(DEPOSITOR, CHILD_CHAIN_MANAGER);
     }
 
