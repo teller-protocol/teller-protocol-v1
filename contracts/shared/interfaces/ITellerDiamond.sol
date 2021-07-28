@@ -26,6 +26,9 @@ import {
 } from "../../nft/polygon/NFTMainnetBridgingToPolygonFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
+import {
+    CompoundClaimCompFacet
+} from "../../escrow/dapps/CompoundClaimComp.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 
@@ -44,6 +47,7 @@ abstract contract ITellerDiamond is
     NFTFacet,
     NFTMainnetBridgingToPolygonFacet,
     CompoundFacet,
+    CompoundClaimCompFacet,
     AaveFacet,
     PoolTogetherFacet,
     IDiamondCut,

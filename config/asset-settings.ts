@@ -59,7 +59,9 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
     USDT: [
+      { key: 'cToken', value: 'CUSDT', type: AssetType.Token },
       { key: 'aToken', value: 'AUSDT', type: AssetType.Token },
+      { key: 'yVault', value: 'YUSDT', type: AssetType.Token },
       {
         key: 'pPool',
         value: '0x481f1BA81f7C01400831DfF18215961C3530D118',

@@ -154,11 +154,6 @@ describe('NFT Dictionary', () => {
           const tokenTier = await nftDictionary.getTokenTierIndex(
             lastOwnedTokenId
           )
-
-          //console.log(`token tier for ${lastOwnedTokenId} is ${tokenTier}`)
-
-          //console.log(`merkleData.tierIndex was ${merkleData.tierIndex}`)
-
           tokenTier.should.equal(merkleData.tierIndex)
         }
       })

@@ -116,7 +116,10 @@ export const addMerkles = async (
   )
 
   log('')
-  log(`Output written to ${distributionsOutputFile}`, { indent: 3, star: true })
+  log(`Output written to ${distributionsOutputFile}`, {
+    indent: 3,
+    star: true,
+  })
   log('')
 }
 

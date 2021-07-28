@@ -116,7 +116,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'CreateLoanFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'LoanDataFacet',
@@ -170,7 +170,17 @@ const deployProtocol: DeployFunction = async (hre) => {
         {
           contract: 'CompoundFacet',
           skipIfAlreadyDeployed: false,
+        },
+        {
+          contract: 'CompoundClaimCompFacet',
+          skipIfAlreadyDeployed: false,
+          args: [dappAddresses.compoundComptrollerAddress],
         }
+        // disable for now
+        // {
+        //   contract: 'YearnFacet',
+        //   skipIfAlreadyDeployed: false,
+        // }
       )
 
       break

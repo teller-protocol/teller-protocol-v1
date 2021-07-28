@@ -1,11 +1,16 @@
-import colors from "colors"
-import * as ethers from "ethers"
-import { task } from "hardhat/config"
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import colors from 'colors'
+import * as ethers from 'ethers'
+import { task } from 'hardhat/config'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { getNFT } from "../../config"
-import { ITellerNFT, TellerNFT, TellerNFTDictionary, TellerNFTV2 } from "../../types/typechain"
-import { NULL_ADDRESS } from "../../utils/consts"
+import { getNFT } from '../../config'
+import {
+  ITellerNFT,
+  TellerNFT,
+  TellerNFTDictionary,
+  TellerNFTV2,
+} from '../../types/typechain'
+import { NULL_ADDRESS } from '../../utils/consts'
 
 interface AddTiersArgs {
   sendTx?: boolean
@@ -45,9 +50,15 @@ export const addTiers = async (
   for (let i = 0; i < tiers.length; i++) {
     const tierIndex = i + 1
     if (existingTiersCount.gt(i)) {
-      log(`Tier ${tierIndex} ${colors.yellow('already')} exists`, { indent: 3, star: true })
+      log(`Tier ${tierIndex} ${colors.yellow('already')} exists`, {
+        indent: 3,
+        star: true,
+      })
     } else {
-      log(`Tier ${tierIndex} ${colors.italic('pending...')}`, { indent: 3, star: true })
+      log(`Tier ${tierIndex} ${colors.italic('pending...')}`, {
+        indent: 3,
+        star: true,
+      })
 
       const { hashes, ...tierData } = tiers[i]
       tierDataToCreate.push(tierData)
@@ -68,10 +79,16 @@ export const addTiers = async (
         .then(({ wait }) => wait())
 
       const gas = colors.cyan(`${receipt.gasUsed.toString()} gas`)
-      log(`Tiers ${i + 1}-${i + 2} created with ${gas}`, { indent: 3, star: true })
+      log(`Tiers ${i + 1}-${i + 2} created with ${gas}`, {
+        indent: 3,
+        star: true,
+      })
     }
   } else {
-    log(`All NFT tiers have ${colors.yellow('already')} been created`, { indent: 3, star: true })
+    log(`All NFT tiers have ${colors.yellow('already')} been created`, {
+      indent: 3,
+      star: true,
+    })
   }
 }
 
