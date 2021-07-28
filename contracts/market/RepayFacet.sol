@@ -249,7 +249,11 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                     loanID,
                     lendingToken
                 );
-                console.log("lendingTokenBalance 1  ", lendingTokenBalance);
+                console.log(
+                    "lendingTokenBalance 1  ",
+                    lendingTokenBalance,
+                    lendingToken
+                );
 
                 console.log(
                     "borrowedAmount 1  ",

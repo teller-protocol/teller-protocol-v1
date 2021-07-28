@@ -437,7 +437,8 @@ describe.skip('Loans', () => {
 
           expect(helpers.details.loan).to.exist
 
-
+          console.log('helpers.details.loan', helpers.details.loan)
+       
 
 
          // console.log('helpers.details.loan', helpers.details.loan)
@@ -464,21 +465,37 @@ describe.skip('Loans', () => {
             amount: 230 * 10**(lendingTokenDecimals),
             hre,
           })
-          
+
+
           
           //simulate that excess profit was made by the user on the borrowed money 
-          const borrowedFundsEscrowAddress = helpers.details.loan[1]
-
-          console.log('add funds to borrowed escrow ',borrowedFundsEscrowAddress) 
-          await lendingToken.transfer(borrowedFundsEscrowAddress,  30 * 10**(lendingTokenDecimals)    )
+          const borrowedFundsEscrowAddress = await diamond.connect( borrower ).getLoanEscrow(loanId)
         
-          
-          const loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress) 
 
+
+          let loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
+          console.log('loanEscrowBalance 1 ', loanEscrowBalance.toString())
+
+          expect(loanEscrowBalance).to.equal(100000000)
+
+
+          console.log('borrower', borrower.getAddress() )
+
+          console.log('add funds to borrowed escrow ',borrowedFundsEscrowAddress, lendingToken.signer.getAddress()  ) 
+         // await lendingToken.transfer(borrowedFundsEscrowAddress,  30     )
+ 
           
 
           const borrowerAddress = await borrower.getAddress()
           const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+
+          await lendingToken
+          .connect(ethers.provider.getSigner(borrowerAddress))
+          .transfer(borrowedFundsEscrowAddress, 30 * 10**(lendingTokenDecimals))
+
+          loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
+          console.log('loanEscrowBalance 2 ', loanEscrowBalance.toString())
+          expect(loanEscrowBalance).to.equal(130000000)
 
           console.log('balanceOf', borrowerBalance.toString() )
 
@@ -514,7 +531,13 @@ describe.skip('Loans', () => {
 
           console.log('balanceOf After', borrowerBalance.toString() )
 
-          expect(parseInt(borrowerBalance.toString())).to.equal(499980000)
+
+          loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
+          console.log('loanEscrowBalance 3 ', loanEscrowBalance.toString())
+          expect(loanEscrowBalance).to.equal(0)
+
+
+          expect(parseInt(borrowerBalance.toString())).to.equal(629970000)
 
            
           expect(loanData.status  ).to.equal(3) //3 = repaid 
