@@ -3,16 +3,10 @@ import rootChainManagerAbi from '@maticnetwork/meta/network/mainnet/v1/artifacts
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Contract, Signer } from 'ethers'
-import hre, {
-  contracts,
-  ethers,
-  getNamedSigner,
-} from 'hardhat'
+import hre, { contracts, ethers, getNamedSigner } from 'hardhat'
 
 import { getMarkets } from '../../config'
-import {
-  claimNFT
-} from '../../tasks'
+import { claimNFT } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
@@ -33,7 +27,7 @@ const maticPOSClient = new MaticPOSClient({
   maticProvider: 'https://rpc-mainnet.maticvigil.com',
 })
 
-describe.only('Bridging Assets to Polygon', () => {
+describe('Bridging Assets to Polygon', () => {
   getMarkets(hre.network).forEach(testBridging)
   function testBridging(markets: Market): void {
     // define needed variablez
@@ -67,7 +61,7 @@ describe.only('Bridging Assets to Polygon', () => {
         borrowerSigner
       )
 
-      // claim nfts 
+      // claim nfts
       await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
 
       // get owned nfts of borrower
@@ -112,7 +106,6 @@ describe.only('Bridging Assets to Polygon', () => {
         // const burnTx = await childToken
         //   .connect(borrowerSigner)
         //   .withdrawBatch(ownedNFTs)
-
         // // from matic docs
         // const exitCallData = await maticPOSClient.exitERC721(
         //   JSON.stringify(burnTx),
@@ -133,7 +126,7 @@ describe.only('Bridging Assets to Polygon', () => {
         // }
       })
     })
-    describe.only('Mock tests', () => {
+    describe('Mock tests', () => {
       describe('stake, unstake, deposit to polygon', () => {
         it('stakes NFTs on behalf of the user', async () => {
           // approve the user's tokens to transfer to the diamond (Stake)
@@ -153,20 +146,32 @@ describe.only('Bridging Assets to Polygon', () => {
 
         it('tier data matches between v1 and v2', async () => {
           // we use filter to get the Event that will be emitted when we mint the token
-          const filter = rootToken.filters.Transfer(NULL_ADDRESS, DUMMY_ADDRESS, null)
+          const filter = rootToken.filters.Transfer(
+            NULL_ADDRESS,
+            DUMMY_ADDRESS,
+            null
+          )
 
           // array of v1 tiers
           const arrayOfTiers = [0, 1, 2, 3, 8, 9, 10, 11]
 
           // mint the token on the tier index, then retrieve the emitted event using transaction's
           // block hash
-          const mintToken = async (tierIndex: number) : Promise<void> => {
-            const receipt = await rootToken.connect(deployer).mint(tierIndex, DUMMY_ADDRESS).then(({ wait }) => wait())
-            const [event] = await rootToken.queryFilter(filter, receipt.blockHash)
+          const mintToken = async (tierIndex: number): Promise<void> => {
+            const receipt = await rootToken
+              .connect(deployer)
+              .mint(tierIndex, DUMMY_ADDRESS)
+              .then(({ wait }) => wait())
+            const [event] = await rootToken.queryFilter(
+              filter,
+              receipt.blockHash
+            )
 
             // set the token tier that we just minted according to the tier index. so, minting 2nd NFT
             // on tier 1 will result in ID = 20001
-            await tellerDictionary.connect(deployer).setTokenTierForTokenId(event.args.tokenId, tierIndex)
+            await tellerDictionary
+              .connect(deployer)
+              .setTokenTierForTokenId(event.args.tokenId, tierIndex)
           }
 
           // mint 3 tokens on every tier for the DUMMY_ADDRESS
@@ -186,17 +191,28 @@ describe.only('Bridging Assets to Polygon', () => {
             const v2TokenURI = await rootTokenV2.uri(newTokenId)
             v1TokenURI.should.equal(v2TokenURI)
 
-            const v1BaseLoanSize = await tellerDictionary.tokenBaseLoanSize(tokenIds[i])
-            const v2BaseLoanSize = await rootTokenV2.tokenBaseLoanSize(newTokenId)
+            const v1BaseLoanSize = await tellerDictionary.tokenBaseLoanSize(
+              tokenIds[i]
+            )
+            const v2BaseLoanSize = await rootTokenV2.tokenBaseLoanSize(
+              newTokenId
+            )
             v1BaseLoanSize.should.eql(v2BaseLoanSize)
 
-            const v1ContributionSize = await tellerDictionary.tokenContributionSize(tokenIds[i])
-            const v2ContributionSize = await rootTokenV2.tokenContributionSize(newTokenId)
+            const v1ContributionSize =
+              await tellerDictionary.tokenContributionSize(tokenIds[i])
+            const v2ContributionSize = await rootTokenV2.tokenContributionSize(
+              newTokenId
+            )
             v1ContributionSize.should.eql(v2ContributionSize)
 
-            const v1ContributionMultiplier = await tellerDictionary.tokenContributionMultiplier(tokenIds[i])
-            const v2ContributionMultiplier = await rootTokenV2.tokenContributionMultiplier(newTokenId)
-            ;(v1ContributionMultiplier * 100).should.eql(v2ContributionMultiplier)
+            const v1ContributionMultiplier =
+              await tellerDictionary.tokenContributionMultiplier(tokenIds[i])
+            const v2ContributionMultiplier =
+              await rootTokenV2.tokenContributionMultiplier(newTokenId)
+            ;(v1ContributionMultiplier * 100).should.eql(
+              v2ContributionMultiplier
+            )
           }
         })
 
@@ -210,8 +226,13 @@ describe.only('Bridging Assets to Polygon', () => {
           v2TokensBefore.length.should.equal(0)
 
           // v2 tokens after should = 1
-          console.log(rootToken.connect(borrowerSigner).safeTransferFrom)
-          await rootToken.connect(borrowerSigner)['safeTransferFrom(address,address,uint256)'](borrower, rootTokenV2.address, nftId)
+          await rootToken
+            .connect(borrowerSigner)
+            ['safeTransferFrom(address,address,uint256)'](
+              borrower,
+              rootTokenV2.address,
+              nftId
+            )
           const v2TokensAfter = await rootTokenV2.getOwnedTokens(borrower)
           v2TokensAfter.length.should.equal(1)
         })
