@@ -496,6 +496,8 @@ describe.skip('Loans', () => {
           const borrowerAddress = await borrower.getAddress()
           const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
 
+
+          //simulating that a profit was made, multiplying the borrowed $$ escrow 
           await lendingToken
           .connect(ethers.provider.getSigner(borrowerAddress))
           .transfer(borrowedFundsEscrowAddress, 30 * 10**(lendingTokenDecimals))
@@ -542,7 +544,7 @@ describe.skip('Loans', () => {
 
           tTokenEscrowBalance = await lendingToken.balanceOf(tTokenAddress)
            console.log('tTokenEscrowBalance 2 ', tTokenEscrowBalance.toString())
-           expect(tTokenEscrowBalance).to.equal(99801540000)
+           expect(tTokenEscrowBalance).to.equal(99801540000)  //99700030000
 
 
 
