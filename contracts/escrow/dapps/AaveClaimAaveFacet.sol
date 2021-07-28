@@ -10,6 +10,7 @@ import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import {
     IAaveIncentivesController
 } from "../../shared/interfaces/IAaveIncentivesController.sol";
+import { IStakedAave } from "../../shared/interfaces/IStakedAave.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -21,13 +22,18 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
      * @dev example - Aave's Incentives controller contract address on L1 mainnet or L2 polygon mainnet
      */
     address public immutable INCENTIVES_CONTROLLER_ADDRESS;
+    address public immutable STAKE_TOKEN_ADDRESS;
 
     /**
      * @notice Sets the network relevant address for Aave's Incentives controller Address on protocol deployment.
      * @param aaveIncentivesControllerAddress The immutable address of Aave's Incentives controller Address on the deployed network.
      */
-    constructor(address aaveIncentivesControllerAddress) public {
+    constructor(
+        address aaveIncentivesControllerAddress,
+        address aaveStakeTokenAddress
+    ) public {
         INCENTIVES_CONTROLLER_ADDRESS = aaveIncentivesControllerAddress;
+        STAKE_TOKEN_ADDRESS = aaveStakeTokenAddress;
     }
 
     /**
@@ -59,11 +65,18 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
             )
         );
 
-        // TODO: unstake AAVE after claiming (claiming stakes AAVE by default)
+        bytes memory unstake = LibEscrow.e(loanID).callDapp(
+            address(STAKE_TOKEN_ADDRESS),
+            abi.encodeWithSelector(
+                IStakedAave.redeem.selector,
+                msg.sender,
+                amount
+            )
+        );
 
         // Add AAVE to escrow token list
         // TODO: get the AAVE token (add as immutable constructor variable)
-        LibEscrow.tokenUpdated(loanID, address(0));
+        // LibEscrow.tokenUpdated(loanID, address(0));
 
         emit AaveClaimed(msg.sender, loanID);
     }
