@@ -33,11 +33,18 @@ const {
   MATIC_MUMBAI_KEY,
   MNEMONIC_KEY,
   SAVE_GAS_REPORT,
+  TESTING,
 } = process.env
 
 if (COMPILING != 'true') {
   require('./tasks')
   require('./utils/hre-extensions')
+}
+let isTesting = false
+if (TESTING === '1') {
+  isTesting = true
+
+  require('./test/helpers/chai-helpers')
 }
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
@@ -123,7 +130,7 @@ export default <HardhatUserConfig>{
         version: '0.8.4',
         settings: {
           optimizer: {
-            enabled: process.env.TESTING !== '1',
+            enabled: !isTesting,
             runs: 200,
           },
         },
