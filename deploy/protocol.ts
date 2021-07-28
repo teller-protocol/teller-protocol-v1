@@ -131,7 +131,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     {
       contract: 'AaveClaimAaveFacet',
       skipIfAlreadyDeployed: false,
-      args: [dappAddresses.aaveIncentivesControllerAddress],
+      args: [dappAddresses.aaveIncentivesControllerAddress, networkName == 'polygon' ? dappAddresses.aaveRewardTokenAddress : dappAddresses.aaveStakeTokenAddress],
     },
     {
       contract: 'PoolTogetherFacet',
