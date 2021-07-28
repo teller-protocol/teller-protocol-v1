@@ -470,7 +470,14 @@ describe.skip('Loans', () => {
           
           //simulate that excess profit was made by the user on the borrowed money 
           const borrowedFundsEscrowAddress = await diamond.connect( borrower ).getLoanEscrow(loanId)
-        
+          
+          const tTokenAddress = await diamond.connect( borrower ).getTTokenFor( lendingToken.address )
+          
+          console.log('tTokenAddress 1 ', tTokenAddress.toString())
+           let tTokenEscrowBalance = await lendingToken.balanceOf(tTokenAddress)
+           console.log('tTokenEscrowBalance 1 ', tTokenEscrowBalance.toString())
+
+           expect(tTokenEscrowBalance).to.equal(99700030000)
 
 
           let loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
@@ -530,6 +537,13 @@ describe.skip('Loans', () => {
           console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
 
           console.log('balanceOf After', borrowerBalance.toString() )
+
+
+
+          tTokenEscrowBalance = await lendingToken.balanceOf(tTokenAddress)
+           console.log('tTokenEscrowBalance 2 ', tTokenEscrowBalance.toString())
+           expect(tTokenEscrowBalance).to.equal(99801540000)
+
 
 
           loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
