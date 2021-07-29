@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import Mocha from 'mocha'
+import { hrtime } from 'process'
 
 import { generateStoryDomains } from '../helpers/story/generator/story-generator'
 import {
