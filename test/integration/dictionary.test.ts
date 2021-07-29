@@ -16,15 +16,6 @@ import {
 } from '../../types/typechain'
 import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
 
-/*
-Error: cannot find artifact "TellerNFTDistributor"
-
-https://github.com/wighawag/hardhat-deploy/blob/master/src/DeploymentsManager.ts
-
-need to deploy artifact files ?? files in folder missing ? 
-
-*/
-
 chai.should()
 chai.use(solidity)
 
