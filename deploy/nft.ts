@@ -7,6 +7,7 @@ import {
   ITellerNFT,
   ITellerNFTDistributor,
   MainnetTellerNFT,
+  TellerNFTV2,
 } from '../types/typechain'
 import {
   deploy,
@@ -43,7 +44,8 @@ const deployNFT: DeployFunction = async (hre) => {
             args: [
               // Initial minters
               ethers.utils.defaultAbiCoder.encode(
-                ['address[]'], [[await deployer.getAddress()]]
+                ['address[]'],
+                [[await deployer.getAddress()]]
               ),
             ],
           },
@@ -83,7 +85,7 @@ const deployNFT: DeployFunction = async (hre) => {
         execute: {
           init: {
             methodName: 'initialize',
-            args: [],
+            args: ['0x'],
           },
         },
       },
@@ -91,21 +93,18 @@ const deployNFT: DeployFunction = async (hre) => {
   }
 
   await run('add-nft-tiers', { sendTx: true })
-  await run('add-nft-merkles', { sendTx: true })
 }
 
 const deployDistributor = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<ITellerNFTDistributor> => {
-  const { ethers, contracts, getNamedSigner, log } = hre
+  const { run, contracts, getNamedSigner, log } = hre
 
   const deployer = await getNamedSigner('deployer')
 
-  const nft = await contracts.get<ITellerNFT>('TellerNFT')
-
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
-    // Try to get deployment of TellerDiamond
+    // Try to get deployment of TellerNFTDistributor
     await contracts.get('TellerNFTDistributor')
 
     // If deployment exists execute upgrade function
@@ -117,6 +116,8 @@ const deployDistributor = async (
 
     execute = upgradeExecute
   } catch {
+    const nft = await contracts.get<ITellerNFT>('TellerNFT')
+
     const executeMethod = 'initialize'
     const initExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
@@ -144,12 +145,18 @@ const deployDistributor = async (
         contract: 'ent_moveMerkle_NFTDistributor_v1',
         skipIfAlreadyDeployed: true,
       },
-      { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: false },
+      { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: true },
+      {
+        contract: 'ent_upgradeNFTV2_NFTDistributor_v1',
+        skipIfAlreadyDeployed: true,
+      },
       { contract: 'ext_distributor_NFT_v1', skipIfAlreadyDeployed: true },
     ],
     hre,
     execute,
   })
+
+  await run('add-nft-merkles', { sendTx: true })
 
   return nftDistributor
 }
