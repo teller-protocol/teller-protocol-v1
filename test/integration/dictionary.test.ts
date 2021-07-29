@@ -20,6 +20,9 @@ import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
 Error: cannot find artifact "TellerNFTDistributor"
 
 https://github.com/wighawag/hardhat-deploy/blob/master/src/DeploymentsManager.ts
+
+need to deploy artifact files ?? files in folder missing ? 
+
 */
 
 chai.should()
@@ -27,38 +30,32 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('NFT Dictionary', () => {
+describe('NFT Dictionary z', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
     let deployer: Signer
-    //  let diamond: ITellerDiamond
+    let diamond: ITellerDiamond
 
     before(async () => {
-      await hre.deployments.fixture(['market'], {
+      //this is critical and make SURE the tags are not misspelled [markets vs market]
+      await hre.deployments.fixture(['nft', 'markets'], {
         keepExistingDeployments: true,
       })
 
-      console.log('dictionary 2')
-
-      //try{
-      //diamond = await contracts.get('TellerDiamond')
-      //}catch(e){
-      //   console.error(e)
-      // }
-
-      console.log('dictionary 3')
+      diamond = await contracts.get('TellerDiamond')
+      //if this fails, dont keep existing deployments  ?
 
       deployer = await getNamedSigner('deployer')
     })
     describe('Dictionary test', () => {
       beforeEach(async () => {
         // Advance time
-        /*  const { value: rateLimit } = await getPlatformSetting(
+        const { value: rateLimit } = await getPlatformSetting(
           'RequestLoanTermsRateLimit',
           hre
-        )*/
-        await evm.advanceTime(30)
+        )
+        await evm.advanceTime(rateLimit)
       })
 
       it('should be able to claim a token and add dictionary data', async () => {

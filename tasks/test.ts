@@ -22,12 +22,12 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 
   // Disable logging
-  process.env.DISABLE_LOGS = 'true'
+  //process.env.DISABLE_LOGS = 'true'
 
   // Run the actual test task
   await runSuper({
     ...args,
-    // deployFixture: false,
+    //   deployFixture: true,
   })
 })
 
@@ -59,7 +59,17 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
     //run the gas reporter plugin
     await runSuper({ testFiles })
 
-    const mocha = new Mocha(hre.config.mocha)
+    /* needs to be a process to tell hardhat that 'this test is running 
+    so we need to use this snapshot 
+    
+    fixtures .
+    
+      in the testing process we need to use the fixtures to specify exactly which deployments are being executed 
+    */
+
+    /* const mocha = new Mocha(hre.config.mocha)
+
+   
 
     await createStoryTests(mocha, hre) //adds them to mocha as suite
 
@@ -67,6 +77,6 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
     const testFailures = await new Promise((resolve, _) => {
       mocha.run(resolve)
     })
-    return testFailures
+    return testFailures*/
   }
 )
