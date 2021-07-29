@@ -37,8 +37,9 @@ contract int_distributor_NFT_v1 is sto_NFTDistributor {
     {
         uint256 claimedWordIndex = nodeIndex / 256;
         uint256 claimedBitIndex = nodeIndex % 256;
-        uint256 claimedWord =
-            distributorStore().claimedBitMap[merkleIndex][claimedWordIndex];
+        uint256 claimedWord = distributorStore().claimedBitMap[merkleIndex][
+            claimedWordIndex
+        ];
         uint256 mask = (1 << claimedBitIndex);
         return claimedWord & mask == mask;
     }

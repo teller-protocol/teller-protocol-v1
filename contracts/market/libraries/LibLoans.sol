@@ -7,9 +7,9 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     PlatformSettingsLib
 } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
-import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 
 // Storage
+import { AppStorageLib } from "../../storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
@@ -98,7 +98,6 @@ library LibLoans {
      */
     function getCollateralNeeded(uint256 loanID)
         internal
-        view
         returns (uint256 _needed)
     {
         (, _needed, ) = getCollateralNeededInfo(loanID);
@@ -113,7 +112,6 @@ library LibLoans {
      */
     function getCollateralNeededInfo(uint256 loanID)
         internal
-        view
         returns (
             uint256 neededInLendingTokens,
             uint256 neededInCollateralTokens,
@@ -128,11 +126,13 @@ library LibLoans {
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
-            neededInCollateralTokens = PriceAggLib.valueFor(
-                loan(loanID).lendingToken,
-                loan(loanID).collateralToken,
-                neededInLendingTokens
-            );
+            neededInCollateralTokens = AppStorageLib.store()
+                .priceAggregator
+                .getValueFor(
+                    loan(loanID).lendingToken,
+                    loan(loanID).collateralToken,
+                    neededInLendingTokens
+                );
         }
     }
 
@@ -146,7 +146,6 @@ library LibLoans {
      */
     function getCollateralNeededInTokens(uint256 loanID)
         internal
-        view
         returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (loan(loanID).collateralRatio == 0) {
@@ -168,10 +167,9 @@ library LibLoans {
                 loan(loanID).collateralRatio
             );
         } else if (loan(loanID).status == LoanStatus.Active) {
-            uint16 requiredRatio =
-                loan(loanID).collateralRatio -
-                    getInterestRatio(loanID) -
-                    uint16(PlatformSettingsLib.getCollateralBufferValue());
+            uint16 requiredRatio = loan(loanID).collateralRatio -
+                getInterestRatio(loanID) -
+                uint16(PlatformSettingsLib.getCollateralBufferValue());
 
             neededInLendingTokens =
                 debt(loanID).principalOwed +

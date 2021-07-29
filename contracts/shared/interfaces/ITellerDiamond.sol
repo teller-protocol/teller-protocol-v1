@@ -15,19 +15,21 @@ import {
     AssetSettingsFacet
 } from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
-import { PriceAggFacet } from "../../price-aggregator/PriceAggFacet.sol";
-import {
-    ChainlinkAggFacet
-} from "../../price-aggregator/chainlink/ChainlinkAggFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
+import { CreateLoanNFTFacet } from "../../market/CreateLoanNFTFacet.sol";
+import { CreateLoanSnarkFacet } from "../../market/CreateLoanSnarkFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { NFTFacet } from "../../nft/NFTFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
-import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
+import {
+    CompoundClaimCompFacet
+} from "../../escrow/dapps/CompoundClaimComp.sol";
+import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
+import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 import { ProviderFactoryFacet } from "../../market/ProviderFactoryFacet.sol";
 
 // When adding a new Facet, kindly make sure to order the inherited contracts around so
@@ -41,17 +43,19 @@ abstract contract ITellerDiamond is
     AssetSettingsDataFacet,
     AssetSettingsFacet,
     PausableFacet,
-    PriceAggFacet,
-    ChainlinkAggFacet,
     LendingFacet,
     CollateralFacet,
     CreateLoanFacet,
+    CreateLoanNFTFacet,
+    CreateLoanSnarkFacet,
     LoanDataFacet,
     RepayFacet,
     SignersFacet,
     NFTFacet,
     CompoundFacet,
-    UniswapFacet,
+    CompoundClaimCompFacet,
+    AaveFacet,
+    PoolTogetherFacet,
     IDiamondCut,
     IDiamondLoupe,
     ProviderFactoryFacet

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import { LoanRequest } from "../../../storage/market.sol";
+import { LoanRequestSnark } from "../../../storage/market.sol";
 import { DataProvider } from "../DataProvider.sol";
 import {
     EnumerableSet
@@ -48,7 +48,7 @@ abstract contract MarketHandler {
      * @return userCollateralRatio returns the collateral ratio of the user based on his score
      * @return userLoanAmount returns the amount for the user to take a loan out based on his score
      */
-    function handler(uint256 marketScore, LoanRequest memory request)
+    function handler(uint256 marketScore, LoanRequestSnark memory request)
         external
         view
         virtual

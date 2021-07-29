@@ -554,10 +554,6 @@
     }
   ],
   "diamondCut": [],
-  "execute": {
-    "methodName": "setNFTDictionaryAddress",
-    "args": ["0x72733102AB139FB0367cc29D492c955A7c736079"]
-  },
   "history": [
     {
       "address": "0x058F447199025e9ACF52E4A1473f4Ad9cC44D299",

@@ -7,12 +7,14 @@ import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
+import fs from 'fs'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
 } from 'hardhat/types'
+import path from 'path'
 
 config()
 
@@ -59,10 +61,23 @@ const networkUrls: { [network: string]: string } = {
   polygon_mumbai: MATIC_MUMBAI_KEY!,
 }
 
-const networkForkingBlock: { [network: string]: number } = {
-  mainnet: 12648380,
-  // polygon: 14891625,
-  // polygon_mumbai: 14244031,
+const getLatestDeploymentBlock = (networkName: string): number | undefined => {
+  try {
+    return parseInt(
+      fs
+        .readFileSync(
+          path.resolve(
+            __dirname,
+            'deployments',
+            networkName,
+            '.latestDeploymentBlock'
+          )
+        )
+        .toString()
+    )
+  } catch {
+    // Network deployment does not exist
+  }
 }
 
 const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
@@ -87,7 +102,7 @@ export default <HardhatUserConfig>{
   },
   tenderly: {
     username: 'soltel',
-    project: 'teller',
+    project: 'mumbai',
   },
   paths: {
     sources: 'contracts',
@@ -105,10 +120,10 @@ export default <HardhatUserConfig>{
   solidity: {
     compilers: [
       {
-        version: '0.8.3',
+        version: '0.8.4',
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: process.env.TESTING !== '1',
             runs: 200,
           },
         },
@@ -121,6 +136,7 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
+    enabled: true,
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
@@ -195,7 +211,7 @@ export default <HardhatUserConfig>{
           : {
               enabled: true,
               url: networkUrls[FORKING_NETWORK],
-              blockNumber: networkForkingBlock[FORKING_NETWORK],
+              blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
             },
     }),
     localhost: networkConfig({

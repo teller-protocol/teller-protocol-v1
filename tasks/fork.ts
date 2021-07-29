@@ -12,13 +12,14 @@ interface NetworkArgs {
   chain: string
   block?: number
   onlyDeployment: boolean
+  noDeploy: boolean
 }
 
 export const forkNetwork: ActionType<NetworkArgs> = async (
   args: NetworkArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { block, onlyDeployment } = args
+  const { block, onlyDeployment, noDeploy } = args
   const { log, run, network } = hre
 
   if (network.name !== HARDHAT_NETWORK_NAME) {
@@ -61,7 +62,7 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
     await run('node', {
       fork: network.config.forking.url,
       forkBlockNumber: block ?? network.config.forking.blockNumber,
-      noDeploy: true,
+      noDeploy: noDeploy,
       noReset: true,
     })
   }
@@ -78,23 +79,39 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
   )
   .addFlag(
     'onlyDeployment',
-    'optional flag that just copies the deployment files'
+    'Just copies the deployment files without starting a local node'
   )
+  .addFlag('noDeploy', 'Prevents deploy script from executing')
   .setAction(forkNetwork)
 
 subtask('fork:fund-deployer').setAction(async (args, hre) => {
-  const { ethers } = hre
+  const { ethers, network } = hre
 
   const [mainAccount] = await hre.getUnnamedAccounts()
   const { deployer } = await hre.getNamedAccounts()
   if (
     ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
   ) {
-    await getFunds({
-      to: deployer,
-      tokenSym: 'ETH',
-      amount: hre.ethers.utils.parseEther('1000'),
-      hre,
-    })
+    const chain = process.env.FORKING_NETWORK
+    if (
+      chain === 'mainnet' ||
+      chain === 'kovan' ||
+      chain === 'rinkeby' ||
+      chain === 'ropsten'
+    ) {
+      await getFunds({
+        to: deployer,
+        tokenSym: 'ETH',
+        amount: hre.ethers.utils.parseEther('1000'),
+        hre,
+      })
+    } else {
+      await getFunds({
+        to: deployer,
+        tokenSym: 'MATIC',
+        amount: hre.ethers.utils.parseEther('10000'),
+        hre,
+      })
+    }
   }
 })

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 // Libraries
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
-import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -14,6 +13,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ILoansEscrow } from "../escrow/ILoansEscrow.sol";
 
 // Storage
+import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LibEscrow {
@@ -25,10 +25,14 @@ library LibEscrow {
         e_ = s().loanEscrows[loanID];
     }
 
+    function exists(uint256 loanID) internal view returns (bool) {
+        return address(e(loanID)) != address(0);
+    }
+
     /**
      * @notice It returns a list of tokens owned by a loan escrow
      * @param loanID uint256 index used to return our token list
-     * @return t_ which is a list of tokens 
+     * @return t_ which is a list of tokens
      */
     function getEscrowTokens(uint256 loanID)
         internal
@@ -49,7 +53,7 @@ library LibEscrow {
         view
         returns (uint256)
     {
-        return IERC20(token).balanceOf(address(e(loanID)));
+        return exists(loanID) ? IERC20(token).balanceOf(address(e(loanID))) : 0;
     }
 
     /**
@@ -79,22 +83,25 @@ library LibEscrow {
      */
     function calculateTotalValue(uint256 loanID)
         internal
-        view
         returns (uint256 value_)
     {
+        if (!exists(loanID)) {
+            return 0;
+        }
+
         address lendingToken = LibLoans.loan(loanID).lendingToken;
         value_ += balanceOf(loanID, lendingToken);
 
         EnumerableSet.AddressSet storage tokens = getEscrowTokens(loanID);
         if (EnumerableSet.length(tokens) > 0) {
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-                uint256 tokenBal =
-                    balanceOf(loanID, EnumerableSet.at(tokens, i));
-                value_ += PriceAggLib.valueFor(
-                    EnumerableSet.at(tokens, i),
-                    lendingToken,
-                    tokenBal
-                );
+                value_ += AppStorageLib.store()
+                    .priceAggregator
+                    .getBalanceOfFor(
+                        address(e(loanID)),
+                        EnumerableSet.at(tokens, i),
+                        lendingToken
+                    );
             }
         }
     }

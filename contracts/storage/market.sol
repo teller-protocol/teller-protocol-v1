@@ -15,6 +15,7 @@ import { Verifier } from "../market/cra/verifier.sol";
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 import { ICollateralEscrow } from "../market/collateral/ICollateralEscrow.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
+import { States } from "../market/data/states.sol";
 
 // DEPRECATED
 struct LoanTerms {
@@ -24,7 +25,13 @@ struct LoanTerms {
     uint32 termsExpiry;
 }
 
-enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
+enum LoanStatus {
+    NonExistent,
+    TermsSet,
+    Active,
+    Closed,
+    Liquidated
+}
 
 struct Loan {
     // Account that owns the loan
@@ -56,6 +63,12 @@ struct LoanDebt {
     uint256 interestOwed;
 }
 
+struct LoanRequestNFT {
+    address payable borrower;
+    address assetAddress;
+    uint32 duration;
+}
+
 /**
  * @notice our loan request to be sent to our borrow function to verify Proof with the witness,
    verify our signature data, process the market score to get our interest rate, then create a loan
@@ -66,7 +79,7 @@ struct LoanDebt {
  * @param witness the witness that contains our identifier, score and commitment data 
  * @param signatureData the signatureData that is used to validate against the commitments we construct
  */
-struct LoanRequest {
+struct LoanRequestSnark {
     LoanUserRequest request;
     address marketHandlerAddress;
     Verifier.Proof snarkProof;
@@ -92,6 +105,7 @@ struct LoanUserRequest {
     uint32 duration;
     uint256 collateralAmount;
     uint256 assetAmount;
+    States.StatesCode code;
 }
 
 /**
@@ -112,6 +126,16 @@ struct LoanConsensusResponse {
     uint16 interestRate;
     uint16 collateralRatio;
     Signature signature;
+}
+
+/**
+ * @notice Loan request object with the cra responses
+ * @param request the loan user request
+ * @param responses the cra responses
+ */
+struct LoanRequestWithResponse {
+    LoanUserRequest request;
+    LoanConsensusResponse[] responses;
 }
 
 /**

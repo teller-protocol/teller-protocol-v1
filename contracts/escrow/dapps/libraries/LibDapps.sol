@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IAToken } from "../interfaces/IAToken.sol";
-import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
+import { IAToken } from "../../../shared/interfaces/IAToken.sol";
+import {
+    IAaveLendingPool
+} from "../../../shared/interfaces/IAaveLendingPool.sol";
 import {
     IAaveLendingPoolAddressesProvider
-} from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
+} from "../../../shared/interfaces/IAaveLendingPoolAddressesProvider.sol";
 import {
     IUniswapV2Router
 } from "../../../shared/interfaces/IUniswapV2Router.sol";
@@ -28,42 +30,38 @@ library LibDapps {
     }
 
     /**
-        @notice Grabs the Aave lending pool instance from the Aave lending pool address provider
-        @return IAaveLendingPool instance address
+        @notice Grabs the Aave lending pool instance from the Aave lending pool address provider.
+        @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
+        @return IAaveLendingPool instance address.
      */
-    function getAaveLendingPool() internal view returns (IAaveLendingPool) {
+    function getAaveLendingPool(address aaveLPAddressProvider)
+        internal
+        view
+        returns (IAaveLendingPool)
+    {
         return
             IAaveLendingPool(
-                IAaveLendingPoolAddressesProvider(
-                    0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5
-                )
+                IAaveLendingPoolAddressesProvider(aaveLPAddressProvider)
                     .getLendingPool()
-            ); // LP address provider contract is immutable and the address will never change
+            ); // LP address provider contract is immutable on each deployed network and the address will never change
     }
 
     /**
-        @notice Grabs the aToken instance from the lending pool
-        @param tokenAddress The underlying asset address to get the aToken for
-        @return IAToken instance
+        @notice Grabs the aToken instance from the lending pool.
+        @param aaveLPAddressProvider The immutable address of Aave's Lending Pool Address Provider on the deployed network.
+        @param tokenAddress The underlying asset address to get the aToken for.
+        @return IAToken instance.
      */
-    function getAToken(address tokenAddress) internal view returns (IAToken) {
+    function getAToken(address aaveLPAddressProvider, address tokenAddress)
+        internal
+        view
+        returns (IAToken)
+    {
         return
             IAToken(
-                getAaveLendingPool().getReserveData(tokenAddress).aTokenAddress
-            );
-    }
-
-    /**
-        @notice Grabs the yVault address for a token from the asset settings
-        @param tokenAddress The underlying token address for the associated yVault
-        @return yVault instance
-     */
-    function getYVault(address tokenAddress) internal view returns (IVault) {
-        return
-            IVault(
-                AppStorageLib.store().assetSettings[tokenAddress].addresses[
-                    keccak256("yVaultAddress")
-                ]
+                getAaveLendingPool(aaveLPAddressProvider).getReserveData(
+                    tokenAddress
+                ).aTokenAddress
             );
     }
 }

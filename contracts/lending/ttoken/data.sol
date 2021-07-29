@@ -7,4 +7,3 @@ bytes32 constant CONTROLLER = keccak256("CONTROLLER");
 bytes32 constant ADMIN = keccak256("ADMIN");
 
 uint256 constant EXCHANGE_RATE_FACTOR = 1e18;
-uint256 constant ONE_HUNDRED_PERCENT = 10000;
