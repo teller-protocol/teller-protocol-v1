@@ -16,6 +16,12 @@ import {
 } from '../../types/typechain'
 import { TellerNFTDictionary } from '../../types/typechain/TellerNFTDictionary'
 
+/*
+Error: cannot find artifact "TellerNFTDistributor"
+
+https://github.com/wighawag/hardhat-deploy/blob/master/src/DeploymentsManager.ts
+*/
+
 chai.should()
 chai.use(solidity)
 
@@ -26,25 +32,33 @@ describe('NFT Dictionary', () => {
 
   function testLoans(market: Market): void {
     let deployer: Signer
-    let diamond: ITellerDiamond
+    //  let diamond: ITellerDiamond
 
     before(async () => {
       await hre.deployments.fixture(['market'], {
         keepExistingDeployments: true,
       })
 
-      diamond = await contracts.get('TellerDiamond')
+      console.log('dictionary 2')
+
+      //try{
+      //diamond = await contracts.get('TellerDiamond')
+      //}catch(e){
+      //   console.error(e)
+      // }
+
+      console.log('dictionary 3')
 
       deployer = await getNamedSigner('deployer')
     })
     describe('Dictionary test', () => {
       beforeEach(async () => {
         // Advance time
-        const { value: rateLimit } = await getPlatformSetting(
+        /*  const { value: rateLimit } = await getPlatformSetting(
           'RequestLoanTermsRateLimit',
           hre
-        )
-        await evm.advanceTime(rateLimit)
+        )*/
+        await evm.advanceTime(30)
       })
 
       it('should be able to claim a token and add dictionary data', async () => {
