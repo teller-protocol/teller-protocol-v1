@@ -137,6 +137,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'ProviderFactoryFacet',
       skipIfAlreadyDeployed: true,
     },
+    {
+      contract: 'ProviderFactoryFacet',
+      skipIfAlreadyDeployed: true,
+    },
     // NFT
     {
       contract: 'NFTFacet',
