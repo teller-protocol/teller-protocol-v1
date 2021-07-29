@@ -6,7 +6,7 @@ import { TellerNFT_V2 } from "../TellerNFT_V2.sol";
 
 contract PolyTellerNFT is TellerNFT_V2 {
     address public immutable CHILD_CHAIN_MANAGER =
-        0x195fe6EE6639665CCeB15BCCeB9980FC445DFa0B;
+        0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa;
 
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
 
