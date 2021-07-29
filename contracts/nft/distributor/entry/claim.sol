@@ -40,7 +40,7 @@ contract ent_claim_NFTDistributor_v1 is
                 .merkleRoots[requests[i].merkleIndex]
                 .tierIndex;
             for (uint256 j; j < requests[i].amount; j++) {
-                distributorStore().nft.mint(tierIndex, account);
+                distributorStore().nft.mint(account, uint128(tierIndex), 1);
             }
         }
 

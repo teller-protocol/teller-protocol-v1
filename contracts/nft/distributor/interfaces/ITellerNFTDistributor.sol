@@ -93,4 +93,10 @@ interface ITellerNFTDistributor {
      * @param admin The address of an admin.
      */
     function initialize(address _nft, address admin) external;
+
+    /**
+     * @notice Upgrades the reference to the NFT to the V2 deployment address.
+     * @param _nft The address of the TellerNFT.
+     */
+    function upgradeNFTV2(address _nft) external;
 }
