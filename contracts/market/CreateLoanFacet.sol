@@ -7,13 +7,13 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
+import { AUTHORIZED, ADMIN } from "../shared/roles.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
 import { LibLoans } from "./libraries/LibLoans.sol";
+import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
-import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
     PlatformSettingsLib
@@ -30,6 +30,9 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
+import { Verifier } from "./cra/verifier.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { ProcessRequestLib } from "./cra/ProcessRequestLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
@@ -43,11 +46,13 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // Storage
 import {
-    LoanRequest,
+    LoanRequestWithResponse,
     LoanStatus,
     LoanTerms,
     Loan,
-    MarketStorageLib
+    MarketStorageLib,
+    Signature,
+    DataProviderSignature
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
@@ -70,7 +75,10 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @notice Creates the loan from requests and validator responses then calling the main function.
      * @param request Struct of the protocol loan request
      */
-    modifier __createLoan(LoanRequest calldata request, bool withNFT) {
+    modifier __createLoan(
+        LoanRequestWithResponse calldata request,
+        bool withNFT
+    ) {
         Loan storage loan = CreateLoanLib.createLoan(request, withNFT);
 
         _;
@@ -86,7 +94,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @param nftIDs IDs of TellerNFTs to use for the loan
      */
     function takeOutLoanWithNFTs(
-        LoanRequest calldata request,
+        LoanRequestWithResponse calldata request,
         uint16[] calldata nftIDs
     ) external paused(LibLoans.ID, false) __createLoan(request, true) {
         // Get the ID of the newly created loan
@@ -133,7 +141,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @param collateralAmount Amount of collateral required for the loan
      */
     function takeOutLoan(
-        LoanRequest calldata request,
+        LoanRequestWithResponse calldata request,
         address collateralToken,
         uint256 collateralAmount
     )
@@ -193,27 +201,25 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 }
 
 library CreateLoanLib {
-    function createLoan(LoanRequest calldata request, bool withNFT)
+    function createLoan(LoanRequestWithResponse calldata request, bool withNFT)
         internal
         returns (Loan storage loan)
     {
         // Perform loan request checks
         require(
-            msg.sender == request.request.borrower,
-            "Teller: not loan requester"
-        );
-        require(
             PlatformSettingsLib.getMaximumLoanDurationValue() >=
                 request.request.duration,
             "Teller: max loan duration exceeded"
         );
-
         // Get consensus values from request
-        (
-            uint16 interestRate,
-            uint16 collateralRatio,
-            uint256 maxLoanAmount
-        ) = LibConsensus.processLoanTerms(request);
+        uint16 interestRate = 15000;
+        uint16 collateralRatio = 5000;
+        uint256 maxLoanAmount = 25000;
+        // (
+        //     uint16 interestRate,
+        //     uint16 collateralRatio,
+        //     uint256 maxLoanAmount
+        // ) = ProcessRequestLib.processMarketRequest(request);
 
         // Perform loan value checks
         require(
@@ -229,6 +235,7 @@ library CreateLoanLib {
 
         // Get and increment new loan ID
         uint256 loanID = CreateLoanLib.newID();
+
         // Set loan data based on terms
         loan = LibLoans.loan(loanID);
         loan.id = uint128(loanID);
@@ -261,23 +268,20 @@ library CreateLoanLib {
      * @return id_ the new ID requested, which stores it in the loan data
      */
     function newID() internal returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib.store()
+        Counters.Counter storage counter = MarketStorageLib
+            .store()
             .loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
     }
 
     function currentID() internal view returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib.store()
+        Counters.Counter storage counter = MarketStorageLib
+            .store()
             .loanIDCounter;
         id_ = Counters.current(counter);
     }
 
-    /**
-     * @notice it creates a new loan escrow contract
-     * @param loanID the ID that identifies the loan
-     * @return escrow_ the loanEscrow that gets created
-     */
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
         escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");
