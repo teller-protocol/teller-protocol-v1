@@ -44,7 +44,6 @@ describe('NFT Dictionary', () => {
       })
 
       diamond = await contracts.get('TellerDiamond')
-      //if this fails, dont keep existing deployments  ?
 
       deployer = await getNamedSigner('deployer')
     })
