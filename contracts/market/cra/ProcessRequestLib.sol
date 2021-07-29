@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {
-    LoanRequest,
+    LoanRequestSnark,
     DataProviderSignature,
     Signature
 } from "../../storage/market.sol";
@@ -22,7 +22,7 @@ library ProcessRequestLib {
      * @return collateralRatio the collateral ratio required for the loan, if any
      * @return maxLoanAmount the max loan amount the user is entitled to
      */
-    function processMarketRequest(LoanRequest memory request)
+    function processMarketRequest(LoanRequestSnark memory request)
         public
         returns (
             uint16 interestRate,
@@ -30,8 +30,9 @@ library ProcessRequestLib {
             uint256 maxLoanAmount
         )
     {
-        MarketHandler marketHandler =
-            MarketHandler(request.marketHandlerAddress);
+        MarketHandler marketHandler = MarketHandler(
+            request.marketHandlerAddress
+        );
         // Overwrite the first snark witness item with the on-chain identifier
         // for the loan (msg.sender ^ nonce). This forces the CRA to have been
         // run with the proper identifier.
@@ -134,18 +135,17 @@ library ProcessRequestLib {
         bytes32 commitment,
         address providerAddress
     ) private view {
-        address recoveredSigner =
-            ECDSA.recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        uint256(commitment)
-                    )
-                ),
-                signature.v,
-                signature.r,
-                signature.s
-            );
+        address recoveredSigner = ECDSA.recover(
+            keccak256(
+                abi.encodePacked(
+                    "\x19Ethereum Signed Message:\n32",
+                    uint256(commitment)
+                )
+            ),
+            signature.v,
+            signature.r,
+            signature.s
+        );
         DataProvider provider = DataProvider(providerAddress);
         require(
             provider.signers(recoveredSigner),

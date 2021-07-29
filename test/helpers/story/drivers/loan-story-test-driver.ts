@@ -18,7 +18,6 @@ import {
   repayLoan,
   RepayLoanArgs,
   takeOutLoanWithNfts,
-  takeOutLoanWithoutNfts,
 } from '../../loans'
 import { TestAction, TestArgs, TestScenario } from '../story-helpers'
 import StoryTestDriver from './story-test-driver'
@@ -192,16 +191,10 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
       ? args.loanType
       : LoanType.UNDER_COLLATERALIZED
     await hre.evm.advanceTime(rateLimit)
-    const funcToRun = args.nft
-      ? takeOutLoanWithNfts(hre, {
-          amount: 100,
-          lendToken: market.lendingToken,
-        })
-      : takeOutLoanWithoutNfts(hre, {
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType,
-        })
+    const funcToRun = takeOutLoanWithNfts(hre, {
+      amount: 100,
+      lendToken: market.lendingToken,
+    })
     const { tx, getHelpers } = await funcToRun
     const helpers = await getHelpers()
     // borrower data from our helpers

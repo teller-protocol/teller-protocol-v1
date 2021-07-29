@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.3;
 
-import { LoanRequest } from "../../../storage/market.sol";
+import { LoanRequestSnark } from "../../../storage/market.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -16,7 +16,7 @@ contract TellerMarketHandler is MarketHandler, Rates {
     ) MarketHandler(maxInterestRate, collateralRatio, maxLoanAmount) {}
 
     // teller market handler
-    function handler(uint256 marketScore, LoanRequest memory request)
+    function handler(uint256 marketScore, LoanRequestSnark memory request)
         external
         view
         override
@@ -40,9 +40,8 @@ contract TellerMarketHandler is MarketHandler, Rates {
         // get interest rate
         uint16 baseInterestRate = 1000;
 
-        uint16 interestRate =
-            baseInterestRate *
-                ((maxCollateralRatio / request.request.collateralRatio) / 2);
+        uint16 interestRate = baseInterestRate *
+            ((maxCollateralRatio / request.request.collateralRatio) / 2);
 
         // Illinois interest rate for testing
         uint16 sampleCappedInterestRate = rates[uint16(request.request.code)];
@@ -78,9 +77,8 @@ contract TellerMarketHandler is MarketHandler, Rates {
         uint256 scoreToCalculate
     ) internal pure returns (uint256 amount) {
         // calculate for slope
-        uint256 m =
-            (highestAmountBound - lowestAmountBound) /
-                (highestScoreBound - lowestScoreBound);
+        uint256 m = (highestAmountBound - lowestAmountBound) /
+            (highestScoreBound - lowestScoreBound);
 
         // return amount
         amount =

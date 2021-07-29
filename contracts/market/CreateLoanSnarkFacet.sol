@@ -46,7 +46,7 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // Storage
 import {
-    LoanRequestWithResponse,
+    LoanRequestSnark,
     LoanStatus,
     LoanTerms,
     Loan,
@@ -56,7 +56,7 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
+contract CreateLoanSnarkFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when a loan has been successfully taken out
      * @param loanID ID of loan from which collateral was withdrawn
@@ -64,84 +64,15 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @param amountBorrowed Total amount taken out in the loan
      * @param withNFT Boolean indicating if the loan was taken out using NFTs
      */
-    event LoanTakenOut(
+    event LoanTakenOutSnark(
         uint256 indexed loanID,
         address indexed borrower,
         uint256 amountBorrowed,
         bool withNFT
     );
 
-    /**
-     * @notice Creates the loan from requests and validator responses then calling the main function.
-     * @param request Struct of the protocol loan request
-     */
-    modifier __createLoan(
-        LoanRequestWithResponse calldata request,
-        bool withNFT
-    ) {
-        Loan storage loan = CreateLoanLib.createLoan(request, withNFT);
-
-        _;
-
-        loan.status = LoanStatus.Active;
-        loan.loanStartTime = uint32(block.timestamp);
-        loan.duration = request.request.duration;
-    }
-
-    /**
-     * @notice Creates a loan with the loan request and NFTs without any collateral
-     * @param request Struct of the protocol loan request
-     * @param nftIDs IDs of TellerNFTs to use for the loan
-     */
-    function takeOutLoanWithNFTs(
-        LoanRequestWithResponse calldata request,
-        uint16[] calldata nftIDs
-    ) external paused(LibLoans.ID, false) __createLoan(request, true) {
-        // Get the ID of the newly created loan
-        uint256 loanID = CreateLoanLib.currentID() - 1;
-        uint256 amount = LibLoans.loan(loanID).borrowedAmount;
-        uint8 lendingDecimals = ERC20(request.request.assetAddress).decimals();
-
-        uint256 allowedBaseLoanSize;
-        for (uint256 i; i < nftIDs.length; i++) {
-            NFTLib.applyToLoan(loanID, nftIDs[i]);
-
-            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
-                nftIDs[i]
-            );
-        }
-        require(
-            amount <= allowedBaseLoanSize * (10**lendingDecimals),
-            "Teller: insufficient NFT loan size"
-        );
-
-        // Pull funds from Teller Token LP and transfer to the new loan escrow
-        LendingLib.tToken(LibLoans.loan(loanID).lendingToken).fundLoan(
-            CreateLoanLib.createEscrow(loanID),
-            amount
-        );
-
-        emit LoanTakenOut(
-            loanID,
-            msg.sender,
-            LibLoans.loan(loanID).borrowedAmount,
-            true
-        );
-    }
-
-    /**
-     * @notice Take out a loan
-     *
-     * @dev collateral ratio is a percentage of the loan amount that's required in collateral
-     * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
-     * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
-     *
-     * @param request Struct of the protocol loan request
-     * @param collateralToken Token address to use as collateral for the new loan
-     * @param collateralAmount Amount of collateral required for the loan
-     */
-    function takeOutLoan(
-        LoanRequestWithResponse calldata request,
+    function takeOutLoanSnark(
+        LoanRequestSnark calldata request,
         address collateralToken,
         uint256 collateralAmount
     )
@@ -150,8 +81,9 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
-        __createLoan(request, false)
     {
+        // create loan from library
+        Loan storage loan = CreateLoanSnarkLib.createLoanSnark(request);
         // Check if collateral token is zero
         require(
             collateralToken != address(0x0),
@@ -168,9 +100,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             ),
             "Teller: collateral token not allowed"
         );
-
-        // Get the ID of the newly created loan
-        Loan storage loan = LibLoans.loan(CreateLoanLib.currentID() - 1);
 
         // Save collateral token to loan
         loan.collateralToken = collateralToken;
@@ -192,16 +121,20 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         tToken.fundLoan(
             LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio)
                 ? loan.borrower
-                : CreateLoanLib.createEscrow(loan.id),
+                : CreateLoanSnarkLib.createEscrow(loan.id),
             loan.borrowedAmount
         );
 
-        emit LoanTakenOut(loan.id, msg.sender, loan.borrowedAmount, false);
+        emit LoanTakenOutSnark(loan.id, msg.sender, loan.borrowedAmount, false);
+        // set to active
+        loan.status = LoanStatus.Active;
+        loan.loanStartTime = uint32(block.timestamp);
+        loan.duration = request.request.duration;
     }
 }
 
-library CreateLoanLib {
-    function createLoan(LoanRequestWithResponse calldata request, bool withNFT)
+library CreateLoanSnarkLib {
+    function createLoanSnark(LoanRequestSnark calldata request)
         internal
         returns (Loan storage loan)
     {
@@ -211,15 +144,13 @@ library CreateLoanLib {
                 request.request.duration,
             "Teller: max loan duration exceeded"
         );
-        // Get consensus values from request
-        uint16 interestRate = 15000;
-        uint16 collateralRatio = 5000;
-        uint256 maxLoanAmount = 25000;
-        // (
-        //     uint16 interestRate,
-        //     uint16 collateralRatio,
-        //     uint256 maxLoanAmount
-        // ) = ProcessRequestLib.processMarketRequest(request);
+
+        // Get market values
+        (
+            uint16 interestRate,
+            uint16 collateralRatio,
+            uint256 maxLoanAmount
+        ) = ProcessRequestLib.processMarketRequest(request);
 
         // Perform loan value checks
         require(
@@ -234,7 +165,7 @@ library CreateLoanLib {
         );
 
         // Get and increment new loan ID
-        uint256 loanID = CreateLoanLib.newID();
+        uint256 loanID = CreateLoanSnarkLib.newID();
 
         // Set loan data based on terms
         loan = LibLoans.loan(loanID);
@@ -243,12 +174,8 @@ library CreateLoanLib {
         loan.lendingToken = request.request.assetAddress;
         loan.borrower = request.request.borrower;
         loan.borrowedAmount = maxLoanAmount;
-        if (withNFT) {
-            loan.interestRate = PlatformSettingsLib.getNFTInterestRate();
-        } else {
-            loan.interestRate = interestRate;
-            loan.collateralRatio = collateralRatio;
-        }
+        loan.interestRate = interestRate;
+        loan.collateralRatio = collateralRatio;
 
         // Set loan debt
         LibLoans.debt(loanID).principalOwed = maxLoanAmount;

@@ -1,7 +1,3 @@
-import { isBytesLike } from '@ethersproject/bytes'
-import { toUtf8Bytes } from '@ethersproject/strings'
-import { time, timeStamp } from 'console'
-import { createSign } from 'crypto'
 import {
   BigNumber,
   BigNumberish,
@@ -11,43 +7,30 @@ import {
 } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
-import { ConsoleLogger } from 'ts-generator/dist/logger'
-
 // zkcra imports
 import {
-  initialize,
-  ZoKratesProvider,
   CompilationArtifacts,
   ComputationResult,
+  initialize,
   Proof,
   SetupKeypair,
-  //@ts-ignore
+  ZoKratesProvider,
+  // @ts-expect-error: because we are looking for the /node pkg
 } from 'zokrates-js/node'
-import fetch from 'node-fetch'
-// import zkcra from '../fixtures/zkcra.json'
-// const out = 'https://ipfs.io/ipfs/QmeWAsv22oPBK2Rk8Jdj49CGjpz8fMivSzozmvARWGVqY8?filename=out'
+
 const zkcraJson = `https://ipfs.io/ipfs/QmPRctNbW2q1TdrJAp2E1CkafJuCEzDKYtrqpYoHDkpXuR?filename=zkcra.json`
-import scores from '../fixtures/zk-scores'
+import { JsonRpcBatchProvider } from '@ethersproject/providers'
+import { readFileSync, writeFile, writeFileSync } from 'fs'
+import { join } from 'path'
 
 // teller files
-import { getNFT } from '../../config'
-import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
+import { getNativeToken } from '../../config'
+import { claimNFT, getPrice } from '../../tasks'
 import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import scores from '../fixtures/zk-scores'
 import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
 
-import { readFileSync, writeFile, writeFileSync } from 'fs'
-import { join } from 'path'
-import { JsonRpcBatchProvider } from '@ethersproject/providers'
-const {
-  getNamedSigner,
-  getNamedAccounts,
-  contracts,
-  tokens,
-  ethers,
-  toBN,
-  evm,
-} = hre
 export enum LoanType {
   ZERO_COLLATERAL,
   UNDER_COLLATERALIZED,
@@ -200,113 +183,6 @@ export const createLoan = async (
 }
 
 /**
- * @description: function helper that sets the collateral token and ratio and creates a mock CRA
- * response to plug into the newly merged create loan function that:
- *  - sets the terms
- *  - deposits collateral
- *  - takes out the loan
- *
- * @param args: CreateLoanArgs parameters to create the loan
- * @returns: Promise<CreateLoanReturn> helper variables to help run our tests
- */
-export const takeOutLoanWithoutNfts = async (
-  hre: HardhatRuntimeEnvironment,
-  args: CreateLoanArgs
-): Promise<CreateLoanReturn> => {
-  const {
-    lendToken,
-    collToken,
-    loanType,
-    amount = 100,
-    amountBN,
-    duration = moment.duration(1, 'day'),
-  } = args
-  const { contracts, tokens, getNamedAccounts, toBN } = hre
-  // define diamond contract
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-
-  // lending token
-  const lendingToken =
-    typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
-
-  // collateral token
-  const collateralToken =
-    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
-  const collateralIsNative =
-    collateralToken.address === getNativeToken(hre.network)
-
-  // set borrower and loan amount
-  const borrower = args.borrower ?? (await getNamedAccounts()).borrower
-  const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
-
-  // depending on the loan type, we set a different collateral ratio. 10000 = 100%
-  let collateralRatio = 0
-  switch (loanType) {
-    case LoanType.ZERO_COLLATERAL:
-      break
-    case LoanType.UNDER_COLLATERALIZED:
-      collateralRatio = 5000
-      break
-    case LoanType.OVER_COLLATERALIZED:
-      collateralRatio = 15000
-      break
-  }
-
-  // create our mock CRA response
-  const craReturn = await mockCRAResponse(hre, {
-    lendingToken: lendingToken.address,
-    loanAmount,
-    loanTermLength: duration.asSeconds(),
-    collateralRatio: collateralRatio,
-    interestRate: '400',
-    borrower,
-  })
-
-  const { value: collValue } = await getPrice(
-    {
-      src: await lendingToken.symbol(),
-      dst: await collateralToken.symbol(),
-      amount: hre.fromBN(loanAmount, await lendingToken.decimals()),
-    },
-    hre
-  )
-  const collAmount = hre.toBN(collValue, await collateralToken.decimals())
-  const nativeAmount = collateralIsNative ? collAmount : BigNumber.from(0)
-  if (!collateralIsNative) {
-    await getFunds({
-      tokenSym: await collateralToken.symbol(),
-      amount: collAmount,
-      to: borrower,
-      hre,
-    })
-    await collateralToken
-      .connect(hre.ethers.provider.getSigner(borrower))
-      .approve(diamond.address, collAmount)
-  }
-
-  // call the takeOutLoan function from the diamond
-  const tx = diamond
-    .connect(hre.ethers.provider.getSigner(borrower))
-    .takeOutLoan(
-      { request: craReturn.request, responses: craReturn.responses },
-      collateralToken.address,
-      collAmount,
-      { value: nativeAmount.toString() }
-    )
-
-  // return our transaction and our helper variable
-  return {
-    tx,
-    getHelpers: async (): Promise<LoanHelpersReturn> => {
-      await tx
-      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
-      const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(hre, loanID)
-    },
-  }
-}
-
-/**
  * @description: It creates, signs, apply with NFTs and takes out a loan in one function
  * @param args: Arguments we specify to create our Loan by depositing NFT
  * @returns Promise<CreateLoanReturn> that gives us data to help run our tests
@@ -320,13 +196,6 @@ export const takeOutLoanWithNfts = async (
 
   // diamond contract
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-
-  // lending token
-  const lendingToken =
-    typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
-
-  // amount in loan
-  const loanAmount = toBN(amount, await lendingToken.decimals())
 
   // get the borrower, deployer and borrower's signer
   // const deployer = await getNamedSigner('deployer')
@@ -350,23 +219,15 @@ export const takeOutLoanWithNfts = async (
   // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
   await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
 
-  // Create mockCRAResponse
-  const craReturn = await mockCRAResponse(hre, {
-    lendingToken: lendingToken.address,
-    loanAmount,
-    loanTermLength: duration.asSeconds(),
-    collateralRatio: 0,
-    interestRate: '400',
-    borrower,
-  })
-
   // plug it in the takeOutLoanWithNfts function along with the proofs to apply to the loan!
-  const tx = diamond
-    .connect(borrowerSigner)
-    .takeOutLoanWithNFTs(
-      { request: craReturn.request, responses: craReturn.responses },
-      ownedNFTs
-    )
+  const tx = diamond.connect(borrowerSigner).takeOutLoanNFTs(
+    {
+      borrower,
+      assetAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+      duration: moment.duration(1, 'day').asSeconds(),
+    },
+    ownedNFTs
+  )
 
   // return our transaction and our helper variables
   return {
@@ -382,8 +243,11 @@ export const takeOutLoanWithNfts = async (
 
 // we fill zkCRAConfigInfo before we sign
 export const fillZKCRAConfigInfo = async (
+  hre: HardhatRuntimeEnvironment,
   args: ZKCRAConfigArgs
 ): Promise<ZKCRAConfigReturn> => {
+  const { getNamedAccounts, getNamedSigner, contracts } = hre
+
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
   // get signers (providers)
@@ -428,14 +292,16 @@ export const fillZKCRAConfigInfo = async (
 }
 
 export const outputCraValues = async (
+  hre: HardhatRuntimeEnvironment,
   goodScore: boolean
 ): Promise<CreateLoanWithZKCRA> => {
+  const { getNamedAccounts, contracts } = hre
   // local variables
   let zokratesProvider: ZoKratesProvider
-  let compilationArtifacts: CompilationArtifacts
+  let compilationArtifacts: CompilationArtifacts = null
   let keyPair: SetupKeypair
   let computation: ComputationResult
-  let proof: Proof
+  let proof: Proof = null
   // set provider after initialization
   const provider: ZoKratesProvider = await initialize()
   console.log('provider initialized')
@@ -452,42 +318,10 @@ export const outputCraValues = async (
       endfor
 
       return MARKET_SCORE,commitments`
-  // const uint8Array = new Uint8Array(JSON.parse(JSON.stringify(zkcra)).program)
-  // console.log('fetching zkcra json')
-  // let zkcra: any
-  // try {
-  //   zkcra = await fetch(zkcraJson)
-  // } catch (err) {
-  //   console.log('error found: ' + err)
-  // }
-  // console.log('fetched')
-  // const response = await zkcra.json()
-  // console.log(response)
-  // const uint8Array = new Uint8Array(response.program.data)
-  // const abi = response.abi
-  // const compArtifact = { program: uint8Array, abi: abi }
-  // console.log(compArtifact)
-
   // compile into circuit
   console.log('about to compile source')
   compilationArtifacts = provider.compile(source)
   console.log('compiled source')
-  // const programArray = compilationArtifacts.program
-  // const programBuffer = programArray.buffer
-  // const objectToAdd = {
-  //   program: Buffer.from(programBuffer),
-  //   abi: compilationArtifacts.abi,
-  // }
-  // // console.log(JSON.stringify(objectToAdd))
-  // // writeFileSync(
-  // //   join(__dirname, '../fixtures/zkcra.json'),
-  // //   JSON.stringify(objectToAdd),
-  // //   { encoding: 'utf-8' }
-  // // )
-
-  // generate keypair
-  // keyPair = provider.setup(compilationArtifacts.program)
-  // console.log('got keypair')
 
   // get borrower nonce and identifier
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -531,34 +365,38 @@ export const outputCraValues = async (
 }
 // take out function with zkcra implemented
 export const borrowWithZKCRA = async (
+  hre: HardhatRuntimeEnvironment,
   args: CreateLoanWithZKCRA
 ): Promise<CreateLoanReturn> => {
   // get proof and witness from args
+  const { getNamedAccounts, getNamedSigner, contracts, ethers, tokens, toBN } =
+    hre
+
   const { proof, computation, providerAddresses } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
   // cutting the proof inputs and concatenating them into our input variables
-  const firstInput =
-    '0x' +
-    proof.inputs
-      .slice(2, 10)
-      .map((input: string) => input.substr(2).substr(56))
-      .join('')
+  const firstProofSlice: string = proof.inputs
+    .slice(2, 10)
+    .map((input: string) => input.substr(2).substr(56))
+    .join('')
 
-  const secondInput =
-    '0x' +
-    proof.inputs
-      .slice(10, 18)
-      .map((input: string) => input.substr(2).substr(56))
-      .join('')
-  console.log('second input made')
-  const thirdInput =
-    '0x' +
-    proof.inputs
-      .slice(18, 26)
-      .map((input: string) => input.substr(2).substr(56))
-      .join('')
+  const secondProofSlice: string = proof.inputs
+    .slice(10, 18)
+    .map((input: string) => input.substr(2).substr(56))
+    .join('')
+
+  const thirdProofSlice: string = proof.inputs
+    .slice(18, 26)
+    .map((input: string) => input.substr(2).substr(56))
+    .join('')
+
+  const firstInput = '0x' + firstProofSlice
+
+  const secondInput = '0x' + secondProofSlice
+
+  const thirdInput = '0x' + thirdProofSlice
 
   console.log('Third input made')
   // get the signer
@@ -674,7 +512,7 @@ export const borrowWithZKCRA = async (
   }
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
-    .takeOutLoan(loanRequest, collToken, collAmount)
+    .takeOutLoanSnark(loanRequest, collToken, collAmount)
 
   return {
     tx,
@@ -682,7 +520,7 @@ export const borrowWithZKCRA = async (
       await tx
       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(loanID)
+      return await loanHelpers(hre, loanID)
     },
   }
 }
