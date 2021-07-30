@@ -99,8 +99,8 @@ library PlatformSettingsLib {
      * @notice It gets the current "ProfitFeePercent" setting's value
      * @return value_ the current value.
      */
-    function getProfitFeePercent() internal view returns (uint256 value_) {
-        value_ = s(NAMES.PROFIT_FEE_PERCENT).value;
+    function getProfitFeePercent() internal view returns (uint16 value_) {
+        value_ = uint16(s(NAMES.PROFIT_FEE_PERCENT).value);
     }
 
     /**

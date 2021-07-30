@@ -59,6 +59,12 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         uint256 totalOwed
     );
 
+    event ProfitFeeClaimed(
+        uint256 indexed loanID,
+        uint256 amount,
+        address sender
+    );
+
     /**
      * @notice This event is emitted when a loan has been successfully liquidated
      * @param loanID ID of loan from which collateral was withdrawn
@@ -223,7 +229,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                     lendingToken
                 );
 
-                uint256 excessProfits = 0;
+                uint256 excessProfits;
 
                 if (
                     lendingTokenBalance > LibLoans.loan(loanID).borrowedAmount
@@ -246,6 +252,12 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                         lendingToken,
                         address(tToken),
                         amountForProfitFee
+                    );
+
+                    emit ProfitFeeClaimed(
+                        loanID,
+                        amountForProfitFee,
+                        msg.sender
                     );
                 }
 

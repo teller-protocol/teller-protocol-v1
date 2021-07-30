@@ -59,9 +59,9 @@ library LibDapps {
     {
         return
             IAToken(
-                getAaveLendingPool(aaveLPAddressProvider).getReserveData(
-                    tokenAddress
-                ).aTokenAddress
+                getAaveLendingPool(aaveLPAddressProvider)
+                    .getReserveData(tokenAddress)
+                    .aTokenAddress
             );
     }
 }

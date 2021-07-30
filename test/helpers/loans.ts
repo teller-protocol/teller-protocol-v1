@@ -444,8 +444,6 @@ export const repayLoan = async (
     from = borrower.signer,
   } = args
 
-
-  console.log('repaying loan', loan.id, amount )
   return await diamond.connect(from).repayLoan(loan.id, amount)
 }
 export const escrowRepayLoan = async (

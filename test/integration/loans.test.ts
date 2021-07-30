@@ -1,10 +1,10 @@
 import { FunctionFragment } from '@ethersproject/abi'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import hre from 'hardhat'
 
-import { getMarkets } from '../../config'
+import { getMarkets, getNFT } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
@@ -15,29 +15,40 @@ import {
   //loanHelpers,
   LoanType,
   takeOutLoanWithNfts,
-  takeOutLoanWithoutNfts 
+  takeOutLoanWithoutNfts,
 } from '../helpers/loans'
-
 
 chai.should()
 chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe.skip('Loans', () => {
+describe('Loans', () => {
+  /*
+  Solves rate limit error for taking out loans 
+  */
+  beforeEach(async () => {
+    // Advance time
+    const { value: rateLimit } = await getPlatformSetting(
+      'RequestLoanTermsRateLimit',
+      hre
+    )
+    await evm.advanceTime(rateLimit)
+  })
+
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
     let deployer: Signer
     let diamond: ITellerDiamond
-    // let borrower: Signer
+    let borrower: Signer
 
     before(async () => {
       // eslint-disable-next-line
       ({ diamond } = await fundedMarket(hre, {
         assetSym: market.lendingToken,
         amount: 100000,
-        keepExistingDeployments: false
+        //keepExistingDeployments: false
       }))
 
       deployer = await getNamedSigner('deployer')
@@ -72,7 +83,7 @@ describe.skip('Loans', () => {
           helpers = await getHelpers()
 
           // borrower data from our helpers
-          // borrower = helpers.details.borrower.signer
+          borrower = helpers.details.borrower.signer
 
           // check if loan exists
           expect(helpers.details.loan).to.exist
@@ -132,10 +143,6 @@ describe.skip('Loans', () => {
       })
 
       describe('with NFT', () => {
-
-       
-
-       
         before(async () => {
           // Advance time
           const { value: rateLimit } = await getPlatformSetting(
@@ -147,7 +154,7 @@ describe.skip('Loans', () => {
         it('creates a loan', async () => {
           // get helpers
           const { getHelpers } = await takeOutLoanWithNfts(hre, {
-            amount: 100,
+            amount: 100, //should use raw amt not formatted.. oh well
             lendToken: market.lendingToken,
           })
 
@@ -159,43 +166,32 @@ describe.skip('Loans', () => {
           // get loanStatus from helpers and check if it's equal to 2, which means it's active
           const loanStatus = helpers.details.loan.status
           expect(loanStatus).to.equal(2)
-
-           
-         
         })
 
-
-
         it('should be able to create and repay a loan', async () => {
-
-
-          const { getHelpers } = await takeOutLoanWithNfts({
-            amount: 100,  //should use raw amt not formatted.. oh well 
+          const { getHelpers } = await takeOutLoanWithNfts(hre, {
+            amount: 100, //should use raw amt not formatted.. oh well
             lendToken: market.lendingToken,
           })
 
           const helpers: LoanHelpersReturn = await getHelpers()
 
-
           expect(helpers.details.loan).to.exist
 
-
-
-
           console.log('helpers.details.loan', helpers.details.loan)
-          
-          const loanId =  helpers.details.loan.id 
-          console.log('loanId',loanId)
 
-        //  const lHelpers = await loanHelpers(loanId)  
-          
+          const loanId = helpers.details.loan.id
+          console.log('loanId', loanId)
 
+          //  const lHelpers = await loanHelpers(loanId)
 
-          //need to give fake ERC20 to borrower 
-          //and add fake ERC20 to the borrow escrow 
+          //need to give fake ERC20 to borrower
+          //and add fake ERC20 to the borrow escrow
 
           const lendingToken =
-          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+            typeof market.lendingToken === 'string'
+              ? await tokens.get(market.lendingToken)
+              : market.lendingToken
 
           const lendingTokenDecimals = await lendingToken.decimals()
           console.log('decimals', lendingTokenDecimals)
@@ -203,84 +199,70 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 200 * 10**(lendingTokenDecimals),
+            amount: 200 * 10 ** lendingTokenDecimals,
             hre,
           })
 
           const borrowerAddress = await borrower.getAddress()
-          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress)
 
-          console.log('balanceOf', borrowerBalance.toString() )
+          console.log('balanceOf', borrowerBalance.toString())
 
-          console.log('market.lendingToken',market.lendingToken)
+          console.log('market.lendingToken', market.lendingToken)
 
-
-          const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay)
-
+          const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+          console.log('balanceLeftToRepay', balanceLeftToRepay)
 
           await lendingToken
-          .connect(ethers.provider.getSigner(borrowerAddress))
-          .approve(diamond.address, balanceLeftToRepay)
+            .connect(ethers.provider.getSigner(borrowerAddress))
+            .approve(diamond.address, balanceLeftToRepay)
 
-          //let response = await helpers.repay( 100000000 , borrower )  
+          //let response = await helpers.repay( 100000000 , borrower )
 
-          await diamond.connect( borrower ).repayLoan(loanId, 100010000)
+          await diamond.connect(borrower).repayLoan(loanId, 100010000)
 
-          
-          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+          const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-
-          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
-
+          console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
 
           const loanData = await diamond.getLoan(loanId)
-          console.log('loanData',  ) 
+          console.log('loanData')
 
-         
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay)
+          console.log('balanceLeftToRepay 2', balanceLeftToRepay)
 
-          console.log('balanceOf After', borrowerBalance.toString() )
+          console.log('balanceOf After', borrowerBalance.toString())
 
           expect(parseInt(borrowerBalance.toString())).to.equal(200000000)
 
-           
-          expect(loanData.status  ).to.equal(3) //3 = repaid 
+          expect(loanData.status).to.equal(3) //3 = repaid
 
-          expect(parseInt( totalOwedAfterRepay.toString() ) ).to.equal(0) 
+          expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
         })
 
-
         it('should be able to create and escrow-repay a loan', async () => {
-
-
-          const { getHelpers } = await takeOutLoanWithNfts({
-            amount: 100,  //should use raw amt not formatted.. oh well 
+          const { getHelpers } = await takeOutLoanWithNfts(hre, {
+            amount: 100, //should use raw amt not formatted.. oh well
             lendToken: market.lendingToken,
           })
 
           const helpers: LoanHelpersReturn = await getHelpers()
 
-
           expect(helpers.details.loan).to.exist
 
-
-
-
           console.log('helpers.details.loan', helpers.details.loan)
-          
-          const loanId =  helpers.details.loan.id 
-          console.log('loanId',loanId)
 
-        //  const lHelpers = await loanHelpers(loanId)  
-          
+          const loanId = helpers.details.loan.id
+          console.log('loanId', loanId)
 
+          //  const lHelpers = await loanHelpers(loanId)
 
-          //need to give fake ERC20 to borrower 
-          //and add fake ERC20 to the borrow escrow 
+          //need to give fake ERC20 to borrower
+          //and add fake ERC20 to the borrow escrow
 
           const lendingToken =
-          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+            typeof market.lendingToken === 'string'
+              ? await tokens.get(market.lendingToken)
+              : market.lendingToken
 
           const lendingTokenDecimals = await lendingToken.decimals()
           console.log('decimals', lendingTokenDecimals)
@@ -288,84 +270,70 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 200 * 10**(lendingTokenDecimals),
+            amount: 200 * 10 ** lendingTokenDecimals,
             hre,
           })
 
           const borrowerAddress = await borrower.getAddress()
-          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress)
 
-          console.log('balanceOf', borrowerBalance.toString() )
+          console.log('balanceOf', borrowerBalance.toString())
 
-          console.log('market.lendingToken',market.lendingToken)
+          console.log('market.lendingToken', market.lendingToken)
 
-
-          const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
-
+          const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+          console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
           await lendingToken
-          .connect(ethers.provider.getSigner(borrowerAddress))
-          .approve(diamond.address, balanceLeftToRepay)
+            .connect(ethers.provider.getSigner(borrowerAddress))
+            .approve(diamond.address, balanceLeftToRepay)
 
-          //let response = await helpers.repay( 100000000 , borrower )  
+          //let response = await helpers.repay( 100000000 , borrower )
 
-          await diamond.connect( borrower ).escrowRepay(loanId, 100010000) 
-          
-          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+          await diamond.connect(borrower).escrowRepay(loanId, 100010000)
 
+          const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
-
+          console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
 
           const loanData = await diamond.getLoan(loanId)
-          console.log('loanData',  ) 
+          console.log('loanData')
 
-          console.log('balanceOf After', borrowerBalance.toString() )
+          console.log('balanceOf After', borrowerBalance.toString())
 
-         
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
-           
-          expect(loanData.status  ).to.equal(3) //3 = repaid 
+          console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
+
+          expect(loanData.status).to.equal(3) //3 = repaid
 
           expect(parseInt(borrowerBalance.toString())).to.equal(299990000)
 
-          expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0) 
+          expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
         })
 
-
-
-
         it('should be able to create, earn profits on, and repay a loan', async () => {
-
-
-          const { getHelpers } = await takeOutLoanWithNfts({
-            amount: 100,  //should use raw amt not formatted.. oh well 
+          const { getHelpers } = await takeOutLoanWithNfts(hre, {
+            amount: 100, //should use raw amt not formatted.. oh well
             lendToken: market.lendingToken,
           })
 
           const helpers: LoanHelpersReturn = await getHelpers()
 
-
           expect(helpers.details.loan).to.exist
 
-
-
-
           console.log('helpers.details.loan', helpers.details.loan)
-          
-          const loanId =  helpers.details.loan.id 
-          console.log('loanId',loanId)
 
-        //  const lHelpers = await loanHelpers(loanId)  
-          
+          const loanId = helpers.details.loan.id
+          console.log('loanId', loanId)
 
+          //  const lHelpers = await loanHelpers(loanId)
 
-          //need to give fake ERC20 to borrower 
-          //and add fake ERC20 to the borrow escrow 
+          //need to give fake ERC20 to borrower
+          //and add fake ERC20 to the borrow escrow
 
           const lendingToken =
-          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+            typeof market.lendingToken === 'string'
+              ? await tokens.get(market.lendingToken)
+              : market.lendingToken
 
           const lendingTokenDecimals = await lendingToken.decimals()
           console.log('decimals', lendingTokenDecimals)
@@ -373,88 +341,70 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 200 * 10**(lendingTokenDecimals),
+            amount: 200 * 10 ** lendingTokenDecimals,
             hre,
           })
 
           const borrowerAddress = await borrower.getAddress()
-          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress)
 
-          console.log('balanceOf', borrowerBalance.toString() )
+          console.log('balanceOf', borrowerBalance.toString())
 
-          console.log('market.lendingToken',market.lendingToken)
+          console.log('market.lendingToken', market.lendingToken)
 
-
-          const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
-
-
-
-          
+          const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+          console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
           await lendingToken
-          .connect(ethers.provider.getSigner(borrowerAddress))
-          .approve(diamond.address, balanceLeftToRepay)
+            .connect(ethers.provider.getSigner(borrowerAddress))
+            .approve(diamond.address, balanceLeftToRepay)
 
-         
-          await diamond.connect( borrower ).repayLoan(loanId, 100010000)
+          await diamond.connect(borrower).repayLoan(loanId, 100010000)
 
-          
-          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+          const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-
-          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
-
+          console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
 
           const loanData = await diamond.getLoan(loanId)
-          console.log('loanData',  ) 
+          console.log('loanData')
 
-         
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
+          console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
 
-          console.log('balanceOf After', borrowerBalance.toString() )
+          console.log('balanceOf After', borrowerBalance.toString())
 
           expect(parseInt(borrowerBalance.toString())).to.equal(499980000)
 
-           
-          expect(loanData.status  ).to.equal(3) //3 = repaid 
+          expect(loanData.status).to.equal(3) //3 = repaid
 
-          expect(parseInt( totalOwedAfterRepay.toString() ) ).to.equal(0) 
+          expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
         })
 
-
-
         it('should be able to create, earn profits on, and repay a loan with excess profit ', async () => {
-
-
-          const { getHelpers } = await takeOutLoanWithNfts({
-            amount: 100,  //should use raw amt not formatted.. oh well 
+          const { getHelpers } = await takeOutLoanWithNfts(hre, {
+            amount: 100, //should use raw amt not formatted.. oh well
             lendToken: market.lendingToken,
           })
 
           const helpers: LoanHelpersReturn = await getHelpers()
 
-
           expect(helpers.details.loan).to.exist
 
           console.log('helpers.details.loan', helpers.details.loan)
-       
 
+          // console.log('helpers.details.loan', helpers.details.loan)
 
-         // console.log('helpers.details.loan', helpers.details.loan)
-          
-          const loanId =  helpers.details.loan.id 
-          console.log('loanId',loanId)
+          const loanId = helpers.details.loan.id
+          console.log('loanId', loanId)
 
-        //  const lHelpers = await loanHelpers(loanId)  
-          
+          //  const lHelpers = await loanHelpers(loanId)
 
-
-          //need to give fake ERC20 to borrower 
-          //and add fake ERC20 to the borrow escrow 
+          //need to give fake ERC20 to borrower
+          //and add fake ERC20 to the borrow escrow
 
           const lendingToken =
-          typeof market.lendingToken === 'string' ? await tokens.get(market.lendingToken) : market.lendingToken
+            typeof market.lendingToken === 'string'
+              ? await tokens.get(market.lendingToken)
+              : market.lendingToken
 
           const lendingTokenDecimals = await lendingToken.decimals()
           console.log('decimals', lendingTokenDecimals)
@@ -462,105 +412,95 @@ describe.skip('Loans', () => {
           await getFunds({
             to: borrower,
             tokenSym: market.lendingToken,
-            amount: 230 * 10**(lendingTokenDecimals),
+            amount: 200 * 10 ** lendingTokenDecimals,
             hre,
           })
 
+          //simulate that excess profit was made by the user on the borrowed money
+          const borrowedFundsEscrowAddress = await diamond
+            .connect(borrower)
+            .getLoanEscrow(loanId)
 
-          
-          //simulate that excess profit was made by the user on the borrowed money 
-          const borrowedFundsEscrowAddress = await diamond.connect( borrower ).getLoanEscrow(loanId)
-          
-          const tTokenAddress = await diamond.connect( borrower ).getTTokenFor( lendingToken.address )
-          
-          console.log('tTokenAddress 1 ', tTokenAddress.toString())
-           let tTokenEscrowBalance = await lendingToken.balanceOf(tTokenAddress)
-           console.log('tTokenEscrowBalance 1 ', tTokenEscrowBalance.toString())
+          await getFunds({
+            to: borrowedFundsEscrowAddress,
+            tokenSym: market.lendingToken,
+            amount: 30 * 10 ** lendingTokenDecimals,
+            hre,
+          })
 
-           expect(tTokenEscrowBalance).to.equal(99700030000)
+          const tTokenAddress = await diamond
+            .connect(borrower)
+            .getTTokenFor(lendingToken.address)
 
+          const originalTTokenEscrowBalanceBN: BigNumber =
+            await lendingToken.balanceOf(tTokenAddress)
 
-          let loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
-          console.log('loanEscrowBalance 1 ', loanEscrowBalance.toString())
+          const originalTTokenEscrowBalance: number = parseInt(
+            originalTTokenEscrowBalanceBN.toString()
+          )
 
-          expect(loanEscrowBalance).to.equal(100000000)
+          expect(originalTTokenEscrowBalance).to.equal(99700030000)
 
+          let loanEscrowBalance = await lendingToken.balanceOf(
+            borrowedFundsEscrowAddress
+          )
 
-          console.log('borrower', borrower.getAddress() )
-
-          console.log('add funds to borrowed escrow ',borrowedFundsEscrowAddress, lendingToken.signer.getAddress()  ) 
-         // await lendingToken.transfer(borrowedFundsEscrowAddress,  30     )
- 
-          
-
-          const borrowerAddress = await borrower.getAddress()
-          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress) 
-
-
-          //simulating that a profit was made, multiplying the borrowed $$ escrow 
-          await lendingToken
-          .connect(ethers.provider.getSigner(borrowerAddress))
-          .transfer(borrowedFundsEscrowAddress, 30 * 10**(lendingTokenDecimals))
-
-          loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
-          console.log('loanEscrowBalance 2 ', loanEscrowBalance.toString())
           expect(loanEscrowBalance).to.equal(130000000)
 
-          console.log('balanceOf', borrowerBalance.toString() )
+          const borrowerAddress = await borrower.getAddress()
+          const borrowerBalance = await lendingToken.balanceOf(borrowerAddress)
 
-          console.log('market.lendingToken',market.lendingToken)
+          console.log('balanceOf', borrowerBalance.toString())
 
+          console.log('market.lendingToken', market.lendingToken)
 
-          const balanceLeftToRepay =  await diamond.getTotalOwed( loanId )
-          console.log('balanceLeftToRepay',balanceLeftToRepay.toString())
-
-
-
-          
+          const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+          console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
           await lendingToken
-          .connect(ethers.provider.getSigner(borrowerAddress))
-          .approve(diamond.address, balanceLeftToRepay)
+            .connect(ethers.provider.getSigner(borrowerAddress))
+            .approve(diamond.address, balanceLeftToRepay)
 
-         
-          await diamond.connect( borrower ).repayLoan(loanId, 100010000)
+          await diamond.connect(borrower).repayLoan(loanId, 100010000)
 
-          
-          const totalOwedAfterRepay = await diamond.getTotalOwed( loanId )
+          const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-
-          console.log('totalOwedAfterRepay',  totalOwedAfterRepay.toString()  )
-
+          console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
 
           const loanData = await diamond.getLoan(loanId)
-          console.log('loanData',  ) 
+          console.log('loanData')
 
-         
-          console.log('balanceLeftToRepay 2',balanceLeftToRepay.toString())
+          console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
 
-          console.log('balanceOf After', borrowerBalance.toString() )
+          console.log('balanceOf After', borrowerBalance.toString())
 
+          const amtRepaid = 100010000
+          const expectedProfitFee = 1500000
 
+          //The difference should be the loan repayment + profit fee
+          const finalTTokenEscrowBalance = await lendingToken.balanceOf(
+            tTokenAddress
+          )
+          console.log(
+            'finalTTokenEscrowBalance 2 ',
+            finalTTokenEscrowBalance.toString()
+          )
+          expect(parseInt(finalTTokenEscrowBalance.toString())).to.equal(
+            originalTTokenEscrowBalance + expectedProfitFee + amtRepaid
+          ) //99700030000
 
-          tTokenEscrowBalance = await lendingToken.balanceOf(tTokenAddress)
-           console.log('tTokenEscrowBalance 2 ', tTokenEscrowBalance.toString())
-           expect(tTokenEscrowBalance).to.equal(99801540000)  //99700030000
-
-
-
-          loanEscrowBalance = await lendingToken.balanceOf(borrowedFundsEscrowAddress)
+          loanEscrowBalance = await lendingToken.balanceOf(
+            borrowedFundsEscrowAddress
+          )
           console.log('loanEscrowBalance 3 ', loanEscrowBalance.toString())
           expect(loanEscrowBalance).to.equal(0)
 
+          expect(parseInt(borrowerBalance.toString())).to.equal(599970000)
 
-          expect(parseInt(borrowerBalance.toString())).to.equal(629970000)
+          expect(loanData.status).to.equal(3) //3 = repaid
 
-           
-          expect(loanData.status  ).to.equal(3) //3 = repaid 
-
-          expect(parseInt( totalOwedAfterRepay.toString() ) ).to.equal(0) 
+          expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
         })
-
       })
     })
   }

@@ -123,7 +123,8 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         returns (address[] memory tokens_)
     {
         EnumerableSet.AddressSet storage collateralTokens = MarketStorageLib
-            .store().collateralTokens[asset];
+            .store()
+            .collateralTokens[asset];
         tokens_ = new address[](EnumerableSet.length(collateralTokens));
         for (uint256 i; i < EnumerableSet.length(collateralTokens); i++) {
             tokens_[i] = EnumerableSet.at(collateralTokens, i);
