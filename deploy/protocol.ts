@@ -155,6 +155,10 @@ const deployProtocol: DeployFunction = async (hre) => {
         args: [nftMigrator.address],
         mock: process.env.TESTING === '1',
       },
+      {
+        contract: 'NFTInterestFacet',
+        skipIfAlreadyDeployed: true,
+      },
       // Dapps
       {
         contract: 'UniswapFacet',
@@ -274,6 +278,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
+    skipIfAlreadyDeployed: true,
     indent: 4,
   })
 
@@ -327,6 +332,7 @@ const deployCollateralEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'CollateralEscrowBeaconFactory',
     args: [beaconProxy.address, collateralEscrowLogic.address],
+    skipIfAlreadyDeployed: true,
     indent: 4,
   })
 
@@ -361,7 +367,7 @@ const deployTTokenBeacon = async (
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = 2
+  const logicVersion = '2_Alpha'
 
   const tTokenLogic = await deploy<ITToken>({
     hre,
@@ -380,6 +386,7 @@ const deployTTokenBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'TTokenBeaconFactory',
     args: [beaconProxy.address, tTokenLogic.address],
+    skipIfAlreadyDeployed: true,
     indent: 4,
   })
 

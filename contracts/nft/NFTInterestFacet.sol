@@ -9,6 +9,10 @@ import { NFTLib } from "./libraries/NFTLib.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
 
 contract NFTInterestFacet is NFTFacet {
+    // TELLER NFT V1
+    TellerNFT private constant TELLER_NFT_V1 =
+        TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);
+
     /**
      * @notice It claims the interest earned by the caller's staked NFTs
      * @param assetAddress The address of the lending asset against which the NFTs are staked

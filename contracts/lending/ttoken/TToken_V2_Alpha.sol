@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TToken_V2 } from "./TToken_V2.sol";
-import { CONTROLLER } from "./data.sol";
+import { CONTROLLER, ADMIN } from "./data.sol";
 import { ITTokenStrategy } from "./strategies/ITTokenStrategy.sol";
 
 // Libraries
@@ -16,11 +16,18 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-abstract contract TToken_V3 is TToken_V2 {
+contract TToken_V2_Alpha is TToken_V2 {
+    /**
+     * @notice Gets the amount of interest that was generated during the Alpha launch.
+     */
+    function getAlphaInterestEarned() external view returns (uint256) {
+        return s().alphaInterestEarned;
+    }
+
     /**
      * @notice Called by the Teller Diamond contract at the end of the protocol's Alpha.
      */
-    function markEndOfAlpha() external authorized(CONTROLLER, _msgSender()) {
+    function markEndOfAlpha() external authorized(ADMIN, _msgSender()) {
         require(!s().alphaEnded, "Teller: alpha already ended");
         s().alphaEnded = true;
         s().alphaInterestEarned = s().totalInterestRepaid; // mark the amount of interest earned to date
