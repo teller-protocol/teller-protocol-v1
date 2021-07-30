@@ -234,18 +234,18 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                         LibLoans.loan(loanID).borrowedAmount;
                 }
 
-                // Multiply excess profits by the mgmt fee (5%)
-                uint256 amountForManagementFee = NumbersLib.percent(
+                // Multiply excess profits by the profit fee (5%)
+                uint256 amountForProfitFee = NumbersLib.percent(
                     excessProfits,
-                    uint16(PlatformSettingsLib.getManagementFeePercent())
+                    uint16(PlatformSettingsLib.getProfitFeePercent())
                 );
 
-                //If excess profit should be claimed for mgmt fee, send that amount to the tToken liq pool
-                if (amountForManagementFee > 0) {
+                //If excess profit should be claimed for profit fee, send that amount to the tToken liq pool
+                if (amountForProfitFee > 0) {
                     LibEscrow.e(loanID).claimToken(
                         lendingToken,
                         address(tToken),
-                        amountForManagementFee
+                        amountForProfitFee
                     );
                 }
 
