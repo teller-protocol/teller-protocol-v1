@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TellerNFT } from "../nft/TellerNFT.sol";
+import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
-import { NFTMigrator } from "./mainnet/NFTMigrator.sol";
 
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";
@@ -14,19 +14,17 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+// TELLER NFT V1
+TellerNFT constant TELLER_NFT_V1 = TellerNFT(
+    0x2ceB85a2402C94305526ab108e7597a102D6C175
+);
+
+// TELLER NFT V2
+TellerNFT_V2 constant TELLER_NFT_V2 = TellerNFT_V2(
+    0x98Ca52786e967d1469090AdC075416948Ca004A7
+);
+
 contract NFTFacet is RolesMods {
-    address internal immutable migrator;
-
-    /* Constructor */
-
-    /**
-     * @notice Sets the NFT migrator address on deployment
-     * @param tellerNFTMigratorAddress The address of Teller's NFT migrator contract
-     */
-    constructor(address tellerNFTMigratorAddress) {
-        migrator = tellerNFTMigratorAddress;
-    }
-
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
      * @return staked_ the returned staked NFTs mapped to an owner's address
@@ -79,7 +77,7 @@ contract NFTFacet is RolesMods {
                 "Teller: not the owner of the NFT ID!"
             );
 
-            NFTMigrator(migrator).TELLER_NFT_V2().safeTransferFrom(
+            TELLER_NFT_V2.safeTransferFrom(
                 address(this),
                 owner,
                 nftIDs[i], //v2_id

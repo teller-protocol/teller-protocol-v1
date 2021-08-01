@@ -20,13 +20,13 @@ contract NFTMigrator {
      * @param V1TokenId the tokenId that we are sending. First array is the ERC721, if any. Second array
      * are our ERC-1155 tokenIDs
      */
-    function migrateV1toV2(uint256 V1TokenId)
+    function migrateV1toV2(uint256 V1TokenId, address from)
         external
         returns (uint256 newTokenId_)
     {
         newTokenId_ = TELLER_NFT_V2.convertV1TokenId(V1TokenId);
         TELLER_NFT_V1.safeTransferFrom(
-            address(this),
+            from,
             address(TELLER_NFT_V2),
             V1TokenId,
             abi.encode(newTokenId_)

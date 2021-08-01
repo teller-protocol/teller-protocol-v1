@@ -3,9 +3,6 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TellerNFT } from "../TellerNFT.sol";
-import {
-    NFTMainnetBridgingToPolygonFacet
-} from "../mainnet/NFTMainnetBridgingToPolygonFacet.sol";
 
 // Libraries
 import {

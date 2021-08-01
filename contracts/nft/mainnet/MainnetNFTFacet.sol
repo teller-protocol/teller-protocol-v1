@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Contracts
+import { TellerNFT } from "../../nft/TellerNFT.sol";
+import { TellerNFT_V2 } from "../../nft/TellerNFT_V2.sol";
 import { NFTFacet } from "../NFTFacet.sol";
 import { NFTMigrator } from "./NFTMigrator.sol";
 import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
@@ -13,7 +15,29 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+// TELLER NFT V1
+TellerNFT constant TELLER_NFT_V1 = TellerNFT(
+    0x2ceB85a2402C94305526ab108e7597a102D6C175
+);
+
+// TELLER NFT V2
+TellerNFT_V2 constant TELLER_NFT_V2 = TellerNFT_V2(
+    0x98Ca52786e967d1469090AdC075416948Ca004A7
+);
+
 abstract contract MainnetNFTFacet is NFTFacet {
+    address internal immutable migrator;
+
+    /* Constructor */
+
+    /**
+     * @notice Sets the NFT migrator address on deployment
+     * @param tellerNFTMigratorAddress The address of Teller's NFT migrator contract
+     */
+    constructor(address tellerNFTMigratorAddress) {
+        migrator = tellerNFTMigratorAddress;
+    }
+
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
      * @return staked_ the returned staked NFTs mapped to an owner's address
@@ -59,16 +83,17 @@ abstract contract MainnetNFTFacet is NFTFacet {
             (bool success, bytes memory data) = migrator.delegatecall(
                 abi.encodeWithSelector(
                     NFTMigrator.migrateV1toV2.selector,
-                    nftIDs[i]
+                    nftIDs[i],
+                    address(this)
                 )
             );
-            require(success, "Teller: Migration unseccessful");
+            require(success, "Teller: Migration unsuccessful");
             uint256 V2Id = abi.decode(data, (uint256));
-            NFTMigrator(migrator).TELLER_NFT_V2().safeTransferFrom(
+            TELLER_NFT_V2.safeTransferFrom(
                 address(this),
                 msg.sender,
                 V2Id,
-                1,
+                1, //amount
                 data
             );
         }
@@ -81,8 +106,29 @@ abstract contract MainnetNFTFacet is NFTFacet {
     function stakeNFTs(uint256[] calldata nftIDs) external {
         for (uint256 i; i < nftIDs.length; i++) {
             // Stake NFT and transfer into diamond
-            NFTLib.stake(nftIDs[i], msg.sender);
+            //NFTLib.stake(nftIDs[i], msg.sender);
+
+            TELLER_NFT_V1.safeTransferFrom(
+                msg.sender,
+                address(this),
+                nftIDs[i],
+                ""
+            );
+
+            (bool success, bytes memory data) = migrator.delegatecall(
+                abi.encodeWithSelector(
+                    NFTMigrator.migrateV1toV2.selector,
+                    nftIDs[i],
+                    msg.sender
+                )
+            );
+            require(success, "Teller: Migration unsuccessful");
+
+            uint256 V2Id = abi.decode(data, (uint256));
+
+            NFTLib.stakeV2(V2Id, 1, msg.sender);
         }
+
         // Give the caller authorization to protocol
         RolesLib.grantRole(AUTHORIZED, msg.sender);
     }
