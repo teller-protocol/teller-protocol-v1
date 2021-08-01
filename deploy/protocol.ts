@@ -23,11 +23,9 @@ const deployProtocol: DeployFunction = async (hre) => {
 
   log('********** Teller Diamond **********', { indent: 1 })
 
-  const { address: nftAddress } = await contracts.get('TellerNFT')
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
-  const nftDictionary = await contracts.get('TellerNFTDictionary')
   const priceAggregator = await contracts.get('PriceAggregator')
 
   const wrappedNativeToken = getNativeToken(network)
@@ -58,7 +56,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [
         {
           admin: deployer,
-          tellerNFT: nftAddress,
           loansEscrowBeacon: loansEscrowBeacon.address,
           collateralEscrowBeacon: collateralEscrowBeacon.address,
           tTokenBeacon: tTokenBeacon.address,
@@ -66,7 +63,6 @@ const deployProtocol: DeployFunction = async (hre) => {
           nftLiquidationController:
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
           wrappedNativeToken: wrappedNativeToken,
-          nftDictionary: nftDictionary.address,
           priceAggregator: priceAggregator.address,
         },
       ],
