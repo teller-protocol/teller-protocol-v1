@@ -22,12 +22,14 @@ import {
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
-    // immutable and constant addresses
-    address public immutable POLYGON_NFT_ADDRESS;
+    address public constant POLYGON_NFT_ADDRESS =
+        0x83AF2b36A3F8593203b2098CBec616A57f1A80cC;
     address public constant ERC721_PREDICATE =
-        0x74D83801586E9D3C4dc45FfCD30B54eA9C88cf9b;
+        0xE6F45376f64e1F568BD1404C155e5fFD2F80F7AD;
+    address public constant ERC1155_PREDICATE =
+        0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f;
     address public constant ROOT_CHAIN_MANAGER =
-        0xD4888faB8bd39A663B63161F5eE1Eae31a25B653;
+        0xA0c68C638235ee32657e8f720a23ceC1bFc77C77;
 
     // TELLER NFT V1
     TellerNFT public constant TELLER_NFT_V1 =
@@ -37,17 +39,13 @@ contract NFTMainnetBridgingToPolygonFacet {
     MainnetTellerNFT public constant TELLER_NFT_V2 =
         MainnetTellerNFT(0x98Ca52786e967d1469090AdC075416948Ca004A7);
 
-    constructor(address polygonNFT) {
-        POLYGON_NFT_ADDRESS = polygonNFT;
-    }
-
     /**
-     * @notice it makes a function call to the ROOT_CHAIN_MANAGER "depositFor"
-     * function signature, which calls our PolyTellerNFT using the CHILD_CHAIN_MANAGER
-     * (after we map)
+     * @notice It makes a function call to the ROOT_CHAIN_MANAGER "depositFor"
+     *  function signature, which calls our PolyTellerNFT using the CHILD_CHAIN_MANAGER
+     *  (after we map)
      * @param tokenIds the token ids that we are depositing on ROOT_CHAIN_MANAGER
      */
-    function __depositFor(uint256[] memory tokenIds) internal virtual {
+    function __depositForV1(uint256[] memory tokenIds) internal virtual {
         uint256[] memory amounts = new uint256[](tokenIds.length);
         for (uint256 i; i < amounts.length; i++) {
             amounts[i] = 1;
@@ -65,17 +63,18 @@ contract NFTMainnetBridgingToPolygonFacet {
     }
 
     /**
-     * @notice it initializes our NFTBridge by approving all NFTs to the Polygon ERC721_Predicate
+     * @notice It initializes our NFTBridge by approving all NFTs to the Polygon predicate contracts
      */
     function initNFTBridge() external {
         TELLER_NFT_V1.setApprovalForAll(ERC721_PREDICATE, true);
+        TELLER_NFT_V2.setApprovalForAll(ERC1155_PREDICATE, true);
     }
 
     /**
-     * @notice gets all of our NFTs (staked and unstaked) migrates to ERC1155 (if ERC721), then
-     * bridges to polygon
-     * @param tokenIds the tokenIds that we are sending. First array is the ERC721, if any. Second array
-     * are our ERC-1155 tokenIDs
+     * @notice Gets all of our NFTs (staked and unstaked) migrates to ERC1155 (if ERC721), then
+     *  bridges to polygon
+     * @param tokenIds The tokenIds that we are sending. First array is the ERC721, if any. Second array
+     *  are our ERC-1155 tokenIDs
      */
     function bridgeNFTsV1(uint256[] calldata tokenIds) external {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
@@ -104,22 +103,29 @@ contract NFTMainnetBridgingToPolygonFacet {
             );
             tokenIds_[i] = newTokenId;
         }
-        __depositFor(tokenIds_);
+        __depositForV1(tokenIds_);
+    }
+
+    function bridgeNFTsV2(
+        uint256[] calldata tokenIds,
+        uint256[] calldata amounts
+    ) external {
+        // TODO: waiting for code Syed is working on
     }
 
     /**
-        @dev Handles the receipt of a single ERC1155 token type. This function is
-        called at the end of a `safeTransferFrom` after the balance has been updated.
-        To accept the transfer, this must return
-        `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
-        (i.e. 0xf23a6e61, or its own function selector).
-        @param operator The address which initiated the transfer (i.e. msg.sender)
-        @param from The address which previously owned the token
-        @param id The ID of the token being transferred
-        @param value The amount of tokens being transferred
-        @param data Additional data with no specified format
-        @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` if transfer is allowed
-    */
+     * @dev Handles the receipt of a single ERC1155 token type. This function is
+     *  called at the end of a `safeTransferFrom` after the balance has been updated.
+     *  To accept the transfer, this must return
+     *  `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+     *  (i.e. 0xf23a6e61, or its own function selector).
+     * @param operator The address which initiated the transfer (i.e. msg.sender)
+     * @param from The address which previously owned the token
+     * @param id The ID of the token being transferred
+     * @param value The amount of tokens being transferred
+     * @param data Additional data with no specified format
+     * @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` if transfer is allowed
+     */
     function onERC1155Received(
         address operator,
         address from,

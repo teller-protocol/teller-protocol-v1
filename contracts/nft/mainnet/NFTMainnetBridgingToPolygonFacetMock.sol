@@ -8,9 +8,5 @@ import {
 contract NFTMainnetBridgingToPolygonFacetMock is
     NFTMainnetBridgingToPolygonFacet
 {
-    constructor(address polygonNFT)
-        NFTMainnetBridgingToPolygonFacet(polygonNFT)
-    {}
-
-    function __depositFor(uint256[] memory tokenIds) internal override {}
+    function __depositForV1(uint256[] memory tokenIds) internal override {}
 }
