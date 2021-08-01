@@ -17,11 +17,11 @@ struct NFTStorage {
     // Maps NFT owner to set of token IDs owned (V2)
     mapping(address => EnumerableSet.UintSet) stakedNFTsV2;
     // Map NFT ids to amounts
-    mapping(uint256 => uint256) stakedNFTsV2Amounts;
+    mapping(address => mapping(uint256 => uint256)) stakedNFTsV2Amounts;
     // Maps loanID to NFT IDs indicating NFT being used for the loan (V2)
     mapping(uint256 => EnumerableSet.UintSet) loanNFTsV2;
     // Map NFT ids to amounts, linked to loans
-    mapping(uint256 => uint256) loanNFTsV2Amounts;
+    mapping(uint256 => mapping(uint256 => uint256)) loanNFTsV2Amounts;
 }
 
 bytes32 constant NFT_STORAGE_POS = keccak256("teller.staking.storage");

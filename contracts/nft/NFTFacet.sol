@@ -56,7 +56,7 @@ contract NFTFacet is RolesMods {
         amounts_ = new uint256[](EnumerableSet.length(nftsV2));
         for (uint256 i; i < EnumerableSet.length(nftsV2); i++) {
             loanNFTs_[i] = EnumerableSet.at(nftsV2, i);
-            amounts_[i] = NFTLib.s().loanNFTsV2Amounts[loanNFTs_[i]];
+            amounts_[i] = NFTLib.s().loanNFTsV2Amounts[loanID][loanNFTs_[i]];
         }
     }
 

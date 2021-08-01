@@ -82,7 +82,7 @@ library NFTLib {
         amounts_ = new uint256[](EnumerableSet.length(nftsV2));
         for (uint256 i; i < staked_.length; i++) {
             staked_[i] = EnumerableSet.at(nftsV2, i);
-            amounts_[i] = s().stakedNFTsV2Amounts[staked_[i]];
+            amounts_[i] = s().stakedNFTsV2Amounts[nftOwner][staked_[i]];
         }
     }
 
