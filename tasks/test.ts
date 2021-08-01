@@ -30,18 +30,17 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 })
 
-function createStoryTests(
-  mochaInstance: Mocha,
+const runStoryTests = async (
   hre: HardhatRuntimeEnvironment
-): number {
-  //custom code
-  const storyMochaInstance: Mocha = generateAllStoryTests(mochaInstance, hre)
+): Promise<number> => {
+  // Create new mocha instance
+  const mocha = new Mocha(hre.config.mocha)
 
-  // console.log('\n\n\n\n')
+  generateAllStoryTests(mocha, hre)
 
-  //console.log('Completed story tests.')
-
-  return 0
+  return await new Promise<number>((resolve, _) => {
+    mocha.run(resolve)
+  })
 }
 
 // https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
@@ -55,17 +54,9 @@ function createStoryTests(
 
 subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
   async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
-    //run the gas reporter plugin
-    await runSuper({ testFiles })
-
-    const mocha = new Mocha(hre.config.mocha)
-
-    await createStoryTests(mocha, hre) //adds them to mocha as suite
-
-    //testFiles.forEach((file) => mocha.addFile(file))
-    const testFailures = await new Promise((resolve, _) => {
-      mocha.run(resolve)
-    })
-    return testFailures
+    let failures = 0
+    failures += (await runSuper({ testFiles })) as number
+    failures += await runStoryTests(hre)
+    return failures
   }
 )
