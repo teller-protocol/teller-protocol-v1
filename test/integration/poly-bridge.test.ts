@@ -6,7 +6,6 @@ import { BigNumber, Contract, Signer } from 'ethers'
 import hre, { contracts, ethers, getNamedSigner } from 'hardhat'
 
 import { getMarkets } from '../../config'
-import { claimNFT } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
@@ -36,7 +35,6 @@ describe('Bridging Assets to Polygon', () => {
     let rootToken: TellerNFT
     let rootTokenV2: TellerNFTV2
     let tellerDictionary: TellerNFTDictionary
-    // let childToken: PolyTellerNFT
     let borrower: string
     let borrowerSigner: Signer
     let ownedNFTs: BigNumber[]
@@ -46,28 +44,30 @@ describe('Bridging Assets to Polygon', () => {
       await hre.deployments.fixture(['protocol'], {
         keepExistingDeployments: true,
       })
+
       // declare variables
       rootToken = await contracts.get('TellerNFT')
       rootTokenV2 = await contracts.get('TellerNFT_V2')
       tellerDictionary = await contracts.get('TellerNFTDictionary')
-      // childToken = await contracts.get('PolyTellerNFT')
       diamond = await contracts.get('TellerDiamond')
-      deployer = await getNamedSigner('deployer')
-      borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
-      borrowerSigner = (await hre.evm.impersonate(borrower)).signer
-      rootChainManager = new ethers.Contract(
-        '0xD4888faB8bd39A663B63161F5eE1Eae31a25B653',
-        rootChainManagerAbi.abi,
-        borrowerSigner
-      )
 
-      // claim nfts
-      await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
+      deployer = await getNamedSigner('deployer')
+
+      const filter = rootToken.filters.Transfer(null, diamond.address, null)
+      const [event] = await rootToken.queryFilter(filter)
+      borrower = event.args.from
+      borrowerSigner = (await hre.evm.impersonate(borrower)).signer
 
       // get owned nfts of borrower
       ownedNFTs = await rootToken
         .getOwnedTokens(borrower)
         .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+
+      rootChainManager = new ethers.Contract(
+        '0xD4888faB8bd39A663B63161F5eE1Eae31a25B653',
+        rootChainManagerAbi.abi,
+        borrowerSigner
+      )
     })
 
     describe('Calling mapped contracts', () => {
@@ -87,11 +87,11 @@ describe('Bridging Assets to Polygon', () => {
 
       it('bridges our NFTs', async () => {
         // migrate and bridge all of our nfts
-        await diamond.connect(borrowerSigner).bridgeNFTs([ownedNFTs, []])
+        await diamond.connect(borrowerSigner).bridgeNFTsV1(ownedNFTs)
         // add rest of the test here
       })
 
-      it('stakes the NFTs on polygon', async () => {
+      it.skip('stakes the NFTs on polygon', async () => {
         // encode data
         const stakedNFTs = await diamond.getStakedNFTs(borrower)
         const depositData = ethers.utils.defaultAbiCoder.encode(
@@ -102,7 +102,7 @@ describe('Bridging Assets to Polygon', () => {
         // await childToken.connect(deployer).deposit(borrower, depositData)
       })
 
-      it('unstakes NFTs on polygon and burns them', async () => {
+      it.skip('unstakes NFTs on polygon and burns them', async () => {
         // const burnTx = await childToken
         //   .connect(borrowerSigner)
         //   .withdrawBatch(ownedNFTs)
@@ -118,7 +118,7 @@ describe('Bridging Assets to Polygon', () => {
         // await diamond.connect(borrowerSigner).exit(exitCallData)
       })
 
-      it('stakes the NFTs on ethereum', async () => {
+      it.skip('stakes the NFTs on ethereum', async () => {
         // await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
         // const stakedNFTs = await diamond.getStakedNFTs(borrower)
         // for (let i = 0; i < ownedNFTs.length; i++) {

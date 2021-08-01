@@ -77,36 +77,34 @@ contract NFTMainnetBridgingToPolygonFacet {
      * @param tokenIds the tokenIds that we are sending. First array is the ERC721, if any. Second array
      * are our ERC-1155 tokenIDs
      */
-    function bridgeNFTs(uint256[][2] calldata tokenIds) external {
+    function bridgeNFTsV1(uint256[] calldata tokenIds) external {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
             msg.sender
         ];
 
         // we are creating a new array so that we can overrwrite each element
         // with a newTokenId.
-        uint256[][2] memory tokenIds_ = tokenIds;
-        for (uint256 i; i < tokenIds_[0].length; i++) {
-            if (EnumerableSet.contains(stakedNFTs, tokenIds_[0][i])) {
-                NFTLib.unstake(tokenIds_[0][i]);
-            } else if (TELLER_NFT_V1.ownerOf(tokenIds_[0][i]) == msg.sender) {
+        uint256[] memory tokenIds_ = tokenIds;
+        for (uint256 i; i < tokenIds_.length; i++) {
+            if (EnumerableSet.contains(stakedNFTs, tokenIds_[i])) {
+                NFTLib.unstake(tokenIds_[i]);
+            } else if (TELLER_NFT_V1.ownerOf(tokenIds_[i]) == msg.sender) {
                 TELLER_NFT_V1.transferFrom(
                     msg.sender,
                     address(this),
-                    tokenIds_[0][i]
+                    tokenIds_[i]
                 );
             }
-            uint256 newTokenId = TELLER_NFT_V2.convertV1TokenId(
-                tokenIds_[0][i]
-            );
+            uint256 newTokenId = TELLER_NFT_V2.convertV1TokenId(tokenIds_[i]);
             TELLER_NFT_V1.safeTransferFrom(
                 address(this),
                 address(TELLER_NFT_V2),
-                tokenIds_[0][i],
+                tokenIds_[i],
                 abi.encode(newTokenId)
             );
-            tokenIds_[0][i] = newTokenId;
+            tokenIds_[i] = newTokenId;
         }
-        __depositFor(tokenIds_[0]);
+        __depositFor(tokenIds_);
     }
 
     /**
