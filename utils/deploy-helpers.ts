@@ -61,7 +61,7 @@ export const deploy = async <C extends Contract>(
     })
   }
 
-  const contract = (await hre.contracts.get(args.contract, {
+  const contract = (await hre.contracts.get(contractDeployName, {
     at: contractAddress,
   })) as DeployedContract<C>
   contract.deployResult = result
@@ -73,20 +73,20 @@ export interface DiamondExecuteArgs<F, A> {
   args: A
 }
 
-export type Facets = Array<string | Omit<DeployArgs, 'hre'>>
+type FacetConfig = Omit<DeployArgs, 'hre'>
+export type Facets = Array<string | FacetConfig>
 
 export interface DeployDiamondArgs<
   C extends Contract,
   F = string | undefined,
   A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
-  > extends CommonDeployArgs {
+> extends CommonDeployArgs {
   name: string
   facets: Facets
   owner?: string
   execute?: F extends keyof C['functions']
-  ? DiamondExecuteArgs<F, A>
-  : undefined
-  onFacetDeployment?: (result: DeployResult) => Promise<void>
+    ? DiamondExecuteArgs<F, A>
+    : undefined
 }
 
 export const deployDiamond = async <
@@ -96,7 +96,7 @@ export const deployDiamond = async <
 >(
   args: DeployDiamondArgs<C, F, A>
 ): Promise<C> => {
-  const { onFacetDeployment, hre, indent = 1 } = args
+  const { hre, indent = 1 } = args
   const {
     deployments: { diamond },
     getNamedAccounts,
@@ -106,22 +106,31 @@ export const deployDiamond = async <
 
   const { deployer } = await getNamedAccounts()
 
-  const contractDisplayName = colors.bold(
-    colors.underline(colors.green(args.name))
-  )
+  const contractDisplayName = colors.green.bold.underline(args.name)
   log(`Deploying Diamond facets for ${contractDisplayName}`, {
     star: true,
     indent,
   })
 
+  for (let config of args.facets) {
+    if (typeof config === 'string') {
+      config = { contract: config }
+    }
+
+    const { deployResult } = await deploy({
+      ...config,
+      indent: indent + 1,
+      hre,
+    })
+    if (deployResult.artifactName) {
+      config.contract = deployResult.artifactName
+    }
+  }
+
   const result = await diamond.deploy(args.name, {
     owner: args.owner ?? deployer,
     libraries: args.libraries,
     facets: args.facets,
-    onFacetDeployment: async (result) => {
-      await onDeployResult({ result, hre, indent: indent + 1 })
-      await onFacetDeployment?.(result)
-    },
     // @ts-expect-error fix type
     execute: args.execute,
     from: deployer,
@@ -149,11 +158,18 @@ interface DeployResultArgs {
 const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
   const { result, hre, name, indent = 1 } = args
 
-  const displayName =
-    name ??
-    colors.bold(
-      colors.underline(colors.green(result.artifactName ?? 'Unknown'))
-    )
+  let displayName = colors.green.bold.underline(
+    result.artifactName ?? 'Unknown'
+  )
+  if (name != null) {
+    displayName = name
+
+    const isMocked = result.artifactName && /Mock$/.test(result.artifactName)
+    if (isMocked) {
+      const mockString = colors.yellow.bold.italic(`Mock`)
+      displayName = `${displayName}${mockString}`
+    }
+  }
   hre.log(`${displayName}:`, {
     indent,
     star: true,
@@ -163,7 +179,8 @@ const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
   if (result.newlyDeployed) {
     const gas = colors.cyan(`${result.receipt!.gasUsed} gas`)
     hre.log(
-      ` ${colors.green('new')} ${result.address} ${result.receipt ? 'with ' + gas : ''
+      ` ${colors.green('new')} ${result.address} ${
+        result.receipt ? 'with ' + gas : ''
       }`
     )
 
@@ -184,7 +201,7 @@ const saveDeploymentBlock = async (
   const deploymentBlockPath = `deployments/${networkName}/.latestDeploymentBlock`
   const lastDeployment = await disklet
     .getText(deploymentBlockPath)
-    .catch(() => { })
+    .catch(() => {})
   if (!lastDeployment || block > parseInt(lastDeployment)) {
     await disklet.setText(deploymentBlockPath, block.toString())
   }
