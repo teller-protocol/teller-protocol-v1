@@ -2,13 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { NFTFacet } from "./NFTFacet.sol";
+import { TToken_V2_Alpha } from "../lending/ttoken/TToken_V2_Alpha.sol";
+import { TellerNFT } from "./TellerNFT.sol";
 
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
+import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-contract NFTInterestFacet is NFTFacet {
+contract NFTInterestFacet {
     // TELLER NFT V1
     TellerNFT private constant TELLER_NFT_V1 =
         TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);
@@ -18,12 +23,11 @@ contract NFTInterestFacet is NFTFacet {
      * @param assetAddress The address of the lending asset against which the NFTs are staked
      */
     function claimNFTInterest(address assetAddress) external {
-        uint16 claimableInterestPercent = NFTLib
-            .calculateClaimableInterestPercent(msg.sender);
-        LendingLib.tToken(assetAddress).claimAlphaInterest(
-            msg.sender,
-            claimableInterestPercent
-        );
+        TToken_V2_Alpha(address(LendingLib.tToken(assetAddress)))
+            .claimAlphaInterest(
+                msg.sender,
+                getClaimableInterestPercent(msg.sender)
+            );
     }
 
     /**
@@ -35,6 +39,10 @@ contract NFTInterestFacet is NFTFacet {
         view
         returns (uint16)
     {
-        return NFTLib.calculateClaimableInterestPercent(nftOwner);
+        uint256 userNFTs = EnumerableSet.length(
+            NFTLib.s().stakedNFTs[nftOwner]
+        );
+        uint256 diamondNFTs = TELLER_NFT_V1.balanceOf(address(this));
+        return NumbersLib.ratioOf(userNFTs, diamondNFTs);
     }
 }

@@ -32,7 +32,7 @@ import "./token-storage.sol" as Storage;
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  * @author develop@teller.finance
  */
-abstract contract TToken_V1 is ITToken, ReentryMods {
+contract TToken_V1 is ITToken, ReentryMods {
     function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 

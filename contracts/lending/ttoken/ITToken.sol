@@ -71,13 +71,6 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     );
 
     /**
-     * @notice The event is emitted when interest has been claimed at the end of Teller's Alpha
-     * @param recipient The address who has claimed the interest
-     * @param userReward The amount of interest claimed by the Alpha participant
-     */
-    event AlphaInterestClaimed(address recipient, uint256 userReward);
-
-    /**
      * @notice The token that is the underlying asset for this Teller token.
      * @return ERC20 token
      */
@@ -219,14 +212,4 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
      * @param underlying address of the ERC20 token
      */
     function initialize(address admin, address underlying) external virtual;
-
-    /**
-     * @notice Called by the Teller Diamond contract at the end of Alpha for recipient's earned interest.
-     * @param recipient The address of the alpha participant claiming the interest.
-     * @param percent The proportional amount of interest earned by the recipient.
-     */
-
-    function claimAlphaInterest(address recipient, uint16 percent)
-        external
-        virtual;
 }

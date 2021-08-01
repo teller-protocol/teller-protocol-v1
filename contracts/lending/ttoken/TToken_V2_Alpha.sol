@@ -18,6 +18,13 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
  */
 contract TToken_V2_Alpha is TToken_V2 {
     /**
+     * @notice The event is emitted when interest has been claimed at the end of Teller's Alpha
+     * @param recipient The address who has claimed the interest
+     * @param userReward The amount of interest claimed by the Alpha participant
+     */
+    event AlphaInterestClaimed(address recipient, uint256 userReward);
+
+    /**
      * @notice Gets the amount of interest that was generated during the Alpha launch.
      */
     function getAlphaInterestEarned() external view returns (uint256) {
@@ -42,7 +49,6 @@ contract TToken_V2_Alpha is TToken_V2 {
 
     function claimAlphaInterest(address recipient, uint16 percent)
         external
-        override
         authorized(CONTROLLER, _msgSender())
     {
         require(s().alphaEnded, "Teller: alpha not ended");
