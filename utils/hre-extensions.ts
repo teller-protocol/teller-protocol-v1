@@ -133,12 +133,14 @@ extendEnvironment((hre) => {
       name: string,
       config?: ContractsGetConfig
     ): Promise<C> {
-      const {
-        abi,
-        address = config?.at,
-      }: { abi: unknown[]; address?: string } = await deployments
+      const { abi, address } = await deployments
         .get(name)
         .catch(() => deployments.getArtifact(name))
+        .then((artifact) => ({
+          abi: artifact.abi,
+          address:
+            config?.at ?? ('address' in artifact ? artifact.address : null),
+        }))
 
       if (address == null)
         throw new Error(
