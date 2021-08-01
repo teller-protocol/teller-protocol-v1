@@ -26,9 +26,13 @@ import {
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
- * @notice This contract is used by borrowers to call Dapp functions (using delegate calls).
- * @notice This contract should only be constructed using it's upgradeable Proxy contract.
- * @notice In order to call a Dapp function, the Dapp must be added in the DappRegistry instance.
+ * @notice This is the logic for the Teller NFT Version 2.
+ * @notice This contract contains the base logic of an ERC1155 NFT that works for all
+ *  networks. Some functionality is required on a specific network, therefore, there may
+ *  exist a child contract that inherits from this.
+ * @notice The TellerNFT_V2 is meant to be used for taking out loans on the Teller Protocol
+ *  without the need for a bank account or collateral. The max loan size using an NFT is
+ *  is determined by the `tokenBaseLoanSize`.
  *
  * @author develop@teller.finance
  */
