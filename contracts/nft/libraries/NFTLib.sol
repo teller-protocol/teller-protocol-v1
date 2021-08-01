@@ -41,12 +41,45 @@ library NFTLib {
     }
 
     /**
+     * @notice it transfers the NFT from the sender to the diamond to stake then adds the NFTID to the list of the owner's stakedNFTs
+     * @param nftID the ID of the NFT to stake
+     * @param amount the quantity of ERC1155 NFT to stake
+     * @param owner the owner of the NFT who will stake the NFT
+     */
+    function stakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal {
+        // Transfer to diamond
+        NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
+        // Add NFT ID and quantity to user set
+        s().stakedNFTsV2Amounts[owner][nftID] += amount;
+        EnumerableSet.add(s().stakedNFTsV2[owner], nftID);
+    }
+
+    /**
      * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
      * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
      * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
      */
     function unstake(uint256 nftID) internal returns (bool success_) {
         success_ = EnumerableSet.remove(s().stakedNFTs[msg.sender], nftID);
+    }
+
+    /**
+     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
+     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
+     * @param amount the quantity of ERC1155 NFT to unstake
+     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
+     */
+    function unstakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal returns (bool success_) {
+        s().stakedNFTsV2Amounts[owner][nftID] -= amount;
+        success_ = EnumerableSet.remove(s().stakedNFTsV2[owner], nftID);
     }
 
     /**

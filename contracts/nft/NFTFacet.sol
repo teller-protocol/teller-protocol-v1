@@ -65,28 +65,26 @@ contract NFTFacet is RolesMods {
      * back to the user
      * @param nftIDs the nftIDs to unstake
      */
-    function unstakeNFTsV2(uint256[] calldata nftIDs) external {
+    function unstakeNFTsV2(
+        uint256[] calldata nftIDs,
+        uint256[] calldata nftAmounts
+    ) external {
+        address owner = msg.sender;
+
         for (uint256 i; i < nftIDs.length; i++) {
             // Unstake NFTs by requiring that removing of the staked NFTs by
             // the msg.sender is a success. If it isn't, we revert
             require(
-                NFTLib.unstake(nftIDs[i]),
+                NFTLib.unstakeV2(nftIDs[i], nftAmounts[i], owner),
                 "Teller: not the owner of the NFT ID!"
             );
-            (bool success, bytes memory data) = migrator.delegatecall(
-                abi.encodeWithSelector(
-                    NFTMigrator.migrateV1toV2.selector,
-                    nftIDs[i]
-                )
-            );
-            require(success, "Teller: Migration unseccessful");
-            uint256 V2Id = abi.decode(data, (uint256));
+
             NFTMigrator(migrator).TELLER_NFT_V2().safeTransferFrom(
                 address(this),
-                msg.sender,
-                V2Id,
-                1,
-                data
+                owner,
+                nftIDs[i], //v2_id
+                nftAmounts[i],
+                ""
             );
         }
     }
@@ -95,10 +93,13 @@ contract NFTFacet is RolesMods {
      * @notice Transfers multiple Teller NFTs to Diamond and applies user stake.
      * @param nftIDs IDs of Teller NFTs to stake.
      */
-    function stakeNFTsV2(uint256[] calldata nftIDs) external {
+    function stakeNFTsV2(
+        uint256[] calldata nftIDs,
+        uint256[] calldata nftAmounts
+    ) external {
         for (uint256 i; i < nftIDs.length; i++) {
             // Stake NFT and transfer into diamond
-            NFTLib.stake(nftIDs[i], msg.sender);
+            NFTLib.stakeV2(nftIDs[i], nftAmounts[i], msg.sender);
         }
         // Give the caller authorization to protocol
         RolesLib.grantRole(AUTHORIZED, msg.sender);
