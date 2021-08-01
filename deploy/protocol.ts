@@ -124,11 +124,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'SignersFacet',
       skipIfAlreadyDeployed: false,
     },
-    // NFT
-    {
-      contract: 'NFTFacet',
-      skipIfAlreadyDeployed: false,
-    },
     // Dapps
     {
       contract: 'AaveFacet',
@@ -146,6 +141,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     const nftMigrator = await contracts.get('NFTMigrator')
 
     facets.push(
+      // NFT
+      {
+        contract: 'MainnetNFTFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftMigrator.address],
+      },
       {
         contract: 'NFTMainnetBridgingToPolygonFacet',
         skipIfAlreadyDeployed: false,
@@ -175,6 +176,11 @@ const deployProtocol: DeployFunction = async (hre) => {
     )
   } else {
     facets.push(
+      // NFT
+      {
+        contract: 'NFTFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Dapps
       {
         contract: 'SushiswapFacet',

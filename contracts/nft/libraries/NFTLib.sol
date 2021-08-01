@@ -3,10 +3,17 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TellerNFT } from "../TellerNFT.sol";
+import {
+    NFTMainnetBridgingToPolygonFacet
+} from "../mainnet/NFTMainnetBridgingToPolygonFacet.sol";
 
 // Libraries
-import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    MerkleProof
+} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -57,6 +64,25 @@ library NFTLib {
         for (uint256 i; i < staked_.length; i++) {
             // EnumerableSet.contains(nfts)
             staked_[i] = EnumerableSet.at(nfts, i);
+        }
+    }
+
+    /**
+     * @notice it gets the list of staked NFTs from the owner
+     * @param nftOwner the owner of the staked NFTs to pull from
+     * @return staked_ the array of the staked NFTs owned by the user
+     */
+    function stakedNFTsV2(address nftOwner)
+        internal
+        view
+        returns (uint256[] memory staked_, uint256[] memory amounts_)
+    {
+        EnumerableSet.UintSet storage nftsV2 = s().stakedNFTsV2[nftOwner];
+        staked_ = new uint256[](EnumerableSet.length(nftsV2));
+        amounts_ = new uint256[](EnumerableSet.length(nftsV2));
+        for (uint256 i; i < staked_.length; i++) {
+            staked_[i] = EnumerableSet.at(nftsV2, i);
+            amounts_[i] = s().stakedNFTsV2Amounts[staked_[i]];
         }
     }
 
