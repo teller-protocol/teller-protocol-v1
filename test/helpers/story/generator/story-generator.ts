@@ -59,13 +59,14 @@ const generateDomainScenarios = (
     args: {},
   }
   actions.unshift(test)
-  testCases.push({ domain, actions })
   if (value.parents) {
     value.parents.map((value) => {
       parseParents(value, testCases)
     })
-    testCases.push({ domain, actions: actions })
   }
+
+  testCases.push({ domain, actions })
+
   return testCases
 }
 
