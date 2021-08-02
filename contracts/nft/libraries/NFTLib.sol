@@ -5,8 +5,12 @@ pragma solidity ^0.8.0;
 import { TellerNFT } from "../TellerNFT.sol";
 
 // Libraries
-import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    MerkleProof
+} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -34,6 +38,22 @@ library NFTLib {
     }
 
     /**
+     * @notice it transfers the NFT from the sender to the diamond to stake then adds the NFTID to the list of the owner's stakedNFTs
+     * @param nftID the ID of the NFT to stake
+     * @param amount the quantity of ERC1155 NFT to stake
+     * @param owner the owner of the NFT who will stake the NFT
+     */
+    function stakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal {
+        // Add NFT ID and quantity to user set
+        s().stakedNFTsV2Amounts[owner][nftID] += amount;
+        EnumerableSet.add(s().stakedNFTsV2[owner], nftID);
+    }
+
+    /**
      * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
      * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
      * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
@@ -43,20 +63,27 @@ library NFTLib {
     }
 
     /**
-     * @notice it gets the list of staked NFTs from the owner
-     * @param nftOwner the owner of the staked NFTs to pull from
-     * @return staked_ the array of the staked NFTs owned by the user
+     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
+     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
+     * @param amount the quantity of ERC1155 NFT to unstake
+     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
      */
-    function stakedNFTs(address nftOwner)
-        internal
-        view
-        returns (uint256[] memory staked_)
-    {
-        EnumerableSet.UintSet storage nfts = s().stakedNFTs[nftOwner];
-        staked_ = new uint256[](EnumerableSet.length(nfts));
-        for (uint256 i; i < staked_.length; i++) {
-            // EnumerableSet.contains(nfts)
-            staked_[i] = EnumerableSet.at(nfts, i);
+    function unstakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal returns (bool success_) {
+        // Check if owner has the staked balance
+        success_ = s().stakedNFTsV2Amounts[owner][nftID] >= amount;
+
+        // Subtract the amount from owner's staked balance
+        if (success_) {
+            s().stakedNFTsV2Amounts[owner][nftID] -= amount;
+
+            // If the staked token balance is now 0, remove the ID from mapping
+            if (s().stakedNFTsV2Amounts[owner][nftID] == 0) {
+                EnumerableSet.remove(s().stakedNFTsV2[owner], nftID);
+            }
         }
     }
 

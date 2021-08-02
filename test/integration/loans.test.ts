@@ -17,7 +17,7 @@ import {
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, evm } = hre
+const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
 describe.skip('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)

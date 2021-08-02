@@ -33,33 +33,34 @@ export const deploy = async <C extends Contract>(
   } = hre
 
   const { deployer } = await getNamedAccounts()
+
+  // If marked as mock, prepend "Mock" to the contract name
+  const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
   const contractDeployName = args.name ?? args.contract
+
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
   let result: DeployResult
 
   if (!existingContract || (existingContract && !skipIfAlreadyDeployed)) {
-    // If marked as mock, prepend "Mock" to the contract name
-    const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
-
     result = await deploy(contractDeployName, {
       ...args,
       contract: contractName,
       from: deployer,
     })
-
     contractAddress = result.address
-    await onDeployResult({ result, name: contractDeployName, hre, indent })
   } else {
     result = { ...existingContract, newlyDeployed: false }
     contractAddress = existingContract.address
-    await onDeployResult({
-      result,
-      name: contractDeployName,
-      hre,
-      indent,
-    })
   }
+
+  await onDeployResult({
+    result,
+    contract: contractName,
+    name: contractDeployName,
+    hre,
+    indent,
+  })
 
   const contract = (await hre.contracts.get(contractDeployName, {
     at: contractAddress,
@@ -139,8 +140,9 @@ export const deployDiamond = async <
 
   await onDeployResult({
     result,
+    contract: 'Diamond',
+    name: args.name,
     hre,
-    name: `(Diamond) ${contractDisplayName}`,
     indent: indent + 1,
   })
   log('')
@@ -151,25 +153,22 @@ export const deployDiamond = async <
 interface DeployResultArgs {
   result: DeployResult
   hre: HardhatRuntimeEnvironment
-  name?: string
+  contract: string
+  name: string
   indent?: number
 }
 
 const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
-  const { result, hre, name, indent = 1 } = args
+  const { result, hre, contract, name, indent = 1 } = args
 
-  let displayName = colors.green.bold.underline(
-    result.artifactName ?? 'Unknown'
-  )
-  if (name != null) {
-    displayName = name
-
-    const isMocked = result.artifactName && /Mock$/.test(result.artifactName)
-    if (isMocked) {
-      const mockString = colors.yellow.bold.italic(`Mock`)
-      displayName = `${displayName}${mockString}`
-    }
+  let displayName = name
+  if (contract !== name) {
+    displayName = `${displayName} (${colors.bold.italic(contract)})`
   }
+  if (result.artifactName && result.artifactName !== contract) {
+    displayName = `${displayName} (${colors.bold.italic(result.artifactName)})`
+  }
+
   hre.log(`${displayName}:`, {
     indent,
     star: true,

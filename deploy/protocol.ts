@@ -124,11 +124,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'SignersFacet',
       skipIfAlreadyDeployed: false,
     },
-    // NFT
-    {
-      contract: 'NFTFacet',
-      skipIfAlreadyDeployed: false,
-    },
     // Dapps
     {
       contract: 'AaveFacet',
@@ -141,11 +136,19 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
   ]
 
+  const nftV2 = await contracts.get('TellerNFT_V2')
   // Network specify Facets
   if (isEtheremNetwork(network)) {
     const nftMigrator = await contracts.get('NFTMigrator')
 
     facets.push(
+      // NFT
+      {
+        contract: 'MainnetNFTFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftV2.address, nftMigrator.address],
+        mock: process.env.TESTING === '1',
+      },
       {
         contract: 'NFTMainnetBridgingToPolygonFacet',
         skipIfAlreadyDeployed: false,
@@ -175,6 +178,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     )
   } else {
     facets.push(
+      // NFT
+      {
+        contract: 'NFTFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftV2.address],
+      },
       // Dapps
       {
         contract: 'SushiswapFacet',
