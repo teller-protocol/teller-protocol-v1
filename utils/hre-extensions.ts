@@ -257,21 +257,3 @@ extendEnvironment((hre) => {
     fn.write(formatMsg(msg, config))
   }
 })
-
-/**
- * Override `hardhat-deploy` deploy subtask to do some magic after it runs.
- */
-subtask('deploy:runDeploy', async (args, hre, runSuper) => {
-  if (!runSuper.isDefined) return
-
-  await runSuper(args)
-
-  // Only continue on a live network
-  if (!hre.network.live) return
-
-  // Verify contracts on Etherscan
-  await hre.run('etherscan-verify', { solcInput: true })
-
-  // Save and verify contracts on Tenderly
-  await hre.run('tenderly-contracts')
-})
