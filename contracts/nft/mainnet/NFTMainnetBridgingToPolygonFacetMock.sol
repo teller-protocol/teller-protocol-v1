@@ -8,5 +8,18 @@ import {
 contract NFTMainnetBridgingToPolygonFacetMock is
     NFTMainnetBridgingToPolygonFacet
 {
-    function __depositForV1(uint256[] memory tokenIds) internal override {}
+    /* Constructor */
+
+    /**
+     * @notice Sets the NFT migrator address on deployment
+     * @param tellerNFTMigratorAddress The address of Teller's NFT migrator contract
+     */
+    constructor(address tellerNFTMigratorAddress)
+        NFTMainnetBridgingToPolygonFacet(tellerNFTMigratorAddress)
+    {}
+
+    function __depositFor(uint256[] memory tokenIds, uint256[] memory amounts)
+        internal
+        override
+    {}
 }

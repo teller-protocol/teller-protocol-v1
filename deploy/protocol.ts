@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getDappAddresses, getNativeToken, getNetworkName } from '../config'
+import { getDappAddresses, getNativeToken, isEtheremNetwork } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -19,7 +19,6 @@ import {
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
   const { deployer } = await getNamedAccounts()
-  const networkName = getNetworkName(network)
 
   log('********** Teller Diamond **********', { indent: 1 })
 
@@ -140,58 +139,49 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'PoolTogetherFacet',
       skipIfAlreadyDeployed: false,
     },
-    {
-      contract: 'NFTMainnetBridgingToPolygonFacet',
-      skipIfAlreadyDeployed: false,
-      mock: process.env.TESTING === '1',
-    },
   ]
 
   // Network specify Facets
-  switch (networkName) {
-    case 'mainnet':
-    case 'kovan':
-    case 'rinkeby':
-    case 'ropsten':
-      facets.push(
-        // Dapps
-        {
-          contract: 'UniswapFacet',
-          skipIfAlreadyDeployed: false,
-          args: [dappAddresses.uniswapV2RouterAddress],
-        },
-        {
-          contract: 'CompoundFacet',
-          skipIfAlreadyDeployed: false,
-        },
-        {
-          contract: 'CompoundClaimCompFacet',
-          skipIfAlreadyDeployed: false,
-          args: [dappAddresses.compoundComptrollerAddress],
-        }
-        // disable for now
-        // {
-        //   contract: 'YearnFacet',
-        //   skipIfAlreadyDeployed: false,
-        // }
-      )
+  if (isEtheremNetwork(network)) {
+    const nftMigrator = await contracts.get('NFTMigrator')
 
-      break
-
-    case 'polygon':
-    case 'polygon_mumbai':
-    case 'localhost':
-    case 'hardhat':
-      facets.push(
-        // Dapps
-        {
-          contract: 'SushiswapFacet',
-          skipIfAlreadyDeployed: false,
-          args: [dappAddresses.sushiswapV2RouterAddress],
-        }
-      )
-
-      break
+    facets.push(
+      {
+        contract: 'NFTMainnetBridgingToPolygonFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftMigrator.address],
+        mock: process.env.TESTING === '1',
+      },
+      // Dapps
+      {
+        contract: 'UniswapFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.uniswapV2RouterAddress],
+      },
+      {
+        contract: 'CompoundFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'CompoundClaimCompFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.compoundComptrollerAddress],
+      }
+      // disable for now
+      // {
+      //   contract: 'YearnFacet',
+      //   skipIfAlreadyDeployed: false,
+      // }
+    )
+  } else {
+    facets.push(
+      // Dapps
+      {
+        contract: 'SushiswapFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.sushiswapV2RouterAddress],
+      }
+    )
   }
 
   const tellerDiamondArgs: DeployDiamondArgs<ITellerDiamond, any> = {

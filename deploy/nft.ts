@@ -56,6 +56,12 @@ const deployNFT: DeployFunction = async (hre) => {
     // Deploy distributor
     const nftDistributor = await deployDistributor(hre)
 
+    // Deploy migrator
+    await deploy({
+      contract: 'NFTMigrator',
+      hre,
+    })
+
     // Add the distributor as a minter if not already
     const minterRole = ethers.utils.id('MINTER')
     const distributorIsDictAdmin = await nft.hasRole(
