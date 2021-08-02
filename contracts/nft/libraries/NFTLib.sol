@@ -5,12 +5,8 @@ pragma solidity ^0.8.0;
 import { TellerNFT } from "../TellerNFT.sol";
 
 // Libraries
-import {
-    MerkleProof
-} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -59,6 +55,7 @@ library NFTLib {
         EnumerableSet.UintSet storage nfts = s().stakedNFTs[nftOwner];
         staked_ = new uint256[](EnumerableSet.length(nfts));
         for (uint256 i; i < staked_.length; i++) {
+            // EnumerableSet.contains(nfts)
             staked_[i] = EnumerableSet.at(nfts, i);
         }
     }

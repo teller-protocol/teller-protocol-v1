@@ -7,8 +7,6 @@ import { ADMIN, PAUSER, AUTHORIZED } from "../shared/roles.sol";
 import {
     UpgradeableBeaconFactory
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
-import { TellerNFT } from "../nft/TellerNFT.sol";
-import { TellerNFTDictionary } from "../nft/TellerNFTDictionary.sol";
 import { PriceAggregator } from "../price-aggregator/PriceAggregator.sol";
 
 // Interfaces
@@ -23,13 +21,11 @@ import { AppStorageLib, AppStorage } from "../storage/app.sol";
 
 struct InitArgs {
     address admin;
-    address tellerNFT;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
     address tTokenBeacon;
     address nftLiquidationController;
     address wrappedNativeToken;
-    address nftDictionary;
     address priceAggregator;
 }
 
@@ -133,7 +129,6 @@ contract SettingsFacet is RolesMods {
         RolesLib.grantRole(ADMIN, _args.admin);
         RolesLib.grantRole(PAUSER, _args.admin);
 
-        s.nft = TellerNFT(_args.tellerNFT);
         s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(
             _args.collateralEscrowBeacon
@@ -142,7 +137,5 @@ contract SettingsFacet is RolesMods {
         s.nftLiquidationController = _args.nftLiquidationController;
         s.wrappedNativeToken = _args.wrappedNativeToken;
         s.priceAggregator = PriceAggregator(_args.priceAggregator);
-
-        NFTLib.s().nftDictionary = TellerNFTDictionary(_args.nftDictionary);
     }
 }

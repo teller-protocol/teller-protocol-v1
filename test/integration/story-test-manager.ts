@@ -10,20 +10,23 @@ import {
 export const generateAllStoryTests = (
   mochaInstance: Mocha,
   hre: HardhatRuntimeEnvironment
-): Mocha => {
+): void => {
   const allTestStoryDomains: TestScenarioDomain[] = generateStoryDomains()
-
-  //const mochaInstance = new Mocha(hre.config.mocha)
-  //mochaInstance.timeout(19000)
 
   for (const storyDomain of allTestStoryDomains) {
     const suiteInstance = Mocha.Suite.create(
       mochaInstance.suite,
       'Story Test Suite - '.concat(storyDomain.domainName)
     )
+
+    suiteInstance.beforeAll(async () => {
+      await hre.deployments.fixture('markets', {
+        keepExistingDeployments: true,
+      })
+    })
+
     for (const scenario of storyDomain.scenarios) {
       generateTests(hre, scenario, suiteInstance)
     }
   }
-  return mochaInstance
 }
