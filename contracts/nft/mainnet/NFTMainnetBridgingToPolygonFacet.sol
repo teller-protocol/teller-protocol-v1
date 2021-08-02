@@ -120,10 +120,55 @@ contract NFTMainnetBridgingToPolygonFacet {
         __depositFor(tokenIds_, amounts_);
     }
 
-    function bridgeNFTsV2(
-        uint256[] calldata tokenIds,
-        uint256[] calldata amounts
-    ) external {
+    /**
+     * @notice Gets all of our NFTs (staked and unstaked) migrates to ERC1155 (if ERC721), then
+     *  bridges to polygon
+     * @param tokenIds The tokenIds that we are sending. First array is the ERC721, if any. Second array
+     *  are our ERC-1155 tokenIDs
+     */
+
+    function bridgeNFTsV2(uint256[] calldata tokenIds) external {
         // TODO: waiting for code Syed is working on
+        //skip migrating the token
+
+        EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
+            msg.sender
+        ];
+
+        // we are creating a new array so that we can overrwrite each element
+        // with a newTokenId.
+        uint256[] memory tokenIds_ = new uint256[](tokenIds.length);
+        uint256[] memory amounts_ = new uint256[](tokenIds.length);
+        for (uint256 i; i < tokenIds_.length; i++) {
+            amounts_[i] = TELLER_NFT_V2.balanceOf(msg.sender, tokenIds_[i]);
+            //uint256[] memory ownedNFTs = TELLER_NFT_V2.getOwnedTokens(msg.sender, tokenIds_[i]);
+
+            if (EnumerableSet.contains(stakedNFTs, tokenIds_[i])) {
+                NFTLib.unstakeV2(tokenIds_[i], amounts_[i], msg.sender);
+            } else if (amounts_[i] > 0) {
+                TELLER_NFT_V2.safeTransferFrom(
+                    msg.sender,
+                    address(this),
+                    tokenIds_[i],
+                    amounts_[i],
+                    ""
+                );
+            }
+
+            //TellerNFTV2 contract - get owned tokens
+
+            /*  (bool success, bytes memory data) = migrator.delegatecall(
+                abi.encodeWithSelector(
+                    NFTMigrator.migrateV1toV2.selector,
+                    tokenIds_[i]
+                )
+            );
+            require(success, "Teller: Migration unsuccessful");*/
+
+            // Decode the new V2 token ID
+            //tokenIds_[i] = abi.decode(data, (uint256));
+            //amounts_[i] = 1;
+        }
+        __depositFor(tokenIds_, amounts_);
     }
 }
