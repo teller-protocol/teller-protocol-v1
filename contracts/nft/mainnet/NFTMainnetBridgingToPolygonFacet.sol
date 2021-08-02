@@ -128,9 +128,6 @@ contract NFTMainnetBridgingToPolygonFacet {
      */
 
     function bridgeNFTsV2(uint256[] calldata tokenIds) external {
-        // TODO: waiting for code Syed is working on
-        //skip migrating the token
-
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
             msg.sender
         ];
@@ -141,7 +138,6 @@ contract NFTMainnetBridgingToPolygonFacet {
         uint256[] memory amounts_ = new uint256[](tokenIds.length);
         for (uint256 i; i < tokenIds_.length; i++) {
             amounts_[i] = TELLER_NFT_V2.balanceOf(msg.sender, tokenIds_[i]);
-            //uint256[] memory ownedNFTs = TELLER_NFT_V2.getOwnedTokens(msg.sender, tokenIds_[i]);
 
             if (EnumerableSet.contains(stakedNFTs, tokenIds_[i])) {
                 NFTLib.unstakeV2(tokenIds_[i], amounts_[i], msg.sender);
@@ -154,20 +150,6 @@ contract NFTMainnetBridgingToPolygonFacet {
                     ""
                 );
             }
-
-            //TellerNFTV2 contract - get owned tokens
-
-            /*  (bool success, bytes memory data) = migrator.delegatecall(
-                abi.encodeWithSelector(
-                    NFTMigrator.migrateV1toV2.selector,
-                    tokenIds_[i]
-                )
-            );
-            require(success, "Teller: Migration unsuccessful");*/
-
-            // Decode the new V2 token ID
-            //tokenIds_[i] = abi.decode(data, (uint256));
-            //amounts_[i] = 1;
         }
         __depositFor(tokenIds_, amounts_);
     }
