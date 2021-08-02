@@ -41,6 +41,7 @@ contract MainnetNFTFacet is NFTFacet {
 
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
+     * @param nftOwner the owner of the staked NFTs to pull from
      * @return staked_ the returned staked NFTs mapped to an owner's address
      */
     function getStakedNFTs(address nftOwner)
@@ -48,7 +49,12 @@ contract MainnetNFTFacet is NFTFacet {
         view
         returns (uint256[] memory staked_)
     {
-        staked_ = NFTLib.stakedNFTs(nftOwner);
+        EnumerableSet.UintSet storage nfts = NFTLib.s().stakedNFTs[nftOwner];
+        staked_ = new uint256[](EnumerableSet.length(nfts));
+        for (uint256 i; i < staked_.length; i++) {
+            // EnumerableSet.contains(nfts)
+            staked_[i] = EnumerableSet.at(nfts, i);
+        }
     }
 
     /**

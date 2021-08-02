@@ -25,6 +25,7 @@ contract NFTFacet is RolesMods {
 
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
+     * @param nftOwner the owner of the staked NFTs to pull from
      * @return staked_ the returned staked NFTs mapped to an owner's address
      * @return amounts_ the amounts of NFTs mapped to the ids
      */
@@ -33,7 +34,15 @@ contract NFTFacet is RolesMods {
         view
         returns (uint256[] memory staked_, uint256[] memory amounts_)
     {
-        (staked_, amounts_) = NFTLib.stakedNFTsV2(nftOwner);
+        EnumerableSet.UintSet storage nftsV2 = NFTLib.s().stakedNFTsV2[
+            nftOwner
+        ];
+        staked_ = new uint256[](EnumerableSet.length(nftsV2));
+        amounts_ = new uint256[](EnumerableSet.length(nftsV2));
+        for (uint256 i; i < staked_.length; i++) {
+            staked_[i] = EnumerableSet.at(nftsV2, i);
+            amounts_[i] = NFTLib.s().stakedNFTsV2Amounts[nftOwner][staked_[i]];
+        }
     }
 
     /**

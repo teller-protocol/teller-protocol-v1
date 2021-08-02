@@ -20,7 +20,7 @@ const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
 type V2Balances = [BigNumber[], BigNumber[]]
 
-describe.only('NFT Staking', () => {
+describe('NFT Staking', () => {
   let diamond: ITellerDiamond
   let tellerNFTV2: TellerNFTV2
   let deployer: Signer
