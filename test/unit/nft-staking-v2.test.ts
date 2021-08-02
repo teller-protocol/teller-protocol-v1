@@ -205,7 +205,14 @@ describe.only('NFT Staking', () => {
 
       it('should be able to stake V2 NFTs', async () => {
         // stake NFTs on behalf of user
-        await diamond.connect(borrower).stakeNFTsV2(...balances)
+        await tellerNFTV2
+          .connect(borrower)
+          .safeBatchTransferFrom(
+            borrowerAddress,
+            diamond.address,
+            ...balances,
+            '0x'
+          )
 
         // get staked
         const stakedNFTs = await diamond.getStakedNFTsV2(borrowerAddress)

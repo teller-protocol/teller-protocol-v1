@@ -9,7 +9,6 @@ import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";
-import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -87,25 +86,82 @@ contract NFTFacet is RolesMods {
     }
 
     /**
-     * @notice Transfers multiple Teller NFTs to Diamond and applies user stake.
-     * @param nftIDs IDs of Teller NFTs to stake.
+     * @notice When a NFT V2 is transferred to the protocol, it is automatically staked for the owner.
+     * @dev Handles the receipt of a single ERC1155 token type. This function is
+     *  called at the end of a `safeTransferFrom` after the balance has been updated.
+     *  To accept the transfer, this must return
+     *  `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+     *  (i.e. 0xf23a6e61, or its own function selector).
+     * @param operator The address which initiated the transfer (i.e. msg.sender)
+     * @param from The address which previously owned the token
+     * @param id The ID of the token being transferred
+     * @param value The amount of tokens being transferred
+     * @param data Additional data with no specified format
+     * @return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` if transfer is allowed
      */
-    function stakeNFTsV2(
-        uint256[] calldata nftIDs,
-        uint256[] calldata nftAmounts
-    ) external {
-        for (uint256 i; i < nftIDs.length; i++) {
-            // Stake NFT and transfer into diamond
-            TELLER_NFT_V2.safeTransferFrom(
-                msg.sender,
-                address(this),
-                nftIDs[i],
-                nftAmounts[i],
-                ""
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external returns (bytes4) {
+        require(
+            msg.sender == address(TELLER_NFT_V2),
+            "Teller: unaccepted 1155"
+        );
+        __stakeNFTV2(from, id, value);
+
+        return
+            bytes4(
+                keccak256(
+                    "onERC1155Received(address,address,uint256,uint256,bytes)"
+                )
             );
-            NFTLib.stakeV2(nftIDs[i], nftAmounts[i], msg.sender);
+    }
+
+    /**
+     * @notice When a NFT V2 is transferred to the protocol, it is automatically staked for the owner.
+     * @dev Handles the receipt of a multiple ERC1155 token types. This function
+     *  is called at the end of a `safeBatchTransferFrom` after the balances have
+     *  been updated. To accept the transfer(s), this must return
+     *  `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+     *  (i.e. 0xbc197c81, or its own function selector).
+     * @param operator The address which initiated the batch transfer (i.e. msg.sender)
+     * @param from The address which previously owned the token
+     * @param ids An array containing ids of each token being transferred (order and length must match values array)
+     * @param values An array containing amounts of each token being transferred (order and length must match ids array)
+     * @param data Additional data with no specified format
+     * @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` if transfer is allowed
+     */
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external returns (bytes4) {
+        require(
+            msg.sender == address(TELLER_NFT_V2),
+            "Teller: unaccepted 1155"
+        );
+        for (uint256 i; i < ids.length; i++) {
+            __stakeNFTV2(from, ids[i], values[i]);
         }
-        // Give the caller authorization to protocol
-        RolesLib.grantRole(AUTHORIZED, msg.sender);
+
+        return
+            bytes4(
+                keccak256(
+                    "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"
+                )
+            );
+    }
+
+    function __stakeNFTV2(
+        address owner,
+        uint256 id,
+        uint256 value
+    ) private {
+        NFTLib.stakeV2(id, value, owner);
     }
 }
