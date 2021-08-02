@@ -136,6 +136,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
   ]
 
+  const nftV2 = await contracts.get('TellerNFT_V2')
   // Network specify Facets
   if (isEtheremNetwork(network)) {
     const nftMigrator = await contracts.get('NFTMigrator')
@@ -145,7 +146,8 @@ const deployProtocol: DeployFunction = async (hre) => {
       {
         contract: 'MainnetNFTFacet',
         skipIfAlreadyDeployed: false,
-        args: [nftMigrator.address],
+        args: [nftV2.address, nftMigrator.address],
+        mock: process.env.TESTING === '1',
       },
       {
         contract: 'NFTMainnetBridgingToPolygonFacet',
@@ -180,6 +182,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       {
         contract: 'NFTFacet',
         skipIfAlreadyDeployed: false,
+        args: [nftV2.address],
       },
       // Dapps
       {

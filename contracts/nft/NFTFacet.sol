@@ -14,17 +14,16 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-// TELLER NFT V1
-TellerNFT constant TELLER_NFT_V1 = TellerNFT(
-    0x2ceB85a2402C94305526ab108e7597a102D6C175
-);
-
-// TELLER NFT V2
-TellerNFT_V2 constant TELLER_NFT_V2 = TellerNFT_V2(
-    0x98Ca52786e967d1469090AdC075416948Ca004A7
-);
-
 contract NFTFacet is RolesMods {
+    // TELLER NFT V2
+    TellerNFT_V2 private immutable TELLER_NFT_V2;
+
+    /* Constructor */
+
+    constructor(address nftV2Address) {
+        TELLER_NFT_V2 = TellerNFT_V2(nftV2Address);
+    }
+
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
      * @return staked_ the returned staked NFTs mapped to an owner's address
@@ -97,6 +96,13 @@ contract NFTFacet is RolesMods {
     ) external {
         for (uint256 i; i < nftIDs.length; i++) {
             // Stake NFT and transfer into diamond
+            TELLER_NFT_V2.safeTransferFrom(
+                msg.sender,
+                address(this),
+                nftIDs[i],
+                nftAmounts[i],
+                ""
+            );
             NFTLib.stakeV2(nftIDs[i], nftAmounts[i], msg.sender);
         }
         // Give the caller authorization to protocol

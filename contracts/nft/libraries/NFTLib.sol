@@ -48,8 +48,6 @@ library NFTLib {
         uint256 amount,
         address owner
     ) internal {
-        // Transfer to diamond
-        NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
         // Add NFT ID and quantity to user set
         s().stakedNFTsV2Amounts[owner][nftID] += amount;
         EnumerableSet.add(s().stakedNFTsV2[owner], nftID);
@@ -75,8 +73,18 @@ library NFTLib {
         uint256 amount,
         address owner
     ) internal returns (bool success_) {
-        s().stakedNFTsV2Amounts[owner][nftID] -= amount;
-        success_ = EnumerableSet.remove(s().stakedNFTsV2[owner], nftID);
+        // Check if owner has the staked balance
+        success_ = s().stakedNFTsV2Amounts[owner][nftID] >= amount;
+
+        // Subtract the amount from owner's staked balance
+        if (success_) {
+            s().stakedNFTsV2Amounts[owner][nftID] -= amount;
+
+            // If the staked token balance is now 0, remove the ID from mapping
+            if (s().stakedNFTsV2Amounts[owner][nftID] == 0) {
+                EnumerableSet.remove(s().stakedNFTsV2[owner], nftID);
+            }
+        }
     }
 
     /**

@@ -15,26 +15,27 @@ import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-// TELLER NFT V1
-TellerNFT constant TELLER_NFT_V1 = TellerNFT(
-    0x2ceB85a2402C94305526ab108e7597a102D6C175
-);
+contract MainnetNFTFacet is NFTFacet {
+    // TELLER NFT V1
+    TellerNFT private constant TELLER_NFT_V1 =
+        TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);
 
-// TELLER NFT V2
-TellerNFT_V2 constant TELLER_NFT_V2 = TellerNFT_V2(
-    0x98Ca52786e967d1469090AdC075416948Ca004A7
-);
+    // TELLER NFT V2
+    TellerNFT_V2 private immutable TELLER_NFT_V2;
 
-abstract contract MainnetNFTFacet is NFTFacet {
     address internal immutable migrator;
 
     /* Constructor */
 
     /**
      * @notice Sets the NFT migrator address on deployment
+     * @param nftV2Address The address of Teller's NFT V2 contract
      * @param tellerNFTMigratorAddress The address of Teller's NFT migrator contract
      */
-    constructor(address tellerNFTMigratorAddress) {
+    constructor(address nftV2Address, address tellerNFTMigratorAddress)
+        NFTFacet(nftV2Address)
+    {
+        TELLER_NFT_V2 = TellerNFT_V2(nftV2Address);
         migrator = tellerNFTMigratorAddress;
     }
 
@@ -83,8 +84,7 @@ abstract contract MainnetNFTFacet is NFTFacet {
             (bool success, bytes memory data) = migrator.delegatecall(
                 abi.encodeWithSelector(
                     NFTMigrator.migrateV1toV2.selector,
-                    nftIDs[i],
-                    address(this)
+                    nftIDs[i]
                 )
             );
             require(success, "Teller: Migration unsuccessful");
@@ -108,18 +108,12 @@ abstract contract MainnetNFTFacet is NFTFacet {
             // Stake NFT and transfer into diamond
             //NFTLib.stake(nftIDs[i], msg.sender);
 
-            TELLER_NFT_V1.safeTransferFrom(
-                msg.sender,
-                address(this),
-                nftIDs[i],
-                ""
-            );
+            TELLER_NFT_V1.transferFrom(msg.sender, address(this), nftIDs[i]);
 
             (bool success, bytes memory data) = migrator.delegatecall(
                 abi.encodeWithSelector(
                     NFTMigrator.migrateV1toV2.selector,
-                    nftIDs[i],
-                    msg.sender
+                    nftIDs[i]
                 )
             );
             require(success, "Teller: Migration unsuccessful");
