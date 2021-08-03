@@ -2,18 +2,18 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { TToken_V2_Alpha } from "../lending/ttoken/TToken_V2_Alpha.sol";
-import { TellerNFT } from "./TellerNFT.sol";
+import { TToken_V2_Alpha } from "../../lending/ttoken/TToken_V2_Alpha.sol";
+import { TellerNFT } from "../TellerNFT.sol";
 
 // Libraries
-import { NFTLib } from "./libraries/NFTLib.sol";
-import { LendingLib } from "../lending/libraries/LendingLib.sol";
-import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import { NFTLib } from "../libraries/NFTLib.sol";
+import { LendingLib } from "../../lending/libraries/LendingLib.sol";
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-contract NFTInterestFacet {
+contract MainnetNFTInterestFacet {
     // TELLER NFT V1
     TellerNFT private constant TELLER_NFT_V1 =
         TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);

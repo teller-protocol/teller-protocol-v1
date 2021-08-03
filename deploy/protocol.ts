@@ -156,7 +156,7 @@ const deployProtocol: DeployFunction = async (hre) => {
         mock: process.env.TESTING === '1',
       },
       {
-        contract: 'NFTInterestFacet',
+        contract: 'MainnetNFTInterestFacet',
         skipIfAlreadyDeployed: true,
       },
       // Dapps
