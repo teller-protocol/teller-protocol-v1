@@ -202,12 +202,8 @@ describe('NFT Staking', () => {
           const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
 
           await diamond.connect(borrower).unstakeNFTs(stakedNFTsV1)
-          const ownedTokensV2 = await tellerNFTV2.getOwnedTokens(
-            borrowerAddress
-          )
-          const addresses = new Array(ownedTokensV2.length).fill(
-            borrowerAddress
-          )
+          let ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
+          let addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)
           let tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
             addresses,
             ownedTokensV2
@@ -224,6 +220,8 @@ describe('NFT Staking', () => {
 
           await diamond.bridgeNFTsV2(tokenBalancesV2)
 
+          ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
+          addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)
           tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
             addresses,
             ownedTokensV2
