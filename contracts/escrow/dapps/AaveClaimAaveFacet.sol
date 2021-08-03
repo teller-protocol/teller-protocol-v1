@@ -47,7 +47,6 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
      * @notice To claim AAVE call the {claimRewards} function on {AaveIncentivesController}.
      * @param loanID id of the loan being used in the dapp
      * @param amount amount of tokens to claim.
-     * @param tokenAddresses address of the underlying token.
      */
     function aaveClaimAave(
         uint256 loanID,
@@ -82,7 +81,7 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
     }
 
     /**
-     * @notice This function redeems the user's cTokens for a specific amount of the underlying token.
+     * @notice This function calculates the amount of aave tokens that can be redeemed.
      * @param loanID id of the loan being used in the dapp
      */
     function aaveCalculateAave(uint256 loanID)
