@@ -109,7 +109,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     {
-      contract: 'CreateLoanFacet',
+      contract: 'CreateLoanConsensusFacet',
       skipIfAlreadyDeployed: false,
     },
     {
@@ -142,6 +142,11 @@ const deployProtocol: DeployFunction = async (hre) => {
     const nftMigrator = await contracts.get('NFTMigrator')
 
     facets.push(
+      // Loans
+      {
+        contract: 'MainnetCreateLoanWithNFTFacet',
+        skipIfAlreadyDeployed: true,
+      },
       // NFT
       {
         contract: 'MainnetNFTFacet',

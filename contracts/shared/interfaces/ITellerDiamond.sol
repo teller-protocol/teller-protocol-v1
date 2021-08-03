@@ -16,7 +16,7 @@ import {
 } from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
-import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
+import { CreateLoanConsensusFacet } from "../../market/CreateLoanConsensusFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
@@ -40,7 +40,7 @@ abstract contract ITellerDiamond is
     PausableFacet,
     LendingFacet,
     CollateralFacet,
-    CreateLoanFacet,
+    CreateLoanConsensusFacet,
     LoanDataFacet,
     RepayFacet,
     SignersFacet,
