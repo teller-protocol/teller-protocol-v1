@@ -2,31 +2,41 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { PausableMods } from "../../settings/pausable/PausableMods.sol";
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
-} from "../../contexts2/access-control/reentry/ReentryMods.sol";
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
-import { LibCreateLoan } from "../libraries/LibCreateLoan.sol";
-import { LibLoans } from "../libraries/LibLoans.sol";
+import { LibCreateLoan } from "./libraries/LibCreateLoan.sol";
+import { LibLoans } from "./libraries/LibLoans.sol";
 import {
     PlatformSettingsLib
-} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
-import { NFTLib } from "../../nft/libraries/NFTLib.sol";
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
+
+import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
+//import { MainnetTellerNFT } from "../mainnet/MainnetTellerNFT.sol";
 
 // Interfaces
-import { ITToken } from "../../lending/ttoken/ITToken.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Storage
 import {
     LoanUserRequest,
     LoanStatus,
     Loan
-} from "../../storage/market.sol";
+} from "../storage/market.sol";
 
 contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
+
+
+     // TELLER NFT V2
+    TellerNFT_V2 private constant TELLER_NFT_V2 =
+        TellerNFT_V2(0x8f9bbbB0282699921372A134b63799a48c7d17FC);
+
+
     /**
      * @notice Creates a loan with the loan request and NFTs without any collateral
      * @param assetAddress Asset address to take out a loan
@@ -51,11 +61,9 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint8 lendingDecimals = ERC20(assetAddress).decimals();
         uint256 allowedBaseLoanSize;
         for (uint256 i; i < nftIDs.length; i++) {
-            NFTLib.applyToLoanV2(loan.id, nftIDs[i]);
-
-            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
-                nftIDs[i]
-            );
+            NFTLib.applyToLoanV2(loan.id, nftIDs[i], msg.sender); 
+          
+            allowedBaseLoanSize += TELLER_NFT_V2.tokenBaseLoanSize(nftIDs[i]) ;
         }
         require(
             loan.borrowedAmount <= allowedBaseLoanSize * (10**lendingDecimals),
