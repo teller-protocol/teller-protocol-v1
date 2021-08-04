@@ -113,6 +113,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     {
+      contract: 'CreateLoanWithNFTFacet',
+      skipIfAlreadyDeployed: false,
+    },
+    {
       contract: 'LoanDataFacet',
       skipIfAlreadyDeployed: false,
     },

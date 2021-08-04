@@ -183,19 +183,25 @@ export default class LoanStoryTestDriver extends StoryTestDriver {
           `Forking network is invalid: ${process.env.FORKING_NETWORK}`
         )
     }
+
     // Advance time
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',
       hre
     )
+
     const loanType = args.loanType
       ? args.loanType
       : LoanType.UNDER_COLLATERALIZED
     await hre.evm.advanceTime(rateLimit)
+
+    const borrower = await hre.getNamedSigner('borrower')
     const funcToRun = args.nft
       ? takeOutLoanWithNfts(hre, {
           amount: 100,
           lendToken: market.lendingToken,
+          borrower,
+          version: args.nft.version,
         })
       : takeOutLoanWithoutNfts(hre, {
           lendToken: market.lendingToken,
