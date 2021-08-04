@@ -1,5 +1,5 @@
 import colors from 'colors'
-import { task } from 'hardhat/config'
+import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getAssetSettings, getTokens } from '../../config'
@@ -7,8 +7,12 @@ import { AssetSetting } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond } from '../../types/typechain'
 import { AssetType, CacheType } from '../../utils/consts'
 
+interface UpdateAssetSettingsArgs {
+  symbols: string[]
+}
+
 export async function updateAssetSettings(
-  args: null,
+  args: UpdateAssetSettingsArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
   const { getNamedAccounts, contracts, ethers, toBN, network, log } = hre
@@ -24,7 +28,17 @@ export async function updateAssetSettings(
 
   const tokens = getTokens(network)
   const assetSettingsConfig = getAssetSettings(network)
-  for (const [assetSymbol, settings] of Object.entries(assetSettingsConfig)) {
+  if (args.symbols.length === 0) args.symbols = Object.keys(assetSettingsConfig)
+  for (let assetSymbol of args.symbols) {
+    assetSymbol = assetSymbol.toUpperCase()
+    const settings = assetSettingsConfig[assetSymbol]
+    if (!settings) {
+      log(`!! Asset setting for ${assetSymbol} does not exist`, {
+        star: true,
+        indent: 2,
+      })
+    }
+
     log(`${assetSymbol}: `, { indent: 2, star: true, nl: false })
 
     const token = await hre.tokens.get(assetSymbol)
@@ -165,4 +179,11 @@ const buildAssetSettingRequests = async (
 task(
   'update-asset-settings',
   'Updates the asset setting values based on the config file'
-).setAction(updateAssetSettings)
+)
+  .addOptionalVariadicPositionalParam(
+    'symbols',
+    'List of token symbols (separated by spaces) to update asset settings for. Defaults to all in the config file',
+    [],
+    types.string
+  )
+  .setAction(updateAssetSettings)
