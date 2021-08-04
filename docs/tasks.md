@@ -464,6 +464,17 @@ OPTIONS:
 view-platform-setting: Lists the current platform settings
 ```
 
+### update-asset-settings
+
+```shell
+yarn hh update-asset-settings --help
+Hardhat version 2.4.0
+
+Usage: hardhat [GLOBAL OPTIONS] update-asset-settings
+
+update-asset-settings: Updates the asset setting values based on the config file
+```
+
 ### stats
 
 ```shell
