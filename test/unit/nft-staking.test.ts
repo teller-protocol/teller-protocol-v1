@@ -37,6 +37,10 @@ describe('NFT Staking', () => {
 
     diamond = await contracts.get('TellerDiamond')
     tellerNFTV2 = await contracts.get('TellerNFT_V2')
+
+    const ownedTokens = await tellerNFTV2.getOwnedTokens(borrowerAddress)
+
+    console.log('teller v2 ownedTokens', ownedTokens)
   }
 
   if (isEtheremNetwork(hre.network)) {
@@ -80,6 +84,30 @@ describe('NFT Staking', () => {
         return mergeV2IDsToBalances(v2IDs)
       }
 
+      const burnAllTellerNFTV2 = async (): Promise<void> => {
+        let ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
+        const addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)
+        const tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
+          addresses,
+          ownedTokensV2
+        )
+
+        console.log('afterEach ownedTokensV2', ownedTokensV2)
+
+        await tellerNFTV2
+          .connect(borrower)
+          .safeBatchTransferFrom(
+            borrowerAddress,
+            diamond.address,
+            ownedTokensV2,
+            tokenBalancesV2,
+            '0x'
+          )
+
+        ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
+        console.log('afterEach2 ownedTokensV2', ownedTokensV2)
+      }
+
       describe('V1 => V2', () => {
         let ownedNFTsV1: BigNumber[]
 
@@ -96,6 +124,8 @@ describe('NFT Staking', () => {
           ownedNFTsV1 = await tellerNFTV1.getOwnedTokens(borrowerAddress)
         })
 
+        afterEach(async () => {})
+
         it('should be able to stake V1 NFTs and auto migrate to V2 NFTs', async () => {
           const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
 
@@ -110,6 +140,14 @@ describe('NFT Staking', () => {
         })
 
         it('should be able to unstake V1 NFTs and get V2 NFTs in return', async () => {
+          await burnAllTellerNFTV2()
+
+          const ownedTokensV2pre = await tellerNFTV2.getOwnedTokens(
+            //owns 3
+            borrowerAddress
+          )
+          ownedTokensV2pre.length.should.eql(0)
+
           // Stake V1 NFTs with a special mock function that does not migrate to V2
           await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
           const stakedNFTsV1 = await diamond.getStakedNFTs(borrowerAddress)
@@ -119,6 +157,7 @@ describe('NFT Staking', () => {
 
           await diamond.connect(borrower).unstakeNFTs(stakedNFTsV1)
           const ownedTokensV2 = await tellerNFTV2.getOwnedTokens(
+            //owns 5
             borrowerAddress
           )
           const addresses = new Array(ownedTokensV2.length).fill(
@@ -128,6 +167,7 @@ describe('NFT Staking', () => {
             addresses,
             ownedTokensV2
           )
+
           tokenBalancesV2.should.eql(
             expectedV2IDs.balances,
             'NFT V2 balances do not match'
