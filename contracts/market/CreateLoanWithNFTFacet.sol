@@ -17,25 +17,17 @@ import {
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
-//import { MainnetTellerNFT } from "../mainnet/MainnetTellerNFT.sol";
 
 // Interfaces
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Storage
-import {
-    LoanUserRequest,
-    LoanStatus,
-    Loan
-} from "../storage/market.sol";
+import { LoanUserRequest, LoanStatus, Loan } from "../storage/market.sol";
 
 contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
-
-
-     // TELLER NFT V2
+    // TELLER NFT V2
     TellerNFT_V2 private constant TELLER_NFT_V2 =
         TellerNFT_V2(0x8f9bbbB0282699921372A134b63799a48c7d17FC);
-
 
     /**
      * @notice Creates a loan with the loan request and NFTs without any collateral
@@ -44,11 +36,12 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
      * @param duration How long the loan should last (in seconds)
      * @param nftIDs IDs of TellerNFTs to use for the loan
      */
-    function takeOutLoanWithNFTs(
+    function takeOutLoanWithNFTsV2(
         address assetAddress,
         uint256 amount,
         uint32 duration,
-        uint16[] calldata nftIDs
+        uint256[] calldata nftIDs,
+        uint256[] calldata amounts
     ) external paused(LibLoans.ID, false) {
         Loan storage loan = LibCreateLoan.initNewLoan(
             assetAddress,
@@ -61,9 +54,12 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint8 lendingDecimals = ERC20(assetAddress).decimals();
         uint256 allowedBaseLoanSize;
         for (uint256 i; i < nftIDs.length; i++) {
-            NFTLib.applyToLoanV2(loan.id, nftIDs[i], msg.sender); 
-          
-            allowedBaseLoanSize += TELLER_NFT_V2.tokenBaseLoanSize(nftIDs[i]) ;
+            NFTLib.applyToLoanV2(loan.id, nftIDs[i], amounts[i], msg.sender);
+
+            uint256 tokenTotalBaseLoanSize = TELLER_NFT_V2.tokenBaseLoanSize(
+                nftIDs[i]
+            ) * amounts[i];
+            allowedBaseLoanSize += tokenTotalBaseLoanSize;
         }
         require(
             loan.borrowedAmount <= allowedBaseLoanSize * (10**lendingDecimals),

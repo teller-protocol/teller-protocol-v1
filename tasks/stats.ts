@@ -6,6 +6,7 @@ import {
   ITellerDiamond,
   ITellerNFT,
   ITToken,
+  LibCreateLoan,
 } from '../types/typechain'
 
 task('stats', 'Prints out current stats about the DAI market').setAction(
@@ -67,9 +68,20 @@ subtask('stats:loans-taken-out')
       return JSON.parse(args.loansTakenOut)
     }
 
-    const loanFilter = diamond.filters.LoanTakenOut(null, null, null, null)
+    const LibCreateLoan = await hre.contracts.get<LibCreateLoan>(
+      'LibCreateLoan',
+      {
+        at: diamond.address,
+      }
+    )
+    const loanFilter = LibCreateLoan.filters.LoanTakenOut(
+      null,
+      null,
+      null,
+      null
+    )
     const loanEvents = await diamond.queryFilter(loanFilter)
-    const loanIDs = loanEvents.map(({ args: { loanID } }) => loanID)
+    const loanIDs = loanEvents.map(({ args: { loanID } }) => loanID.toString())
 
     if (!args.disableLog) {
       hre.log(`${loanIDs.length} loans taken out`, { star: true })
@@ -98,7 +110,7 @@ subtask('stats:loans-repaid')
     const loanRepaidEvents = await diamond.queryFilter(loanRepaidFilter)
     const repaidLoanIDs = loanRepaidEvents
       .filter((event) => event.args.totalOwed.eq(0))
-      .map(({ args: { loanID } }) => loanID)
+      .map(({ args: { loanID } }) => loanID.toString())
 
     if (!args.disableLog) {
       hre.log(`${repaidLoanIDs.length} loans repaid`, { star: true })
@@ -118,7 +130,7 @@ subtask('stats:average-loan-amount')
     })
 
     const ms = await tDai.callStatic.getMarketState()
-    const loansTakenOut = await hre.run('stats:loans-taken-out', args)
+    const loansTakenOut: number[] = await hre.run('stats:loans-taken-out', args)
     const averageLoanAmount = ms.totalBorrowed.div(loansTakenOut.length)
 
     if (!args.disableLog) {
@@ -179,8 +191,8 @@ subtask('stats:pending-interest-owed')
   .setAction(async (args, hre) => {
     const diamond: ITellerDiamond = await hre.contracts.get('TellerDiamond')
 
-    const loansTakenOut: BN[] = await hre.run('stats:loans-taken-out', args)
-    const loansRepaid: BN[] = await hre.run('stats:loans-repaid', args)
+    const loansTakenOut: number[] = await hre.run('stats:loans-taken-out', args)
+    const loansRepaid: number[] = await hre.run('stats:loans-repaid', args)
     const loansRepaidMap = loansRepaid.reduce<{ [loanID: string]: true }>(
       (map, loanID) => {
         map[loanID.toString()] = true
@@ -194,14 +206,25 @@ subtask('stats:pending-interest-owed')
       if (!loansRepaidMap[loanID]) {
         const debt = await diamond.getDebtOwed(loanID)
         pendingInterestOwed = pendingInterestOwed.add(debt.interestOwed)
+
+        await aoeu(loanID)
       }
     }
 
+    const arr: number[] = []
+    const aoeu = async (loanID: number): Promise<void> => {
+      const nfts = await diamond.getLoanNFTs(loanID)
+      if (nfts.length === 0) return
+      const { interestOwed } = await diamond.getDebtOwed(loanID)
+      if (interestOwed.eq(0)) return
+      pendingInterestOwed = pendingInterestOwed.sub(interestOwed)
+      arr.push(loanID)
+    }
+
     await Promise.all(
-      new Array(loansTakenOut.length)
-        .fill(null)
-        .map((_, loanID) => fetchPendingInterestOwed(loanID))
+      loansTakenOut.map((loanID) => fetchPendingInterestOwed(loanID))
     )
+    // console.log(JSON.stringify(arr))
 
     if (!args.disableLog) {
       const pendingInterestOwedFN = FN.from(pendingInterestOwed).divUnsafe(

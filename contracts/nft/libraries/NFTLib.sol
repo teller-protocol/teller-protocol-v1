@@ -117,19 +117,27 @@ library NFTLib {
         EnumerableSet.add(s().loanNFTs[loanID], nftID);
     }
 
-
-     /**
+    /**
      * @notice it unstakes an NFT and verifies the proof in order to apply the proof to a loan
      * @param loanID the identifier of the loan
      * @param nftID the NFT ID to apply to the loan
      */
-    function applyToLoanV2(uint256 loanID, uint256 nftID, address borrower) internal {
+    function applyToLoanV2(
+        uint256 loanID,
+        uint256 nftID,
+        uint256 amount,
+        address borrower
+    ) internal {
         // NFT must be currently staked
         // Remove NFT from being staked - returns bool
-        require(unstakeV2(nftID,1,borrower), "Teller: borrower nft not staked");
+        require(
+            unstakeV2(nftID, amount, borrower),
+            "Teller: borrower nft not staked"
+        );
 
         // Apply NFT to loan
-        EnumerableSet.add(s().loanNFTs[loanID], nftID);
+        EnumerableSet.add(s().loanNFTsV2[loanID], nftID);
+        s().loanNFTsV2Amounts[loanID][nftID] = amount;
     }
 
     /**
