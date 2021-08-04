@@ -26,8 +26,11 @@ import { LoanUserRequest, LoanStatus, Loan } from "../storage/market.sol";
 
 contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
     // TELLER NFT V2
-    TellerNFT_V2 private constant TELLER_NFT_V2 =
-        TellerNFT_V2(0x8f9bbbB0282699921372A134b63799a48c7d17FC);
+    TellerNFT_V2 private immutable TELLER_NFT_V2;
+
+    constructor(address tellerNFTV2Address) {
+        TELLER_NFT_V2 = TellerNFT_V2(tellerNFTV2Address);
+    }
 
     /**
      * @notice Creates a loan with the loan request and NFTs without any collateral
