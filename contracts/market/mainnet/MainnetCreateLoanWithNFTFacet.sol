@@ -20,11 +20,7 @@ import { NFTLib } from "../../nft/libraries/NFTLib.sol";
 import { ITToken } from "../../lending/ttoken/ITToken.sol";
 
 // Storage
-import {
-    LoanUserRequest,
-    LoanStatus,
-    Loan
-} from "../../storage/market.sol";
+import { LoanUserRequest, LoanStatus, Loan } from "../../storage/market.sol";
 
 contract MainnetCreateLoanWithNFTFacet is ReentryMods, PausableMods {
     /**
@@ -51,7 +47,7 @@ contract MainnetCreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint8 lendingDecimals = ERC20(assetAddress).decimals();
         uint256 allowedBaseLoanSize;
         for (uint256 i; i < nftIDs.length; i++) {
-            NFTLib.applyToLoan(loan.id, nftIDs[i]);
+            NFTLib.applyToLoan(loan.id, nftIDs[i], msg.sender);
 
             allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
                 nftIDs[i]
