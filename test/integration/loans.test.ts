@@ -168,7 +168,7 @@ describe('Loans', () => {
           })
         }
 
-        describe.only('V2', () => {
+        describe('V2', () => {
           let helpers: LoanHelpersReturn
 
           it('creates a loan', async () => {
