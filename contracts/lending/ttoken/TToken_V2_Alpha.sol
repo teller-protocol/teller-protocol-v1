@@ -52,6 +52,7 @@ contract TToken_V2_Alpha is TToken_V2 {
         authorized(CONTROLLER, _msgSender())
     {
         require(s().alphaEnded, "Teller: alpha not ended");
+        require(percent > 0, "Teller: interest percent cannot be 0");
         require(
             !s().alphaInterestClaimed[recipient],
             "Teller: interest already claimed"
