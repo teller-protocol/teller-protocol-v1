@@ -48,8 +48,7 @@ library LibCreateLoan {
     ) internal returns (Loan storage loan_) {
         // Perform loan request checks
         require(
-            PlatformSettingsLib.getMaximumLoanDurationValue() >=
-                duration,
+            PlatformSettingsLib.getMaximumLoanDurationValue() >= duration,
             "Teller: max loan duration exceeded"
         );
         require(
@@ -57,9 +56,8 @@ library LibCreateLoan {
             "Teller: asset max loan amount exceeded"
         );
         require(
-            LendingLib.tToken(assetAddress).debtRatioFor(
-                amount
-            ) <= MaxDebtRatioLib.get(assetAddress),
+            LendingLib.tToken(assetAddress).debtRatioFor(amount) <=
+                MaxDebtRatioLib.get(assetAddress),
             "Teller: max supply-to-debt ratio exceeded"
         );
 
@@ -89,12 +87,13 @@ library LibCreateLoan {
         );
     }
 
-    function fundLoan(address lendingToken, address destination, uint256 amount) internal {
+    function fundLoan(
+        address lendingToken,
+        address destination,
+        uint256 amount
+    ) internal {
         // Pull funds from Teller Token LP and transfer to the new loan escrow
-        LendingLib.tToken(lendingToken).fundLoan(
-            destination,
-            amount
-        );
+        LendingLib.tToken(lendingToken).fundLoan(destination, amount);
     }
 
     /**
@@ -103,14 +102,14 @@ library LibCreateLoan {
      */
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter = MarketStorageLib.store()
-        .loanIDCounter;
+            .loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
     }
 
     function currentID() internal view returns (uint256 id_) {
         Counters.Counter storage counter = MarketStorageLib.store()
-        .loanIDCounter;
+            .loanIDCounter;
         id_ = Counters.current(counter);
     }
 

@@ -281,7 +281,7 @@ export const takeOutLoanWithNfts = async (
   hre: HardhatRuntimeEnvironment,
   args: CreateLoanWithNftArgs
 ): Promise<TakeOutLoanWithNFTsReturn> => {
-  const { contracts, tokens, toBN, getNamedSigner } = hre
+  const { contracts, tokens, ethers, toBN, getNamedSigner } = hre
   const {
     borrower,
     lendToken,
@@ -289,6 +289,8 @@ export const takeOutLoanWithNfts = async (
     duration = moment.duration(1, 'day'),
     version,
   } = args
+
+  const coder = ethers.utils.defaultAbiCoder
 
   const borrowerAddress = await borrower.getAddress()
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -336,6 +338,12 @@ export const takeOutLoanWithNfts = async (
       // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
       await diamond.connect(borrower).mockStakeNFTsV1(nftsUsed.v1)
 
+      // Encode the NFT V1 token data for the function
+      const tokenData = coder.encode(
+        ['uint16', 'bytes'],
+        [1, coder.encode(['uint256[]'], [nftsUsed.v1])]
+      )
+
       // plug it in the takeOutLoanWithNFTs function
       tx = diamond
         .connect(borrower)
@@ -343,7 +351,7 @@ export const takeOutLoanWithNfts = async (
           lendingToken.address,
           loanAmount,
           duration.asSeconds(),
-          nftsUsed.v1
+          tokenData
         )
 
       break
@@ -390,15 +398,26 @@ export const takeOutLoanWithNfts = async (
           '0x'
         )
 
-      // plug it in the takeOutLoanWithNFTsV2 function
+      // Encode the NFT V2 token data for the function
+      const tokenData = hre.ethers.utils.defaultAbiCoder.encode(
+        ['uint16', 'bytes'],
+        [
+          2,
+          coder.encode(
+            ['uint256[]', 'uint256[]'],
+            [nftsUsed.v2.ids, nftsUsed.v2.balances]
+          ),
+        ]
+      )
+
+      // plug it in the takeOutLoanWithNFTs function
       tx = diamond
         .connect(borrower)
-        .takeOutLoanWithNFTsV2(
+        .takeOutLoanWithNFTs(
           lendingToken.address,
           loanAmount,
           duration.asSeconds(),
-          nftsUsed.v2.ids,
-          nftsUsed.v2.balances
+          tokenData
         )
 
       break

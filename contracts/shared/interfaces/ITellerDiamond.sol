@@ -16,7 +16,9 @@ import {
 } from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
-import { CreateLoanConsensusFacet } from "../../market/CreateLoanConsensusFacet.sol";
+import {
+    CreateLoanConsensusFacet
+} from "../../market/CreateLoanConsensusFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";

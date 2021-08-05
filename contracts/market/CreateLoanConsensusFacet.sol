@@ -58,12 +58,12 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
         );
         require(
             collateralToken != address(0) &&
-            EnumerableSet.contains(
-                MarketStorageLib.store().collateralTokens[
-                    request.request.assetAddress
-                ],
-                collateralToken
-            ),
+                EnumerableSet.contains(
+                    MarketStorageLib.store().collateralTokens[
+                        request.request.assetAddress
+                    ],
+                    collateralToken
+                ),
             "Teller: collateral token not allowed"
         );
 
@@ -96,14 +96,25 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: more collateral required"
         );
 
-        address borrower = LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio)
+        address borrower = LibLoans.canGoToEOAWithCollateralRatio(
+            loan.collateralRatio
+        )
             ? loan.borrower
             : LibCreateLoan.createEscrow(loan.id);
-        LibCreateLoan.fundLoan(loan.lendingToken, borrower, loan.borrowedAmount);
+        LibCreateLoan.fundLoan(
+            loan.lendingToken,
+            borrower,
+            loan.borrowedAmount
+        );
 
         // Set the loan to active
         loan.status = LoanStatus.Active;
 
-        emit LibCreateLoan.LoanTakenOut(loan.id, msg.sender, loan.borrowedAmount, false);
+        emit LibCreateLoan.LoanTakenOut(
+            loan.id,
+            msg.sender,
+            loan.borrowedAmount,
+            false
+        );
     }
 }

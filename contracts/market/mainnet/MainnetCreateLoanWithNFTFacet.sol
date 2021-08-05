@@ -2,77 +2,44 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { PausableMods } from "../../settings/pausable/PausableMods.sol";
-import {
-    ReentryMods
-} from "../../contexts2/access-control/reentry/ReentryMods.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { CreateLoanWithNFTFacet } from "../CreateLoanWithNFTFacet.sol";
 
 // Libraries
-import { LibCreateLoan } from "../libraries/LibCreateLoan.sol";
-import { LibLoans } from "../libraries/LibLoans.sol";
-import {
-    PlatformSettingsLib
-} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NFTLib } from "../../nft/libraries/NFTLib.sol";
 
-// Interfaces
-import { ITToken } from "../../lending/ttoken/ITToken.sol";
+contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
+    constructor(address tellerNFTV2Address)
+        CreateLoanWithNFTFacet(tellerNFTV2Address)
+    {}
 
-// Storage
-import { LoanUserRequest, LoanStatus, Loan } from "../../storage/market.sol";
-
-contract MainnetCreateLoanWithNFTFacet is ReentryMods, PausableMods {
     /**
-     * @notice Creates a loan with the loan request and NFTs without any collateral
-     * @param assetAddress Asset address to take out a loan
-     * @param amount The amount of the {assetAddress} used for the loan
-     * @param duration How long the loan should last (in seconds)
-     * @param nftIDs IDs of TellerNFTs to use for the loan
+     * @notice Process the NFT data to calculate max loan size and apply to the loan
+     * @dev Only knows how to process {tokenData} for NFT V1, otherwise calls super
+     * @param loanID The ID for the loan to apply the NFTs to
+     * @param version The token version used to know how to decode the data
+     * @param tokenData Encoded token ID array. NFT V1 includes just the IDs
+     * @return allowedLoanSize_ The max loan size calculated by the token IDs
      */
-    function takeOutLoanWithNFTs(
-        address assetAddress,
-        uint256 amount,
-        uint32 duration,
-        uint16[] calldata nftIDs
-    ) external paused(LibLoans.ID, false) {
-        Loan storage loan = LibCreateLoan.initNewLoan(
-            assetAddress,
-            amount,
-            duration,
-            PlatformSettingsLib.getNFTInterestRate()
-        );
+    function _takeOutLoanProcessNFTs(
+        uint256 loanID,
+        uint16 version,
+        bytes memory tokenData
+    ) internal virtual override returns (uint256 allowedLoanSize_) {
+        if (version == 1) {
+            uint256[] memory nftIDs = abi.decode(tokenData, (uint256[]));
+            for (uint256 i; i < nftIDs.length; i++) {
+                NFTLib.applyToLoan(loanID, nftIDs[i], msg.sender);
 
-        // Calculate the max loan size based on NFT V1 values
-        uint8 lendingDecimals = ERC20(assetAddress).decimals();
-        uint256 allowedBaseLoanSize;
-        for (uint256 i; i < nftIDs.length; i++) {
-            NFTLib.applyToLoan(loan.id, nftIDs[i], msg.sender);
-
-            allowedBaseLoanSize += NFTLib.s().nftDictionary.tokenBaseLoanSize(
-                nftIDs[i]
+                allowedLoanSize_ += NFTLib.s().nftDictionary.tokenBaseLoanSize(
+                    nftIDs[i]
+                );
+            }
+        } else {
+            allowedLoanSize_ = super._takeOutLoanProcessNFTs(
+                loanID,
+                version,
+                tokenData
             );
         }
-        require(
-            loan.borrowedAmount <= allowedBaseLoanSize * (10**lendingDecimals),
-            "Teller: insufficient NFT loan size"
-        );
-
-        // Fund the loan
-        LibCreateLoan.fundLoan(
-            loan.lendingToken,
-            LibCreateLoan.createEscrow(loan.id),
-            loan.borrowedAmount
-        );
-
-        // Set the loan to active
-        loan.status = LoanStatus.Active;
-
-        emit LibCreateLoan.LoanTakenOut(
-            loan.id,
-            msg.sender,
-            loan.borrowedAmount,
-            true
-        );
     }
 }

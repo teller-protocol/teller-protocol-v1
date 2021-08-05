@@ -175,9 +175,6 @@ describe('Loans', () => {
             // get helpers
             const borrower = await getNamedSigner('borrower')
 
-            const nft = await contracts.get('TellerNFT_V2')
-            console.log('contract methods 1', await nft.connect(borrower))
-
             const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
               amount: 100,
               lendToken: market.lendingToken,
@@ -194,12 +191,6 @@ describe('Loans', () => {
 
             const loanNFTsV2 = await diamond.getLoanNFTsV2(
               helpers.details.loan.id
-            )
-
-            console.log(
-              'loanNFTsV2.loanNFTs_',
-              loanNFTsV2.loanNFTs_,
-              nfts.v2.ids
             )
 
             loanNFTsV2.loanNFTs_.should.eql(

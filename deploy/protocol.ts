@@ -113,11 +113,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     {
-      contract: 'CreateLoanWithNFTFacet',
-      args: [nftV2.address],
-      skipIfAlreadyDeployed: false,
-    },
-    {
       contract: 'LoanDataFacet',
       skipIfAlreadyDeployed: false,
     },
@@ -149,6 +144,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       // Loans
       {
         contract: 'MainnetCreateLoanWithNFTFacet',
+        args: [nftV2.address],
         skipIfAlreadyDeployed: false,
       },
       // NFT
@@ -187,6 +183,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     )
   } else {
     facets.push(
+      // Loans
+      {
+        contract: 'CreateLoanWithNFTFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
       // NFT
       {
         contract: 'NFTFacet',
