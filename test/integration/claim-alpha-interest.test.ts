@@ -71,6 +71,15 @@ if (isEtheremNetwork(network)) {
       )
     })
 
+    it('Should not be able to claim 0% proportional interest', async () => {
+      const { signer } = await hre.evm.impersonate(staker)
+
+      await diamond
+        .connect(deployer)
+        .claimAlphaInterest(await signer.getAddress(), 0)
+        .should.be.revertedWith('Teller: interest percent cannot be 0')
+    })
+
     it('Should be able to claim interest from alpha staking', async () => {
       const { signer } = await hre.evm.impersonate(staker)
 
