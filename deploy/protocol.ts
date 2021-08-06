@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getDappAddresses, getNativeToken, isEtheremNetwork } from '../config'
+import { getDappAddresses, getNativeToken, getNetworkName, isEtheremNetwork } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -131,7 +131,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     {
       contract: 'AaveClaimAaveFacet',
       skipIfAlreadyDeployed: false,
-      args: [dappAddresses.aaveIncentivesControllerAddress, networkName == 'polygon' ? dappAddresses.aaveRewardTokenAddress : dappAddresses.aaveStakeTokenAddress],
+      args: [
+        dappAddresses.aaveIncentivesControllerAddress,
+        getNetworkName(hre.network) == 'polygon'
+          ? dappAddresses.aaveRewardTokenAddress
+          : dappAddresses.aaveStakeTokenAddress,
+      ],
     },
     {
       contract: 'PoolTogetherFacet',
