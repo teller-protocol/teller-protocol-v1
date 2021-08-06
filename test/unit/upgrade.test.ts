@@ -18,7 +18,7 @@ chai.use(solidity)
 describe('Upgrading the Teller diamond', () => {
   it('Should be able to disable adding an authorized address', async () => {
     await deployments.fixture('protocol', {
-      keepExistingDeployments: RUN_EXISTING,
+      keepExistingDeployments: true,
     })
 
     const deployer = await getNamedSigner('deployer')
