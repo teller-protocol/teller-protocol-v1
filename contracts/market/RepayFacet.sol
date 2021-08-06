@@ -202,7 +202,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
             LibLoans.loan(loanID).status = LoanStatus.Liquidated;
 
             // Transfer NFT if linked
-            NFTLib.liquidateNFT(loanID);
+            
+            _liquidateNFT(loanID);
         } else {
             // if the loan is now fully paid, close it and withdraw borrower collateral
             if (leftToPay_ == 0) {
@@ -220,7 +221,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 __claimEscrowTokens(loanID);
 
                 // Restake any NFTs linked to loan for borrower
-                NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
+                _restakeNFT(loanID);
+               
             }
 
             emit LoanRepaid(
@@ -231,6 +233,14 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 leftToPay_
             );
         }
+    }
+
+    function _restakeNFT(uint256 loanID) internal virtual {
+         NFTLib.restakeLinkedV2(loanID, LibLoans.loan(loanID).borrower);
+    }
+
+    function _liquidateNFT(uint256 loanID) internal virtual {
+        NFTLib.liquidateNFTV2(loanID);
     }
 
     /**
