@@ -27,6 +27,7 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
      * beacon.
      */
     constructor(address payable proxyAddress_, address implementation_) {
+        require(proxyAddress_ != address(0) && implementation_ != address(0));
         proxyAddress = InitializeableBeaconProxy(proxyAddress_);
         _setImplementation(implementation_);
     }
