@@ -6,7 +6,7 @@ import hre from 'hardhat'
 import { getMarkets, isEtheremNetwork } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ITellerDiamond, MainnetNFTFacet } from '../../types/typechain'
+import { ITellerDiamond } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
@@ -22,30 +22,28 @@ chai.use(solidity)
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
 describe('Loans', () => {
-  console.log('teest loans ')
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
     let deployer: Signer
-    let diamond: ITellerDiamond & MainnetNFTFacet
+    let diamond: ITellerDiamond
     // let borrower: Signer
 
     before(async () => {
-      await fundedMarket(hre, {
+      // eslint-disable-next-line
+      ({ diamond } = await fundedMarket(hre, {
         assetSym: market.lendingToken,
         amount: 100000,
         keepExistingDeployments: true,
         extendMaxTVL: true,
-      })
+      }))
 
       deployer = await getNamedSigner('deployer')
       diamond = await contracts.get('TellerDiamond')
     })
-
     // tests for merged loan functions
     describe('merge create loan', () => {
       let helpers: any = null
-
       before(async () => {
         // update percentage submission percentage value to 0 for this test
         const percentageSubmission = {
@@ -61,7 +59,6 @@ describe('Loans', () => {
         )
         await evm.advanceTime(rateLimit)
       })
-
       describe('without NFT', () => {
         it('should create a loan', async () => {
           // get helpers variables after function returns our transaction and
@@ -79,7 +76,6 @@ describe('Loans', () => {
           // check if loan exists
           expect(helpers.details.loan).to.exist
         })
-
         it('should have collateral deposited', async () => {
           // get collateral
           const { collateral } = helpers
@@ -88,7 +84,6 @@ describe('Loans', () => {
           // check if collateral is > 0
           amount.gt(0).should.eq(true, 'Loan must have collateral')
         })
-
         it('should be taken out', () => {
           // get loanStatus from helpers and check if it's equal to 2, which means
           // it's active and taken out
@@ -153,7 +148,6 @@ describe('Loans', () => {
               // get helpers
 
               const borrower = await getNamedSigner('borrower')
-
               const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
                 amount: 100,
                 lendToken: market.lendingToken,
@@ -182,7 +176,6 @@ describe('Loans', () => {
 
             it('should be able to create and repay a loan', async () => {
               const borrower = await getNamedSigner('borrower')
-
               const { getHelpers } = await takeOutLoanWithNfts(hre, {
                 amount: 100, //should use raw amt not formatted.. oh well
                 lendToken: market.lendingToken,
