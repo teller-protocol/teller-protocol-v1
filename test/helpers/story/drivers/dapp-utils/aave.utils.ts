@@ -1,8 +1,13 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { IAToken } from '../../../../../types/typechain'
+import { getDappAddresses } from '../../../../../config'
+import {
+  IAaveIncentivesController,
+  IAToken,
+} from '../../../../../types/typechain'
 import { LoanHelpersReturn } from '../../../loans'
 import LoanStoryTestDriver from '../loan-story-test-driver'
 chai.should()
@@ -57,6 +62,35 @@ async function withdrawAave(
   aDaiBalance.eq(0).should.eql(true, '')
 }
 
+async function claimAave(
+  hre: HardhatRuntimeEnvironment,
+  loan: LoanHelpersReturn
+): Promise<void> {
+  const { contracts, network } = hre
+  const { details, diamond } = loan
+  const dappAddresses = getDappAddresses(network)
+  const IncentiveController = await contracts.get<IAaveIncentivesController>(
+    'IAaveIncentivesController',
+    {
+      at: dappAddresses.aaveIncentivesControllerAddress,
+    }
+  )
+  const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+  const aaveBefore = await IncentiveController.getUserUnclaimedRewards(
+    escrowAddress
+  )
+  const assets = [details.lendingToken.address]
+  // expect(BigNumber.from(aaveBefore).gt(0)).to.equal(true)
+  const claim = await diamond
+    .connect(details.borrower.signer)
+    .aaveClaimAave(details.loan.id, aaveBefore, assets)
+  console.log({ claim: claim })
+  const aaveAfter = await IncentiveController.getUserUnclaimedRewards(
+    escrowAddress
+  )
+  expect(aaveAfter.toString()).to.equal('0')
+}
+
 export const aaveLendTest = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
@@ -76,6 +110,39 @@ export const aaveLendTest = async (
     await lendAave(hre, loan)
   } else {
     await lendAave(hre, loan).catch((error) => {
+      expect(error).to.exist
+    })
+  }
+}
+
+export const aaveClaimTest = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<void> => {
+  const { getNamedSigner, contracts, network } = hre
+  const borrower = await getNamedSigner('borrower')
+  const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
+  const { details, diamond } = loan
+  let shouldPass = true
+  await hre.evm.advanceTime(details.loan.duration)
+  const dappAddresses = getDappAddresses(network)
+  const IncentiveController = await contracts.get<IAaveIncentivesController>(
+    'IAaveIncentivesController',
+    {
+      at: dappAddresses.aaveIncentivesControllerAddress,
+    }
+  )
+  const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
+  const aaveBefore = await IncentiveController.getUserUnclaimedRewards(
+    escrowAddress
+  )
+  console.log({ aaveBefore: aaveBefore.toString() })
+  //read the state and determine if this should pass
+  if (!loan) shouldPass = false
+  // if (aaveBefore.lte(0)) shouldPass = false
+  if (shouldPass) {
+    await claimAave(hre, loan)
+  } else {
+    await claimAave(hre, loan).catch((error) => {
       expect(error).to.exist
     })
   }
