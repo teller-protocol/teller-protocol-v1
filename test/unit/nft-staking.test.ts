@@ -43,8 +43,6 @@ describe('NFT Staking', () => {
     tellerNFTV2 = await contracts.get('TellerNFT_V2')
 
     const ownedTokens = await tellerNFTV2.getOwnedTokens(borrowerAddress)
-
-    console.log('teller v2 ownedTokens', ownedTokens)
   }
 
   if (isEtheremNetwork(hre.network)) {
@@ -97,8 +95,6 @@ describe('NFT Staking', () => {
           ownedTokensV2
         )
 
-        console.log('afterEach ownedTokensV2', ownedTokensV2)
-
         await tellerNFTV2
           .connect(borrower)
           .safeBatchTransferFrom(
@@ -110,7 +106,6 @@ describe('NFT Staking', () => {
           )
 
         ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
-        console.log('afterEach2 ownedTokensV2', ownedTokensV2)
       }
 
       describe('V1 => V2', () => {
