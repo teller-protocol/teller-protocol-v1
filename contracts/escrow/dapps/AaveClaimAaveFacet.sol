@@ -43,7 +43,7 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
     );
 
     /**
-     * @notice To claim comp call the claim comp function on COMPTROLLER_ADDRESS_PROVIDER_ADDRESS.
+     * @notice To claim AAVE call the {claimRewards} function on {AaveIncentivesController}.
      * @param loanID id of the loan being used in the dapp
      * @param amount amount of tokens to claim.
      * @param tokenAddresses address of the underlying token.
