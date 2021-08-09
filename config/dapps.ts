@@ -10,7 +10,7 @@ const mainnetDappAddresses: Tokens = {
 
 const polygonDappAddresses: Tokens = {
   aaveLendingPoolAddressProvider: '0xd05e3E715d945B59290df0ae8eF85c1BdB684744',
-  aaveIncentivesControllerAddress: '',
+  aaveIncentivesControllerAddress: '0x357D51124f59836DeD84c8a1730D72B749d8BC23',
   sushiswapV2RouterAddress: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
   uniswapV2RouterAddress: '0x0000000000000000000000000000000000000000',
   compoundComptrollerAddress: '',
