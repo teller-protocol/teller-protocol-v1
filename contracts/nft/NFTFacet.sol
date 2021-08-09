@@ -12,6 +12,7 @@ import { NFTLib } from "./libraries/NFTLib.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 
 contract NFTFacet is RolesMods {
     // TELLER NFT V2
@@ -25,7 +26,7 @@ contract NFTFacet is RolesMods {
 
     /**
      * @notice it gets the staked NFTs mapped to an owner's address
-     * @param nftOwner the owner of the staked NFTs to pull from
+     * @param nftOwner The address of the NFT owner.
      * @return staked_ the returned staked NFTs mapped to an owner's address
      * @return amounts_ the amounts of NFTs mapped to the ids
      */
