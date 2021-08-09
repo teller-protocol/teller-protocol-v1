@@ -32,15 +32,10 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
 
     /**
         @notice This event is emitted every time Aave deposit is invoked successfully.
-        @param claimer claimer.
-        @param amount amount of tokens to claim.
-        @param tokenAddresses address of the underlying token.
+        @param borrower address of the loan borrower.
+        @param loanID ID of the loan.
      */
-    event AaveClaimed(
-        address claimer,
-        uint256 amount,
-        address[] tokenAddresses
-    );
+    event AaveClaimed(address borrower, uint256 loanID);
 
     /**
      * @notice To claim AAVE call the {claimRewards} function on {AaveIncentivesController}.
@@ -63,7 +58,14 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
                 escrow
             )
         );
-        emit AaveClaimed(escrow, loanID, tokenAddresses);
+
+        // TODO: unstake AAVE after claiming (claiming stakes AAVE by default)
+
+        // Add AAVE to escrow token list
+        // TODO: get the AAVE token (add as immutable constructor variable)
+        LibEscrow.tokenUpdated(loanID, address(0));
+
+        emit AaveClaimed(msg.sender, loanID);
     }
 
     /**

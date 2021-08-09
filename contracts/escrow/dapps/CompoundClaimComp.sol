@@ -15,10 +15,10 @@ import { IComptroller } from "../../shared/interfaces/IComptroller.sol";
 contract CompoundClaimCompFacet is PausableMods, DappMods {
     /**
      * @notice This event is emitted every time Compound redeem is invoked successfully.
-     * @param holder address of escrow.
+     * @param borrower address of the loan borrower.
      * @param loanID loan ID.
      */
-    event CompoundClaimed(address indexed holder, uint256 loanID);
+    event CompoundClaimed(address indexed borrower, uint256 loanID);
 
     /**
      * @dev The address of Compound's Comptroler Address Provider on the deployed network
@@ -35,7 +35,7 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
     }
 
     /**
-     * @notice To claim comp call the claim comp function on COMPTROLLER_ADDRESS_PROVIDER_ADDRESS.
+     * @notice To claim COMP call the {claimComp} function on COMPTROLLER_ADDRESS_PROVIDER_ADDRESS.
      * @param loanID id of the loan being used in the dapp
      */
     function compoundClaimComp(uint256 loanID)
@@ -48,7 +48,12 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
             address(COMPTROLLER_ADDRESS_PROVIDER_ADDRESS),
             abi.encodeWithSignature("claimComp(address)", escrow)
         );
-        emit CompoundClaimed(escrow, loanID);
+
+        // Add AAVE to escrow token list
+        // TODO: get the COMP token (add as immutable constructor variable)
+        LibEscrow.tokenUpdated(loanID, address(0));
+
+        emit CompoundClaimed(msg.sender, loanID);
     }
 
     /**

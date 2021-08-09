@@ -85,6 +85,9 @@ async function claimComp(
     .connect(details.borrower.signer)
     .compoundClaimComp(details.loan.id)
   const compafter = await Comptroller.compAccrued(escrowAddress)
+
+  // TODO: test COMP was deposited into the escrow
+
   expect(compafter.toString()).to.equal('0')
 }
 
