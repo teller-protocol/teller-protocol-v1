@@ -84,7 +84,6 @@ async function claimAave(
   const claim = await diamond
     .connect(details.borrower.signer)
     .aaveClaimAave(details.loan.id, aaveBefore, assets)
-  console.log({ claim: claim })
   const aaveAfter = await IncentiveController.getUserUnclaimedRewards(
     escrowAddress
   )
@@ -135,7 +134,6 @@ export const aaveClaimTest = async (
   const aaveBefore = await IncentiveController.getUserUnclaimedRewards(
     escrowAddress
   )
-  console.log({ aaveBefore: aaveBefore.toString() })
   //read the state and determine if this should pass
   if (!loan) shouldPass = false
   // if (aaveBefore.lte(0)) shouldPass = false
