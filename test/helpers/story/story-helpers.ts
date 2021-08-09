@@ -89,7 +89,9 @@ export interface TestArgs {
   actionTarget?: number
   dappAction?: number
   loanType?: number
-  nft?: boolean
+  nft?: {
+    version: 1 | 2
+  }
 }
 
 export const generateTests = (

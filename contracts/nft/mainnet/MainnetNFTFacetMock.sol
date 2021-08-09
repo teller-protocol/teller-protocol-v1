@@ -8,12 +8,11 @@ import { MainnetNFTFacet } from "./MainnetNFTFacet.sol";
 // Libraries
 import { NFTLib } from "../libraries/NFTLib.sol";
 
-// TELLER NFT V1
-TellerNFT constant TELLER_NFT_V1 = TellerNFT(
-    0x2ceB85a2402C94305526ab108e7597a102D6C175
-);
-
 contract MainnetNFTFacetMock is MainnetNFTFacet {
+    // TELLER NFT V1
+    TellerNFT private constant TELLER_NFT_V1 =
+        TellerNFT(0x2ceB85a2402C94305526ab108e7597a102D6C175);
+
     /* Constructor */
 
     /**
@@ -27,6 +26,7 @@ contract MainnetNFTFacetMock is MainnetNFTFacet {
 
     function mockStakeNFTsV1(uint256[] calldata nftIDs) external {
         for (uint256 i; i < nftIDs.length; i++) {
+            TELLER_NFT_V1.transferFrom(msg.sender, address(this), nftIDs[i]);
             NFTLib.stake(nftIDs[i], msg.sender);
         }
     }

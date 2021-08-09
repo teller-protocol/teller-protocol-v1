@@ -95,6 +95,7 @@ const deployNFT: DeployFunction = async (hre) => {
           },
         },
       },
+      skipIfAlreadyDeployed: false,
       mock: process.env.TESTING === '1',
     })
   }

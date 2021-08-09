@@ -9,10 +9,16 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
 import { getNativeToken } from '../../config'
-import { claimNFT, getPrice } from '../../tasks'
-import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import { getPrice } from '../../tasks'
+import {
+  ERC20,
+  ITellerDiamond,
+  TellerNFT,
+  TellerNFTV2,
+} from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { mockCRAResponse } from './mock-cra-response'
+import { mergeV2IDsToBalances, mintNFTV1, mintNFTV2, V2Balances } from './nft'
 
 export enum LoanType {
   ZERO_COLLATERAL,
@@ -68,11 +74,12 @@ export const loanHelpers = async (
 
 interface CreateLoanWithNftArgs {
   lendToken: string | ERC20
-  borrower?: string
+  borrower: Signer
   deployer?: string
   amount?: BigNumberish
   amountBN?: BigNumberish
   duration?: moment.Duration
+  version: 1 | 2
 }
 export interface CreateLoanArgs {
   lendToken: string | ERC20
@@ -258,6 +265,13 @@ export const takeOutLoanWithoutNfts = async (
   }
 }
 
+interface TakeOutLoanWithNFTsReturn extends CreateLoanReturn {
+  nfts: {
+    v1: BigNumber[]
+    v2: V2Balances
+  }
+}
+
 /**
  * @description: It creates, signs, apply with NFTs and takes out a loan in one function
  * @param args: Arguments we specify to create our Loan by depositing NFT
@@ -266,11 +280,19 @@ export const takeOutLoanWithoutNfts = async (
 export const takeOutLoanWithNfts = async (
   hre: HardhatRuntimeEnvironment,
   args: CreateLoanWithNftArgs
-): Promise<CreateLoanReturn> => {
-  const { contracts, tokens, toBN, getNamedSigner } = hre
-  const { lendToken, amount = 100, duration = moment.duration(1, 'day') } = args
+): Promise<TakeOutLoanWithNFTsReturn> => {
+  const { contracts, tokens, ethers, toBN, getNamedSigner } = hre
+  const {
+    borrower,
+    lendToken,
+    amount = 100,
+    duration = moment.duration(1, 'day'),
+    version,
+  } = args
 
-  // diamond contract
+  const coder = ethers.utils.defaultAbiCoder
+
+  const borrowerAddress = await borrower.getAddress()
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
   // lending token
@@ -280,52 +302,135 @@ export const takeOutLoanWithNfts = async (
   // amount in loan
   const loanAmount = toBN(amount, await lendingToken.decimals())
 
-  // get the borrower, deployer and borrower's signer
-  // const deployer = await getNamedSigner('deployer')
-  const borrower = '0x86a41524cb61edd8b115a72ad9735f8068996688'
-  const { signer: borrowerSigner } = await hre.evm.impersonate(borrower)
+  const nftsUsed: TakeOutLoanWithNFTsReturn['nfts'] = {
+    v1: [],
+    v2: mergeV2IDsToBalances([]),
+  }
 
-  // Claim user's NFT as borrower
-  await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
+  let tx: Promise<ContractTransaction>
+  switch (version) {
+    case 1: {
+      const nft = await contracts.get<TellerNFT>('TellerNFT')
 
-  // Get the sum of loan amount to take out
-  const nft = await contracts.get<TellerNFT>('TellerNFT')
+      // Mint user NFTs to use
+      await mintNFTV1({
+        tierIndex: 0,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV1({
+        tierIndex: 1,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV1({
+        tierIndex: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
 
-  // get all the borrower's NFTs
-  const ownedNFTs = await nft
-    .getOwnedTokens(borrower)
-    .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
+      // get all the borrower's NFTs
+      nftsUsed.v1 = await nft.getOwnedTokens(borrowerAddress)
 
-  // Set NFT approval
-  await nft.connect(borrowerSigner).setApprovalForAll(diamond.address, true)
+      // Set NFT approval
+      await nft.connect(borrower).setApprovalForAll(diamond.address, true)
 
-  // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
-  await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
+      // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
+      await diamond.connect(borrower).mockStakeNFTsV1(nftsUsed.v1)
 
-  // Create mockCRAResponse
-  const craReturn = await mockCRAResponse(hre, {
-    lendingToken: lendingToken.address,
-    loanAmount,
-    loanTermLength: duration.asSeconds(),
-    collateralRatio: 0,
-    interestRate: '400',
-    borrower,
-  })
+      // Encode the NFT V1 token data for the function
+      const tokenData = coder.encode(
+        ['uint16', 'bytes'],
+        [1, coder.encode(['uint256[]'], [nftsUsed.v1])]
+      )
 
-  // plug it in the takeOutLoanWithNfts function along with the proofs to apply to the loan!
-  const tx = diamond
-    .connect(borrowerSigner)
-    .takeOutLoanWithNFTs(
-      { request: craReturn.request, responses: craReturn.responses },
-      ownedNFTs
-    )
+      // plug it in the takeOutLoanWithNFTs function
+      tx = diamond
+        .connect(borrower)
+        .takeOutLoanWithNFTs(
+          lendingToken.address,
+          loanAmount,
+          duration.asSeconds(),
+          tokenData
+        )
+
+      break
+    }
+    case 2: {
+      const nft = await contracts.get<TellerNFTV2>('TellerNFT_V2')
+
+      // Mint user NFTs to use
+      await mintNFTV2({
+        tierIndex: 1,
+        amount: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV2({
+        tierIndex: 2,
+        amount: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV2({
+        tierIndex: 3,
+        amount: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
+
+      // get all the borrower's NFTs
+      const ownedNFTs = await nft.getOwnedTokens(borrowerAddress)
+
+      // // Set NFT approval
+      // await nft.connect(borrower).setApprovalForAll(diamond.address, true)
+      //
+      // // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
+      // await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTs)
+      nftsUsed.v2 = mergeV2IDsToBalances(ownedNFTs)
+      await nft
+        .connect(borrower)
+        .safeBatchTransferFrom(
+          borrowerAddress,
+          diamond.address,
+          nftsUsed.v2.ids,
+          nftsUsed.v2.balances,
+          '0x'
+        )
+
+      // Encode the NFT V2 token data for the function
+      const tokenData = hre.ethers.utils.defaultAbiCoder.encode(
+        ['uint16', 'bytes'],
+        [
+          2,
+          coder.encode(
+            ['uint256[]', 'uint256[]'],
+            [nftsUsed.v2.ids, nftsUsed.v2.balances]
+          ),
+        ]
+      )
+
+      // plug it in the takeOutLoanWithNFTs function
+      tx = diamond
+        .connect(borrower)
+        .takeOutLoanWithNFTs(
+          lendingToken.address,
+          loanAmount,
+          duration.asSeconds(),
+          tokenData
+        )
+
+      break
+    }
+  }
 
   // return our transaction and our helper variables
   return {
     tx,
+    nfts: nftsUsed,
     getHelpers: async (): Promise<LoanHelpersReturn> => {
       await tx
-      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+      const allBorrowerLoans = await diamond.getBorrowerLoans(borrowerAddress)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
       return await loanHelpers(hre, loanID)
     },

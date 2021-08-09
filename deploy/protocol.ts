@@ -69,7 +69,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
     execute = initExecute
   }
-
+  const nftV2 = await contracts.get('TellerNFT_V2')
   // Deploy platform diamond
   const facets: Facets = [
     // Settings
@@ -109,7 +109,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
     },
     {
-      contract: 'CreateLoanFacet',
+      contract: 'CreateLoanConsensusFacet',
       skipIfAlreadyDeployed: false,
     },
     {
@@ -136,12 +136,17 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
   ]
 
-  const nftV2 = await contracts.get('TellerNFT_V2')
   // Network specify Facets
   if (isEtheremNetwork(network)) {
     const nftMigrator = await contracts.get('NFTMigrator')
 
     facets.push(
+      // Loans
+      {
+        contract: 'MainnetCreateLoanWithNFTFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
       // NFT
       {
         contract: 'MainnetNFTFacet',
@@ -178,6 +183,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     )
   } else {
     facets.push(
+      // Loans
+      {
+        contract: 'CreateLoanWithNFTFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
       // NFT
       {
         contract: 'NFTFacet',
