@@ -309,11 +309,44 @@ describe('Loans', () => {
               const borrower = await getNamedSigner('borrower')
               const liquidator = await getNamedSigner('liquidator')
 
-              const { getHelpers } = await takeOutLoanWithNfts(hre, {
+              const lendingToken =
+                typeof market.lendingToken === 'string'
+                  ? await tokens.get(market.lendingToken)
+                  : market.lendingToken
+
+              const collateralToken =
+                typeof market.collateralTokens[0] === 'string'
+                  ? await tokens.get(market.collateralTokens[0])
+                  : market.collateralTokens[0]
+
+              const lendingTokenDecimals = await lendingToken.decimals()
+              console.log('decimals', lendingTokenDecimals)
+
+              const collateralTokenDecimals = await collateralToken.decimals()
+
+              await getFunds({
+                to: borrower,
+                tokenSym: market.collateralTokens[0],
+                amount: (300 * 10 ** collateralTokenDecimals).toString(),
+                hre,
+              })
+
+              const borrowerAddress = await borrower.getAddress()
+
+              await collateralToken
+                .connect(ethers.provider.getSigner(borrowerAddress))
+                .approve(
+                  diamond.address,
+                  (300 * 10 ** collateralTokenDecimals).toString()
+                )
+
+              const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
                 amount: 100, //should use raw amt not formatted.. oh well
                 lendToken: market.lendingToken,
-                borrower: borrower,
-                version: 1,
+                collToken: market.collateralTokens[0],
+                loanType: LoanType.OVER_COLLATERALIZED,
+                //borrower: borrower,
+                //version: 1,
               })
 
               const helpers: LoanHelpersReturn = await getHelpers()
@@ -322,16 +355,10 @@ describe('Loans', () => {
 
               console.log('helpers.details.loan', helpers.details.loan)
 
+              //collateral token is 0x00000000
+
               const loanId = helpers.details.loan.id
               console.log('loanId', loanId)
-
-              const lendingToken =
-                typeof market.lendingToken === 'string'
-                  ? await tokens.get(market.lendingToken)
-                  : market.lendingToken
-
-              const lendingTokenDecimals = await lendingToken.decimals()
-              console.log('decimals', lendingTokenDecimals)
 
               await getFunds({
                 to: borrower,
@@ -347,7 +374,6 @@ describe('Loans', () => {
                 hre,
               })
 
-              const borrowerAddress = await borrower.getAddress()
               const borrowerBalance = await lendingToken.balanceOf(
                 borrowerAddress
               )
@@ -369,6 +395,9 @@ describe('Loans', () => {
               console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
 
               expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
+
+              //make the loan expire
+              await evm.advanceTime(helpers.details.loan.duration)
 
               await diamond.connect(liquidator).liquidateLoan(loanId)
               /*
