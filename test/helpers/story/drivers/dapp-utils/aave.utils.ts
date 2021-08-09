@@ -29,7 +29,7 @@ async function lendAave(
 
   const aDaiBalance = await aToken.balanceOf(escrowAddress)
 
-  aDaiBalance.eq(details.loan.borrowedAmount).should.eql(true, '')
+  aDaiBalance.should.eql(details.loan.borrowedAmount)
 
   const tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
   tokenAddresses.should.include(aToken.address)
