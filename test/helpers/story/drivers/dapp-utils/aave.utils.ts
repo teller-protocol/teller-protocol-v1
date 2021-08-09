@@ -87,6 +87,9 @@ async function claimAave(
   const aaveAfter = await IncentiveController.getUserUnclaimedRewards(
     escrowAddress
   )
+
+  // TODO: test AAVE was deposited into the escrow
+
   expect(aaveAfter.toString()).to.equal('0')
 }
 
