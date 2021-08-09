@@ -27,7 +27,7 @@ contract InitializeableBeaconProxy is Proxy {
      *  The UpgradeableBeaconFactory should clone this proxy and then initialize the clone in the same call.
      */
     constructor() {
-        initialize(address(1), "");
+        _setBeacon(address(1), "");
     }
 
     /**
@@ -41,7 +41,7 @@ contract InitializeableBeaconProxy is Proxy {
      *
      * - `beacon` must be a contract with the interface {IBeacon}.
      */
-    function initialize(address beacon, bytes memory data) public payable {
+    function initialize(address beacon, bytes memory data) external payable {
         assert(
             _BEACON_SLOT ==
                 bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1)
