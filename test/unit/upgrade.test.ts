@@ -8,9 +8,9 @@ import {
   getNamedSigner,
 } from 'hardhat'
 
-import { ITellerDiamond, SettingsFacet } from '../types/typechain'
-import { NULL_ADDRESS } from '../utils/consts'
-import { RUN_EXISTING } from './helpers/env-helpers'
+import { ITellerDiamond, SettingsFacet } from '../../types/typechain'
+import { NULL_ADDRESS } from '../../utils/consts'
+import { RUN_EXISTING } from '../helpers/env-helpers'
 
 chai.should()
 chai.use(solidity)
@@ -33,7 +33,6 @@ describe('Upgrading the Teller diamond', () => {
     const { borrower: user } = await getNamedAccounts()
     await protocol.addAuthorizedAddress(user)
     const SettingsFacet = await contracts.get<SettingsFacet>('SettingsFacet')
-    SettingsFacet.interface.functions['addAuthorizedAddress(address)'].format
     const selector = SettingsFacet.interface.getSighash('addAuthorizedAddress')
     await protocol.diamondCut(
       [
