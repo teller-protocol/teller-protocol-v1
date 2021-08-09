@@ -22,6 +22,15 @@ contract InitializeableBeaconProxy is Proxy {
         0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
 
     /**
+     * @notice This proxy is an implementation of a BeaconProxy and is meant to be cloned using EIP 1167. Therefore,
+     *  once this proxy is deployed, we immediately initialize it so that it cannot be initialized by an external party.
+     *  The UpgradeableBeaconFactory should clone this proxy and then initialize the clone in the same call.
+     */
+    constructor() {
+        _setBeacon(address(1), "");
+    }
+
+    /**
      * @dev Initializes the proxy with `beacon`.
      *
      * If `data` is nonempty, it's used as data in a delegate call to the implementation returned by the beacon. This

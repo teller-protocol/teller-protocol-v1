@@ -177,6 +177,10 @@ export default <HardhatUserConfig>{
       hardhat: 10,
       localhost: 10,
     },
+    attacker: {
+      hardhat: 11,
+      localhost: 11,
+    },
   },
   networks: {
     kovan: networkConfig({

@@ -33,6 +33,15 @@ import "./token-storage.sol" as Storage;
  * @author develop@teller.finance
  */
 contract TToken_V1 is ITToken, ReentryMods {
+    /**
+     * @notice To prevent the initialization of this TToken implementation contract, we call the initializer modifier.
+     *  This prevents someone from:
+     *      1. Becoming the ADMIN of the implementation contract
+     *      2. Setting a strategy
+     *      3. Calling a malicious function on the strategy that destroys the logic contract
+     */
+    constructor() initializer {}
+
     function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 
