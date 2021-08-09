@@ -105,7 +105,7 @@ library NFTLib {
         }
     }
 
-        /**
+    /**
      * @notice if the user fails to pay his loan, then we liquidate the all the NFTs associated with the loan
      * @param loanID the identifier of the loan to liquidate the NFTs from
      */
@@ -177,7 +177,7 @@ library NFTLib {
         }
     }
 
-     /**
+    /**
      * @notice it finds the loan's NFTs and adds them back to the owner's list of staked NFTs
      * @param loanID the identifier of the respective loan to add the NFTs back to the user's staked NFTs
      * @param owner the owner to add the unstaked NFTs back to the staked pile
@@ -187,7 +187,11 @@ library NFTLib {
         EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
         for (uint256 i; i < EnumerableSet.length(nfts); i++) {
             // Restake the NFT
-            EnumerableSet.add(s().stakedNFTs[owner], EnumerableSet.at(nfts, i));
+            EnumerableSet.add(
+                s().stakedNFTsV2[owner],
+                EnumerableSet.at(nfts, i)
+            );
+            s().stakedNFTsV2Amounts[owner][loanID] += 1;
         }
     }
 }

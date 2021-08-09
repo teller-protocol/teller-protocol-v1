@@ -22,7 +22,6 @@ chai.use(solidity)
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
 describe('Loans', () => {
-  console.log('teest loans ')
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -206,7 +205,6 @@ describe('Loans', () => {
               const lendingTokenDecimals = await lendingToken.decimals()
               console.log('decimals', lendingTokenDecimals)
 
-              //THIS FAILS
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
@@ -232,7 +230,9 @@ describe('Loans', () => {
 
               //let response = await helpers.repay( 100000000 , borrower )
 
-              await diamond.connect(borrower).repayLoan(loanId, 100010000)
+              await diamond
+                .connect(borrower)
+                .repayLoan(loanId, '100000000000000000000')
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -249,9 +249,90 @@ describe('Loans', () => {
                 200000000000000000000
               )
 
-              // expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              //99999999999900000000
 
-              // expect(loanData.status).to.equal(3) //3 = repaid
+              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+
+              expect(loanData.status).to.equal(3) //3 = repaid
+            })
+
+            it('should be able to create and repay a loan', async () => {
+              const borrower = await getNamedSigner('borrower')
+
+              const { getHelpers } = await takeOutLoanWithNfts(hre, {
+                amount: 100, //should use raw amt not formatted.. oh well
+                lendToken: market.lendingToken,
+                borrower: borrower,
+                version: 1,
+              })
+
+              const helpers: LoanHelpersReturn = await getHelpers()
+
+              expect(helpers.details.loan).to.exist
+
+              console.log('helpers.details.loan', helpers.details.loan)
+
+              const loanId = helpers.details.loan.id
+              console.log('loanId', loanId)
+
+              const lendingToken =
+                typeof market.lendingToken === 'string'
+                  ? await tokens.get(market.lendingToken)
+                  : market.lendingToken
+
+              const lendingTokenDecimals = await lendingToken.decimals()
+              console.log('decimals', lendingTokenDecimals)
+
+              await getFunds({
+                to: borrower,
+                tokenSym: market.lendingToken,
+                amount: (200 * 10 ** lendingTokenDecimals).toString(),
+                hre,
+              })
+
+              const borrowerAddress = await borrower.getAddress()
+              const borrowerBalance = await lendingToken.balanceOf(
+                borrowerAddress
+              )
+
+              console.log('balanceOf', borrowerBalance.toString())
+
+              console.log('market.lendingToken', market.lendingToken)
+
+              const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+              console.log('balanceLeftToRepay', balanceLeftToRepay)
+
+              await lendingToken
+                .connect(ethers.provider.getSigner(borrowerAddress))
+                .approve(diamond.address, balanceLeftToRepay)
+
+              const stakedNFTsBeforeRepay = await diamond.getStakedNFTsV2(
+                borrowerAddress
+              )
+              console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
+
+              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(3)
+
+              await diamond
+                .connect(borrower)
+                .repayLoan(loanId, '100000000000000000000')
+
+              const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
+
+              const loanData = await diamond.getLoan(loanId)
+
+              const stakedNFTsAfterRepay = await diamond.getStakedNFTsV2(
+                borrowerAddress
+              )
+              console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
+
+              expect(stakedNFTsAfterRepay.staked_.length).to.equal(6)
+
+              //99999999999900000000
+
+              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+
+              expect(loanData.status).to.equal(3) //3 = repaid
             })
           })
         }
