@@ -272,9 +272,13 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
+<<<<<<< HEAD
               const loanNFTsBeforeRepay = await diamond.getLoanNFTs(loanId)
 
               expect(stakedNFTsBeforeRepay.length).to.equal(0)
+=======
+              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
+>>>>>>> getting error when liquidating loan
 
               await diamond
                 .connect(borrower)
@@ -288,13 +292,101 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
+<<<<<<< HEAD
               expect(stakedNFTsAfterRepay.length).to.equal(
                 loanNFTsBeforeRepay.length
               )
+=======
+              expect(stakedNFTsAfterRepay.staked_.length).to.equal(3)
+>>>>>>> getting error when liquidating loan
 
               totalOwedAfterRepay.should.eql(0)
 
               expect(loanData.status).to.equal(LoanStatus.Closed)
+            })
+
+            it('should be able to create and liquidate a loan', async () => {
+              const borrower = await getNamedSigner('borrower')
+              const liquidator = await getNamedSigner('liquidator')
+
+              const { getHelpers } = await takeOutLoanWithNfts(hre, {
+                amount: 100, //should use raw amt not formatted.. oh well
+                lendToken: market.lendingToken,
+                borrower: borrower,
+                version: 1,
+              })
+
+              const helpers: LoanHelpersReturn = await getHelpers()
+
+              expect(helpers.details.loan).to.exist
+
+              console.log('helpers.details.loan', helpers.details.loan)
+
+              const loanId = helpers.details.loan.id
+              console.log('loanId', loanId)
+
+              const lendingToken =
+                typeof market.lendingToken === 'string'
+                  ? await tokens.get(market.lendingToken)
+                  : market.lendingToken
+
+              const lendingTokenDecimals = await lendingToken.decimals()
+              console.log('decimals', lendingTokenDecimals)
+
+              await getFunds({
+                to: borrower,
+                tokenSym: market.lendingToken,
+                amount: (200 * 10 ** lendingTokenDecimals).toString(),
+                hre,
+              })
+
+              await getFunds({
+                to: liquidator,
+                tokenSym: market.lendingToken,
+                amount: (200 * 10 ** lendingTokenDecimals).toString(),
+                hre,
+              })
+
+              const borrowerAddress = await borrower.getAddress()
+              const borrowerBalance = await lendingToken.balanceOf(
+                borrowerAddress
+              )
+
+              console.log('balanceOf', borrowerBalance.toString())
+
+              console.log('market.lendingToken', market.lendingToken)
+
+              const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+              console.log('balanceLeftToRepay', balanceLeftToRepay)
+
+              await lendingToken
+                .connect(ethers.provider.getSigner(borrowerAddress))
+                .approve(diamond.address, balanceLeftToRepay)
+
+              const stakedNFTsBeforeRepay = await diamond.getStakedNFTsV2(
+                borrowerAddress
+              )
+              console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
+
+              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
+
+              await diamond.connect(liquidator).liquidateLoan(loanId)
+              /*
+              const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
+
+              const loanData = await diamond.getLoan(loanId)
+
+              const stakedNFTsAfterRepay = await diamond.getStakedNFTsV2(
+                borrowerAddress
+              )
+              console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
+
+              expect(stakedNFTsAfterRepay.staked_.length).to.equal(3)
+ 
+
+              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+
+              expect(loanData.status).to.equal(3) //3 = repaid*/
             })
           })
         }
