@@ -10,10 +10,6 @@ import {
 import {
     IAaveLendingPoolAddressesProvider
 } from "../../../shared/interfaces/IAaveLendingPoolAddressesProvider.sol";
-import {
-    IUniswapV2Router
-} from "../../../shared/interfaces/IUniswapV2Router.sol";
-import { IVault } from "../interfaces/IVault.sol";
 
 // Libraries
 import {
@@ -59,9 +55,9 @@ library LibDapps {
     {
         return
             IAToken(
-                getAaveLendingPool(aaveLPAddressProvider).getReserveData(
-                    tokenAddress
-                ).aTokenAddress
+                getAaveLendingPool(aaveLPAddressProvider)
+                    .getReserveData(tokenAddress)
+                    .aTokenAddress
             );
     }
 }
