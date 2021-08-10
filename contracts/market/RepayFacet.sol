@@ -202,7 +202,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
             LibLoans.loan(loanID).status = LoanStatus.Liquidated;
 
             // Transfer NFT if linked
-            
+
             _liquidateNFT(loanID);
         } else {
             // if the loan is now fully paid, close it and withdraw borrower collateral
@@ -222,7 +222,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
 
                 // Restake any NFTs linked to loan for borrower
                 _restakeNFT(loanID);
-               
             }
 
             emit LoanRepaid(
@@ -236,11 +235,11 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     }
 
     function _restakeNFT(uint256 loanID) internal virtual {
-         NFTLib.restakeLinkedV2(loanID, LibLoans.loan(loanID).borrower);
+        NFTLib.restakeLinkedV2(loanID, LibLoans.loan(loanID).borrower);
     }
 
     function _liquidateNFT(uint256 loanID) internal virtual {
-        NFTLib.liquidateNFTV2(loanID);
+        NFTLib.liquidateNFT(loanID);
     }
 
     /**
@@ -363,7 +362,8 @@ library RepayLib {
 
         // Calculate available collateral for reward
         if (collateralAmount > 0) {
-            collateralValue_ = AppStorageLib.store()
+            collateralValue_ = AppStorageLib
+                .store()
                 .priceAggregator
                 .getValueFor(
                     LibLoans.loan(loanID).collateralToken,
@@ -409,7 +409,8 @@ library RepayLib {
         // if the lending reward is less than the collateral lending tokens, then aggregate
         // the value for the lending token with the collateral token and send it to the liquidator
         if (rewardInLending <= collateralInLending) {
-            uint256 rewardInCollateral = AppStorageLib.store()
+            uint256 rewardInCollateral = AppStorageLib
+                .store()
                 .priceAggregator
                 .getValueFor(
                     LibLoans.loan(loanID).lendingToken,
@@ -442,7 +443,8 @@ library RepayLib {
         address recipient,
         uint256 value
     ) private {
-        EnumerableSet.AddressSet storage tokens = MarketStorageLib.store()
+        EnumerableSet.AddressSet storage tokens = MarketStorageLib
+            .store()
             .escrowTokens[loanID];
         uint256 valueLeftToTransfer = value;
 
@@ -492,7 +494,8 @@ library RepayLib {
             if (token == LibLoans.loan(loanID).lendingToken) {
                 balanceInLending = balance;
             } else {
-                balanceInLending = AppStorageLib.store()
+                balanceInLending = AppStorageLib
+                    .store()
                     .priceAggregator
                     .getValueFor(
                         token,

@@ -106,22 +106,6 @@ library NFTLib {
     }
 
     /**
-     * @notice if the user fails to pay his loan, then we liquidate the all the NFTs associated with the loan
-     * @param loanID the identifier of the loan to liquidate the NFTs from
-     */
-    function liquidateNFTV2(uint256 loanID) internal {
-        // Check if NFTs are linked
-        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
-        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
-            NFTLib.nft().transferFrom(
-                address(this),
-                AppStorageLib.store().nftLiquidationController,
-                EnumerableSet.at(nfts, i)
-            );
-        }
-    }
-
-    /**
      * @notice It unstakes an NFT and verifies the proof in order to apply the proof to a loan
      * @param loanID the identifier of the loan
      * @param nftID the NFT ID to apply to the loan
@@ -184,14 +168,17 @@ library NFTLib {
      */
     function restakeLinkedV2(uint256 loanID, address owner) internal {
         // Get linked NFT
-        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
-        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
-            // Restake the NFT
-            EnumerableSet.add(
-                s().stakedNFTsV2[owner],
-                EnumerableSet.at(nfts, i)
-            );
-            s().stakedNFTsV2Amounts[owner][loanID] += 1;
+        EnumerableSet.UintSet storage loanNFTs = s().loanNFTsV2[loanID];
+        for (uint256 i; i < EnumerableSet.length(loanNFTs); i++) {
+            uint256 nftV2ID = EnumerableSet.at(loanNFTs, i);
+
+            // Make sure NFT ID is staked
+            EnumerableSet.add(s().stakedNFTsV2[owner], nftV2ID);
+
+            // Increment the staked amount from amount linked to loan
+            s().stakedNFTsV2Amounts[owner][nftV2ID] += s().loanNFTsV2Amounts[
+                loanID
+            ][nftV2ID];
         }
     }
 }
