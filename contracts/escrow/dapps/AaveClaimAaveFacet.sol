@@ -10,6 +10,9 @@ import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import {
     IAaveIncentivesController
 } from "../../shared/interfaces/IAaveIncentivesController.sol";
+import { LibLoans } from "../../market/libraries/LibLoans.sol";
+// Storage
+import { LoanStatus } from "../../storage/market.sol";
 import { IStakedAave } from "../../shared/interfaces/IStakedAave.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -53,29 +56,27 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
         uint256 amount,
         address[] calldata tokenAddresses
     ) public paused("", false) onlyBorrower(loanID) {
-        address escrow = address(LibEscrow.e(loanID));
+        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+            ? msg.sender
+            : address(LibEscrow.e(loanID));
         bytes memory result = LibEscrow.e(loanID).callDapp(
             address(INCENTIVES_CONTROLLER_ADDRESS),
             abi.encodeWithSelector(
                 IAaveIncentivesController.claimRewards.selector,
                 tokenAddresses,
                 amount,
-                escrow
+                user
             )
         );
 
         bytes memory unstake = LibEscrow.e(loanID).callDapp(
             address(STAKE_TOKEN_ADDRESS),
-            abi.encodeWithSelector(
-                IStakedAave.redeem.selector,
-                msg.sender,
-                amount
-            )
+            abi.encodeWithSelector(IStakedAave.redeem.selector, user, amount)
         );
 
         // Add AAVE to escrow token list
         // TODO: get the AAVE token (add as immutable constructor variable)
-        // LibEscrow.tokenUpdated(loanID, address(0));
+        LibEscrow.tokenUpdated(loanID, address(0));
 
         emit AaveClaimed(msg.sender, loanID);
     }
@@ -94,9 +95,10 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
         IAaveIncentivesController conptroller = IAaveIncentivesController(
             INCENTIVES_CONTROLLER_ADDRESS
         );
-        uint256 result = conptroller.getUserUnclaimedRewards(
-            address(LibEscrow.e(loanID))
-        );
+        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+            ? msg.sender
+            : address(LibEscrow.e(loanID));
+        uint256 result = conptroller.getUserUnclaimedRewards(user);
         return result;
     }
 }

@@ -8,6 +8,9 @@ import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 // Libraries
 import { LibCompound } from "./libraries/LibCompound.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
+import { LibLoans } from "../../market/libraries/LibLoans.sol";
+// Storage
+import { LoanStatus } from "../../storage/market.sol";
 
 // Interfaces
 import { IComptroller } from "../../shared/interfaces/IComptroller.sol";
@@ -43,10 +46,12 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
         paused("", false)
         onlyBorrower(loanID)
     {
-        address escrow = address(LibEscrow.e(loanID));
+        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+            ? msg.sender
+            : address(LibEscrow.e(loanID));
         LibEscrow.e(loanID).callDapp(
             address(COMPTROLLER_ADDRESS_PROVIDER_ADDRESS),
-            abi.encodeWithSignature("claimComp(address)", escrow)
+            abi.encodeWithSignature("claimComp(address)", user)
         );
 
         // Add AAVE to escrow token list
@@ -65,10 +70,13 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
         view
         returns (uint256)
     {
+        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+            ? msg.sender
+            : address(LibEscrow.e(loanID));
         IComptroller comptroller = IComptroller(
             COMPTROLLER_ADDRESS_PROVIDER_ADDRESS
         );
-        uint256 comp = comptroller.compAccrued(address(LibEscrow.e(loanID)));
+        uint256 comp = comptroller.compAccrued(user);
         return comp;
     }
 }

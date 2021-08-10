@@ -36,7 +36,7 @@ import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
 import {
     CompoundClaimCompFacet
-} from "../../escrow/dapps/CompoundClaimComp.sol";
+} from "../../escrow/dapps/CompoundClaimCompFacet.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { AaveClaimAaveFacet } from "../../escrow/dapps/AaveClaimAaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
