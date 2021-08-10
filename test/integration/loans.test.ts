@@ -136,6 +136,10 @@ describe('Loans', () => {
 
       describe('with NFT', () => {
         beforeEach(async () => {
+          await hre.deployments.fixture('protocol', {
+            keepExistingDeployments: true,
+          })
+
           // Advance time
           const { value: rateLimit } = await getPlatformSetting(
             'RequestLoanTermsRateLimit',
@@ -232,7 +236,10 @@ describe('Loans', () => {
 
               await diamond
                 .connect(borrower)
-                .repayLoan(loanId, '100000000000000000000')
+                .repayLoan(
+                  loanId,
+                  (100 * 10 ** lendingTokenDecimals).toString()
+                )
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -246,10 +253,8 @@ describe('Loans', () => {
               console.log('balanceOf After', borrowerBalance.toString())
 
               expect(parseInt(borrowerBalance.toString())).to.equal(
-                200000000000000000000
+                200 * 10 ** lendingTokenDecimals
               )
-
-              //99999999999900000000
 
               expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
 
@@ -311,11 +316,14 @@ describe('Loans', () => {
               )
               console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
 
-              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(3)
+              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
 
               await diamond
                 .connect(borrower)
-                .repayLoan(loanId, '100000000000000000000')
+                .repayLoan(
+                  loanId,
+                  (100 * 10 ** lendingTokenDecimals).toString()
+                )
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -326,9 +334,7 @@ describe('Loans', () => {
               )
               console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
 
-              expect(stakedNFTsAfterRepay.staked_.length).to.equal(6)
-
-              //99999999999900000000
+              expect(stakedNFTsAfterRepay.staked_.length).to.equal(3)
 
               expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
 
