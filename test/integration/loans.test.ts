@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import hre from 'hardhat'
 
 import { getMarkets, isEtheremNetwork } from '../../config'
@@ -300,12 +300,7 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay)
 
               await lendingToken
                 .connect(ethers.provider.getSigner(borrowerAddress))
@@ -314,14 +309,10 @@ describe('Loans', () => {
               const stakedNFTsBeforeRepay = await diamond.getStakedNFTs(
                 borrowerAddress
               )
-              console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
 
-              const loanNFTsBeforeRepay = await diamond.getLoanNFTsV2(
-                borrowerAddress
-              )
-              console.log('loanNFTsBeforeRepay', loanNFTsBeforeRepay)
+              const loanNFTsBeforeRepay = await diamond.getLoanNFTs(loanId)
 
-              expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
+              expect(stakedNFTsBeforeRepay.length).to.equal(0)
 
               await diamond
                 .connect(borrower)
@@ -337,13 +328,12 @@ describe('Loans', () => {
               const stakedNFTsAfterRepay = await diamond.getStakedNFTs(
                 borrowerAddress
               )
-              console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
 
-              expect(stakedNFTsAfterRepay.staked_.length).to.equal(1)
+              expect(stakedNFTsAfterRepay.length).to.equal(
+                loanNFTsBeforeRepay.length
+              )
 
-              expect(stakedNFTsAfterRepay.amounts_[0]).to.equal(1)
-
-              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              totalOwedAfterRepay.should.eql(0)
 
               expect(loanData.status).to.equal(3) //3 = repaid
             })
@@ -399,8 +389,6 @@ describe('Loans', () => {
 
             expect(helpers.details.loan).to.exist
 
-            console.log('helpers.details.loan', helpers.details.loan)
-
             const loanId = helpers.details.loan.id
             console.log('loanId', loanId)
 
@@ -424,12 +412,7 @@ describe('Loans', () => {
               borrowerAddress
             )
 
-            console.log('balanceOf', borrowerBalance.toString())
-
-            console.log('market.lendingToken', market.lendingToken)
-
             const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-            console.log('balanceLeftToRepay', balanceLeftToRepay)
 
             await lendingToken
               .connect(ethers.provider.getSigner(borrowerAddress))
@@ -438,12 +421,8 @@ describe('Loans', () => {
             const stakedNFTsBeforeRepay = await diamond.getStakedNFTsV2(
               borrowerAddress
             )
-            console.log('stakedNFTsBeforeRepay', stakedNFTsBeforeRepay)
 
-            const loanNFTsBeforeRepay = await diamond.getLoanNFTsV2(
-              borrowerAddress
-            )
-            console.log('loanNFTsBeforeRepay', loanNFTsBeforeRepay)
+            const loanNFTs = await diamond.getLoanNFTsV2(loanId)
 
             expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
 
@@ -458,11 +437,30 @@ describe('Loans', () => {
             const stakedNFTsAfterRepay = await diamond.getStakedNFTsV2(
               borrowerAddress
             )
-            console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
 
-            expect(stakedNFTsAfterRepay.staked_.length).to.equal(1)
+            expect(stakedNFTsAfterRepay.staked_.length).to.equal(
+              loanNFTs.loanNFTs_.length + stakedNFTsBeforeRepay.staked_.length
+            )
 
-            expect(stakedNFTsAfterRepay.amounts_[0]).to.equal(1)
+            const stakedNFTAmounts = stakedNFTsAfterRepay.staked_.reduce<{
+              [nftID: string]: BigNumber
+            }>((obj, nftID, i) => {
+              obj[nftID.toString()] = stakedNFTsAfterRepay.amounts_[i]
+              return obj
+            }, {})
+
+            for (let i = 0; i < loanNFTs.loanNFTs_.length; i++) {
+              const nftID = loanNFTs.loanNFTs_[i]
+
+              const stakedNFTBeforeRepayAmount =
+                stakedNFTsBeforeRepay.amounts_[i] ?? 0
+
+              const expectedAmount = loanNFTs.amounts_[i].add(
+                stakedNFTBeforeRepayAmount
+              )
+
+              stakedNFTAmounts[nftID.toString()].should.eql(expectedAmount)
+            }
 
             expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
 
