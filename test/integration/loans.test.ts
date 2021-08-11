@@ -556,6 +556,123 @@ describe('Loans', () => {
             expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
             expect(loanData.status).to.equal(LoanStatus.Liquidated)
           })
+
+          it('should be able to create and liquidate a loan', async () => {
+            const borrower = await getNamedSigner('borrower')
+            const liquidator = await getNamedSigner('liquidator')
+
+            const lendingToken =
+              typeof market.lendingToken === 'string'
+                ? await tokens.get(market.lendingToken)
+                : market.lendingToken
+
+            const collateralToken =
+              typeof market.collateralTokens[0] === 'string'
+                ? await tokens.get(market.collateralTokens[0])
+                : market.collateralTokens[0]
+
+            const lendingTokenDecimals = await lendingToken.decimals()
+            console.log('decimals', lendingTokenDecimals)
+
+            const collateralTokenDecimals = await collateralToken.decimals()
+
+            const borrowerAddress = await borrower.getAddress()
+            const liquidatorAddress = await liquidator.getAddress()
+
+            /* const { getHelpers } = await takeOutLoanWithoutNfts(hre, {
+              amount: 100, //should use raw amt not formatted.. oh well
+              lendToken: market.lendingToken,
+              collToken: market.collateralTokens[0],
+              loanType: LoanType.OVER_COLLATERALIZED,
+              //borrower: borrower,
+              //version: 1,
+            })*/
+
+            const { getHelpers } = await takeOutLoanWithNfts(hre, {
+              amount: 100, //should use raw amt not formatted.. oh well
+              lendToken: market.lendingToken,
+              borrower: borrower,
+              version: 2,
+            })
+
+            const helpers: LoanHelpersReturn = await getHelpers()
+
+            expect(helpers.details.loan).to.exist
+
+            console.log('helpers.details.loan', helpers.details.loan)
+
+            //collateral token is 0x00000000
+
+            const loanId = helpers.details.loan.id
+            console.log('loanId', loanId)
+
+            await getFunds({
+              to: borrower,
+              tokenSym: market.lendingToken,
+              amount: (200 * 10 ** lendingTokenDecimals).toString(),
+              hre,
+            })
+
+            await getFunds({
+              to: liquidator,
+              tokenSym: market.lendingToken,
+              amount: (200 * 10 ** lendingTokenDecimals).toString(),
+              hre,
+            })
+
+            const borrowerBalance = await lendingToken.balanceOf(
+              borrowerAddress
+            )
+
+            console.log('balanceOf', borrowerBalance.toString())
+
+            console.log('market.lendingToken', market.lendingToken)
+
+            const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+            console.log('balanceLeftToRepay', balanceLeftToRepay)
+
+            await lendingToken
+              .connect(ethers.provider.getSigner(borrowerAddress))
+              .approve(diamond.address, balanceLeftToRepay)
+
+            const stakedNFTsBeforeLiquidate = await diamond.getStakedNFTsV2(
+              borrowerAddress
+            )
+            console.log('stakedNFTsBeforeLiquidate', stakedNFTsBeforeLiquidate)
+
+            const loanNFTsBeforeLiquidate = await diamond.getLoanNFTsV2(
+              borrowerAddress
+            )
+            expect(loanNFTsBeforeLiquidate.length).to.equal(2)
+
+            //make the loan expire
+            await evm.advanceTime(helpers.details.loan.duration)
+
+            await lendingToken
+              .connect(liquidator)
+              .approve(diamond.address, balanceLeftToRepay)
+
+            await diamond.connect(liquidator).liquidateLoan(loanId)
+
+            const loanNFTsAfterLiquidate = await diamond.getLoanNFTsV2(
+              borrowerAddress
+            )
+            expect(loanNFTsAfterLiquidate.length).to.equal(0)
+
+            //expect(stakedNFTsAfterRepay.staked_.length).to.equal(3)
+
+            /*
+            const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
+            const loanData = await diamond.getLoan(loanId)
+            const stakedNFTsAfterRepay = await diamond.getStakedNFTsV2(
+              borrowerAddress
+            )
+            console.log('stakedNFTsAfterRepay', stakedNFTsAfterRepay)
+            expect(stakedNFTsAfterRepay.staked_.length).to.equal(3)
+
+            expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+            expect(loanData.status).to.equal(3) //3 = repaid*/
+          })
         })
       })
     })
