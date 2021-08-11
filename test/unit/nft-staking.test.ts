@@ -218,7 +218,7 @@ describe('NFT Staking', () => {
 
           tokenBalancesV2.should.eql(expectedV2IDs[1])
 
-          await diamond.bridgeNFTsV2(tokenBalancesV2)
+          await diamond.bridgeNFTsV2(tokenBalancesV2[0], 1)
 
           ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
           addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)

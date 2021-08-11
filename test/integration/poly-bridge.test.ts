@@ -90,7 +90,7 @@ if (isEtheremNetwork(hre.network)) {
 
         it('bridges our NFTs', async () => {
           // migrate and bridge all of our nfts
-          await diamond.connect(borrowerSigner).bridgeNFTsV1(ownedNFTs)
+          await diamond.connect(borrowerSigner).bridgeNFTsV1(ownedNFTs[0])
           // add rest of the test here
         })
 

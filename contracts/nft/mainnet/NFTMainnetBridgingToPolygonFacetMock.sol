@@ -18,8 +18,5 @@ contract NFTMainnetBridgingToPolygonFacetMock is
         NFTMainnetBridgingToPolygonFacet(tellerNFTMigratorAddress)
     {}
 
-    function __depositFor(uint256[] memory tokenIds, uint256[] memory amounts)
-        internal
-        override
-    {}
+    function __depositFor(uint256 tokenId, uint256 amount) internal override {}
 }
