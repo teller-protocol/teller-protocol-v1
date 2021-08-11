@@ -67,9 +67,6 @@ contract NFTMainnetBridgingToPolygonFacet {
             tokenIds[i] = tokenId;
             amounts[i] = amount;
         }
-        console.log("deposit for");
-        console.log(tokenIds[0]);
-        console.log(amounts[0]);
         // Deposit tokens by calling the RootChainManager which then has the ERC721_PREDICATE transfer the tokens
         Address.functionCall(
             ROOT_CHAIN_MANAGER,
@@ -100,15 +97,11 @@ contract NFTMainnetBridgingToPolygonFacet {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
             msg.sender
         ];
-        console.log(tokenId);
         // we are creating a new array so that we can overrwrite each element
         // with a newTokenId.
         if (EnumerableSet.contains(stakedNFTs, tokenId)) {
-            console.log("unstaking");
             NFTLib.unstake(tokenId, msg.sender);
         } else if (TELLER_NFT_V1.ownerOf(tokenId) == msg.sender) {
-            console.log("staking");
-            console.log(tokenId);
             TELLER_NFT_V1.transferFrom(msg.sender, address(this), tokenId);
         }
 
@@ -121,7 +114,6 @@ contract NFTMainnetBridgingToPolygonFacet {
         uint256 tokenIdV2 = abi.decode(data, (uint256));
         uint256 amount = 1;
 
-        console.log("about to deposit");
         __depositFor(tokenIdV2, amount);
     }
 
@@ -132,7 +124,6 @@ contract NFTMainnetBridgingToPolygonFacet {
      *  are our ERC-1155 tokenIDs
      * @param amount the amount of tokenIds to stake
      */
-
     function bridgeNFTsV2(uint256 tokenId, uint256 amount) external {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTsV2[
             msg.sender
@@ -143,10 +134,8 @@ contract NFTMainnetBridgingToPolygonFacet {
         if (EnumerableSet.contains(stakedNFTs, tokenId)) {
             NFTLib.unstakeV2(tokenId, amount, msg.sender);
             if (amountStaked <= amount) {
-                console.log("amount staked less than amount");
                 NFTLib.unstakeV2(tokenId, amount, msg.sender);
             } else {
-                console.log("amount staked greater than amount");
                 NFTLib.unstakeV2(tokenId, amountStaked, msg.sender);
             }
         } else if (amount > 0) {
@@ -158,7 +147,6 @@ contract NFTMainnetBridgingToPolygonFacet {
                 ""
             );
         }
-
         __depositFor(tokenId, amount);
     }
 }

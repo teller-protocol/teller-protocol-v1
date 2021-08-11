@@ -192,50 +192,6 @@ describe('NFT Staking', () => {
             .unstakeNFTs(stakedNFTsV1)
             .should.be.revertedWith('Teller: not the owner of the NFT ID!')
         })
-
-        it('should be able to start to bridge NFTv2 to polygon', async () => {
-          const ownedNFTsV1 = await tellerNFTV1.getOwnedTokens(borrowerAddress)
-          await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
-          const stakedNFTsV1 = await diamond.getStakedNFTs(borrowerAddress)
-          ownedNFTsV1.should.eql(stakedNFTsV1)
-
-          const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
-
-          await diamond.connect(borrower).unstakeNFTs(stakedNFTsV1)
-          let ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
-          let addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)
-          let tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
-            addresses,
-            ownedTokensV2
-          )
-
-          console.log(
-            'balances pre-bridge',
-            ownedTokensV2,
-            addresses,
-            tokenBalancesV2
-          )
-
-          tokenBalancesV2.should.eql(expectedV2IDs[1])
-
-          await diamond.bridgeNFTsV2(tokenBalancesV2[0], 1)
-
-          ownedTokensV2 = await tellerNFTV2.getOwnedTokens(borrowerAddress)
-          addresses = new Array(ownedTokensV2.length).fill(borrowerAddress)
-          tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
-            addresses,
-            ownedTokensV2
-          )
-
-          console.log(
-            'balances post-bridge',
-            ownedTokensV2,
-            addresses,
-            tokenBalancesV2
-          )
-
-          tokenBalancesV2.length.should.eql(2)
-        })
       })
     })
   } else {

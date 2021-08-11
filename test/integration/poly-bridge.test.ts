@@ -72,61 +72,53 @@ if (isEtheremNetwork(hre.network)) {
           borrowerSigner
         )
       })
-
       describe('Calling mapped contracts', () => {
-        it('approves spending of tokens', async () => {
-          const erc721Predicate = '0x74D83801586E9D3C4dc45FfCD30B54eA9C88cf9b'
-          for (let i = 0; i < ownedNFTs.length; i++) {
-            await rootToken
-              .connect(borrowerSigner)
-              .approve(erc721Predicate, ownedNFTs[i])
-
-            const approved = await rootToken
-              .connect(borrower)
-              .getApproved(ownedNFTs[i])
-            erc721Predicate.should.equal(approved)
+        it('should be able to start to bridge NFTv2 to polygon', async () => {
+          const ownedNFTsV1 = await rootToken.getOwnedTokens(borrower)
+          await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
+          const stakedNFTsV1 = await diamond.getStakedNFTs(borrower)
+          ownedNFTsV1.should.eql(stakedNFTsV1)
+          // const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
+          const expectedV2IDs: any = []
+          for (let i = 0; i < ownedNFTsV1.length; i++) {
+            const newID = await rootTokenV2.convertV1TokenId(ownedNFTs[i])
+            expectedV2IDs.push(newID)
           }
-        })
 
-        it('bridges our NFTs', async () => {
-          // migrate and bridge all of our nfts
-          await diamond.connect(borrowerSigner).bridgeNFTsV1(ownedNFTs[0])
-          // add rest of the test here
-        })
-
-        it.skip('stakes the NFTs on polygon', async () => {
-          // encode data
-          const stakedNFTs = await diamond.getStakedNFTs(borrower)
-          const depositData = ethers.utils.defaultAbiCoder.encode(
-            ['uint256[]'],
-            [stakedNFTs]
+          await diamond.connect(borrower).unstakeNFTs(stakedNFTsV1)
+          let ownedTokensV2 = await rootTokenV2.getOwnedTokens(borrower)
+          let addresses = new Array(ownedTokensV2.length).fill(borrower)
+          let tokenBalancesV2 = await rootTokenV2.balanceOfBatch(
+            addresses,
+            ownedTokensV2
           )
-          // stake the nfts on polygon
-          // await childToken.connect(deployer).deposit(borrower, depositData)
-        })
 
-        it.skip('unstakes NFTs on polygon and burns them', async () => {
-          // const burnTx = await childToken
-          //   .connect(borrowerSigner)
-          //   .withdrawBatch(ownedNFTs)
-          // // from matic docs
-          // const exitCallData = await maticPOSClient.exitERC721(
-          //   JSON.stringify(burnTx),
-          //   {
-          //     from: diamond.address,
-          //     encodeAbi: true,
-          //   }
-          // )
-          // // exit call data
-          // await diamond.connect(borrowerSigner).exit(exitCallData)
-        })
+          console.log(
+            'balances pre-bridge',
+            ownedTokensV2,
+            addresses,
+            tokenBalancesV2
+          )
 
-        it.skip('stakes the NFTs on ethereum', async () => {
-          // await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
-          // const stakedNFTs = await diamond.getStakedNFTs(borrower)
-          // for (let i = 0; i < ownedNFTs.length; i++) {
-          //   ownedNFTs[i].should.equal(stakedNFTs[i])
-          // }
+          tokenBalancesV2.should.eql(expectedV2IDs[1])
+
+          await diamond.bridgeNFTsV2(tokenBalancesV2[0], 1)
+
+          ownedTokensV2 = await rootTokenV2.getOwnedTokens(borrower)
+          addresses = new Array(ownedTokensV2.length).fill(borrower)
+          tokenBalancesV2 = await rootTokenV2.balanceOfBatch(
+            addresses,
+            ownedTokensV2
+          )
+
+          console.log(
+            'balances post-bridge',
+            ownedTokensV2,
+            addresses,
+            tokenBalancesV2
+          )
+
+          tokenBalancesV2.length.should.eql(2)
         })
       })
       describe('Mock tests', () => {
