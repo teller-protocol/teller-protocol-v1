@@ -79,7 +79,7 @@ export async function updateAssetSettings(
           continue
         }
         const existingValue = await fn(token.address)
-        if (existingValue !== values[key]) {
+        if (existingValue.toString() !== values[key].toString()) {
           log(`Updating ${key}`, {
             star: true,
             indent: 3,
