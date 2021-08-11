@@ -270,4 +270,9 @@ interface IComptroller {
      * @return The number of COMP
      */
     function compAccrued(address holder) external view returns (uint256);
+
+    /**
+     * @notice Recalculate and update COMP speeds for all COMP markets
+     */
+    function compSpeeds(address holder) external view returns (uint256);
 }

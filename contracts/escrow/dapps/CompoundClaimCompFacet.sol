@@ -70,13 +70,10 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
         view
         returns (uint256)
     {
-        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
-            ? msg.sender
-            : address(LibEscrow.e(loanID));
         IComptroller comptroller = IComptroller(
             COMPTROLLER_ADDRESS_PROVIDER_ADDRESS
         );
-        uint256 comp = comptroller.compAccrued(user);
+        uint256 comp = comptroller.compAccrued(address(LibEscrow.e(loanID)));
         return comp;
     }
 }
