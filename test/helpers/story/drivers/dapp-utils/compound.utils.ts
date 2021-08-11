@@ -2,9 +2,14 @@ import { BigNumber } from '@ethersproject/bignumber'
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import moment from 'moment'
 
 import { getDappAddresses } from '../../../../../config'
-import { ICErc20, IComptroller } from '../../../../../types/typechain'
+import {
+  EscrowClaimTokens,
+  ICErc20,
+  IComptroller,
+} from '../../../../../types/typechain'
 import { getFunds } from '../../../get-funds'
 import { LoanHelpersReturn } from '../../../loans'
 import LoanStoryTestDriver from '../loan-story-test-driver'
@@ -125,17 +130,33 @@ export const compoundClaimTest = async (
   const loan = await LoanStoryTestDriver.getLoan(hre, borrower)
   const { details, diamond } = loan
   let shouldPass = true
-  await hre.evm.advanceTime(details.loan.duration)
   const dappAddresses = getDappAddresses(network)
   const Comptroller = await contracts.get<IComptroller>('IComptroller', {
     at: dappAddresses.compoundComptrollerAddress,
   })
   const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-  const compBefore = await Comptroller.compAccrued(escrowAddress)
+  await hre.evm.advanceTime(moment.duration(10, 'day'))
+  shouldPass = await hre.evm.withBlockScope(0, async () => {
+    // do the mint for the deployer
+    await getFunds({
+      to: await borrower.getAddress(),
+      tokenSym: await details.lendingToken.symbol(),
+      amount: BigNumber.from(details.loan.borrowedAmount).mul(2),
+      hre,
+    })
 
+    const cToken = await contracts.get<ICErc20>('ICErc20', {
+      at: await diamond.getAssetCToken(details.lendingToken.address),
+    })
+    await cToken.mint('1')
+
+    const compAccrued = await Comptroller.compAccrued(escrowAddress)
+    console.log({ compAccrued })
+    return compAccrued.gt(0)
+  })
+  console.log({ shouldPass })
   //read the state and determine if this should pass
   if (!loan) shouldPass = false
-  if (compBefore.lte(0)) shouldPass = false
   if (shouldPass) {
     await claimComp(hre, loan)
   } else {

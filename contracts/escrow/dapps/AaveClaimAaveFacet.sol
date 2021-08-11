@@ -16,6 +16,7 @@ import { LoanStatus } from "../../storage/market.sol";
 import { IStakedAave } from "../../shared/interfaces/IStakedAave.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "hardhat/console.sol";
 
 contract AaveClaimAaveFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
@@ -85,20 +86,14 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
      * @notice This function calculates the amount of aave tokens that can be redeemed.
      * @param loanID id of the loan being used in the dapp
      */
-    function aaveCalculateAave(uint256 loanID)
-        public
-        view
-        paused("", false)
-        onlyBorrower(loanID)
-        returns (uint256)
-    {
+    function aaveCalculateAave(uint256 loanID) public view returns (uint256) {
         IAaveIncentivesController conptroller = IAaveIncentivesController(
             INCENTIVES_CONTROLLER_ADDRESS
         );
-        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
-            ? msg.sender
-            : address(LibEscrow.e(loanID));
-        uint256 result = conptroller.getUserUnclaimedRewards(user);
+        uint256 result = conptroller.getUserUnclaimedRewards(
+            address(LibEscrow.e(loanID))
+        );
+        console.log("result is", result);
         return result;
     }
 }
