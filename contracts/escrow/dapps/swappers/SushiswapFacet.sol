@@ -8,7 +8,9 @@ import { AbstractUniSwapper } from "./AbstractUniSwapper.sol";
 import { LibEscrow } from "../../libraries/LibEscrow.sol";
 
 // Interfaces
-import { IUniswapV2Router } from "../../../shared/interfaces/IUniswapV2Router.sol";
+import {
+    IUniswapV2Router
+} from "../../../shared/interfaces/IUniswapV2Router.sol";
 
 contract SushiswapFacet is AbstractUniSwapper {
     /**
@@ -61,6 +63,7 @@ contract SushiswapFacet is AbstractUniSwapper {
             address(LibEscrow.e(loanID)),
             block.timestamp
         );
+
         // Call Escrow to do swap get the response amounts
         uint256[] memory amounts = abi.decode(
             LibEscrow.e(loanID).callDapp(address(ROUTER_ADDRESS), callData),

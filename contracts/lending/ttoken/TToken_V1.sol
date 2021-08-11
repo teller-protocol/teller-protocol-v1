@@ -13,10 +13,16 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ITToken } from "./ITToken.sol";
 
 // Libraries
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ERC165Checker
+} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { ReentryMods } from "../../contexts2/access-control/reentry/ReentryMods.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
@@ -27,6 +33,15 @@ import "./token-storage.sol" as Storage;
  * @author develop@teller.finance
  */
 contract TToken_V1 is ITToken, ReentryMods {
+    /**
+     * @notice To prevent the initialization of this TToken implementation contract, we call the initializer modifier.
+     *  This prevents someone from:
+     *      1. Becoming the ADMIN of the implementation contract
+     *      2. Setting a strategy
+     *      3. Calling a malicious function on the strategy that destroys the logic contract
+     */
+    constructor() initializer {}
+
     function() pure returns (Storage.Store storage) internal constant s =
         Storage.store;
 
@@ -38,7 +53,7 @@ contract TToken_V1 is ITToken, ReentryMods {
      * The LP being restricted means that only the Teller protocol may
      *  lend/borrow funds.
      */
-    modifier notRestricted {
+    modifier notRestricted() {
         require(
             !s().restricted || RolesLib.hasRole(CONTROLLER, _msgSender()),
             "Teller: platform restricted"
@@ -438,7 +453,7 @@ contract TToken_V1 is ITToken, ReentryMods {
     }
 
     /**
-     * @notice it retrives the value in the underlying tokens
+     * @notice it retrieves the value in the underlying tokens
      *
      */
     function _valueInUnderlying(uint256 amount, uint256 rate)

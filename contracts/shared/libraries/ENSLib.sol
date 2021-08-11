@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { ENSRegistry } from "@ensdomains/ens-contracts/contracts/registry/ENSRegistry.sol";
-import { PublicResolver } from "@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol";
+import {
+    ENSRegistry
+} from "@ensdomains/ens-contracts/contracts/registry/ENSRegistry.sol";
+import {
+    PublicResolver
+} from "@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol";
 
 library ENS {
     bytes32 public constant ETH_NAMEHASH =

@@ -133,12 +133,14 @@ extendEnvironment((hre) => {
       name: string,
       config?: ContractsGetConfig
     ): Promise<C> {
-      const {
-        abi,
-        address = config?.at,
-      }: { abi: unknown[]; address?: string } = await deployments
+      const { abi, address } = await deployments
         .get(name)
         .catch(() => deployments.getArtifact(name))
+        .then((artifact) => ({
+          abi: artifact.abi,
+          address:
+            config?.at ?? ('address' in artifact ? artifact.address : null),
+        }))
 
       if (address == null)
         throw new Error(
@@ -254,22 +256,4 @@ extendEnvironment((hre) => {
     const fn = config?.error ? process.stderr : process.stdout
     fn.write(formatMsg(msg, config))
   }
-})
-
-/**
- * Override `hardhat-deploy` deploy subtask to do some magic after it runs.
- */
-subtask('deploy:runDeploy', async (args, hre, runSuper) => {
-  if (!runSuper.isDefined) return
-
-  await runSuper(args)
-
-  // Only continue on a live network
-  if (!hre.network.live) return
-
-  // Verify contracts on Etherscan
-  await hre.run('etherscan-verify', { solcInput: true })
-
-  // Save and verify contracts on Tenderly
-  await hre.run('tenderly-contracts')
 })

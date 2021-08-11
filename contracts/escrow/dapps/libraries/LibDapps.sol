@@ -4,13 +4,17 @@ pragma solidity ^0.8.0;
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IAToken } from "../../../shared/interfaces/IAToken.sol";
-import { IAaveLendingPool } from "../../../shared/interfaces/IAaveLendingPool.sol";
-import { IAaveLendingPoolAddressesProvider } from "../../../shared/interfaces/IAaveLendingPoolAddressesProvider.sol";
-import { IUniswapV2Router } from "../../../shared/interfaces/IUniswapV2Router.sol";
-import { IVault } from "../interfaces/IVault.sol";
+import {
+    IAaveLendingPool
+} from "../../../shared/interfaces/IAaveLendingPool.sol";
+import {
+    IAaveLendingPoolAddressesProvider
+} from "../../../shared/interfaces/IAaveLendingPoolAddressesProvider.sol";
 
 // Libraries
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { MarketStorageLib, MarketStorage } from "../../../storage/market.sol";
@@ -51,23 +55,9 @@ library LibDapps {
     {
         return
             IAToken(
-                getAaveLendingPool(aaveLPAddressProvider)
-                    .getReserveData(tokenAddress)
-                    .aTokenAddress
-            );
-    }
-
-    /**
-        @notice Grabs the yVault address for a token from the asset settings.
-        @param tokenAddress The underlying token address for the associated yVault.
-        @return yVault instance.
-     */
-    function getYVault(address tokenAddress) internal view returns (IVault) {
-        return
-            IVault(
-                AppStorageLib.store().assetSettings[tokenAddress].addresses[
-                    keccak256("yVaultAddress")
-                ]
+                getAaveLendingPool(aaveLPAddressProvider).getReserveData(
+                    tokenAddress
+                ).aTokenAddress
             );
     }
 }

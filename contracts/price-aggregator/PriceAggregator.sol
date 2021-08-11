@@ -6,7 +6,9 @@ import { ChainlinkPricer } from "./pricers/ChainlinkPricer.sol";
 
 // Interfaces
 import { IsaLPPricer } from "./IsaLPPricer.sol";
-import { AggregatorV2V3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
+import {
+    AggregatorV2V3Interface
+} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract PriceAggregator {

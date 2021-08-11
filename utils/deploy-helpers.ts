@@ -33,35 +33,36 @@ export const deploy = async <C extends Contract>(
   } = hre
 
   const { deployer } = await getNamedAccounts()
+
+  // If marked as mock, prepend "Mock" to the contract name
+  const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
   const contractDeployName = args.name ?? args.contract
+
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
   let result: DeployResult
 
   if (!existingContract || (existingContract && !skipIfAlreadyDeployed)) {
-    // If marked as mock, prepend "Mock" to the contract name
-    const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
-
     result = await deploy(contractDeployName, {
       ...args,
       contract: contractName,
       from: deployer,
     })
-
     contractAddress = result.address
-    await onDeployResult({ result, name: contractDeployName, hre, indent })
   } else {
     result = { ...existingContract, newlyDeployed: false }
     contractAddress = existingContract.address
-    await onDeployResult({
-      result,
-      name: contractDeployName,
-      hre,
-      indent,
-    })
   }
 
-  const contract = (await hre.contracts.get(args.contract, {
+  await onDeployResult({
+    result,
+    contract: contractName,
+    name: contractDeployName,
+    hre,
+    indent,
+  })
+
+  const contract = (await hre.contracts.get(contractDeployName, {
     at: contractAddress,
   })) as DeployedContract<C>
   contract.deployResult = result
@@ -73,7 +74,8 @@ export interface DiamondExecuteArgs<F, A> {
   args: A
 }
 
-export type Facets = Array<string | Omit<DeployArgs, 'hre'>>
+type FacetConfig = Omit<DeployArgs, 'hre'>
+export type Facets = Array<string | FacetConfig>
 
 export interface DeployDiamondArgs<
   C extends Contract,
@@ -86,7 +88,6 @@ export interface DeployDiamondArgs<
   execute?: F extends keyof C['functions']
     ? DiamondExecuteArgs<F, A>
     : undefined
-  onFacetDeployment?: (result: DeployResult) => Promise<void>
 }
 
 export const deployDiamond = async <
@@ -96,7 +97,7 @@ export const deployDiamond = async <
 >(
   args: DeployDiamondArgs<C, F, A>
 ): Promise<C> => {
-  const { onFacetDeployment, hre, indent = 1 } = args
+  const { hre, indent = 1 } = args
   const {
     deployments: { diamond },
     getNamedAccounts,
@@ -106,22 +107,31 @@ export const deployDiamond = async <
 
   const { deployer } = await getNamedAccounts()
 
-  const contractDisplayName = colors.bold(
-    colors.underline(colors.green(args.name))
-  )
+  const contractDisplayName = colors.green.bold.underline(args.name)
   log(`Deploying Diamond facets for ${contractDisplayName}`, {
     star: true,
     indent,
   })
 
+  for (let config of args.facets) {
+    if (typeof config === 'string') {
+      config = { contract: config }
+    }
+
+    const { deployResult } = await deploy({
+      ...config,
+      indent: indent + 1,
+      hre,
+    })
+    if (deployResult.artifactName) {
+      config.contract = deployResult.artifactName
+    }
+  }
+
   const result = await diamond.deploy(args.name, {
     owner: args.owner ?? deployer,
     libraries: args.libraries,
     facets: args.facets,
-    onFacetDeployment: async (result) => {
-      await onDeployResult({ result, hre, indent: indent + 1 })
-      await onFacetDeployment?.(result)
-    },
     // @ts-expect-error fix type
     execute: args.execute,
     from: deployer,
@@ -130,8 +140,9 @@ export const deployDiamond = async <
 
   await onDeployResult({
     result,
+    contract: 'Diamond',
+    name: args.name,
     hre,
-    name: `(Diamond) ${contractDisplayName}`,
     indent: indent + 1,
   })
   log('')
@@ -142,18 +153,22 @@ export const deployDiamond = async <
 interface DeployResultArgs {
   result: DeployResult
   hre: HardhatRuntimeEnvironment
-  name?: string
+  contract: string
+  name: string
   indent?: number
 }
 
 const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
-  const { result, hre, name, indent = 1 } = args
+  const { result, hre, contract, name, indent = 1 } = args
 
-  const displayName =
-    name ??
-    colors.bold(
-      colors.underline(colors.green(result.artifactName ?? 'Unknown'))
-    )
+  let displayName = name
+  if (contract !== name) {
+    displayName = `${displayName} (${colors.bold.italic(contract)})`
+  }
+  if (result.artifactName && result.artifactName !== contract) {
+    displayName = `${displayName} (${colors.bold.italic(result.artifactName)})`
+  }
+
   hre.log(`${displayName}:`, {
     indent,
     star: true,

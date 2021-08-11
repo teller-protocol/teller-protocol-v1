@@ -464,6 +464,20 @@ OPTIONS:
 view-platform-setting: Lists the current platform settings
 ```
 
+### update-asset-settings
+
+```shell
+Hardhat version 2.4.0
+
+Usage: hardhat [GLOBAL OPTIONS] update-asset-settings [...symbols]
+
+POSITIONAL ARGUMENTS:
+
+  symbols       List of token symbols (separated by spaces) to update asset settings for. Defaults to all in the config file (default: [])
+
+update-asset-settings: Updates the asset setting values based on the config file
+```
+
 ### stats
 
 ```shell

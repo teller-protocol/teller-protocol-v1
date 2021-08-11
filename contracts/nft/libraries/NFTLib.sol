@@ -26,40 +26,66 @@ library NFTLib {
     }
 
     /**s
-     * @notice it transfers the NFT from the sender to the diamond to stake then adds the NFTID to the list of the owner's stakedNFTs
+     * @notice Adds the {nftID} to the list of the owner's stakedNFTs
      * @param nftID the ID of the NFT to stake
      * @param owner the owner of the NFT who will stake the NFT
      */
     function stake(uint256 nftID, address owner) internal {
-        // Transfer to diamond
-        NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
         // Add NFT ID to user set
         EnumerableSet.add(s().stakedNFTs[owner], nftID);
     }
 
     /**
-     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
-     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
-     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
+     * @notice Adds the {nftID} to the list of the owner's stakedNFTs
+     * @param nftID the ID of the NFT to stake
+     * @param amount the quantity of ERC1155 NFT to stake
+     * @param owner the owner of the NFT who will stake the NFT
      */
-    function unstake(uint256 nftID) internal returns (bool success_) {
-        success_ = EnumerableSet.remove(s().stakedNFTs[msg.sender], nftID);
+    function stakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal {
+        // Add NFT ID and quantity to user set
+        s().stakedNFTsV2Amounts[owner][nftID] += amount;
+        EnumerableSet.add(s().stakedNFTsV2[owner], nftID);
     }
 
     /**
-     * @notice it gets the list of staked NFTs from the owner
-     * @param nftOwner the owner of the staked NFTs to pull from
-     * @return staked_ the array of the staked NFTs owned by the user
+     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
+     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
+     * @param owner the account which originally staked the NFT
+     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
      */
-    function stakedNFTs(address nftOwner)
+    function unstake(uint256 nftID, address owner)
         internal
-        view
-        returns (uint256[] memory staked_)
+        returns (bool success_)
     {
-        EnumerableSet.UintSet storage nfts = s().stakedNFTs[nftOwner];
-        staked_ = new uint256[](EnumerableSet.length(nfts));
-        for (uint256 i; i < staked_.length; i++) {
-            staked_[i] = EnumerableSet.at(nfts, i);
+        success_ = EnumerableSet.remove(s().stakedNFTs[owner], nftID);
+    }
+
+    /**
+     * @notice it unstakes the NFT by removing the NFT ID from the list of the user's staked NFTs
+     * @param nftID the ID of the NFT to remove from the list of the user's staked NFTs
+     * @param amount the quantity of ERC1155 NFT to unstake
+     * @return success_ the boolean value telling us if the user has unsuccessfully unstaked the NFT
+     */
+    function unstakeV2(
+        uint256 nftID,
+        uint256 amount,
+        address owner
+    ) internal returns (bool success_) {
+        // Check if owner has the staked balance
+        success_ = s().stakedNFTsV2Amounts[owner][nftID] >= amount;
+
+        // Subtract the amount from owner's staked balance
+        if (success_) {
+            s().stakedNFTsV2Amounts[owner][nftID] -= amount;
+
+            // If the staked token balance is now 0, remove the ID from mapping
+            if (s().stakedNFTsV2Amounts[owner][nftID] == 0) {
+                EnumerableSet.remove(s().stakedNFTsV2[owner], nftID);
+            }
         }
     }
 
@@ -80,17 +106,45 @@ library NFTLib {
     }
 
     /**
+     * @notice It unstakes an NFT and verifies the proof in order to apply the proof to a loan
+     * @param loanID the identifier of the loan
+     * @param nftID the NFT ID to apply to the loan
+     * @param owner the account which originally staked the NFT
+     */
+    function applyToLoan(
+        uint256 loanID,
+        uint256 nftID,
+        address owner
+    ) internal {
+        // NFT must be currently staked
+        // Remove NFT from being staked - returns bool
+        require(unstake(nftID, owner), "Teller: borrower nft not staked");
+
+        // Apply NFT to loan
+        EnumerableSet.add(s().loanNFTs[loanID], nftID);
+    }
+
+    /**
      * @notice it unstakes an NFT and verifies the proof in order to apply the proof to a loan
      * @param loanID the identifier of the loan
      * @param nftID the NFT ID to apply to the loan
      */
-    function applyToLoan(uint256 loanID, uint256 nftID) internal {
+    function applyToLoanV2(
+        uint256 loanID,
+        uint256 nftID,
+        uint256 amount,
+        address borrower
+    ) internal {
         // NFT must be currently staked
         // Remove NFT from being staked - returns bool
-        require(unstake(nftID), "Teller: borrower nft not staked");
+        require(
+            unstakeV2(nftID, amount, borrower),
+            "Teller: borrower nft not staked"
+        );
 
         // Apply NFT to loan
-        EnumerableSet.add(s().loanNFTs[loanID], nftID);
+        EnumerableSet.add(s().loanNFTsV2[loanID], nftID);
+        s().loanNFTsV2Amounts[loanID][nftID] = amount;
     }
 
     /**

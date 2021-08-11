@@ -33,11 +33,18 @@ const {
   MATIC_MUMBAI_KEY,
   MNEMONIC_KEY,
   SAVE_GAS_REPORT,
+  TESTING,
 } = process.env
 
 if (COMPILING != 'true') {
   require('./tasks')
   require('./utils/hre-extensions')
+}
+let isTesting = false
+if (TESTING === '1') {
+  isTesting = true
+
+  require('./test/helpers/chai-helpers')
 }
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
@@ -123,7 +130,7 @@ export default <HardhatUserConfig>{
         version: '0.8.4',
         settings: {
           optimizer: {
-            enabled: process.env.TESTING !== '1',
+            enabled: !isTesting,
             runs: 200,
           },
         },
@@ -136,6 +143,7 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
+    enabled: true,
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
@@ -168,6 +176,10 @@ export default <HardhatUserConfig>{
     craSigner: {
       hardhat: 10,
       localhost: 10,
+    },
+    attacker: {
+      hardhat: 11,
+      localhost: 11,
     },
   },
   networks: {
@@ -204,6 +216,7 @@ export default <HardhatUserConfig>{
     hardhat: networkConfig({
       chainId: 31337,
       live: false,
+      allowUnlimitedContractSize: true,
       forking:
         FORKING_NETWORK == null
           ? undefined

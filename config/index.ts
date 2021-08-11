@@ -25,6 +25,16 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 
+/**
+ * Checks if the network is Ethereum mainnet or one of its testnets
+ * @param network HardhatRuntimeEnvironment Network object
+ * @return boolean
+ */
+export const isEtheremNetwork = (network: Network): boolean =>
+  ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(
+    (n) => n === getNetworkName(network)
+  )
+
 export const getNetworkName = (network: Network): string =>
   process.env.FORKING_NETWORK ?? network.name
 
@@ -64,12 +74,13 @@ export const getTokens = (
 
 export const getNativeToken = (network: Network): string => {
   const tokens = getTokens(network)
-  let wrappedNativeToken
+  let wrappedNativeToken: string
+  const networkName = getNetworkName(network)
   if (
-    network.name === 'mainnet' ||
-    network.name === 'kovan' ||
-    network.name === 'rinkeby' ||
-    network.name === 'ropsten'
+    networkName === 'mainnet' ||
+    networkName === 'kovan' ||
+    networkName === 'rinkeby' ||
+    networkName === 'ropsten'
   ) {
     wrappedNativeToken = tokens.erc20.WETH
   } else {

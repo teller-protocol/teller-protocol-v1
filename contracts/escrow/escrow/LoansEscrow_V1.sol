@@ -23,7 +23,7 @@ import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 contract LoansEscrow_V1 is ILoansEscrow {
     address public owner;
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(owner == msg.sender, "Teller: loan escrow not owner");
         _;
     }
