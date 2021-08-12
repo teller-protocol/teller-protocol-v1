@@ -152,7 +152,5 @@ export const tokens: Record<string, NetworkTokens> = {
       WBTC: '0x0d787a4a1548f673ed375445535a6c7A1EE56180',
     },
   },
-  hardhat: polygonTokens,
-  localhost: polygonTokens,
   mainnet: mainnetTokens,
 }
