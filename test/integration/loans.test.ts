@@ -178,7 +178,7 @@ describe('Loans', () => {
 
               // get loanStatus from helpers and check if it's equal to 2, which means it's active
               const loanStatus = helpers.details.loan.status
-              loanStatus.should.equal(2, 'Loan is not active')
+              loanStatus.should.equal(LoanStatus.Active, 'Loan is not active')
 
               const loanNFTs = await diamond.getLoanNFTs(
                 helpers.details.loan.id
@@ -555,135 +555,6 @@ describe('Loans', () => {
 
             expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
             expect(loanData.status).to.equal(LoanStatus.Liquidated)
-          })
-
-          it('should be able to create and liquidate a loan', async () => {
-            const borrower = await getNamedSigner('borrower')
-            const liquidator = await getNamedSigner('liquidator')
-
-            const lendingToken =
-              typeof market.lendingToken === 'string'
-                ? await tokens.get(market.lendingToken)
-                : market.lendingToken
-
-            const collateralToken =
-              typeof market.collateralTokens[0] === 'string'
-                ? await tokens.get(market.collateralTokens[0])
-                : market.collateralTokens[0]
-
-            const lendingTokenDecimals = await lendingToken.decimals()
-            console.log('decimals', lendingTokenDecimals)
-
-            const collateralTokenDecimals = await collateralToken.decimals()
-
-            const borrowerAddress = await borrower.getAddress()
-
-            const { getHelpers } = await takeOutLoanWithNfts(hre, {
-              amount: 100,
-              lendToken: market.lendingToken,
-              borrower: borrower,
-              version: 2,
-            })
-
-            const helpers: LoanHelpersReturn = await getHelpers()
-
-            expect(helpers.details.loan).to.exist
-
-            console.log('helpers.details.loan', helpers.details.loan)
-
-            const loanId = helpers.details.loan.id
-            console.log('loanId', loanId)
-
-            await getFunds({
-              to: borrower,
-              tokenSym: market.lendingToken,
-              amount: (200 * 10 ** lendingTokenDecimals).toString(),
-              hre,
-            })
-
-            await getFunds({
-              to: liquidator,
-              tokenSym: market.lendingToken,
-              amount: (200 * 10 ** lendingTokenDecimals).toString(),
-              hre,
-            })
-
-            const borrowerBalance = await lendingToken.balanceOf(
-              borrowerAddress
-            )
-
-            const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-
-            await lendingToken
-              .connect(ethers.provider.getSigner(borrowerAddress))
-              .approve(diamond.address, balanceLeftToRepay)
-
-            const loanNFTsBeforeLiquidate = await diamond.getLoanNFTsV2(loanId)
-            expect(loanNFTsBeforeLiquidate.loanNFTs_.length).to.equal(3)
-
-            const diamondOwnerArray = loanNFTsBeforeLiquidate.loanNFTs_.map(
-              () => diamond.address
-            )
-
-            const nftBalancesBeforeLiquidation =
-              await tellerNFTV2.balanceOfBatch(
-                diamondOwnerArray,
-                loanNFTsBeforeLiquidate.loanNFTs_
-              )
-
-            const liquidationController =
-              await diamond.getNFTLiquidationController()
-
-            //make the loan expire
-            await evm.advanceTime(helpers.details.loan.duration)
-
-            await lendingToken
-              .connect(liquidator)
-              .approve(diamond.address, balanceLeftToRepay)
-
-            await diamond.connect(liquidator).liquidateLoan(loanId)
-
-            const liqControllerOwnedTokens = await tellerNFTV2.getOwnedTokens(
-              liquidationController
-            )
-
-            liqControllerOwnedTokens.should.eql(
-              loanNFTsBeforeLiquidate.loanNFTs_
-            )
-
-            const liquidatorOwnerArray = loanNFTsBeforeLiquidate.loanNFTs_.map(
-              () => liquidationController
-            )
-
-            const loanNFTsAfterLiquidate = await diamond.getLoanNFTsV2(loanId)
-
-            const nftBalancesAfterLiquidation =
-              await tellerNFTV2.balanceOfBatch(
-                liquidatorOwnerArray,
-                loanNFTsAfterLiquidate.loanNFTs_
-              )
-
-            expect(nftBalancesAfterLiquidation).to.eql(
-              loanNFTsBeforeLiquidate.amounts_
-            )
-
-            const nftBalancesInDiamondAfterLiquidation =
-              await tellerNFTV2.balanceOfBatch(
-                diamondOwnerArray,
-                loanNFTsAfterLiquidate.loanNFTs_
-              )
-
-            const emptyAmounts = nftBalancesAfterLiquidation.map(() =>
-              BigNumber.from(0x0)
-            )
-
-            expect(nftBalancesInDiamondAfterLiquidation).to.eql(emptyAmounts)
-
-            const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
-            const loanData = await diamond.getLoan(loanId)
-
-            expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
-            expect(loanData.status).to.equal(4) //4 = liquidated
           })
         })
       })
