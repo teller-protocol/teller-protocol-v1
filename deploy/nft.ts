@@ -7,6 +7,7 @@ import {
   ITellerNFT,
   ITellerNFTDistributor,
   MainnetTellerNFT,
+  TellerNFT,
   TellerNFTV2,
 } from '../types/typechain'
 import {
@@ -32,6 +33,13 @@ const deployNFT: DeployFunction = async (hre) => {
     (n) => n === networkName
   )
   if (isEthereum) {
+    const minterAddresses = [await deployer.getAddress()]
+    /* Deploying V1 */
+    const nftV1 = await deploy<TellerNFT>({ contract: 'TellerNFT', hre })
+    if (nftV1.deployResult.newlyDeployed) {
+      await nftV1.initialize(minterAddresses).then(({ wait }) => wait())
+    }
+    /* Deploying V2 */
     const nft = await deploy<MainnetTellerNFT>({
       contract: 'MainnetTellerNFT',
       name: nftName,
@@ -45,7 +53,7 @@ const deployNFT: DeployFunction = async (hre) => {
               // Initial minters
               ethers.utils.defaultAbiCoder.encode(
                 ['address[]'],
-                [[await deployer.getAddress()]]
+                [minterAddresses]
               ),
             ],
           },
