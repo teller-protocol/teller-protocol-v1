@@ -26,7 +26,6 @@ const {
   COMPILING,
   CMC_KEY,
   ETHERSCAN_API_KEY,
-  GAS_PRICE_GWEI_KEY,
   INFURA_KEY,
   FORKING_NETWORK,
   MATIC_MAINNET_KEY,
@@ -54,10 +53,6 @@ const accounts: HardhatNetworkHDAccountsUserConfig = {
 }
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
-
-const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = GAS_PRICE_GWEI_KEY
-  ? BN.from(ethers.utils.parseUnits(GAS_PRICE_GWEI_KEY, 'gwei')).toNumber()
-  : 'auto'
 
 const networkUrls: { [network: string]: string } = {
   kovan: ALCHEMY_KOVAN_KEY!,
@@ -92,11 +87,6 @@ const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
     ...config,
     accounts,
     gas: GAS,
-    gasPrice: config.live
-      ? GAS_PRICE
-      : GAS_PRICE === 'auto'
-      ? GAS_PRICE
-      : BN.from(GAS_PRICE).div(4).toNumber(),
   }
 
   return config
