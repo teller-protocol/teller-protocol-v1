@@ -234,6 +234,10 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         }
     }
 
+    /**
+       @notice automatically restake the NFT when the loan is repaid
+       @param loanID ID of loan for which to restake linked NFT
+    */
     function _restakeNFT(uint256 loanID) internal virtual {
         NFTLib.restakeLinkedV2(loanID, LibLoans.loan(loanID).borrower);
     }

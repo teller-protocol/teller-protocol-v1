@@ -197,10 +197,7 @@ describe('Loans', () => {
               const loanId = helpers.details.loan.id
               console.log('loanId', loanId)
 
-              const lendingToken =
-                typeof market.lendingToken === 'string'
-                  ? await tokens.get(market.lendingToken)
-                  : market.lendingToken
+              const lendingToken = helpers.details.lendingToken
 
               const lendingTokenDecimals = await lendingToken.decimals()
               console.log('decimals', lendingTokenDecimals)
@@ -209,7 +206,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: (200 * 10 ** lendingTokenDecimals).toString(),
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -260,23 +257,16 @@ describe('Loans', () => {
 
               expect(helpers.details.loan).to.exist
 
-              console.log('helpers.details.loan', helpers.details.loan)
-
               const loanId = helpers.details.loan.id
-              console.log('loanId', loanId)
 
-              const lendingToken =
-                typeof market.lendingToken === 'string'
-                  ? await tokens.get(market.lendingToken)
-                  : market.lendingToken
+              const lendingToken = helpers.details.lendingToken
 
               const lendingTokenDecimals = await lendingToken.decimals()
-              console.log('decimals', lendingTokenDecimals)
 
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: (200 * 10 ** lendingTokenDecimals).toString(),
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -301,10 +291,7 @@ describe('Loans', () => {
 
               await diamond
                 .connect(borrower)
-                .repayLoan(
-                  loanId,
-                  (100 * 10 ** lendingTokenDecimals).toString()
-                )
+                .repayLoan(loanId, hre.toBN(100, lendingTokenDecimals))
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -374,20 +361,15 @@ describe('Loans', () => {
             expect(helpers.details.loan).to.exist
 
             const loanId = helpers.details.loan.id
-            console.log('loanId', loanId)
 
-            const lendingToken =
-              typeof market.lendingToken === 'string'
-                ? await tokens.get(market.lendingToken)
-                : market.lendingToken
+            const lendingToken = helpers.details.lendingToken
 
             const lendingTokenDecimals = await lendingToken.decimals()
-            console.log('decimals', lendingTokenDecimals)
 
             await getFunds({
               to: borrower,
               tokenSym: market.lendingToken,
-              amount: (200 * 10 ** lendingTokenDecimals).toString(),
+              amount: hre.toBN(200, lendingTokenDecimals),
               hre,
             })
 
@@ -412,7 +394,7 @@ describe('Loans', () => {
 
             await diamond
               .connect(borrower)
-              .repayLoan(loanId, (100 * 10 ** lendingTokenDecimals).toString())
+              .repayLoan(loanId, hre.toBN(100, lendingTokenDecimals))
 
             const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
