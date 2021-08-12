@@ -7,6 +7,7 @@ import { getMarkets, isEtheremNetwork } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond, MainnetNFTFacet } from '../../types/typechain'
+import { LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
@@ -196,11 +197,6 @@ describe('Loans', () => {
               const loanId = helpers.details.loan.id
               console.log('loanId', loanId)
 
-              //  const lHelpers = await loanHelpers(loanId)
-
-              //need to give fake ERC20 to borrower
-              //and add fake ERC20 to the borrow escrow
-
               const lendingToken =
                 typeof market.lendingToken === 'string'
                   ? await tokens.get(market.lendingToken)
@@ -209,6 +205,7 @@ describe('Loans', () => {
               const lendingTokenDecimals = await lendingToken.decimals()
               console.log('decimals', lendingTokenDecimals)
 
+              //add lending token funds to the borrower
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
@@ -221,18 +218,11 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay)
 
               await lendingToken
-                .connect(ethers.provider.getSigner(borrowerAddress))
+                .connect(borrower)
                 .approve(diamond.address, balanceLeftToRepay)
-
-              //let response = await helpers.repay( 100000000 , borrower )
 
               await diamond
                 .connect(borrower)
@@ -243,22 +233,17 @@ describe('Loans', () => {
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-              console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
-
               const loanData = await diamond.getLoan(loanId)
-              console.log('loanData')
 
-              console.log('balanceLeftToRepay 2', balanceLeftToRepay)
-
-              console.log('balanceOf After', borrowerBalance.toString())
-
-              expect(parseInt(borrowerBalance.toString())).to.equal(
+              const borrowerBalanceAfterRepayment =
+                await lendingToken.balanceOf(borrowerAddress)
+              borrowerBalanceAfterRepayment.should.eql(
                 200 * 10 ** lendingTokenDecimals
               )
 
               expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
 
-              expect(loanData.status).to.equal(3) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
             })
 
             it('should be able to create and repay a loan', async () => {
@@ -335,7 +320,7 @@ describe('Loans', () => {
 
               totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(3) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
             })
           })
         }
@@ -357,9 +342,8 @@ describe('Loans', () => {
 
             helpers.details.loan.should.exist
 
-            // get loanStatus from helpers and check if it's equal to 2, which means it's active
             const loanStatus = helpers.details.loan.status
-            loanStatus.should.equal(2, 'Loan is not active')
+            loanStatus.should.equal(LoanStatus.Active, 'Loan is not active')
 
             const loanNFTsV2 = await diamond.getLoanNFTsV2(
               helpers.details.loan.id
@@ -464,7 +448,7 @@ describe('Loans', () => {
 
             expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
 
-            expect(loanData.status).to.equal(3) //3 = repaid
+            expect(loanData.status).to.equal(LoanStatus.Closed)
           })
         })
       })
