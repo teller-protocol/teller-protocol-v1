@@ -44,7 +44,6 @@ const deployChainlinkPricer = async (
   let resolverAddress: string
   switch (getNetworkName(hre.network)) {
     case 'mainnet':
-    case 'kovan':
     case 'rinkeby':
     case 'ropsten':
       resolverAddress = '0x122eb74f9d0F1a5ed587F43D120C1c2BbDb9360B'
@@ -52,6 +51,7 @@ const deployChainlinkPricer = async (
 
     case 'polygon':
     case 'polygon_mumbai':
+    case 'kovan':
       resolverAddress = await deployChainlinkENS(hre)
       break
 
