@@ -120,7 +120,13 @@ contract NFTFacet is RolesMods {
             msg.sender == address(TELLER_NFT_V2),
             "Teller: unaccepted 1155"
         );
-        __stakeNFTV2(from, id, value);
+
+        // see NFTMainnetBridginToPolygonFacet bridgeNFTsV2(): we are either migrating or transferring
+        // the V2 NFT, therefore we don't them to be staked if the Diamond initiates the transfer. It should
+        // only be staked if it's a user who initiates the transfer
+        if (operator != address(this)) {
+            __stakeNFTV2(from, id, value);
+        }
 
         return
             bytes4(

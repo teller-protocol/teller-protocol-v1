@@ -134,23 +134,21 @@ contract NFTMainnetBridgingToPolygonFacet {
      */
 
     function bridgeNFTsV2(uint256 tokenId, uint256 amount) external {
-        EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
+        EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTsV2[
             msg.sender
         ];
-
-        // we are creating a new array so that we can overrwrite each element
-        // with a newTokenId.
-        // amounts_[i] = TELLER_NFT_V2.balanceOf(msg.sender, tokenIds_[i]);
         uint256 amountStaked = NFTLib.s().stakedNFTsV2Amounts[msg.sender][
             tokenId
         ];
         if (EnumerableSet.contains(stakedNFTs, tokenId)) {
             NFTLib.unstakeV2(tokenId, amount, msg.sender);
-            // if (amountStaked <= amount) {
-            //     NFTLib.unstakeV2(tokenId, amountStaked, msg.sender);
-            // } else {
-            //     NFTLib.unstakeV2(tokenId, amount, msg.sender);
-            // }
+            if (amountStaked <= amount) {
+                console.log("amount staked less than amount");
+                NFTLib.unstakeV2(tokenId, amount, msg.sender);
+            } else {
+                console.log("amount staked greater than amount");
+                NFTLib.unstakeV2(tokenId, amountStaked, msg.sender);
+            }
         } else if (amount > 0) {
             TELLER_NFT_V2.safeTransferFrom(
                 msg.sender,
