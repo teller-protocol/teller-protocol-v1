@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Storage
+// Contracts
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+// Libraries
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow, ILoansEscrow } from "../libraries/LibEscrow.sol";
+
+// Interfaces
 import { IAToken } from "../../shared/interfaces/IAToken.sol";
 import {
     IAaveIncentivesController
 } from "../../shared/interfaces/IAaveIncentivesController.sol";
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
+
 // Storage
 import { LoanStatus } from "../../storage/market.sol";
 import { IStakedAave } from "../../shared/interfaces/IStakedAave.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract AaveClaimAaveFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
@@ -93,7 +99,6 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
         uint256 result = conptroller.getUserUnclaimedRewards(
             address(LibEscrow.e(loanID))
         );
-        console.log("result is", result);
         return result;
     }
 }

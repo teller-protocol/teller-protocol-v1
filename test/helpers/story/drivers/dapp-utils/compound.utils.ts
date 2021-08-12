@@ -135,7 +135,6 @@ export const compoundClaimTest = async (
     at: dappAddresses.compoundComptrollerAddress,
   })
   const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-  await hre.evm.advanceTime(moment.duration(10, 'day'))
   shouldPass = await hre.evm.withBlockScope(0, async () => {
     // do the mint for the deployer
     await getFunds({
@@ -148,8 +147,11 @@ export const compoundClaimTest = async (
     const cToken = await contracts.get<ICErc20>('ICErc20', {
       at: await diamond.getAssetCToken(details.lendingToken.address),
     })
-    await cToken.mint('1')
-
+    await details.lendingToken
+      .connect(borrower)
+      .approve(cToken.address, BigNumber.from(details.loan.borrowedAmount))
+    await cToken.connect(borrower).mint('1')
+    await hre.evm.advanceTime(moment.duration(10, 'day'))
     const compAccrued = await Comptroller.compAccrued(escrowAddress)
     console.log({ compAccrued })
     return compAccrued.gt(0)

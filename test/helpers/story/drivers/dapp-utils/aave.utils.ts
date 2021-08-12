@@ -7,6 +7,7 @@ import moment from 'moment'
 import { getDappAddresses } from '../../../../../config'
 import {
   IAaveIncentivesController,
+  IAaveLendingPool,
   IAToken,
 } from '../../../../../types/typechain'
 import { getFunds } from '../../../get-funds'
@@ -137,7 +138,7 @@ export const aaveClaimTest = async (
     }
   )
   const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
-  await hre.evm.advanceTime(moment.duration(10, 'day'))
+
   shouldPass = await hre.evm.withBlockScope(0, async () => {
     // do the mint for the deployer
     const borrowerAddress = await borrower.getAddress()
@@ -151,8 +152,26 @@ export const aaveClaimTest = async (
     const aToken = await contracts.get<IAToken>('IAToken', {
       at: await diamond.getAssetAToken(details.lendingToken.address),
     })
-    await aToken.connect(borrower).mint(borrowerAddress, '1', '1')
 
+    const dappAddresses = getDappAddresses(hre.network)
+
+    const aaveLendingPool = await contracts.get<IAaveLendingPool>(
+      'IAaveLendingPool',
+      {
+        at: dappAddresses.aaveLendingPoolAddressProvider,
+      }
+    )
+    const reserve = await aaveLendingPool.getReserveData(
+      details.lendingToken.address
+    )
+    console.log({ reserve: reserve.liquidityIndex })
+    await details.lendingToken
+      .connect(borrower)
+      .approve(aToken.address, BigNumber.from(details.loan.borrowedAmount))
+    await aToken
+      .connect(borrower)
+      .mint(borrowerAddress, '1', reserve.liquidityIndex)
+    await hre.evm.advanceTime(moment.duration(1, 'day'))
     const aaveAccrued = await IncentiveController.getUserUnclaimedRewards(
       escrowAddress
     )
