@@ -162,8 +162,6 @@ describe('Loans', () => {
             let helpers: LoanHelpersReturn
 
             it('creates a loan', async () => {
-              // get helpers
-
               const borrower = await getNamedSigner('borrower')
 
               const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
@@ -176,9 +174,10 @@ describe('Loans', () => {
 
               helpers.details.loan.should.exist
 
-              // get loanStatus from helpers and check if it's equal to 2, which means it's active
-              const loanStatus = helpers.details.loan.status
-              loanStatus.should.equal(LoanStatus.Active, 'Loan is not active')
+              helpers.details.loan.status.should.equal(
+                LoanStatus.Active,
+                'Loan is not active'
+              )
 
               const loanNFTs = await diamond.getLoanNFTs(
                 helpers.details.loan.id
@@ -311,7 +310,6 @@ describe('Loans', () => {
           let helpers: LoanHelpersReturn
 
           it('creates a loan', async () => {
-            // get helpers
             const borrower = await getNamedSigner('borrower')
 
             const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
@@ -432,21 +430,6 @@ describe('Loans', () => {
             const borrower = await getNamedSigner('borrower')
             const liquidator = await getNamedSigner('liquidator')
 
-            const lendingToken =
-              typeof market.lendingToken === 'string'
-                ? await tokens.get(market.lendingToken)
-                : market.lendingToken
-
-            const collateralToken =
-              typeof market.collateralTokens[0] === 'string'
-                ? await tokens.get(market.collateralTokens[0])
-                : market.collateralTokens[0]
-
-            const lendingTokenDecimals = await lendingToken.decimals()
-            console.log('decimals', lendingTokenDecimals)
-
-            const collateralTokenDecimals = await collateralToken.decimals()
-
             const borrowerAddress = await borrower.getAddress()
 
             const { getHelpers } = await takeOutLoanWithNfts(hre, {
@@ -460,22 +443,23 @@ describe('Loans', () => {
 
             expect(helpers.details.loan).to.exist
 
-            console.log('helpers.details.loan', helpers.details.loan)
+            const lendingToken = helpers.details.lendingToken
+
+            const lendingTokenDecimals = await lendingToken.decimals()
 
             const loanId = helpers.details.loan.id
-            console.log('loanId', loanId)
 
             await getFunds({
               to: borrower,
               tokenSym: market.lendingToken,
-              amount: (200 * 10 ** lendingTokenDecimals).toString(),
+              amount: hre.toBN(200, lendingTokenDecimals),
               hre,
             })
 
             await getFunds({
               to: liquidator,
               tokenSym: market.lendingToken,
-              amount: (200 * 10 ** lendingTokenDecimals).toString(),
+              amount: hre.toBN(200, lendingTokenDecimals),
               hre,
             })
 
@@ -486,7 +470,7 @@ describe('Loans', () => {
             const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
 
             await lendingToken
-              .connect(ethers.provider.getSigner(borrowerAddress))
+              .connect(borrower)
               .approve(diamond.address, balanceLeftToRepay)
 
             const loanNFTsBeforeLiquidate = await diamond.getLoanNFTsV2(loanId)
