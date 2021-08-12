@@ -8,6 +8,10 @@ import { getNetworkName, isEtheremNetwork } from '../../config'
 import { Address } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
+  MainnetNFTFacet,
+  MainnetNFTFacetMock,
+  MainnetTellerNFT,
+  PolyTellerNFTMock,
   TellerNFT,
   TellerNFTDictionary,
   TellerNFTV2,
@@ -78,8 +82,9 @@ describe('NFT Staking', () => {
       const convertV1IDsToV2Balances = async (
         V1IDs: BigNumberish[]
       ): Promise<V2Balances> => {
+        const $tellerNFTV2 = tellerNFTV2 as MainnetTellerNFT
         const v2IDs = await Promise.all(
-          V1IDs.map<BigNumber>((id) => tellerNFTV2.convertV1TokenId(id))
+          V1IDs.map((id) => $tellerNFTV2.convertV1TokenId(id))
         )
         return mergeV2IDsToBalances(v2IDs)
       }
@@ -110,14 +115,17 @@ describe('NFT Staking', () => {
 
       describe('V1 => V2', () => {
         let ownedNFTsV1: BigNumber[]
+        let diamond1: ITellerDiamond & MainnetNFTFacetMock
 
         beforeEach(async () => {
           await setup(true)
 
+          diamond1 = diamond as ITellerDiamond & MainnetNFTFacetMock
+
           // diamond and teller nft
           await tellerNFTV1
             .connect(borrower)
-            .setApprovalForAll(diamond.address, true)
+            .setApprovalForAll(diamond1.address, true)
 
           await mintV1(0)
           await mintV1(2)
@@ -130,10 +138,10 @@ describe('NFT Staking', () => {
           const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
 
           // stake NFTs on behalf of user
-          await diamond.connect(borrower).stakeNFTs(ownedNFTsV1)
+          await diamond1.connect(borrower).stakeNFTs(ownedNFTsV1)
 
           // get staked
-          const stakedNFTs = await diamond.getStakedNFTsV2(borrowerAddress)
+          const stakedNFTs = await diamond1.getStakedNFTsV2(borrowerAddress)
 
           // every tokenId of the owned NFT should equate a token ID from the stakedNFT
           stakedNFTs.should.eql(expectedV2IDs)
@@ -149,13 +157,13 @@ describe('NFT Staking', () => {
           ownedTokensV2pre.length.should.eql(0)
 
           // Stake V1 NFTs with a special mock function that does not migrate to V2
-          await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
-          const stakedNFTsV1 = await diamond.getStakedNFTs(borrowerAddress)
+          await diamond1.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
+          const stakedNFTsV1 = await diamond1.getStakedNFTs(borrowerAddress)
           stakedNFTsV1.should.eql(ownedNFTsV1, 'Staked NFTs do not match')
 
           const expectedV2IDs = await convertV1IDsToV2Balances(stakedNFTsV1)
 
-          await diamond.connect(borrower).unstakeNFTs(stakedNFTsV1)
+          await diamond1.connect(borrower).unstakeNFTs(stakedNFTsV1)
           const ownedTokensV2 = await tellerNFTV2.getOwnedTokens(
             //owns 5
             borrowerAddress
@@ -176,11 +184,11 @@ describe('NFT Staking', () => {
 
         it('should not be able to unstake NFTs from the wrong address', async () => {
           const ownedNFTsV1 = await tellerNFTV1.getOwnedTokens(borrowerAddress)
-          await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
-          const stakedNFTsV1 = await diamond.getStakedNFTs(borrowerAddress)
+          await diamond1.connect(borrower).mockStakeNFTsV1(ownedNFTsV1)
+          const stakedNFTsV1 = await diamond1.getStakedNFTs(borrowerAddress)
 
           // unstake all of our staked nfts from the wrong address
-          await diamond
+          await diamond1
             .connect(deployer)
             .unstakeNFTs(stakedNFTsV1)
             .should.be.revertedWith('Teller: not the owner of the NFT ID!')
@@ -190,12 +198,15 @@ describe('NFT Staking', () => {
   } else {
     describe(`${getNetworkName(hre.network)}`, () => {
       let balances: V2Balances
+      let $tellerNFTV2: PolyTellerNFTMock
 
       before(async () => {
         await setup(false)
 
+        $tellerNFTV2 = tellerNFTV2 as PolyTellerNFTMock
+
         // diamond and teller nft
-        await tellerNFTV2
+        await $tellerNFTV2
           .connect(borrower)
           .setApprovalForAll(diamond.address, true)
 
@@ -215,7 +226,7 @@ describe('NFT Staking', () => {
 
       const prando = new Prando()
       const mintV2 = async (tierIndex: number): Promise<BigNumber> => {
-        const tierTokenCount = await tellerNFTV2.tierTokenCount(tierIndex)
+        const tierTokenCount = await $tellerNFTV2.tierTokenCount(tierIndex)
         const tierTokenID = prando.nextInt(0, tierTokenCount.toNumber())
         const tokenIDV2 = BigNumber.from(
           `${tierIndex}${tierTokenID.toString().padStart(4, '0')}`
@@ -224,13 +235,13 @@ describe('NFT Staking', () => {
           ['uint256[]', 'uint256[]', 'bytes'],
           [[tokenIDV2], [1], '0x']
         )
-        await tellerNFTV2.connect(deployer).deposit(borrowerAddress, data)
+        await $tellerNFTV2.connect(deployer).deposit(borrowerAddress, data)
         return tokenIDV2
       }
 
       it('should be able to stake V2 NFTs', async () => {
         // stake NFTs on behalf of user
-        await tellerNFTV2
+        await $tellerNFTV2
           .connect(borrower)
           .safeBatchTransferFrom(
             borrowerAddress,

@@ -19,6 +19,9 @@ import { LendingFacet } from "../../lending/LendingFacet.sol";
 import {
     CreateLoanConsensusFacet
 } from "../../market/CreateLoanConsensusFacet.sol";
+import {
+    CreateLoanWithNFTFacet
+} from "../../market/CreateLoanWithNFTFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
@@ -36,6 +39,9 @@ import {
 } from "../../escrow/dapps/CompoundClaimComp.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
 import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
+import { UniswapFacet } from "../../escrow/dapps/swappers/UniswapFacet.sol";
+import { SushiswapFacet } from "../../escrow/dapps/swappers/SushiswapFacet.sol";
+import { YearnFacet } from "../../escrow/dapps/YearnFacet.sol";
 
 abstract contract ITellerDiamond is
     SettingsFacet,
@@ -46,6 +52,7 @@ abstract contract ITellerDiamond is
     LendingFacet,
     CollateralFacet,
     CreateLoanConsensusFacet,
+    CreateLoanWithNFTFacet,
     LoanDataFacet,
     RepayFacet,
     SignersFacet,
@@ -56,6 +63,9 @@ abstract contract ITellerDiamond is
     CompoundClaimCompFacet,
     AaveFacet,
     PoolTogetherFacet,
+    UniswapFacet,
+    SushiswapFacet,
+    YearnFacet,
     IDiamondCut,
     IDiamondLoupe
 {}

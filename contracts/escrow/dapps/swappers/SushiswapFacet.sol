@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { AbstractUniSwapper } from "./AbstractUniSwapper.sol";
+import { AbstractSwapper } from "./AbstractSwapper.sol";
 
 // Libraries
 import { LibEscrow } from "../../libraries/LibEscrow.sol";
@@ -12,12 +12,20 @@ import {
     IUniswapV2Router
 } from "../../../shared/interfaces/IUniswapV2Router.sol";
 
-contract SushiswapFacet is AbstractUniSwapper {
+contract SushiswapFacet is AbstractSwapper {
+    /**
+     * @dev The address of the swapping router on the deployed network
+     * @dev example - contract address on L1 mainnet or L2 polygon mainnet
+     */
+    address private immutable ROUTER_ADDRESS;
+
     /**
      * @notice Sets the swapping router address on protocol deployment.
      * @param routerAddress The address of the swapping router contract on the network.
      */
-    constructor(address routerAddress) AbstractUniSwapper(routerAddress) {}
+    constructor(address routerAddress) {
+        ROUTER_ADDRESS = routerAddress;
+    }
 
     /**
      * @notice Event emitted every time a successful swap has taken place.
