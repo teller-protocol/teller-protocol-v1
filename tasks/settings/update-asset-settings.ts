@@ -70,6 +70,7 @@ export async function updateAssetSettings(
           groups: { first, rest },
         } = keyNameMatch
         const fnName = `getAsset${first.toUpperCase()}${rest}`
+        // @ts-expect-error Typings don't support index accessor, but will work
         const fn = diamond[fnName]
         if (!fn) {
           log(`!! Getter function for ${fnName} does not exist !!`, {

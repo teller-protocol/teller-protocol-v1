@@ -1,13 +1,10 @@
 import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ConsoleLogger } from 'ts-generator/dist/logger'
 
 import {
   MainnetTellerNFT,
-  PolyTellerNFT,
   TellerNFT,
   TellerNFTDictionary,
-  TellerNFTV2,
 } from '../../types/typechain'
 
 interface MintNFTV1Args {
@@ -44,11 +41,7 @@ export const mintNFTV2 = async (args: MintNFTV2Args): Promise<void> => {
   const { tierIndex, amount, borrower, hre } = args
 
   const deployer = await hre.getNamedSigner('deployer')
-  const nft: PolyTellerNFT = await hre.contracts.get('TellerNFT_V2')
-
-  //let contractConnection = await nft.connect(deployer)
-
-  //console.log('contract methods ', contractConnection)
+  const nft: MainnetTellerNFT = await hre.contracts.get('TellerNFT_V2')
 
   await nft.connect(deployer).mint(borrower, tierIndex, amount)
 }

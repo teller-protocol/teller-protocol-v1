@@ -19,11 +19,6 @@ describe('TellerNFTDictionary', () => {
       dictionaryContract = (await Dictionary.deploy()) as TellerNFTDictionary
 
       await dictionaryContract.deployed()
-
-      const type = await dictionaryContract.stakeableTokenType()
-      expect(type).to.equal(
-        '0x2213d707f04cdfd263a540394e2a26bbf3a63d6ad89a37f534d2ee35bdfe0d38'
-      )
     })
 
     it('Should add token tier mappings', async () => {

@@ -13,6 +13,7 @@ import { getPrice } from '../../tasks'
 import {
   ERC20,
   ITellerDiamond,
+  MainnetNFTFacetMock,
   TellerNFT,
   TellerNFTV2,
 } from '../../types/typechain'
@@ -95,68 +96,68 @@ export interface CreateLoanReturn {
   tx: Promise<ContractTransaction>
   getHelpers: () => Promise<LoanHelpersReturn>
 }
-export const createLoan = async (
-  hre: HardhatRuntimeEnvironment,
-  args: CreateLoanArgs
-): Promise<CreateLoanReturn> => {
-  const {
-    lendToken,
-    collToken,
-    loanType,
-    amount = 100,
-    amountBN,
-    duration = moment.duration(1, 'day'),
-  } = args
-  const { contracts, tokens, getNamedAccounts, toBN } = hre
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  const lendingToken =
-    typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
-
-  const collateralToken =
-    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
-  const borrower = args.borrower ?? (await getNamedAccounts()).borrower
-  const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
-  // Set up collateral
-  let collateralRatio = 0
-
-  switch (loanType) {
-    case LoanType.ZERO_COLLATERAL:
-      break
-    case LoanType.UNDER_COLLATERALIZED:
-      collateralRatio = 5000
-      break
-    case LoanType.OVER_COLLATERALIZED:
-      collateralRatio = 15000
-      break
-  }
-  // Get mock cra request and response
-  const craReturn = await mockCRAResponse(hre, {
-    lendingToken: lendingToken.address,
-    loanAmount,
-    loanTermLength: duration.asSeconds(),
-    collateralRatio: collateralRatio,
-    interestRate: '400',
-    borrower,
-  })
-  // Create loan with terms
-  const tx = diamond
-    .connect(hre.ethers.provider.getSigner(borrower))
-    .createLoanWithTerms(
-      craReturn.request,
-      [craReturn.responses],
-      collateralToken.address,
-      '0'
-    )
-  return {
-    tx,
-    getHelpers: async (): Promise<LoanHelpersReturn> => {
-      await tx
-      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
-      const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
-      return await loanHelpers(hre, loanID)
-    },
-  }
-}
+// export const createLoan = async (
+//   hre: HardhatRuntimeEnvironment,
+//   args: CreateLoanArgs
+// ): Promise<CreateLoanReturn> => {
+//   const {
+//     lendToken,
+//     collToken,
+//     loanType,
+//     amount = 100,
+//     amountBN,
+//     duration = moment.duration(1, 'day'),
+//   } = args
+//   const { contracts, tokens, getNamedAccounts, toBN } = hre
+//   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+//   const lendingToken =
+//     typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
+//
+//   const collateralToken =
+//     typeof collToken === 'string' ? await tokens.get(collToken) : collToken
+//   const borrower = args.borrower ?? (await getNamedAccounts()).borrower
+//   const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
+//   // Set up collateral
+//   let collateralRatio = 0
+//
+//   switch (loanType) {
+//     case LoanType.ZERO_COLLATERAL:
+//       break
+//     case LoanType.UNDER_COLLATERALIZED:
+//       collateralRatio = 5000
+//       break
+//     case LoanType.OVER_COLLATERALIZED:
+//       collateralRatio = 15000
+//       break
+//   }
+//   // Get mock cra request and response
+//   const craReturn = await mockCRAResponse(hre, {
+//     lendingToken: lendingToken.address,
+//     loanAmount,
+//     loanTermLength: duration.asSeconds(),
+//     collateralRatio: collateralRatio,
+//     interestRate: '400',
+//     borrower,
+//   })
+//   // Create loan with terms
+//   const tx = diamond
+//     .connect(hre.ethers.provider.getSigner(borrower))
+//     .createLoanWithTerms(
+//       craReturn.request,
+//       [craReturn.responses],
+//       collateralToken.address,
+//       '0'
+//     )
+//   return {
+//     tx,
+//     getHelpers: async (): Promise<LoanHelpersReturn> => {
+//       await tx
+//       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+//       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+//       return await loanHelpers(hre, loanID)
+//     },
+//   }
+// }
 
 /**
  * @description: function helper that sets the collateral token and ratio and creates a mock CRA
@@ -336,7 +337,9 @@ export const takeOutLoanWithNfts = async (
       await nft.connect(borrower).setApprovalForAll(diamond.address, true)
 
       // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
-      await diamond.connect(borrower).mockStakeNFTsV1(nftsUsed.v1)
+      await (diamond as any as MainnetNFTFacetMock)
+        .connect(borrower)
+        .mockStakeNFTsV1(nftsUsed.v1)
 
       // Encode the NFT V1 token data for the function
       const tokenData = coder.encode(

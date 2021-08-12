@@ -9,6 +9,8 @@ import { getMarkets, isEtheremNetwork } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
+  MainnetNFTFacet,
+  MainnetTellerNFT,
   TellerNFT,
   TellerNFTDictionary,
   TellerNFTV2,
@@ -32,7 +34,7 @@ if (isEtheremNetwork(hre.network)) {
     function testBridging(markets: Market): void {
       // define needed variablez
       let deployer: Signer
-      let diamond: ITellerDiamond
+      let diamond: ITellerDiamond & MainnetNFTFacet
       let rootToken: TellerNFT
       let rootTokenV2: TellerNFTV2
       let tellerDictionary: TellerNFTDictionary
@@ -186,7 +188,9 @@ if (isEtheremNetwork(hre.network)) {
             // is = to the URI of our V2 tokenId
             const tokenIds = await rootToken.getOwnedTokens(DUMMY_ADDRESS)
             for (let i = 0; i < tokenIds.length; i++) {
-              const newTokenId = await rootTokenV2.convertV1TokenId(tokenIds[i])
+              const newTokenId = await (
+                rootTokenV2 as MainnetTellerNFT
+              ).convertV1TokenId(tokenIds[i])
 
               const v1TokenURI = await rootToken.tokenURI(tokenIds[i])
               const v2TokenURI = await rootTokenV2.uri(newTokenId)
