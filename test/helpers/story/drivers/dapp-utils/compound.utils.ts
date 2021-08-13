@@ -153,10 +153,8 @@ export const compoundClaimTest = async (
     await cToken.connect(borrower).mint('1')
     await hre.evm.advanceTime(moment.duration(10, 'day'))
     const compAccrued = await Comptroller.compAccrued(escrowAddress)
-    console.log({ compAccrued })
     return compAccrued.gt(0)
   })
-  console.log({ shouldPass })
   //read the state and determine if this should pass
   if (!loan) shouldPass = false
   if (shouldPass) {
