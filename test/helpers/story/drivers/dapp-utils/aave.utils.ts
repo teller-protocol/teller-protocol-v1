@@ -4,7 +4,7 @@ import { solidity } from 'ethereum-waffle'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
-import { getDappAddresses } from '../../../../../config'
+import { getDappAddresses, getNetworkName } from '../../../../../config'
 import {
   IAaveIncentivesController,
   IAaveLendingPool,
@@ -90,10 +90,10 @@ async function claimAave(
   const aaveAfter = await IncentiveController.getUserUnclaimedRewards(
     escrowAddress
   )
-  const aaveToken = await contracts.get<IAToken>('IAToken')
-  expect(await aaveToken.balanceOf(details.borrower.address)).to.equal(
-    aaveBefore
-  )
+  const aToken = await contracts.get<IAToken>('IAToken', {
+    at: await diamond.getAssetAToken(details.lendingToken.address),
+  })
+  expect(await aToken.balanceOf(details.borrower.address)).to.equal(aaveBefore)
 
   expect(aaveAfter.toString()).to.equal('0')
 }
@@ -154,23 +154,25 @@ export const aaveClaimTest = async (
     })
 
     const dappAddresses = getDappAddresses(hre.network)
-
     const aaveLendingPool = await contracts.get<IAaveLendingPool>(
       'IAaveLendingPool',
       {
-        at: dappAddresses.aaveLendingPoolAddressProvider,
+        at: dappAddresses.aaveLendingPool,
       }
     )
     const reserve = await aaveLendingPool.getReserveData(
       details.lendingToken.address
     )
-    console.log({ reserve: reserve.liquidityIndex })
     await details.lendingToken
       .connect(borrower)
-      .approve(aToken.address, BigNumber.from(details.loan.borrowedAmount))
-    await aToken
-      .connect(borrower)
-      .mint(borrowerAddress, '1', reserve.liquidityIndex)
+      .approve(
+        aaveLendingPool.address,
+        BigNumber.from(details.loan.borrowedAmount)
+      )
+    // console.log({borrowedAmount: BigNumber.from(details.loan.borrowedAmount).div(10).toString(), reserve: reserve.liquidityIndex.toString()})
+    // await aToken
+    //   .connect(aaveLendingPool.signer)
+    //   .mint(aaveLendingPool.address, '1', reserve.liquidityIndex)
     await hre.evm.advanceTime(moment.duration(1, 'day'))
     const aaveAccrued = await IncentiveController.getUserUnclaimedRewards(
       escrowAddress
