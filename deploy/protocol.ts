@@ -216,8 +216,10 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
-
   await addAuthorizedAddresses(hre, diamond)
+
+  // set approval for all tokens to be transfered by ERC1155 Predicate
+  await diamond.initNFTBridge()
 }
 
 const addAuthorizedAddresses = async (
