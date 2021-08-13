@@ -14,7 +14,9 @@
     "build": "yarn compile && yarn types && yarn tsc",
     "types": "yarn typechain --target ethers-v5 --out-dir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9_]).json'",
     "coverage": "#yarn hh coverage --solcoverjs ./solcover.js",
-    "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func"
+    "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
+    "git:future": "./scripts/git/future.sh",
+    "git:portal": "./scripts/git/portal.sh"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.1.6",
