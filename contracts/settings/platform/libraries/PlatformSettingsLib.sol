@@ -96,6 +96,14 @@ library PlatformSettingsLib {
     }
 
     /**
+     * @notice It gets the current "ProfitFeePercent" setting's value
+     * @return value_ the current value.
+     */
+    function getProfitFeePercent() internal view returns (uint16 value_) {
+        value_ = uint16(s(NAMES.PROFIT_FEE_PERCENT).value);
+    }
+
+    /**
      * @notice It gets the current "MaximumLoanDuration" setting's value
      * @return value_ the current value.
      */

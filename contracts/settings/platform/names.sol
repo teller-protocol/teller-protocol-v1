@@ -53,6 +53,13 @@ bytes32 constant TERMS_EXPIRY_TIME = keccak256("TermsExpiryTime");
 bytes32 constant LIQUIDATE_REWARD_PERCENT = keccak256("LiquidateRewardPercent");
 
 /**
+        @dev The setting name for the profit fee percent setting.
+        @dev It represents the percentage value (with 2 decimal places) for the percent of excess profit on borrowed money that will be collected by the protocol.
+            i.e. A fee of 5% is stored as 500
+     */
+bytes32 constant PROFIT_FEE_PERCENT = keccak256("ProfitFeePercent");
+
+/**
         @dev The setting name for the maximum loan duration settings.
         @dev The maximum loan duration setting is defined in seconds. Loans will not be given for timespans larger than the one specified here.
      */
