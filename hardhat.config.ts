@@ -99,7 +99,7 @@ export default <HardhatUserConfig>{
   },
   tenderly: {
     username: 'soltel',
-    project: 'mumbai',
+    project: '{see utils/hre-extensions.ts}',
   },
   paths: {
     sources: 'contracts',

@@ -10,6 +10,7 @@ import {
   utils,
 } from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
 import { getTokens } from '../config'
@@ -125,8 +126,38 @@ interface AddressObj {
   [name: string]: Address | AddressObj
 }
 
+/**
+ * Updates the Tenderly project name in the config based on the network being
+ *  used.
+ * @param hre {HardhatRuntimeEnvironment} Hardhat Environment variable to modify
+ *  directly
+ */
+const updateTenderlyConfig = (hre: HardhatRuntimeEnvironment): void => {
+  let projectName: string
+  switch (hre.network.name) {
+    case 'mainnet':
+      projectName = 'teller'
+      break
+
+    case 'kovan':
+      projectName = 'kovan'
+      break
+
+    case 'mumbai':
+      projectName = 'mumbai'
+      break
+
+    default:
+      projectName = 'test'
+  }
+
+  hre.config.tenderly.project = projectName
+}
+
 extendEnvironment((hre) => {
   const { deployments, ethers, network } = hre
+
+  updateTenderlyConfig(hre)
 
   hre.contracts = {
     async get<C extends Contract>(
