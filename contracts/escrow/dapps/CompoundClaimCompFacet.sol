@@ -54,9 +54,9 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
             abi.encodeWithSignature("claimComp(address)", user)
         );
 
-        // Add AAVE to escrow token list
-        // TODO: get the COMP token (add as immutable constructor variable)
-        LibEscrow.tokenUpdated(loanID, address(0));
+        if (LibLoans.loan(loanID).status < LoanStatus.Closed) {
+            LibEscrow.tokenUpdated(loanID, address(0));
+        }
 
         emit CompoundClaimed(msg.sender, loanID);
     }

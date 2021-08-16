@@ -81,9 +81,9 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
             abi.encodeWithSelector(IStakedAave.redeem.selector, user, amount)
         );
 
-        // Add AAVE to escrow token list
-        // TODO: get the AAVE token (add as immutable constructor variable)
-        LibEscrow.tokenUpdated(loanID, address(0));
+        if (LibLoans.loan(loanID).status < LoanStatus.Closed) {
+            LibEscrow.tokenUpdated(loanID, address(0));
+        }
 
         emit AaveClaimed(msg.sender, loanID);
     }

@@ -142,42 +142,13 @@ export const aaveClaimTest = async (
   shouldPass = await hre.evm.withBlockScope(0, async () => {
     // do the mint for the deployer
     const borrowerAddress = await borrower.getAddress()
-    await getFunds({
-      to: borrowerAddress,
-      tokenSym: await details.lendingToken.symbol(),
-      amount: BigNumber.from(details.loan.borrowedAmount).mul(2),
-      hre,
-    })
-
-    const aToken = await contracts.get<IAToken>('IAToken', {
-      at: await diamond.getAssetAToken(details.lendingToken.address),
-    })
-
-    const dappAddresses = getDappAddresses(hre.network)
-    const aaveLendingPool = await contracts.get<IAaveLendingPool>(
-      'IAaveLendingPool',
-      {
-        at: dappAddresses.aaveLendingPool,
-      }
-    )
-    const reserve = await aaveLendingPool.getReserveData(
-      details.lendingToken.address
-    )
-    await details.lendingToken
-      .connect(borrower)
-      .approve(
-        aaveLendingPool.address,
-        BigNumber.from(details.loan.borrowedAmount)
-      )
-    // console.log({borrowedAmount: BigNumber.from(details.loan.borrowedAmount).div(10).toString(), reserve: reserve.liquidityIndex.toString()})
-    // await aToken
-    //   .connect(aaveLendingPool.signer)
-    //   .mint(aaveLendingPool.address, '1', reserve.liquidityIndex)
     await hre.evm.advanceTime(moment.duration(1, 'day'))
+    const assets = [details.lendingToken.address]
+    console.log({ assets, borrowerAddress })
     const aaveAccrued = await IncentiveController.getUserUnclaimedRewards(
       escrowAddress
     )
-    console.log({ aaveAccrued })
+    // console.log({ aaveAccrued, rewardsBal })
     return aaveAccrued.gt(0)
   })
   //read the state and determine if this should pass
