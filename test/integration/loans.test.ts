@@ -8,7 +8,6 @@ import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond, MainnetNFTFacet } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
-import { getFunds } from '../helpers/get-funds'
 import {
   LoanHelpersReturn,
   LoanType,
@@ -169,12 +168,6 @@ describe('Loans', () => {
                 helpers.details.loan.id
               )
               loanNFTs.should.eql(nfts.v1, 'Staked NFTs do not match')
-            })
-
-            it('should be an active loan', () => {
-              // get loanStatus from helpers and check if it's equal to 2, which means it's active
-              const loanStatus = helpers.details.loan.status
-              expect(loanStatus).to.equal(2)
             })
           })
         }

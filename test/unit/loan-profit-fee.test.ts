@@ -7,6 +7,7 @@ import { getMarkets, isEtheremNetwork } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond, MainnetNFTFacet } from '../../types/typechain'
+import { LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
@@ -234,7 +235,9 @@ describe('Loans', () => {
 
               //let response = await helpers.repay( 100000000 , borrower )
 
-              await diamond.connect(borrower).repayLoan(loanId, 100010000)
+              await diamond
+                .connect(borrower)
+                .repayLoan(loanId, balanceLeftToRepay)
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -247,11 +250,10 @@ describe('Loans', () => {
 
               console.log('balanceOf After', borrowerBalance.toString())
 
-              expect(parseInt(borrowerBalance.toString())).to.equal(200000000)
+              borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
 
-              expect(loanData.status).to.equal(3) //3 = repaid
-
-              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              totalOwedAfterRepay.should.eql(0)
+              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
             })
 
             it('should be able to create and escrow-repay a loan', async () => {
@@ -311,7 +313,9 @@ describe('Loans', () => {
 
               //let response = await helpers.repay( 100000000 , borrower )
 
-              await diamond.connect(borrower).escrowRepay(loanId, 100010000)
+              await diamond
+                .connect(borrower)
+                .escrowRepay(loanId, balanceLeftToRepay)
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -324,11 +328,11 @@ describe('Loans', () => {
 
               console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
 
-              expect(loanData.status).to.equal(3) //3 = repaid
+              totalOwedAfterRepay.should.eql(0)
 
-              expect(parseInt(borrowerBalance.toString())).to.equal(299990000)
+              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
 
-              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              borrowerBalance.should.eql(hre.toBN(400, lendingTokenDecimals))
             })
 
             it('should be able to create, earn profits on, and repay a loan', async () => {
@@ -386,7 +390,9 @@ describe('Loans', () => {
                 .connect(ethers.provider.getSigner(borrowerAddress))
                 .approve(diamond.address, balanceLeftToRepay)
 
-              await diamond.connect(borrower).repayLoan(loanId, 100010000)
+              await diamond
+                .connect(borrower)
+                .repayLoan(loanId, balanceLeftToRepay)
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
@@ -399,11 +405,11 @@ describe('Loans', () => {
 
               console.log('balanceOf After', borrowerBalance.toString())
 
-              expect(parseInt(borrowerBalance.toString())).to.equal(499980000)
+              totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(3) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
 
-              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              borrowerBalance.should.eql(hre.toBN(600, lendingTokenDecimals))
             })
 
             it('should be able to create, earn profits on, and repay a loan with excess profit ', async () => {
@@ -470,6 +476,7 @@ describe('Loans', () => {
                 originalTTokenEscrowBalanceBN.toString()
               )
 
+              //fix me
               expect(originalTTokenEscrowBalance).to.equal(99700030000)
 
               let loanEscrowBalance = await lendingToken.balanceOf(
@@ -521,11 +528,11 @@ describe('Loans', () => {
               console.log('loanEscrowBalance 3 ', loanEscrowBalance.toString())
               expect(loanEscrowBalance).to.equal(0)
 
-              expect(parseInt(borrowerBalance.toString())).to.equal(599970000)
+              totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(3) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
 
-              expect(parseInt(totalOwedAfterRepay.toString())).to.equal(0)
+              borrowerBalance.should.eql(hre.toBN(600, lendingTokenDecimals))
             })
           })
         }
