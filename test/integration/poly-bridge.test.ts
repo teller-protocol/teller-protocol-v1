@@ -10,6 +10,7 @@ import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
   MainnetNFTFacet,
+  MainnetNFTFacetMock,
   MainnetTellerNFT,
   TellerNFT,
   TellerNFTDictionary,
@@ -34,9 +35,9 @@ if (isEtheremNetwork(hre.network)) {
     function testBridging(markets: Market): void {
       // define needed variablez
       let deployer: Signer
-      let diamond: ITellerDiamond & MainnetNFTFacet
+      let diamond: ITellerDiamond & MainnetNFTFacet & MainnetNFTFacetMock
       let rootToken: TellerNFT
-      let rootTokenV2: TellerNFTV2
+      let rootTokenV2: TellerNFTV2 & MainnetTellerNFT
       let tellerDictionary: TellerNFTDictionary
       let borrower: string
       let borrowerSigner: Signer
@@ -93,13 +94,6 @@ if (isEtheremNetwork(hre.network)) {
             ownedTokensV2
           )
 
-          console.log(
-            'balances pre-bridge',
-            ownedTokensV2,
-            addresses,
-            tokenBalancesV2
-          )
-
           tokenBalancesV2.should.eql(expectedV2IDs[1])
 
           await diamond.bridgeNFTsV2(tokenBalancesV2[0], 1)
@@ -109,13 +103,6 @@ if (isEtheremNetwork(hre.network)) {
           tokenBalancesV2 = await rootTokenV2.balanceOfBatch(
             addresses,
             ownedTokensV2
-          )
-
-          console.log(
-            'balances post-bridge',
-            ownedTokensV2,
-            addresses,
-            tokenBalancesV2
           )
 
           tokenBalancesV2.length.should.eql(2)

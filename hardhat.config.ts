@@ -213,7 +213,7 @@ export default <HardhatUserConfig>{
           : {
               enabled: true,
               url: networkUrls[FORKING_NETWORK],
-              // blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
+              blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
             },
     }),
     localhost: networkConfig({

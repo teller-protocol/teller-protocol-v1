@@ -21,13 +21,10 @@ import {
 
 // Storage
 import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
-import "hardhat/console.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
     address private constant POLYGON_NFT_ADDRESS =
         0x83AF2b36A3F8593203b2098CBec616A57f1A80cC;
-    address private constant ERC721_PREDICATE =
-        0xDbBffd69Ef9F34bA8Fb8722157A51a4733992B35;
     address private constant ERC1155_PREDICATE =
         0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f;
     address private constant ROOT_CHAIN_MANAGER =
@@ -67,7 +64,7 @@ contract NFTMainnetBridgingToPolygonFacet {
             tokenIds[i] = tokenId;
             amounts[i] = amount;
         }
-        // Deposit tokens by calling the RootChainManager which then has the ERC721_PREDICATE transfer the tokens
+        // Deposit tokens by calling the RootChainManager which then requests the ERC1155_PREDICATE transfer the tokens
         Address.functionCall(
             ROOT_CHAIN_MANAGER,
             abi.encodeWithSignature(
@@ -83,7 +80,6 @@ contract NFTMainnetBridgingToPolygonFacet {
      * @notice It initializes our NFTBridge by approving all NFTs to the Polygon predicate contracts
      */
     function initNFTBridge() external {
-        TELLER_NFT_V1.setApprovalForAll(ERC721_PREDICATE, true);
         TELLER_NFT_V2.setApprovalForAll(ERC1155_PREDICATE, true);
     }
 
