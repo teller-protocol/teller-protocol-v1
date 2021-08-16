@@ -212,7 +212,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: 200 * 10 ** lendingTokenDecimals,
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -289,7 +289,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: 200 * 10 ** lendingTokenDecimals,
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -366,7 +366,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: 200 * 10 ** lendingTokenDecimals,
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -443,7 +443,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrower,
                 tokenSym: market.lendingToken,
-                amount: 200 * 10 ** lendingTokenDecimals,
+                amount: hre.toBN(200, lendingTokenDecimals),
                 hre,
               })
 
@@ -455,7 +455,7 @@ describe('Loans', () => {
               await getFunds({
                 to: borrowedFundsEscrowAddress,
                 tokenSym: market.lendingToken,
-                amount: 30 * 10 ** lendingTokenDecimals,
+                amount: hre.toBN(30, lendingTokenDecimals),
                 hre,
               })
 
