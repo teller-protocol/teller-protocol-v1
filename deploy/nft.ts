@@ -162,10 +162,6 @@ const deployDistributor = async (
         skipIfAlreadyDeployed: true,
       },
       { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: true },
-      {
-        contract: 'ent_upgradeNFTV2_NFTDistributor_v1',
-        skipIfAlreadyDeployed: true,
-      },
       { contract: 'ext_distributor_NFT_v1', skipIfAlreadyDeployed: true },
     ],
     hre,
