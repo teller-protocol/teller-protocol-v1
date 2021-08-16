@@ -465,14 +465,7 @@ describe('Loans', () => {
 
           const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-          console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
-
           const loanData = await diamond.getLoan(loanId)
-          console.log('loanData')
-
-          console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
-
-          console.log('balanceOf After', borrowerBalance.toString())
 
           const amtRepaid = 100010000
           const expectedProfitFee = 1500000
