@@ -185,6 +185,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       //   skipIfAlreadyDeployed: false,
       // }
     )
+    // set approval for all tokens to be transfered by ERC1155 Predicate
   } else {
     facets.push(
       // Loans
@@ -217,9 +218,9 @@ const deployProtocol: DeployFunction = async (hre) => {
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
   await addAuthorizedAddresses(hre, diamond)
-
-  // set approval for all tokens to be transfered by ERC1155 Predicate
-  await diamond.initNFTBridge()
+  if (isEtheremNetwork(network)) {
+    await diamond.initNFTBridge()
+  }
 }
 
 const addAuthorizedAddresses = async (
