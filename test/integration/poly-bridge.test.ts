@@ -182,7 +182,7 @@ if (isEtheremNetwork(hre.network)) {
             await diamond.connect(deployer).stakeNFTs(ownedNFTs)
 
             // get the staked NFTs
-            const stakedNFTs = await diamond.getStakedNFTsV2(deployerAddress)
+            const stakedNFTs = await diamond.getStakedNFTs(deployerAddress)
             console.log(stakedNFTs)
             for (let i = 0; i < ownedNFTs.length; i++) {
               expect(ownedNFTs.length).to.equal(stakedNFTs.length)
@@ -205,7 +205,7 @@ if (isEtheremNetwork(hre.network)) {
             const mintToken = async (tierIndex: number): Promise<void> => {
               const receipt = await nftV1
                 .connect(deployer)
-                .mint(1, DUMMY_ADDRESS)
+                .mint(tierIndex, DUMMY_ADDRESS)
                 .then(({ wait }) => wait())
               const [event] = await nftV1.queryFilter(filter, receipt.blockHash)
 
@@ -221,16 +221,15 @@ if (isEtheremNetwork(hre.network)) {
               await mintToken(arrayOfTiers[i])
               await mintToken(arrayOfTiers[i])
               await mintToken(arrayOfTiers[i])
-              console.log(i)
             }
             // get our token ids and loop through it. for every loop, we check if the V1TokenURI
             // is = to the URI of our V2 tokenId
             const tokenIds = await nftV1.getOwnedTokens(DUMMY_ADDRESS)
-            console.log(tokenIds)
             for (let i = 0; i < tokenIds.length; i++) {
-              const newTokenId = await (
-                nftV2 as MainnetTellerNFT
-              ).convertV1TokenId(tokenIds[i])
+              // convert token id
+              const newTokenId = await nftV2.convertV1TokenId(tokenIds[i])
+
+              // uris
               const v1TokenURI = await nftV1.tokenURI(tokenIds[i])
               const v2TokenURI = await nftV2.uri(newTokenId)
               v1TokenURI.should.equal(v2TokenURI)
