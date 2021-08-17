@@ -46,7 +46,9 @@ if (isEtheremNetwork(hre.network)) {
       let nftV2: TellerNFTV2 & MainnetTellerNFT
       let tellerDictionary: TellerNFTDictionary
       let borrower: string
+      let anotherBorrower: string
       let borrowerSigner: Signer
+      let anotherSigner: Signer
       let ownedNFTs: BigNumber[]
       let rootChainManager: Contract
 
@@ -63,9 +65,13 @@ if (isEtheremNetwork(hre.network)) {
 
         deployer = await getNamedSigner('deployer')
 
-        // const filter = nftV1.filters.Transfer(null, diamond.address, null)
-        // const [event] = await nftV1.queryFilter(filter)
-        // borrower = event.args.from
+        // get borrower with 1 staked V1 NFT
+        const filter = nftV1.filters.Transfer(null, diamond.address, null)
+        const [event] = await nftV1.queryFilter(filter)
+        anotherBorrower = event.args.from
+        anotherSigner = (await hre.evm.impersonate(anotherBorrower)).signer
+
+        // get a regular borrower
         borrower = (await getNamedAccounts()).borrower
         borrowerSigner = (await hre.evm.impersonate(borrower)).signer
 
@@ -124,6 +130,22 @@ if (isEtheremNetwork(hre.network)) {
           await diamond.connect(borrowerSigner).bridgeNFTsV1(ownedNFTsV1[0])
           ownedNFTsV1 = await nftV1.getOwnedTokens(borrower)
           const lengthAfterBridge = ownedNFTsV1.length
+          expect(lengthBeforeBridge).to.not.equal(lengthAfterBridge)
+        })
+        it('should be able to bridge a staked NFTV1 to Polygon', async () => {
+          // get the staked NFTs v1 of the user
+          const stakedNFTsV1 = await diamond.getStakedNFTs(anotherBorrower)
+          console.log('staked NFTs V1')
+          console.log(stakedNFTsV1)
+          const lengthBeforeBridge = stakedNFTsV1.length
+
+          // bridge one staked NFT
+          await diamond.connect(anotherSigner).bridgeNFTsV1(stakedNFTsV1[0])
+
+          // get the staked NFTs v1 of the user after we bridge
+          const stakedNFTsV11 = await diamond.getStakedNFTsV2(anotherBorrower)
+          console.log(stakedNFTsV11)
+          const lengthAfterBridge = stakedNFTsV11.length
           expect(lengthBeforeBridge).to.not.equal(lengthAfterBridge)
         })
         // it('should be able to start to bridge NFTv2 to polygon', async () => {
