@@ -18,6 +18,9 @@
     "git:future": "./scripts/git/future.sh",
     "git:portal": "./scripts/git/portal.sh"
   },
+  "engines": {
+    "node": "14"
+  },
   "dependencies": {
     "@chainlink/contracts": "^0.1.6",
     "@ensdomains/ens-contracts": "^0.0.5",
