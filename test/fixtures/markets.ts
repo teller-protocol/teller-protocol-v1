@@ -38,6 +38,7 @@ export const fundedMarket = async (
   })
 
   tags.push('markets')
+  tags.push('platform-settings')
   await deployments.fixture(tags, {
     keepExistingDeployments,
   })

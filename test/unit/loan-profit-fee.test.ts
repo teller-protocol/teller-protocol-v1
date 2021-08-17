@@ -36,6 +36,7 @@ describe('Loans', () => {
         amount: 100000,
         keepExistingDeployments: true,
         extendMaxTVL: true,
+        tags: ['platform-settings'], //run ../deploy/platform-settings.ts
       })
 
       deployer = await getNamedSigner('deployer')
@@ -137,9 +138,14 @@ describe('Loans', () => {
 
       describe('with NFT', () => {
         beforeEach(async () => {
-          await hre.deployments.fixture('protocol', {
+          await hre.deployments.fixture(['protocol', 'platform-settings'], {
             keepExistingDeployments: true,
           })
+
+          const ProfitFeePct = await diamond.getPlatformSetting(
+            ethers.utils.id('ProfitFeePercent')
+          )
+          expect(ProfitFeePct.value).to.eql(500)
 
           // Advance time
           const { value: rateLimit } = await getPlatformSetting(
@@ -196,15 +202,7 @@ describe('Loans', () => {
 
               expect(helpers.details.loan).to.exist
 
-              console.log('helpers.details.loan', helpers.details.loan)
-
               const loanId = helpers.details.loan.id
-              console.log('loanId', loanId)
-
-              //  const lHelpers = await loanHelpers(loanId)
-
-              //need to give fake ERC20 to borrower
-              //and add fake ERC20 to the borrow escrow
 
               const lendingToken =
                 typeof market.lendingToken === 'string'
@@ -212,7 +210,6 @@ describe('Loans', () => {
                   : market.lendingToken
 
               const lendingTokenDecimals = await lendingToken.decimals()
-              console.log('decimals', lendingTokenDecimals)
 
               await getFunds({
                 to: borrower,
@@ -226,18 +223,11 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay)
 
               await lendingToken
                 .connect(ethers.provider.getSigner(borrowerAddress))
                 .approve(diamond.address, balanceLeftToRepay)
-
-              //let response = await helpers.repay( 100000000 , borrower )
 
               await diamond
                 .connect(borrower)
@@ -245,14 +235,7 @@ describe('Loans', () => {
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-              console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
-
               const loanData = await diamond.getLoan(loanId)
-              console.log('loanData')
-
-              console.log('balanceLeftToRepay 2', balanceLeftToRepay)
-
-              console.log('balanceOf After', borrowerBalance.toString())
 
               borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
 
@@ -274,15 +257,7 @@ describe('Loans', () => {
 
               expect(helpers.details.loan).to.exist
 
-              console.log('helpers.details.loan', helpers.details.loan)
-
               const loanId = helpers.details.loan.id
-              console.log('loanId', loanId)
-
-              //  const lHelpers = await loanHelpers(loanId)
-
-              //need to give fake ERC20 to borrower
-              //and add fake ERC20 to the borrow escrow
 
               const lendingToken =
                 typeof market.lendingToken === 'string'
@@ -304,18 +279,11 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
               await lendingToken
                 .connect(ethers.provider.getSigner(borrowerAddress))
                 .approve(diamond.address, balanceLeftToRepay)
-
-              //let response = await helpers.repay( 100000000 , borrower )
 
               await diamond
                 .connect(borrower)
@@ -323,14 +291,7 @@ describe('Loans', () => {
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-              console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
-
               const loanData = await diamond.getLoan(loanId)
-              console.log('loanData')
-
-              console.log('balanceOf After', borrowerBalance.toString())
-
-              console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
 
               totalOwedAfterRepay.should.eql(0)
 
@@ -353,15 +314,7 @@ describe('Loans', () => {
 
               expect(helpers.details.loan).to.exist
 
-              console.log('helpers.details.loan', helpers.details.loan)
-
               const loanId = helpers.details.loan.id
-              console.log('loanId', loanId)
-
-              //  const lHelpers = await loanHelpers(loanId)
-
-              //need to give fake ERC20 to borrower
-              //and add fake ERC20 to the borrow escrow
 
               const lendingToken =
                 typeof market.lendingToken === 'string'
@@ -369,7 +322,6 @@ describe('Loans', () => {
                   : market.lendingToken
 
               const lendingTokenDecimals = await lendingToken.decimals()
-              console.log('decimals', lendingTokenDecimals)
 
               await getFunds({
                 to: borrower,
@@ -383,12 +335,7 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
               await lendingToken
                 .connect(ethers.provider.getSigner(borrowerAddress))
@@ -400,14 +347,7 @@ describe('Loans', () => {
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
-              console.log('totalOwedAfterRepay', totalOwedAfterRepay.toString())
-
               const loanData = await diamond.getLoan(loanId)
-              console.log('loanData')
-
-              console.log('balanceLeftToRepay 2', balanceLeftToRepay.toString())
-
-              console.log('balanceOf After', borrowerBalance.toString())
 
               totalOwedAfterRepay.should.eql(0)
 
@@ -430,17 +370,7 @@ describe('Loans', () => {
 
               expect(helpers.details.loan).to.exist
 
-              console.log('helpers.details.loan', helpers.details.loan)
-
-              // console.log('helpers.details.loan', helpers.details.loan)
-
               const loanId = helpers.details.loan.id
-              console.log('loanId', loanId)
-
-              //  const lHelpers = await loanHelpers(loanId)
-
-              //need to give fake ERC20 to borrower
-              //and add fake ERC20 to the borrow escrow
 
               const lendingToken =
                 typeof market.lendingToken === 'string'
@@ -448,7 +378,6 @@ describe('Loans', () => {
                   : market.lendingToken
 
               const lendingTokenDecimals = await lendingToken.decimals()
-              console.log('decimals', lendingTokenDecimals)
 
               await getFunds({
                 to: borrower,
@@ -482,13 +411,6 @@ describe('Loans', () => {
                 originalTTokenEscrowBalanceBN.toString()
               )
 
-              console.log(
-                'originalTTokenEscrowBalance',
-                originalTTokenEscrowBalance
-              )
-
-              //expect(originalTTokenEscrowBalance).to.equal(99700030000)
-
               let loanEscrowBalance = await lendingToken.balanceOf(
                 borrowedFundsEscrowAddress
               )
@@ -502,12 +424,7 @@ describe('Loans', () => {
                 borrowerAddress
               )
 
-              console.log('balanceOf', borrowerBalance.toString())
-
-              console.log('market.lendingToken', market.lendingToken)
-
               const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-              console.log('balanceLeftToRepay', balanceLeftToRepay.toString())
 
               await lendingToken
                 .connect(ethers.provider.getSigner(borrowerAddress))
@@ -523,13 +440,8 @@ describe('Loans', () => {
 
               const expectedProfitFee = excessProfitAmount.div(20)
 
-              //The difference should be the loan repayment + profit fee
               const finalTTokenEscrowBalance = await lendingToken.balanceOf(
                 tTokenAddress
-              )
-              console.log(
-                'finalTTokenEscrowBalance 2 ',
-                finalTTokenEscrowBalance.toString()
               )
 
               const TTokenBalanceDifference = finalTTokenEscrowBalance.sub(
@@ -543,7 +455,7 @@ describe('Loans', () => {
               loanEscrowBalance = await lendingToken.balanceOf(
                 borrowedFundsEscrowAddress
               )
-              console.log('loanEscrowBalance 3 ', loanEscrowBalance.toString())
+
               expect(loanEscrowBalance).to.equal(0)
 
               totalOwedAfterRepay.should.eql(0)

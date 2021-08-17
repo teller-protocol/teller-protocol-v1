@@ -42,8 +42,6 @@ import {
     LoanStatus
 } from "../storage/market.sol";
 
-import "hardhat/console.sol";
-
 contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     /**
         @notice This event is emitted when a loan has been successfully repaid
@@ -243,20 +241,11 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                         LibLoans.loan(loanID).borrowedAmount;
                 }
 
-                console.log("excess profit", excessProfits);
-
-                require(
-                    PlatformSettingsLib.getProfitFeePercent() == 500,
-                    "invalid settings"
-                );
-
                 // Multiply excess profits by the profit fee (5%)
                 uint256 amountForProfitFee = NumbersLib.percent(
                     excessProfits,
                     uint16(PlatformSettingsLib.getProfitFeePercent())
                 );
-
-                console.log("amountForProfitFee", amountForProfitFee);
 
                 //If excess profit should be claimed for profit fee, send that amount to the tToken liq pool
                 if (amountForProfitFee > 0) {
