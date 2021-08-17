@@ -63,7 +63,9 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
         uint256 amount,
         address[] calldata tokenAddresses
     ) public paused("", false) onlyBorrower(loanID) {
-        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+        bool loanUnavailable = LibLoans.loan(loanID).status >=
+            LoanStatus.Closed;
+        address user = loanUnavailable
             ? msg.sender
             : address(LibEscrow.e(loanID));
         bytes memory result = LibEscrow.e(loanID).callDapp(
@@ -81,8 +83,10 @@ contract AaveClaimAaveFacet is PausableMods, DappMods {
             abi.encodeWithSelector(IStakedAave.redeem.selector, user, amount)
         );
 
-        if (LibLoans.loan(loanID).status < LoanStatus.Closed) {
-            LibEscrow.tokenUpdated(loanID, address(0));
+        if (loanUnavailable) {
+            for (uint256 index = 0; index < tokenAddresses.length; index++) {
+                LibEscrow.tokenUpdated(loanID, address(tokenAddresses[index]));
+            }
         }
 
         emit AaveClaimed(msg.sender, loanID);

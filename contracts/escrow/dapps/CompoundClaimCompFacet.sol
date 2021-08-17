@@ -46,7 +46,9 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
         paused("", false)
         onlyBorrower(loanID)
     {
-        address user = LibLoans.loan(loanID).status >= LoanStatus.Closed
+        bool loanUnavailable = LibLoans.loan(loanID).status >=
+            LoanStatus.Closed;
+        address user = loanUnavailable
             ? msg.sender
             : address(LibEscrow.e(loanID));
         LibEscrow.e(loanID).callDapp(
@@ -54,8 +56,8 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
             abi.encodeWithSignature("claimComp(address)", user)
         );
 
-        if (LibLoans.loan(loanID).status < LoanStatus.Closed) {
-            LibEscrow.tokenUpdated(loanID, address(0));
+        if (loanUnavailable) {
+            LibEscrow.tokenUpdated(loanID, LibLoans.loan(loanID).lendingToken);
         }
 
         emit CompoundClaimed(msg.sender, loanID);
