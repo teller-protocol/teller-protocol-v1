@@ -148,6 +148,26 @@ if (isEtheremNetwork(hre.network)) {
           const lengthAfterBridge = stakedNFTsV11.length
           expect(lengthBeforeBridge).to.not.equal(lengthAfterBridge)
         })
+        it('should be able to bridge an unstaked NFTV2 to polygon', async () => {
+          // get owned nfts before bridge
+          let ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
+          const lengthBeforeBridge = ownedNFTsV2.length
+
+          // bridge
+          await diamond.connect(borrowerSigner).bridgeNFTsV2(ownedNFTsV2[0], 1)
+
+          // get owned nfts after bridge
+          ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
+          const lengthAfterBridge = ownedNFTsV2.length
+
+          // they shouldnt be equal
+          expect(lengthBeforeBridge).to.not.equal(lengthAfterBridge)
+        })
+        // it('should be able to bridge a staked NFTV2 to polygon', async () => {
+        //   let ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
+
+        //   await diamond.connect(borrowerSigner).
+        // })
         // it('should be able to start to bridge NFTv2 to polygon', async () => {
         //   const ownedNFTsV1 = await nftV1.getOwnedTokens(borrower)
         //   await diamond.connect(borrowerSigner).mockStakeNFTsV1(ownedNFTsV1)
@@ -188,16 +208,23 @@ if (isEtheremNetwork(hre.network)) {
       describe('Mock tests', () => {
         describe('stake, unstake, deposit to polygon', () => {
           it('stakes NFTs on behalf of the user', async () => {
+            const deployerAddress = await deployer.getAddress()
+            // mint the token, then transfer it to v2
+            await nftV1.connect(deployer).mint(0, deployerAddress)
+            const ownedNFTs = await nftV1.getOwnedTokens(deployerAddress)
+            console.log(ownedNFTs)
+
             // approve the user's tokens to transfer to the diamond (Stake)
             await nftV1
-              .connect(borrowerSigner)
+              .connect(deployer)
               .setApprovalForAll(diamond.address, true)
 
             // stake the user's tokens
-            await diamond.connect(borrowerSigner).stakeNFTs(ownedNFTs)
+            await diamond.connect(deployer).stakeNFTs(ownedNFTs)
 
             // get the staked NFTs
-            const stakedNFTs = await diamond.getStakedNFTs(borrower)
+            const stakedNFTs = await diamond.getStakedNFTsV2(deployerAddress)
+            console.log(stakedNFTs)
             for (let i = 0; i < ownedNFTs.length; i++) {
               ownedNFTs[i].should.equal(stakedNFTs[i])
             }
@@ -273,23 +300,24 @@ if (isEtheremNetwork(hre.network)) {
           })
 
           it('migrates an NFT from V1 to V2', async () => {
+            const deployerAddress = await deployer.getAddress()
             // mint the token, then transfer it to v2
-            await nftV1.connect(deployer).mint(0, borrower)
-            const [nftId] = await nftV1.getOwnedTokens(borrower)
+            await nftV1.connect(deployer).mint(0, deployerAddress)
+            const [nftId] = await nftV1.getOwnedTokens(deployerAddress)
 
             // v2 tokens before should = 0
-            const v2TokensBefore = await nftV2.getOwnedTokens(borrower)
+            const v2TokensBefore = await nftV2.getOwnedTokens(deployerAddress)
             v2TokensBefore.length.should.equal(0)
 
             // v2 tokens after should = 1
             await nftV1
-              .connect(borrowerSigner)
+              .connect(deployer)
               ['safeTransferFrom(address,address,uint256)'](
-                borrower,
+                deployerAddress,
                 nftV2.address,
                 nftId
               )
-            const v2TokensAfter = await nftV2.getOwnedTokens(borrower)
+            const v2TokensAfter = await nftV2.getOwnedTokens(deployerAddress)
             v2TokensAfter.length.should.equal(1)
           })
         })
