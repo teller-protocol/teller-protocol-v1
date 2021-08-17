@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import hre from 'hardhat'
 
 import { getMarkets, isEtheremNetwork } from '../../config'
@@ -257,7 +257,7 @@ describe('Loans', () => {
               borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
 
               totalOwedAfterRepay.should.eql(0)
-              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
             })
 
             it('should be able to create and escrow-repay a loan', async () => {
@@ -334,7 +334,7 @@ describe('Loans', () => {
 
               totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
 
               borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
             })
@@ -411,7 +411,7 @@ describe('Loans', () => {
 
               totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
 
               borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
             })
@@ -462,10 +462,12 @@ describe('Loans', () => {
                 .connect(borrower)
                 .getLoanEscrow(loanId)
 
+              const excessProfitAmount = hre.toBN(30, lendingTokenDecimals)
+
               await getFunds({
                 to: borrowedFundsEscrowAddress,
                 tokenSym: market.lendingToken,
-                amount: hre.toBN(30, lendingTokenDecimals),
+                amount: excessProfitAmount,
                 hre,
               })
 
@@ -485,7 +487,6 @@ describe('Loans', () => {
                 originalTTokenEscrowBalance
               )
 
-              //fix me
               //expect(originalTTokenEscrowBalance).to.equal(99700030000)
 
               let loanEscrowBalance = await lendingToken.balanceOf(
@@ -520,10 +521,7 @@ describe('Loans', () => {
 
               const loanData = await diamond.getLoan(loanId)
 
-              const amtRepaid = 100010000
-              const expectedProfitFee = hre
-                .toBN(30, lendingTokenDecimals)
-                .div(20)
+              const expectedProfitFee = excessProfitAmount.div(20)
 
               //The difference should be the loan repayment + profit fee
               const finalTTokenEscrowBalance = await lendingToken.balanceOf(
@@ -534,7 +532,13 @@ describe('Loans', () => {
                 finalTTokenEscrowBalance.toString()
               )
 
-              //  finalTTokenEscrowBalance.should.eql(    expectedProfitFee.add( originalTTokenEscrowBalance ).add(  amtRepaid )    )
+              const TTokenBalanceDifference = finalTTokenEscrowBalance.sub(
+                originalTTokenEscrowBalanceBN
+              )
+
+              expect(TTokenBalanceDifference).to.equal(
+                balanceLeftToRepay.add(expectedProfitFee)
+              )
 
               loanEscrowBalance = await lendingToken.balanceOf(
                 borrowedFundsEscrowAddress
@@ -544,7 +548,7 @@ describe('Loans', () => {
 
               totalOwedAfterRepay.should.eql(0)
 
-              expect(loanData.status).to.equal(LoanStatus.Closed) //3 = repaid
+              expect(loanData.status).to.equal(LoanStatus.Closed)
 
               borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
             })

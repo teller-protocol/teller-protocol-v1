@@ -37,7 +37,7 @@ const mainnetPlatformSettings: PlatformSettings = {
     min: 0,
     max: 10000,
   },
-  ManagementFeePercent: {
+  ProfitFeePercent: {
     processOnDeployment: true,
     value: 500,
     min: 0,
@@ -107,7 +107,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 0,
       max: 10000,
     },
-    ManagementFeePercent: {
+    ProfitFeePercent: {
       processOnDeployment: true,
       value: 500,
       min: 0,
@@ -175,7 +175,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 500,
       max: 10000,
     },
-    ManagementFeePercent: {
+    ProfitFeePercent: {
       processOnDeployment: true,
       value: 500,
       min: 0,
@@ -243,7 +243,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 0,
       max: 10000,
     },
-    ManagementFeePercent: {
+    ProfitFeePercent: {
       processOnDeployment: true,
       value: 500,
       min: 0,
