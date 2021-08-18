@@ -147,7 +147,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       {
         contract: 'MainnetRepayFacet',
-        args: [nftV1.address, nftV2.address],
+        args: [nftV2.address],
         skipIfAlreadyDeployed: false,
       },
       // NFT

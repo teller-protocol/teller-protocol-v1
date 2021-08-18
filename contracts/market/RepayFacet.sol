@@ -44,8 +44,6 @@ import {
 
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 
-import "hardhat/console.sol";
-
 contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     TellerNFT_V2 private immutable TELLER_NFT_V2;
 

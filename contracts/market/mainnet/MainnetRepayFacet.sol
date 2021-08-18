@@ -6,15 +6,7 @@ import { LibLoans } from "../libraries/LibLoans.sol";
 import { TellerNFT } from "../../nft/TellerNFT.sol";
 
 contract MainnetRepayFacet is RepayFacet {
- 
-    TellerNFT private immutable TELLER_NFT_V1; 
-    
-    constructor(address nftV1Address, address nftV2Address)
-        RepayFacet(nftV2Address)
-    {
-        TELLER_NFT_V1 = TellerNFT(nftV1Address);
-        
-    }
+    constructor(address nftV2Address) RepayFacet(nftV2Address) {}
 
     /**
      *  @notice On mainnet, we override the restakeNFT method so that TellerNFTV1 is also restakes
@@ -26,7 +18,7 @@ contract MainnetRepayFacet is RepayFacet {
         super._restakeNFTForRepayment(loanID);
     }
 
-     /**
+    /**
        @notice On mainnet, we override the liquidateNFT method so that TellerNFTV1 is also transferred
        @param loanID ID of loan for which to transfer linked NFT
     */
