@@ -69,7 +69,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
     execute = initExecute
   }
-  const nftV1 = await contracts.get('TellerNFT')
+
   const nftV2 = await contracts.get('TellerNFT_V2')
   // Deploy platform diamond
   const facets: Facets = [
