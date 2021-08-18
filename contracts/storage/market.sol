@@ -137,6 +137,8 @@ struct MarketStorage {
     mapping(address => EnumerableSet.AddressSet) signers;
     // Maps lending token to list of allowed collateral tokens
     mapping(address => EnumerableSet.AddressSet) collateralTokens;
+    // List of lending token addresses
+    EnumerableSet.AddressSet lendingTokens;
 }
 
 bytes32 constant MARKET_STORAGE_POS = keccak256("teller.market.storage");

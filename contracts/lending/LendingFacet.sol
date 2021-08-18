@@ -22,6 +22,10 @@ import {
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { EnumerableHelper } from "../shared/libraries/EnumerableHelper.sol";
 
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
@@ -107,8 +111,13 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         LendingLib.s().tTokens[asset] = ITToken(tToken);
         // Initialize the Teller Token
         LendingLib.s().tTokens[asset].initialize(msg.sender, asset);
+        EnumerableSet.add(LendingLib.s().lendingTokens, asset);
 
         // Emit event
         emit LendingPoolInitialized(msg.sender, asset);
+    }
+
+    function getLendingTokens() external view returns (address[] memory) {
+        return EnumerableHelper.toArray(LendingLib.s().lendingTokens);
     }
 }
