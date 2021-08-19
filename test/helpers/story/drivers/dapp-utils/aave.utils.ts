@@ -144,11 +144,9 @@ export const aaveClaimTest = async (
     const borrowerAddress = await borrower.getAddress()
     await hre.evm.advanceTime(moment.duration(1, 'day'))
     const assets = [details.lendingToken.address]
-    console.log({ assets, borrowerAddress })
     const aaveAccrued = await IncentiveController.getUserUnclaimedRewards(
       escrowAddress
     )
-    // console.log({ aaveAccrued, rewardsBal })
     return aaveAccrued.gt(0)
   })
   //read the state and determine if this should pass
