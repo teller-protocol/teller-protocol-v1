@@ -11,6 +11,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ENS } from "../../shared/libraries/ENSLib.sol";
 import { StringsLib } from "../../shared/libraries/StringsLib.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract ChainlinkPricer {
     using StringsLib for string;
@@ -22,6 +23,10 @@ contract ChainlinkPricer {
         0x4a9dd6923a809a49d009b308182940df46ac3a45ee16c1133f90db66596dae1f;
 
     constructor(address ensResolver) {
+        require(
+            Address.isContract(ensResolver),
+            "Teller: resolver not contract"
+        );
         ENS_RESOLVER = ensResolver;
     }
 

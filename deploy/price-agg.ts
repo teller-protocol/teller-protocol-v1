@@ -26,9 +26,19 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
 
   const priceAgg = await deploy<PriceAggregator>({
     contract: 'PriceAggregator',
-    args: [tokens.all.WETH, chainlinkPricer.address],
+    args: [tokens.all.WETH],
     skipIfAlreadyDeployed: true,
     hre,
+
+    proxy: {
+      proxyContract: 'OpenZeppelinTransparentProxy',
+      execute: {
+        init: {
+          methodName: 'initialize',
+          args: [chainlinkPricer.address],
+        },
+      },
+    },
   })
 
   await addCompoundPricer(priceAgg, hre)
@@ -38,7 +48,7 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
   log('')
 }
 
-const deployChainlinkPricer = async (
+export const deployChainlinkPricer = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<ChainlinkPricer> => {
   let resolverAddress: string
@@ -69,7 +79,7 @@ const deployChainlinkPricer = async (
   return chainlinkPricer
 }
 
-const deployChainlinkENS = async (
+export const deployChainlinkENS = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<string> => {
   const deployer = await hre.getNamedSigner('deployer')
@@ -159,7 +169,7 @@ const deployChainlinkENS = async (
   return resolver.address
 }
 
-const addCompoundPricer = async (
+export const addCompoundPricer = async (
   priceAgg: PriceAggregator,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
