@@ -9,6 +9,7 @@ import { Market } from '../../types/custom/config-types'
 import {
   ITellerDiamond,
   MainnetNFTFacet,
+  TellerNFT,
   TellerNFTV2,
 } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
@@ -140,6 +141,7 @@ describe('Loans', () => {
       })
 
       describe('with NFT', () => {
+        let tellerNFT: TellerNFT
         let tellerNFTV2: TellerNFTV2
 
         beforeEach(async () => {
@@ -237,6 +239,102 @@ describe('Loans', () => {
               totalOwedAfterRepay.should.eql(0)
 
               expect(loanData.status).to.equal(LoanStatus.Closed)
+            })
+
+            it('should be able to create and liquidate a loan', async () => {
+              tellerNFT = await contracts.get('TellerNFT')
+
+              const borrower = await getNamedSigner('borrower')
+              const liquidator = await getNamedSigner('liquidator')
+
+              const borrowerAddress = await borrower.getAddress()
+
+              const { getHelpers } = await takeOutLoanWithNfts(hre, {
+                amount: 100,
+                lendToken: market.lendingToken,
+                borrower: borrower,
+                version: 1,
+              })
+
+              const helpers: LoanHelpersReturn = await getHelpers()
+
+              expect(helpers.details.loan).to.exist
+
+              const lendingToken = helpers.details.lendingToken
+
+              const lendingTokenDecimals = await lendingToken.decimals()
+
+              const loanId = helpers.details.loan.id
+
+              await getFunds({
+                to: borrower,
+                tokenSym: market.lendingToken,
+                amount: hre.toBN(200, lendingTokenDecimals),
+                hre,
+              })
+
+              await getFunds({
+                to: liquidator,
+                tokenSym: market.lendingToken,
+                amount: hre.toBN(200, lendingTokenDecimals),
+                hre,
+              })
+
+              const borrowerBalance = await lendingToken.balanceOf(
+                borrowerAddress
+              )
+
+              const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
+
+              await lendingToken
+                .connect(borrower)
+                .approve(diamond.address, balanceLeftToRepay)
+
+              const loanNFTsBeforeLiquidate = await diamond.getLoanNFTs(loanId)
+              expect(loanNFTsBeforeLiquidate.length).to.equal(3)
+
+              const nftBalancesBeforeLiquidation = await tellerNFT.balanceOf(
+                diamond.address
+              )
+
+              const liquidationController =
+                await diamond.getNFTLiquidationController()
+
+              //make the loan expire
+              await evm.advanceTime(helpers.details.loan.duration)
+
+              await lendingToken
+                .connect(liquidator)
+                .approve(diamond.address, balanceLeftToRepay)
+
+              await diamond.connect(liquidator).liquidateLoan(loanId)
+
+              const liqControllerOwnedTokens = await tellerNFT.getOwnedTokens(
+                liquidationController
+              )
+
+              const nftBalancesAfterLiquidation = await tellerNFT.balanceOf(
+                diamond.address
+              )
+
+              //the diamond should own fewer NFTs since they were swept away
+              nftBalancesAfterLiquidation.should.eql(
+                nftBalancesBeforeLiquidation.sub(loanNFTsBeforeLiquidate.length)
+              )
+
+              const liqControllerOwnedTokenIds = liqControllerOwnedTokens.map(
+                (n) => n.toString()
+              )
+              //the liquidation controller should now own the NFTs used for the loan
+              for (const tokenId of loanNFTsBeforeLiquidate) {
+                liqControllerOwnedTokenIds.should.contain(tokenId.toString())
+              }
+
+              const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
+              const loanData = await diamond.getLoan(loanId)
+
+              totalOwedAfterRepay.should.eql(0)
+              expect(loanData.status).to.equal(LoanStatus.Liquidated)
             })
           })
         }
