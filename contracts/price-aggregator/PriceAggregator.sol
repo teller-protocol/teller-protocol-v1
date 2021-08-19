@@ -36,9 +36,10 @@ contract PriceAggregator is RolesFacet, Initializable {
     }
 
     function initialize(address chainlinkPricerAddress) external initializer {
+        // Checks that the account initializing is the contract deployer
         require(msg.sender == DEPLOYER, "not deployer");
+        // The account must first be grated the ADMIN role and then call {setChainlinkPricer}
         RolesLib.grantRole(ADMIN, DEPLOYER);
-
         setChainlinkPricer(chainlinkPricerAddress);
     }
 

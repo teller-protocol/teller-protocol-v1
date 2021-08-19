@@ -86,7 +86,7 @@ describe('Signers', () => {
         await diamond
           .connect(deployer)
           .removeSigners(lendingToken.address, signers)
-          .should.not.emit(diamond, 'SignerAdded')
+          .should.not.emit(diamond, 'SignerRemoved')
       })
 
       it('Should not be able to remove signers as not ADMIN role', async () => {
@@ -97,7 +97,7 @@ describe('Signers', () => {
         const rando = await getNamedSigner('borrower')
         await diamond
           .connect(rando)
-          .addSigners(lendingToken.address, signers)
+          .removeSigners(lendingToken.address, signers)
           .should.be.revertedWith('AccessControl: not authorized')
       })
     })
