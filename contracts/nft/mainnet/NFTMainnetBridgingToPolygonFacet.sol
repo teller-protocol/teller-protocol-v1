@@ -118,9 +118,10 @@ contract NFTMainnetBridgingToPolygonFacet {
      *  bridges to polygon
      * @param tokenId The tokenIds that we are sending. First array is the ERC721, if any. Second array
      *  are our ERC-1155 tokenIDs
-     * @param amount the amount of tokenIds to stake
+     * @param amountToBridge the amount of tokenIds to stake
      */
-    function bridgeNFTsV2(uint256 tokenId, uint256 amount) external {
+    function bridgeNFTsV2(uint256 tokenId, uint256 amountToBridge) external {
+        require(amountToBridge > 0, "Teller: we must bridge more than one NFT");
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTsV2[
             msg.sender
         ];
@@ -128,21 +129,23 @@ contract NFTMainnetBridgingToPolygonFacet {
             tokenId
         ];
         if (EnumerableSet.contains(stakedNFTs, tokenId)) {
-            NFTLib.unstakeV2(tokenId, amount, msg.sender);
-            if (amountStaked <= amount) {
-                NFTLib.unstakeV2(tokenId, amount, msg.sender);
-            } else {
+            if (amountStaked <= amountToBridge) {
                 NFTLib.unstakeV2(tokenId, amountStaked, msg.sender);
+            } else {
+                NFTLib.unstakeV2(tokenId, amountToBridge, msg.sender);
             }
-        } else if (amount > 0) {
+        }
+        if (
+            amountToBridge > amountStaked && amountToBridge - amountStaked > 0
+        ) {
             TELLER_NFT_V2.safeTransferFrom(
                 msg.sender,
                 address(this),
                 tokenId,
-                amount,
+                amountToBridge,
                 ""
             );
         }
-        __depositFor(tokenId, amount);
+        __depositFor(tokenId, amountToBridge);
     }
 }
