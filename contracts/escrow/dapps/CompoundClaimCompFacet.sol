@@ -9,11 +9,15 @@ import "hardhat/console.sol";
 import { LibCompound } from "./libraries/LibCompound.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
+import {
+    AssetCTokenLib
+} from "../../settings/asset/libraries/AssetCTokenLib.sol";
 // Storage
 import { LoanStatus } from "../../storage/market.sol";
 
 // Interfaces
 import { IComptroller } from "../../shared/interfaces/IComptroller.sol";
+import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 contract CompoundClaimCompFacet is PausableMods, DappMods {
     /**
@@ -40,8 +44,9 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
     /**
      * @notice To claim COMP call the {claimComp} function on COMPTROLLER_ADDRESS_PROVIDER_ADDRESS.
      * @param loanID id of the loan being used in the dapp
+     * @param tokenAddress address of the token.
      */
-    function compoundClaimComp(uint256 loanID)
+    function compoundClaimComp(uint256 loanID, address tokenAddress)
         public
         paused("", false)
         onlyBorrower(loanID)
@@ -57,7 +62,8 @@ contract CompoundClaimCompFacet is PausableMods, DappMods {
         );
 
         if (loanUnavailable) {
-            LibEscrow.tokenUpdated(loanID, LibLoans.loan(loanID).lendingToken);
+            ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
+            LibEscrow.tokenUpdated(loanID, address(cToken));
         }
 
         emit CompoundClaimed(msg.sender, loanID);

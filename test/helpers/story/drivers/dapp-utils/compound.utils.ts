@@ -88,11 +88,10 @@ async function claimComp(
   expect(BigNumber.from(compBefore).gt(0)).to.equal(true)
   await diamond
     .connect(details.borrower.signer)
-    .compoundClaimComp(details.loan.id)
+    .compoundClaimComp(details.loan.id, details.loan.lendingToken)
   const compafter = await Comptroller.compAccrued(escrowAddress)
 
   // TODO: test COMP was deposited into the escrow
-
   expect(compafter.toString()).to.equal('0')
 }
 
