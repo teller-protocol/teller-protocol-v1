@@ -34,6 +34,20 @@ contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
                     nftIDs[i]
                 );
             }
+        } else if (version == 3) {
+            // we only need the NFTV1IDs here
+            (
+                uint256[] memory nftV1IDs,
+                uint256[] memory nftV2IDs,
+                uint256[] memory nftV2amounts
+            ) = abi.decode(tokenData, (uint256[], uint256[], uint256[]));
+            for (uint256 i; i < nftV1IDs.length; i++) {
+                NFTLib.applyToLoan(loanID, nftV1IDs[i], msg.sender);
+
+                allowedLoanSize_ += NFTLib.s().nftDictionary.tokenBaseLoanSize(
+                    nftV1IDs[i]
+                );
+            }
         } else {
             allowedLoanSize_ = super._takeOutLoanProcessNFTs(
                 loanID,

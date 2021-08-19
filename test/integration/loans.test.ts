@@ -420,6 +420,38 @@ describe('Loans', () => {
             expect(loanData.status).to.equal(LoanStatus.Closed)
           })
         })
+        describe('V3', () => {
+          let helpers: LoanHelpersReturn
+          it('creates a loan from v1 and v2 Ids', async () => {
+            const borrower = await getNamedSigner('borrower')
+            const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
+              amount: 100,
+              lendToken: market.lendingToken,
+              borrower,
+              version: 2,
+            })
+            helpers = await getHelpers()
+            console.log(helpers)
+            helpers.details.loan.should.exist
+
+            // get loanStatus from helpers and check if it's equal to 2, which means it's active
+            const loanStatus = helpers.details.loan.status
+            loanStatus.should.equal(2, 'Loan is not active')
+
+            const loanNFTsV2 = await diamond.getLoanNFTsV2(
+              helpers.details.loan.id
+            )
+
+            loanNFTsV2.loanNFTs_.should.eql(
+              nfts.v2.ids,
+              'Staked NFT IDs do not match'
+            )
+            loanNFTsV2.amounts_.should.eql(
+              nfts.v2.balances,
+              'Staked NFT balances do not match'
+            )
+          })
+        })
       })
     })
   }

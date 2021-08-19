@@ -80,7 +80,7 @@ interface CreateLoanWithNftArgs {
   amount?: BigNumberish
   amountBN?: BigNumberish
   duration?: moment.Duration
-  version: 1 | 2
+  version: 1 | 2 | 3
 }
 export interface CreateLoanArgs {
   lendToken: string | ERC20
@@ -402,13 +402,91 @@ export const takeOutLoanWithNfts = async (
         )
 
       // Encode the NFT V2 token data for the function
-      const tokenData = hre.ethers.utils.defaultAbiCoder.encode(
+      const tokenData = coder.encode(
         ['uint16', 'bytes'],
         [
           2,
           coder.encode(
             ['uint256[]', 'uint256[]'],
             [nftsUsed.v2.ids, nftsUsed.v2.balances]
+          ),
+        ]
+      )
+
+      // plug it in the takeOutLoanWithNFTs function
+      tx = diamond
+        .connect(borrower)
+        .takeOutLoanWithNFTs(
+          lendingToken.address,
+          loanAmount,
+          duration.asSeconds(),
+          tokenData
+        )
+
+      break
+    }
+    case 3: {
+      // get nftv1 and nftv2
+      const nft = await contracts.get<TellerNFT>('TellerNFT')
+      const nftV2 = await contracts.get<TellerNFTV2>('TellerNFT_V2')
+
+      // Mint user NFTs to use (from v1 and v2)
+      await mintNFTV1({
+        tierIndex: 0,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV1({
+        tierIndex: 1,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV2({
+        tierIndex: 2,
+        amount: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
+      await mintNFTV2({
+        tierIndex: 3,
+        amount: 2,
+        borrower: borrowerAddress,
+        hre,
+      })
+
+      // get all the borrower's NFTs V1
+      nftsUsed.v1 = await nft.getOwnedTokens(borrowerAddress)
+
+      // get all the borrower's NFTs V2
+      const ownedNFTs = await nftV2.getOwnedTokens(borrowerAddress)
+      nftsUsed.v2 = mergeV2IDsToBalances(ownedNFTs)
+
+      // Set NFT approval
+      await nft.connect(borrower).setApprovalForAll(diamond.address, true)
+
+      // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
+      await (diamond as any as MainnetNFTFacetMock)
+        .connect(borrower)
+        .mockStakeNFTsV1(nftsUsed.v1)
+
+      await nftV2
+        .connect(borrower)
+        .safeBatchTransferFrom(
+          borrowerAddress,
+          diamond.address,
+          nftsUsed.v2.ids,
+          nftsUsed.v2.balances,
+          '0x'
+        )
+
+      // Encode the NFT V1 token data for the function
+      const tokenData = coder.encode(
+        ['uint16', 'bytes'],
+        [
+          3,
+          coder.encode(
+            ['uint256[]', 'uint256[]', 'uint256[]'],
+            [nftsUsed.v1, nftsUsed.v2.ids, nftsUsed.v2.balances]
           ),
         ]
       )

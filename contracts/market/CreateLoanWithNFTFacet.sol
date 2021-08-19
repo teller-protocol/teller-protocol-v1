@@ -115,6 +115,23 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
                     version,
                     tokenData_
                 );
+        } else if (version == 3) {
+            // get loan size from first function
+            uint256 loanSize1 = CreateLoanWithNFTFacet._takeOutLoanProcessNFTs(
+                loanID,
+                version,
+                tokenData_
+            );
+
+            // get loan size from second function
+            uint256 loanSize2 = _takeOutLoanProcessNFTs(
+                loanID,
+                version,
+                tokenData_
+            );
+
+            // add both and return the calculated loan size
+            return loanSize1 + loanSize2;
         } else {
             return _takeOutLoanProcessNFTs(loanID, version, tokenData_);
         }
@@ -145,6 +162,26 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
                     nftIDs[i]
                 );
                 allowedLoanSize_ += baseLoanSize * amounts[i];
+            }
+        } else if (version == 3) {
+            // we only need the nftV2IDs and the nftV2amounts here
+            (
+                uint256[] memory nftV1IDs,
+                uint256[] memory nftV2IDs,
+                uint256[] memory nftV2amounts
+            ) = abi.decode(tokenData, (uint256[], uint256[], uint256[]));
+            for (uint256 i; i < nftV2IDs.length; i++) {
+                NFTLib.applyToLoanV2(
+                    loanID,
+                    nftV2IDs[i],
+                    nftV2amounts[i],
+                    msg.sender
+                );
+
+                uint256 baseLoanSize = TELLER_NFT_V2.tokenBaseLoanSize(
+                    nftV2IDs[i]
+                );
+                allowedLoanSize_ += baseLoanSize * nftV2amounts[i];
             }
         }
     }
