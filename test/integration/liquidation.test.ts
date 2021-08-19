@@ -6,7 +6,11 @@ import hre from 'hardhat'
 import { getMarkets, isEtheremNetwork } from '../../config'
 import { getPlatformSetting, updatePlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ITellerDiamond, MainnetNFTFacet } from '../../types/typechain'
+import {
+  ITellerDiamond,
+  MainnetNFTFacet,
+  TellerNFTV2,
+} from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
@@ -136,6 +140,8 @@ describe('Loans', () => {
       })
 
       describe('with NFT', () => {
+        let tellerNFTV2: TellerNFTV2
+
         beforeEach(async () => {
           await hre.deployments.fixture('protocol', {
             keepExistingDeployments: true,
@@ -147,6 +153,8 @@ describe('Loans', () => {
             hre
           )
           await evm.advanceTime(rateLimit)
+
+          tellerNFTV2 = await contracts.get('TellerNFT_V2')
         })
 
         if (isEtheremNetwork(hre.network)) {
@@ -154,8 +162,6 @@ describe('Loans', () => {
             let helpers: LoanHelpersReturn
 
             it('creates a loan', async () => {
-              // get helpers
-
               const borrower = await getNamedSigner('borrower')
 
               const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
@@ -168,9 +174,10 @@ describe('Loans', () => {
 
               helpers.details.loan.should.exist
 
-              // get loanStatus from helpers and check if it's equal to 2, which means it's active
-              const loanStatus = helpers.details.loan.status
-              loanStatus.should.equal(2, 'Loan is not active')
+              helpers.details.loan.status.should.equal(
+                LoanStatus.Active,
+                'Loan is not active'
+              )
 
               const loanNFTs = await diamond.getLoanNFTs(
                 helpers.details.loan.id
@@ -219,78 +226,13 @@ describe('Loans', () => {
 
               await diamond
                 .connect(borrower)
-                .repayLoan(loanId, balanceLeftToRepay)
-
-              const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
-
-              const loanData = await diamond.getLoan(loanId)
- 
-              totalOwedAfterRepay.should.eql(0)
-
-              expect(loanData.status).to.equal(LoanStatus.Closed)
-            })
-
-            it('should be able to create and repay a loan to restake NFTs', async () => {
-              const borrower = await getNamedSigner('borrower')
-
-              const { getHelpers } = await takeOutLoanWithNfts(hre, {
-                amount: 100,
-                lendToken: market.lendingToken,
-                borrower: borrower,
-                version: 1,
-              })
-
-              const helpers: LoanHelpersReturn = await getHelpers()
-
-              expect(helpers.details.loan).to.exist
-
-              const loanId = helpers.details.loan.id
-
-              const lendingToken = helpers.details.lendingToken
-
-              const lendingTokenDecimals = await lendingToken.decimals()
-
-              await getFunds({
-                to: borrower,
-                tokenSym: market.lendingToken,
-                amount: hre.toBN(200, lendingTokenDecimals),
-                hre,
-              })
-
-              const borrowerAddress = await borrower.getAddress()
-              const borrowerBalance = await lendingToken.balanceOf(
-                borrowerAddress
-              )
-
-              const balanceLeftToRepay = await diamond.getTotalOwed(loanId)
-
-              await lendingToken
-                .connect(borrower)
-                .approve(diamond.address, balanceLeftToRepay)
-
-              const stakedNFTsBeforeRepay = await diamond.getStakedNFTs(
-                borrowerAddress
-              )
-
-              const loanNFTsBeforeRepay = await diamond.getLoanNFTs(loanId)
-
-              expect(stakedNFTsBeforeRepay.length).to.equal(0)
-
-              await diamond
-                .connect(borrower)
                 .repayLoan(loanId, hre.toBN(100, lendingTokenDecimals))
 
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
               const loanData = await diamond.getLoan(loanId)
 
-              const stakedNFTsAfterRepay = await diamond.getStakedNFTs(
-                borrowerAddress
-              )
-
-              expect(stakedNFTsAfterRepay.length).to.equal(
-                loanNFTsBeforeRepay.length
-              )
+              borrowerBalance.should.eql(hre.toBN(200, lendingTokenDecimals))
 
               totalOwedAfterRepay.should.eql(0)
 
@@ -303,7 +245,6 @@ describe('Loans', () => {
           let helpers: LoanHelpersReturn
 
           it('creates a loan', async () => {
-            // get helpers
             const borrower = await getNamedSigner('borrower')
 
             const { nfts, getHelpers } = await takeOutLoanWithNfts(hre, {
@@ -333,8 +274,11 @@ describe('Loans', () => {
             )
           })
 
-          it('should be able to create and repay a loan', async () => {
+          it('should be able to create and liquidate a loan', async () => {
             const borrower = await getNamedSigner('borrower')
+            const liquidator = await getNamedSigner('liquidator')
+
+            const borrowerAddress = await borrower.getAddress()
 
             const { getHelpers } = await takeOutLoanWithNfts(hre, {
               amount: 100,
@@ -347,11 +291,11 @@ describe('Loans', () => {
 
             expect(helpers.details.loan).to.exist
 
-            const loanId = helpers.details.loan.id
-
             const lendingToken = helpers.details.lendingToken
 
             const lendingTokenDecimals = await lendingToken.decimals()
+
+            const loanId = helpers.details.loan.id
 
             await getFunds({
               to: borrower,
@@ -360,7 +304,13 @@ describe('Loans', () => {
               hre,
             })
 
-            const borrowerAddress = await borrower.getAddress()
+            await getFunds({
+              to: liquidator,
+              tokenSym: market.lendingToken,
+              amount: hre.toBN(200, lendingTokenDecimals),
+              hre,
+            })
+
             const borrowerBalance = await lendingToken.balanceOf(
               borrowerAddress
             )
@@ -371,53 +321,72 @@ describe('Loans', () => {
               .connect(borrower)
               .approve(diamond.address, balanceLeftToRepay)
 
-            const stakedNFTsBeforeRepay = await diamond.getStakedNFTsV2(
-              borrowerAddress
+            const loanNFTsBeforeLiquidate = await diamond.getLoanNFTsV2(loanId)
+            expect(loanNFTsBeforeLiquidate.loanNFTs_.length).to.equal(3)
+
+            const diamondOwnerArray = loanNFTsBeforeLiquidate.loanNFTs_.map(
+              () => diamond.address
             )
 
-            const loanNFTs = await diamond.getLoanNFTsV2(loanId)
-
-            expect(stakedNFTsBeforeRepay.staked_.length).to.equal(0)
-
-            await diamond
-              .connect(borrower)
-              .repayLoan(loanId, hre.toBN(100, lendingTokenDecimals))
-
-            const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
-
-            const loanData = await diamond.getLoan(loanId)
-
-            const stakedNFTsAfterRepay = await diamond.getStakedNFTsV2(
-              borrowerAddress
-            )
-
-            expect(stakedNFTsAfterRepay.staked_.length).to.equal(
-              loanNFTs.loanNFTs_.length + stakedNFTsBeforeRepay.staked_.length
-            )
-
-            const stakedNFTAmounts = stakedNFTsAfterRepay.staked_.reduce<{
-              [nftID: string]: BigNumber
-            }>((obj, nftID, i) => {
-              obj[nftID.toString()] = stakedNFTsAfterRepay.amounts_[i]
-              return obj
-            }, {})
-
-            for (let i = 0; i < loanNFTs.loanNFTs_.length; i++) {
-              const nftID = loanNFTs.loanNFTs_[i]
-
-              const stakedNFTBeforeRepayAmount =
-                stakedNFTsBeforeRepay.amounts_[i] ?? 0
-
-              const expectedAmount = loanNFTs.amounts_[i].add(
-                stakedNFTBeforeRepayAmount
+            const nftBalancesBeforeLiquidation =
+              await tellerNFTV2.balanceOfBatch(
+                diamondOwnerArray,
+                loanNFTsBeforeLiquidate.loanNFTs_
               )
 
-              stakedNFTAmounts[nftID.toString()].should.eql(expectedAmount)
-            }
+            const liquidationController =
+              await diamond.getNFTLiquidationController()
+
+            //make the loan expire
+            await evm.advanceTime(helpers.details.loan.duration)
+
+            await lendingToken
+              .connect(liquidator)
+              .approve(diamond.address, balanceLeftToRepay)
+
+            await diamond.connect(liquidator).liquidateLoan(loanId)
+
+            const liqControllerOwnedTokens = await tellerNFTV2.getOwnedTokens(
+              liquidationController
+            )
+
+            liqControllerOwnedTokens.should.eql(
+              loanNFTsBeforeLiquidate.loanNFTs_
+            )
+
+            const liquidatorOwnerArray = loanNFTsBeforeLiquidate.loanNFTs_.map(
+              () => liquidationController
+            )
+
+            const loanNFTsAfterLiquidate = await diamond.getLoanNFTsV2(loanId)
+
+            const nftBalancesAfterLiquidation =
+              await tellerNFTV2.balanceOfBatch(
+                liquidatorOwnerArray,
+                loanNFTsAfterLiquidate.loanNFTs_
+              )
+
+            expect(nftBalancesAfterLiquidation).to.eql(
+              loanNFTsBeforeLiquidate.amounts_
+            )
+
+            const nftBalancesInDiamondAfterLiquidation =
+              await tellerNFTV2.balanceOfBatch(
+                diamondOwnerArray,
+                loanNFTsAfterLiquidate.loanNFTs_
+              )
+
+            const emptyAmounts = nftBalancesAfterLiquidation.map(() =>
+              BigNumber.from(0x0)
+            )
+
+            expect(nftBalancesInDiamondAfterLiquidation).to.eql(emptyAmounts)
+
+            const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
+            const loanData = await diamond.getLoan(loanId)
 
             totalOwedAfterRepay.should.eql(0)
-
-            expect(loanData.status).to.equal(LoanStatus.Closed)
+            expect(loanData.status).to.equal(LoanStatus.Liquidated)
           })
         })
       })
