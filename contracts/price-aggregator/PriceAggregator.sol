@@ -3,35 +3,73 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { ChainlinkPricer } from "./pricers/ChainlinkPricer.sol";
+import {
+    Initializable
+} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {
+    RolesFacet,
+    RolesLib
+} from "../contexts2/access-control/roles/RolesFacet.sol";
+import { ADMIN } from "../shared/roles.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Interfaces
 import { IsaLPPricer } from "./IsaLPPricer.sol";
 import {
     AggregatorV2V3Interface
 } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract PriceAggregator {
+// Libraries
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+
+contract PriceAggregator is RolesFacet, Initializable {
+    address private immutable DEPLOYER;
     uint256 internal constant TEN = 10;
     address public immutable wETH;
 
     mapping(address => IsaLPPricer) public saLPPricer;
     ChainlinkPricer public chainlinkPricer;
 
-    constructor(address wETHAddress, address chainlinkPricerAddress) {
+    constructor(address wETHAddress) {
+        DEPLOYER = msg.sender;
         wETH = wETHAddress;
-        chainlinkPricer = ChainlinkPricer(chainlinkPricerAddress);
+    }
+
+    function initialize(address chainlinkPricerAddress) external initializer {
+        require(msg.sender == DEPLOYER, "not deployer");
+        RolesLib.grantRole(ADMIN, DEPLOYER);
+
+        setChainlinkPricer(chainlinkPricerAddress);
+    }
+
+    function setChainlinkPricer(address pricer)
+        public
+        authorized(ADMIN, msg.sender)
+    {
+        require(
+            Address.isContract(pricer),
+            "Teller: Chainlink pricer not contract"
+        );
+        chainlinkPricer = ChainlinkPricer(pricer);
     }
 
     function setAssetPricers(address pricer, address[] calldata assets)
         external
+        authorized(ADMIN, msg.sender)
     {
         for (uint256 i; i < assets.length; i++) {
             setAssetPricer(assets[i], pricer);
         }
     }
 
-    function setAssetPricer(address asset, address pricer) public {
+    function setAssetPricer(address asset, address pricer)
+        public
+        authorized(ADMIN, msg.sender)
+    {
+        require(
+            Address.isContract(pricer),
+            "Teller: Chainlink pricer not contract"
+        );
         saLPPricer[asset] = IsaLPPricer(pricer);
     }
 
