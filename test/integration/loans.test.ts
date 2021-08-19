@@ -431,7 +431,6 @@ describe('Loans', () => {
               version: 2,
             })
             helpers = await getHelpers()
-            console.log(helpers)
             helpers.details.loan.should.exist
 
             // get loanStatus from helpers and check if it's equal to 2, which means it's active
