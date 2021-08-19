@@ -219,8 +219,8 @@ const deployProtocol: DeployFunction = async (hre) => {
   const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
   // set approval for all tokens to be transfered by ERC1155 Predicate
   if (
-    isEtheremNetwork(network) // &&
-    // nftV2.isApprovedForAll(diamond.address, ERC1155_PREDICATE)
+    isEtheremNetwork(network) &&
+    nftV2.isApprovedForAll(diamond.address, ERC1155_PREDICATE)
   ) {
     await diamond.initNFTBridge()
   }

@@ -176,7 +176,6 @@ if (isEtheremNetwork(hre.network)) {
         it('should be able to bridge an unstaked NFTV2 to polygon', async () => {
           // get owned nfts before bridge
           let ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
-          console.log(ownedNFTsV2)
           const lengthBeforeBridge = ownedNFTsV2.length
 
           // bridge
@@ -195,8 +194,6 @@ if (isEtheremNetwork(hre.network)) {
           let ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
           const lengthBeforeBridge = ownedNFTsV2.length
 
-          console.log('safe transfer from')
-
           // stake an NFT
           await nftV2
             .connect(borrowerSigner)
@@ -208,13 +205,8 @@ if (isEtheremNetwork(hre.network)) {
               '0x'
             )
 
-          console.log('getting staked nftsv2')
           // get stakedNFTsV2
           const stakedNFTsV2 = await diamond.getStakedNFTsV2(borrower)
-          console.log(stakedNFTsV2)
-
-          console.log('bridging')
-
           // bridge a staked NFT
           await diamond
             .connect(borrowerSigner)
@@ -222,7 +214,6 @@ if (isEtheremNetwork(hre.network)) {
 
           // get owned nfts after bridge
           ownedNFTsV2 = await nftV2.getOwnedTokens(borrower)
-          console.log(ownedNFTsV2)
           const lengthAfterBridge = ownedNFTsV2.length
 
           lengthBeforeBridge.should.equal(
