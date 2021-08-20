@@ -116,7 +116,8 @@ library LibLoans {
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
-            neededInCollateralTokens = AppStorageLib.store()
+            neededInCollateralTokens = AppStorageLib
+                .store()
                 .priceAggregator
                 .getValueFor(
                     loan(loanID).lendingToken,

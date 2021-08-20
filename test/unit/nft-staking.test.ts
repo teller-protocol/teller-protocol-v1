@@ -227,6 +227,9 @@ describe('NFT Staking', () => {
           ['uint256[]', 'uint256[]', 'bytes'],
           [[tokenIDV2], [1], '0x']
         )
+        await $tellerNFTV2
+          .connect(deployer)
+          .addDepositor(await deployer.getAddress())
         await $tellerNFTV2.connect(deployer).deposit(borrowerAddress, data)
         return tokenIDV2
       }

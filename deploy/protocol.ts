@@ -116,10 +116,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       contract: 'LoanDataFacet',
       skipIfAlreadyDeployed: false,
     },
-    {
-      contract: 'RepayFacet',
-      skipIfAlreadyDeployed: false,
-    },
+
     {
       contract: 'SignersFacet',
       skipIfAlreadyDeployed: false,
@@ -145,6 +142,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       {
         contract: 'MainnetCreateLoanWithNFTFacet',
         args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'MainnetRepayFacet',
         skipIfAlreadyDeployed: false,
       },
       // NFT
@@ -190,6 +191,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       {
         contract: 'CreateLoanWithNFTFacet',
         args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'RepayFacet',
         skipIfAlreadyDeployed: false,
       },
       // NFT

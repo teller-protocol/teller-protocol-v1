@@ -95,9 +95,7 @@ library LibEscrow {
         EnumerableSet.AddressSet storage tokens = getEscrowTokens(loanID);
         if (EnumerableSet.length(tokens) > 0) {
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-                value_ += AppStorageLib.store()
-                    .priceAggregator
-                    .getBalanceOfFor(
+                value_ += AppStorageLib.store().priceAggregator.getBalanceOfFor(
                         address(e(loanID)),
                         EnumerableSet.at(tokens, i),
                         lendingToken

@@ -160,4 +160,25 @@ library NFTLib {
             EnumerableSet.add(s().stakedNFTs[owner], EnumerableSet.at(nfts, i));
         }
     }
+
+    /**
+     * @notice it finds the loan's NFTs and adds them back to the owner's list of staked NFTs
+     * @param loanID the identifier of the respective loan to add the NFTs back to the user's staked NFTs
+     * @param owner the owner to add the unstaked NFTs back to the staked pile
+     */
+    function restakeLinkedV2(uint256 loanID, address owner) internal {
+        // Get linked NFT
+        EnumerableSet.UintSet storage loanNFTs = s().loanNFTsV2[loanID];
+        for (uint256 i; i < EnumerableSet.length(loanNFTs); i++) {
+            uint256 nftV2ID = EnumerableSet.at(loanNFTs, i);
+
+            // Make sure NFT ID is staked
+            EnumerableSet.add(s().stakedNFTsV2[owner], nftV2ID);
+
+            // Increment the staked amount from amount linked to loan
+            s().stakedNFTsV2Amounts[owner][nftV2ID] += s().loanNFTsV2Amounts[
+                loanID
+            ][nftV2ID];
+        }
+    }
 }
