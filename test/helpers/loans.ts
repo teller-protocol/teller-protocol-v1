@@ -478,7 +478,8 @@ export const takeOutLoanWithNfts = async (
           nftsUsed.v2.balances,
           '0x'
         )
-
+      console.log('loans.ts: nfts used v2')
+      console.log(nftsUsed.v2)
       // Encode the NFT V1 token data for the function
       const tokenData = coder.encode(
         ['uint16', 'bytes'],
