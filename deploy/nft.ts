@@ -1,7 +1,15 @@
+import colors from 'colors'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
-import { TellerNFTDictionary } from '../types/typechain'
+import { getNetworkName } from '../config'
+import {
+  ITellerNFT,
+  ITellerNFTDistributor,
+  MainnetTellerNFT,
+  TellerNFT,
+  TellerNFTV2,
+} from '../types/typechain'
 import {
   deploy,
   deployDiamond,
@@ -9,8 +17,9 @@ import {
 } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, run, log, contracts, ethers } = hre
+  const { getNamedSigner, run, log, network, contracts, ethers } = hre
   const deployer = await getNamedSigner('deployer')
+  const networkName = getNetworkName(network)
   // Make sure contracts are compiled
   await run('compile')
 
@@ -18,30 +27,94 @@ const deployNFT: DeployFunction = async (hre) => {
   log('********** Teller NFT **********', { indent: 1 })
   log('')
 
-  const nft = await deploy<ITellerNFT>({
-    contract: 'TellerNFT',
-    hre,
-  })
-
-  const nftDictionary = await deploy<TellerNFTDictionary>({
-    contract: 'TellerNFTDictionary',
-    hre,
-    proxy: {
-      proxyContract: 'OpenZeppelinTransparentProxy',
-      execute: {
-        init: {
-          methodName: 'initialize',
-          args: [await deployer.getAddress()],
+  // Store list of addresses that should be added as minters
+  const nftName = 'TellerNFT_V2'
+  const isEthereum = ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(
+    (n) => n === networkName
+  )
+  if (isEthereum) {
+    const minterAddresses = [await deployer.getAddress()]
+    /* Deploying V1 */
+    const nftV1 = await deploy<TellerNFT>({ contract: 'TellerNFT', hre })
+    if (nftV1.deployResult.newlyDeployed) {
+      await nftV1.initialize(minterAddresses).then(({ wait }) => wait())
+    }
+    /* Deploying V2 */
+    const nft = await deploy<MainnetTellerNFT>({
+      contract: 'MainnetTellerNFT',
+      name: nftName,
+      hre,
+      proxy: {
+        proxyContract: 'OpenZeppelinTransparentProxy',
+        execute: {
+          init: {
+            methodName: 'initialize',
+            args: [
+              // Initial minters
+              ethers.utils.defaultAbiCoder.encode(
+                ['address[]'],
+                [minterAddresses]
+              ),
+            ],
+          },
         },
       },
-    },
-  })
+    })
 
-  //call initialize on the dictionary
+    // Deploy distributor
+    const nftDistributor = await deployDistributor(hre)
+
+    // Add the distributor as a minter if not already
+    const minterRole = ethers.utils.id('MINTER')
+    const distributorIsDictAdmin = await nft.hasRole(
+      minterRole,
+      nftDistributor.address
+    )
+    if (!distributorIsDictAdmin) {
+      log(
+        `Adding distributor (${nftDistributor.address}) as MINTER for TellerNFT...: `,
+        { indent: 2, star: true, nl: false }
+      )
+
+      const receipt = await nft
+        .connect(deployer)
+        .grantRole(minterRole, nftDistributor.address)
+        .then(({ wait }) => wait())
+
+      log(` with ${colors.cyan(receipt.gasUsed.toString())} gas`)
+    }
+  } else {
+    await deploy({
+      contract: 'PolyTellerNFT',
+      name: nftName,
+      hre,
+      proxy: {
+        proxyContract: 'OpenZeppelinTransparentProxy',
+        execute: {
+          init: {
+            methodName: 'initialize',
+            args: ['0x'],
+          },
+        },
+      },
+      skipIfAlreadyDeployed: false,
+      mock: process.env.TESTING === '1',
+    })
+  }
+
+  await run('add-nft-tiers', { sendTx: true })
+}
+
+const deployDistributor = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<ITellerNFTDistributor> => {
+  const { run, contracts, getNamedSigner, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   let execute: DeployDiamondArgs<ITellerNFTDistributor, any>['execute']
   try {
-    // Try to get deployment of TellerDiamond
+    // Try to get deployment of TellerNFTDistributor
     await contracts.get('TellerNFTDistributor')
 
     // If deployment exists execute upgrade function
@@ -53,13 +126,15 @@ const deployNFT: DeployFunction = async (hre) => {
 
     execute = upgradeExecute
   } catch {
+    const nft = await contracts.get<ITellerNFT>('TellerNFT')
+
     const executeMethod = 'initialize'
     const initExecute: DeployDiamondArgs<
       ITellerNFTDistributor,
       typeof executeMethod
     >['execute'] = {
       methodName: executeMethod,
-      args: [nft.address, nftDictionary.address, await deployer.getAddress()],
+      args: [nft.address, await deployer.getAddress()],
     }
 
     execute = initExecute
@@ -80,49 +155,16 @@ const deployNFT: DeployFunction = async (hre) => {
         contract: 'ent_moveMerkle_NFTDistributor_v1',
         skipIfAlreadyDeployed: true,
       },
-      { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: false },
+      { contract: 'ent_claim_NFTDistributor_v1', skipIfAlreadyDeployed: true },
       { contract: 'ext_distributor_NFT_v1', skipIfAlreadyDeployed: true },
     ],
     hre,
     execute,
   })
 
-  const adminRole = ethers.utils.id('ADMIN')
-  const distributorIsDictAdmin = await nftDictionary.hasRole(
-    adminRole,
-    nftDistributor.address
-  )
-  if (!distributorIsDictAdmin) {
-    log(
-      `Adding distributor ${await deployer.getAddress()} as ADMIN for Dictionary...: `,
-      { indent: 2, star: true, nl: false }
-    )
-
-    await nftDictionary
-      .connect(deployer)
-      .grantRole(adminRole, nftDistributor.address)
-      .then(({ wait }) => wait())
-
-    log('Done.')
-  }
-
-  log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
-
-  try {
-    const minters: string[] = [
-      nftDistributor.address,
-      await deployer.getAddress(),
-    ]
-    const receipt = await nft
-      .initialize(minters)
-      .then(async ({ wait }) => await wait())
-    log(` with ${receipt.gasUsed} gas`)
-  } catch (err) {
-    log(' already initialized')
-  }
-
-  await run('add-nft-tiers', { sendTx: true })
   await run('add-nft-merkles', { sendTx: true })
+
+  return nftDistributor
 }
 
 deployNFT.tags = ['nft']

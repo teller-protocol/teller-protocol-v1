@@ -126,16 +126,16 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'RepayFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     {
       contract: 'SignersFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // NFT
     {
       contract: 'NFTFacet',
-      skipIfAlreadyDeployed: false,
+      skipIfAlreadyDeployed: true,
     },
     // // Dapps
     // {
@@ -334,7 +334,7 @@ const deployTTokenBeacon = async (
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = 1
+  const logicVersion = 2
 
   const tTokenLogic = await deploy<ITToken>({
     hre,

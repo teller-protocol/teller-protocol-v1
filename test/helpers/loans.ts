@@ -136,6 +136,7 @@ export const createLoan = async (
   // Create loan with terms
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
+    // @ts-expect-error todo
     .createLoanWithTerms(
       craReturn.request,
       [craReturn.responses],
