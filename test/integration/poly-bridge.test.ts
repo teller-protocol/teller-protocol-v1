@@ -36,7 +36,7 @@ const maticPOSClient = new MaticPOSClient({
 })
 
 if (isEtheremNetwork(hre.network)) {
-  describe.only('Bridging Assets to Polygon', () => {
+  describe('Bridging Assets to Polygon', () => {
     getMarkets(hre.network).forEach(testBridging)
     function testBridging(markets: Market): void {
       const { log } = hre
@@ -65,8 +65,8 @@ if (isEtheremNetwork(hre.network)) {
         deployer = await getNamedSigner('deployer')
 
         // get a regular borrower
-        borrower = (await getNamedAccounts()).borrower
-        borrowerSigner = (await hre.evm.impersonate(borrower)).signer
+        borrowerSigner = await getNamedSigner('borrower')
+        borrower = await borrowerSigner.getAddress()
 
         // Minting NFTV1 and V2 tokens
         await mintNFTV1({
