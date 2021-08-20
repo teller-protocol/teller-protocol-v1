@@ -158,7 +158,6 @@ const deployProtocol: DeployFunction = async (hre) => {
         contract: 'NFTMainnetBridgingToPolygonFacet',
         skipIfAlreadyDeployed: false,
         args: [nftMigrator.address],
-        mock: process.env.TESTING === '1',
       },
       {
         contract: 'MainnetNFTInterestFacet',
@@ -216,8 +215,15 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
-
   await addAuthorizedAddresses(hre, diamond)
+  const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
+  // set approval for all tokens to be transfered by ERC1155 Predicate
+  if (
+    isEtheremNetwork(network) &&
+    nftV2.isApprovedForAll(diamond.address, ERC1155_PREDICATE)
+  ) {
+    await diamond.initNFTBridge()
+  }
 }
 
 const addAuthorizedAddresses = async (
