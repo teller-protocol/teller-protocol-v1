@@ -136,7 +136,7 @@ describe('Loans', () => {
         // })
       })
 
-      describe.only('with NFT', () => {
+      describe('with NFT', () => {
         beforeEach(async () => {
           await hre.deployments.fixture('protocol', {
             keepExistingDeployments: true,
@@ -167,8 +167,6 @@ describe('Loans', () => {
               })
               helpers = await getHelpers()
 
-              console.log('loan id')
-              console.log(helpers.details.loan.id)
               helpers.details.loan.should.exist
 
               // get loanStatus from helpers and check if it's equal to 2, which means it's active
@@ -178,7 +176,6 @@ describe('Loans', () => {
               const loanNFTs = await diamond.getLoanNFTs(
                 helpers.details.loan.id
               )
-              console.log(loanNFTs)
               loanNFTs.should.eql(nfts.v1, 'Staked NFTs do not match')
             })
 
@@ -318,8 +315,6 @@ describe('Loans', () => {
             })
             helpers = await getHelpers()
 
-            console.log('loan id')
-            console.log(helpers.details.loan.id)
             helpers.details.loan.should.exist
 
             const loanStatus = helpers.details.loan.status
@@ -328,7 +323,7 @@ describe('Loans', () => {
             const loanNFTsV2 = await diamond.getLoanNFTsV2(
               helpers.details.loan.id
             )
-            console.log(loanNFTsV2)
+
             loanNFTsV2.loanNFTs_.should.eql(
               nfts.v2.ids,
               'Staked NFT IDs do not match'
@@ -436,12 +431,8 @@ describe('Loans', () => {
               borrower,
               version: 3,
             })
-            console.log('NFTs used')
-            console.log(nfts)
             helpers = await getHelpers()
             helpers.details.loan.should.exist
-            console.log('loan id')
-            console.log(helpers.details.loan.id)
 
             // get loanStatus from helpers and check if it's equal to 2, which means it's active
             const loanStatus = helpers.details.loan.status
@@ -452,11 +443,6 @@ describe('Loans', () => {
             const loanNFTsV2 = await diamond.getLoanNFTsV2(
               helpers.details.loan.id
             )
-            console.log('loan nfts v1 ')
-            console.log(loanNFTs)
-            console.log('loan nfts v2')
-            console.log(loanNFTsV2)
-
             // check if loan NFTs are equal to each other
             loanNFTs.should.eql(nfts.v1, 'Staked NFTs do not match')
             loanNFTsV2.loanNFTs_.should.eql(

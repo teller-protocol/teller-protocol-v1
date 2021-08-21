@@ -344,7 +344,13 @@ export const takeOutLoanWithNfts = async (
       // Encode the NFT V1 token data for the function
       const tokenData = coder.encode(
         ['uint16', 'bytes'],
-        [1, coder.encode(['uint256[]'], [nftsUsed.v1])]
+        [
+          1,
+          coder.encode(
+            ['uint256[]', 'uint256[]', 'uint256[]'],
+            [nftsUsed.v1, [], []]
+          ),
+        ]
       )
 
       // plug it in the takeOutLoanWithNFTs function
@@ -385,11 +391,10 @@ export const takeOutLoanWithNfts = async (
       // get all the borrower's NFTs
       const ownedNFTs = await nft.getOwnedTokens(borrowerAddress)
 
-      // // Set NFT approval
-      // await nft.connect(borrower).setApprovalForAll(diamond.address, true)
+      // Set NFT approval
+      await nft.connect(borrower).setApprovalForAll(diamond.address, true)
       //
       // // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
-      // await diamond.connect(borrower).mockStakeNFTsV1(ownedNFTs)
       nftsUsed.v2 = mergeV2IDsToBalances(ownedNFTs)
       await nft
         .connect(borrower)
@@ -400,15 +405,14 @@ export const takeOutLoanWithNfts = async (
           nftsUsed.v2.balances,
           '0x'
         )
-
       // Encode the NFT V2 token data for the function
       const tokenData = coder.encode(
         ['uint16', 'bytes'],
         [
           2,
           coder.encode(
-            ['uint256[]', 'uint256[]'],
-            [nftsUsed.v2.ids, nftsUsed.v2.balances]
+            ['uint256[]', 'uint256[]', 'uint256[]'],
+            [[], nftsUsed.v2.ids, nftsUsed.v2.balances]
           ),
         ]
       )
@@ -442,13 +446,13 @@ export const takeOutLoanWithNfts = async (
         hre,
       })
       await mintNFTV2({
-        tierIndex: 2,
+        tierIndex: 1,
         amount: 2,
         borrower: borrowerAddress,
         hre,
       })
       await mintNFTV2({
-        tierIndex: 3,
+        tierIndex: 2,
         amount: 2,
         borrower: borrowerAddress,
         hre,
@@ -457,12 +461,15 @@ export const takeOutLoanWithNfts = async (
       // get all the borrower's NFTs V1
       nftsUsed.v1 = await nft.getOwnedTokens(borrowerAddress)
 
+      // set nft approval
+      await nft.connect(borrower).setApprovalForAll(diamond.address, true)
+
       // get all the borrower's NFTs V2
       const ownedNFTs = await nftV2.getOwnedTokens(borrowerAddress)
+      await nftV2.connect(borrower).setApprovalForAll(diamond.address, true)
       nftsUsed.v2 = mergeV2IDsToBalances(ownedNFTs)
 
       // Set NFT approval
-      await nft.connect(borrower).setApprovalForAll(diamond.address, true)
 
       // Stake NFTs by transferring from the msg.sender (borrower) to the diamond
       await (diamond as any as MainnetNFTFacetMock)
@@ -478,8 +485,6 @@ export const takeOutLoanWithNfts = async (
           nftsUsed.v2.balances,
           '0x'
         )
-      console.log('loans.ts: nfts used v2')
-      console.log(nftsUsed.v2)
       // Encode the NFT V1 token data for the function
       const tokenData = coder.encode(
         ['uint16', 'bytes'],

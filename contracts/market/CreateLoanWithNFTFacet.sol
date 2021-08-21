@@ -125,11 +125,12 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint16 version,
         bytes memory tokenData
     ) internal virtual returns (uint256 allowedLoanSize_) {
-        if (version == 2) {
-            (uint256[] memory nftIDs, uint256[] memory amounts) = abi.decode(
-                tokenData,
-                (uint256[], uint256[])
-            );
+        if ((2 & version) == 2) {
+            (
+                uint256[] memory nftIDsV1,
+                uint256[] memory nftIDs,
+                uint256[] memory amounts
+            ) = abi.decode(tokenData, (uint256[], uint256[], uint256[]));
             for (uint256 i; i < nftIDs.length; i++) {
                 NFTLib.applyToLoanV2(loanID, nftIDs[i], amounts[i], msg.sender);
 
@@ -139,26 +140,5 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
                 allowedLoanSize_ += baseLoanSize * amounts[i];
             }
         }
-        //  else if (version == 3) {
-        //     // we only need the nftV2IDs and the nftV2amounts here
-        //     (
-        //         uint256[] memory nftV1IDs,
-        //         uint256[] memory nftV2IDs,
-        //         uint256[] memory nftV2amounts
-        //     ) = abi.decode(tokenData, (uint256[], uint256[], uint256[]));
-        //     for (uint256 i; i < nftV2IDs.length; i++) {
-        //         NFTLib.applyToLoanV2(
-        //             loanID,
-        //             nftV2IDs[i],
-        //             nftV2amounts[i],
-        //             msg.sender
-        //         );
-
-        //         uint256 baseLoanSize = TELLER_NFT_V2.tokenBaseLoanSize(
-        //             nftV2IDs[i]
-        //         );
-        //         allowedLoanSize_ += baseLoanSize * nftV2amounts[i];
-        //     }
-        // }
     }
 }

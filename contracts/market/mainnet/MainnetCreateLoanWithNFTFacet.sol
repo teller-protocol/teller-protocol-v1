@@ -50,8 +50,6 @@ contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
         }
 
         if (((1 & version) == 1) && ((2 & version) == 2)) {
-            // given that it's both version 1 and 2, then we overwrite the allowedLoanSize_
-            // variable and add both v1Amount and v2Amount
             allowedLoanSize_ = v1Amount + v2Amount;
         }
     }
