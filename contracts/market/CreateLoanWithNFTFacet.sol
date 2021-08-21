@@ -125,12 +125,20 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint16 version,
         bytes memory tokenData
     ) internal virtual returns (uint256 allowedLoanSize_) {
-        if ((2 & version) == 2) {
-            (
-                uint256[] memory nftIDsV1,
-                uint256[] memory nftIDs,
-                uint256[] memory amounts
-            ) = abi.decode(tokenData, (uint256[], uint256[], uint256[]));
+        bool useV2;
+        uint256[] memory nftIDs;
+        uint256[] memory amounts;
+        if (version == 2) {
+            (nftIDs, amounts) = abi.decode(tokenData, (uint256[], uint256[]));
+            useV2 = true;
+        } else if ((2 & version) == 2) {
+            (, nftIDs, amounts) = abi.decode(
+                tokenData,
+                (uint256[], uint256[], uint256[])
+            );
+            useV2 = true;
+        }
+        if (useV2) {
             for (uint256 i; i < nftIDs.length; i++) {
                 NFTLib.applyToLoanV2(loanID, nftIDs[i], amounts[i], msg.sender);
 

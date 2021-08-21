@@ -27,7 +27,6 @@ contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
         bytes memory tokenData
     ) internal virtual override returns (uint256 allowedLoanSize_) {
         uint256 v1Amount;
-        uint256 v2Amount;
         if ((1 & version) == 1) {
             uint256[] memory nftIDs = abi.decode(tokenData, (uint256[]));
             for (uint256 i; i < nftIDs.length; i++) {
@@ -40,17 +39,8 @@ contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
                 v1Amount += allowedLoanSize_;
             }
         }
-        if ((2 & version) == 2) {
-            allowedLoanSize_ = super._takeOutLoanProcessNFTs(
-                loanID,
-                version,
-                tokenData
-            );
-            v2Amount = allowedLoanSize_;
-        }
-
-        if (((1 & version) == 1) && ((2 & version) == 2)) {
-            allowedLoanSize_ = v1Amount + v2Amount;
-        }
+        allowedLoanSize_ =
+            super._takeOutLoanProcessNFTs(loanID, version, tokenData) +
+            v1Amount;
     }
 }

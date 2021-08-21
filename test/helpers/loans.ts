@@ -344,13 +344,7 @@ export const takeOutLoanWithNfts = async (
       // Encode the NFT V1 token data for the function
       const tokenData = coder.encode(
         ['uint16', 'bytes'],
-        [
-          1,
-          coder.encode(
-            ['uint256[]', 'uint256[]', 'uint256[]'],
-            [nftsUsed.v1, [], []]
-          ),
-        ]
+        [1, coder.encode(['uint256[]'], [nftsUsed.v1])]
       )
 
       // plug it in the takeOutLoanWithNFTs function
@@ -411,8 +405,8 @@ export const takeOutLoanWithNfts = async (
         [
           2,
           coder.encode(
-            ['uint256[]', 'uint256[]', 'uint256[]'],
-            [[], nftsUsed.v2.ids, nftsUsed.v2.balances]
+            ['uint256[]', 'uint256[]'],
+            [nftsUsed.v2.ids, nftsUsed.v2.balances]
           ),
         ]
       )
