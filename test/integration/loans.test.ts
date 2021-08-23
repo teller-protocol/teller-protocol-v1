@@ -224,7 +224,7 @@ describe('Loans', () => {
               const totalOwedAfterRepay = await diamond.getTotalOwed(loanId)
 
               const loanData = await diamond.getLoan(loanId)
- 
+
               totalOwedAfterRepay.should.eql(0)
 
               expect(loanData.status).to.equal(LoanStatus.Closed)

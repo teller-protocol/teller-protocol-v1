@@ -251,8 +251,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     }
 
     function _liquidateNFT(uint256 loanID) internal virtual {
-        //uint256 amt = NFTLib.s().stakedNFTsV2Amounts[owner][loanID];
-
         //liquidate TellerNFTV2
         EnumerableSet.UintSet storage nfts = NFTLib.s().loanNFTsV2[loanID];
 
