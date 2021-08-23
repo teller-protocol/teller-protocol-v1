@@ -19,9 +19,9 @@ contract MainnetRepayFacet is RepayFacet {
     }
 
     /**
-       @notice On mainnet, we override the liquidateNFT method so that TellerNFTV1 is also transferred
-       @param loanID ID of loan for which to transfer linked NFT
-    */
+     *  @notice On mainnet, we override the liquidateNFT method so that TellerNFTV1 is also transferred
+     *  @param loanID ID of loan for which to transfer linked NFT
+     */
     function _liquidateNFT(uint256 loanID) internal override {
         NFTLib.liquidateNFT(loanID);
 

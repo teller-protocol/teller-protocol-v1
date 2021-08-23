@@ -264,7 +264,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                 AppStorageLib.store().nftLiquidationController,
                 nftId,
                 NFTLib.s().loanNFTsV2Amounts[loanID][nftId],
-                "0x"
+                ""
             );
         }
     }
