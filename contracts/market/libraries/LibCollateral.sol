@@ -83,6 +83,8 @@ library LibCollateral {
         uint256 amount,
         address payable receiver
     ) internal {
+        if (amount == 0) return;
+
         e(loanID).withdraw(loanID, amount, receiver);
 
         emit CollateralWithdrawn(loanID, receiver, amount);

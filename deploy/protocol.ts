@@ -69,6 +69,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
     execute = initExecute
   }
+
   const nftV2 = await contracts.get('TellerNFT_V2')
   // Deploy platform diamond
   const facets: Facets = [
@@ -146,6 +147,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       {
         contract: 'MainnetRepayFacet',
+        args: [nftV2.address],
         skipIfAlreadyDeployed: false,
       },
       // NFT
@@ -195,6 +197,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       {
         contract: 'RepayFacet',
+        args: [nftV2.address],
         skipIfAlreadyDeployed: false,
       },
       // NFT

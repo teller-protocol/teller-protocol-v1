@@ -42,7 +42,15 @@ import {
     LoanStatus
 } from "../storage/market.sol";
 
+import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
+
 contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
+    TellerNFT_V2 private immutable TELLER_NFT_V2;
+
+    constructor(address nftV2Address) {
+        TELLER_NFT_V2 = TellerNFT_V2(nftV2Address);
+    }
+
     /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
@@ -203,7 +211,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
 
             // Transfer NFT if linked
 
-            NFTLib.liquidateNFT(loanID);
+            _liquidateNFT(loanID);
         } else {
             // if the loan is now fully paid, close it and withdraw borrower collateral
             if (leftToPay_ == 0) {
@@ -242,6 +250,23 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         NFTLib.restakeLinkedV2(loanID, LibLoans.loan(loanID).borrower);
     }
 
+    function _liquidateNFT(uint256 loanID) internal virtual {
+        //liquidate TellerNFTV2
+        EnumerableSet.UintSet storage nfts = NFTLib.s().loanNFTsV2[loanID];
+
+        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
+            uint256 nftId = EnumerableSet.at(nfts, i);
+
+            TELLER_NFT_V2.safeTransferFrom(
+                address(this),
+                AppStorageLib.store().nftLiquidationController,
+                nftId,
+                NFTLib.s().loanNFTsV2Amounts[loanID][nftId],
+                ""
+            );
+        }
+    }
+
     /**
      * @notice Liquidate a loan if it is expired or under collateralized
      * @param loanID The ID of the loan to be liquidated
@@ -253,7 +278,13 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = LibLoans.loan(loanID);
-        uint256 collateralAmount = LibCollateral.e(loanID).loanSupply(loanID);
+
+        uint256 collateralAmount;
+
+        if (address(LibCollateral.e(loanID)) != address(0)) {
+            collateralAmount = LibCollateral.e(loanID).loanSupply(loanID);
+        }
+
         require(
             RepayLib.isLiquidable(loanID, collateralAmount),
             "Teller: does not need liquidation"
@@ -270,7 +301,10 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         __repayLoan(loanID, amountToLiquidate, msg.sender, true);
 
         // Payout the liquidator reward owed
-        if (rewardInLending > 0) {
+        if (
+            rewardInLending > 0 &&
+            address(LibLoans.loan(loanID).collateralToken) != address(0)
+        ) {
             RepayLib.payOutLiquidator(
                 loanID,
                 rewardInLending,
