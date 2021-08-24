@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
-import "hardhat/console.sol";
+
 // Libraries
 import { LibCompound } from "./libraries/LibCompound.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";

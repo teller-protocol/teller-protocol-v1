@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { CreateLoanWithNFTFacet } from "../CreateLoanWithNFTFacet.sol";
+import { TellerNFT_V2 } from "../../nft/TellerNFT_V2.sol";
 
 // Libraries
 import { NFTLib } from "../../nft/libraries/NFTLib.sol";
@@ -25,21 +26,21 @@ contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
         uint16 version,
         bytes memory tokenData
     ) internal virtual override returns (uint256 allowedLoanSize_) {
-        if (version == 1) {
+        uint256 v1Amount;
+        if ((1 & version) == 1) {
             uint256[] memory nftIDs = abi.decode(tokenData, (uint256[]));
             for (uint256 i; i < nftIDs.length; i++) {
                 NFTLib.applyToLoan(loanID, nftIDs[i], msg.sender);
 
+                // add to allowedLoanSize
                 allowedLoanSize_ += NFTLib.s().nftDictionary.tokenBaseLoanSize(
                     nftIDs[i]
                 );
+                v1Amount += allowedLoanSize_;
             }
-        } else {
-            allowedLoanSize_ = super._takeOutLoanProcessNFTs(
-                loanID,
-                version,
-                tokenData
-            );
         }
+        allowedLoanSize_ =
+            super._takeOutLoanProcessNFTs(loanID, version, tokenData) +
+            v1Amount;
     }
 }
