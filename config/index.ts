@@ -30,10 +30,15 @@ import { tokens } from './tokens'
  * @param network HardhatRuntimeEnvironment Network object
  * @return boolean
  */
-export const isEtheremNetwork = (network: Network): boolean =>
-  ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(
-    (n) => n === getNetworkName(network)
-  )
+export const isEtheremNetwork = (
+  network: Network,
+  isMainnet = false
+): boolean =>
+  isMainnet
+    ? getNetworkName(network) === 'mainnet'
+    : ['mainnet', 'kovan', 'rinkeby', 'ropsten'].some(
+        (n) => n === getNetworkName(network)
+      )
 
 export const getNetworkName = (network: Network): string =>
   process.env.FORKING_NETWORK ?? network.name
