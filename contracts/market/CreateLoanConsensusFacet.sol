@@ -68,11 +68,12 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Get consensus values from request
+        // TODO: strip out to internal function & create mock copy of
         (
             uint16 interestRate,
             uint16 collateralRatio,
             uint256 maxLoanAmount
-        ) = LibConsensus.processLoanTerms(request);
+        ) = processLoanTerms(request);
         Loan storage loan = LibCreateLoan.initNewLoan(
             request.request.assetAddress,
             maxLoanAmount,
@@ -116,5 +117,24 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
             loan.borrowedAmount,
             false
         );
+    }
+    
+    /**
+     * @notice it processes a loan terms by doing multiple checks on the LoanRequest request and LoanResponse[] responses
+     * @param request LoanRequest is the borrower request object to take out a loan
+     * @return interestRate the borrower needs to pay back
+     * @return collateralRatio the ratio of collateral the borrower needs to put up for the loan with an underlying asset
+     * @return maxLoanAmount the borrower is entitled for
+     */
+    function processLoanTerms(LoanRequest calldata request)
+        internal
+        virtual
+        returns (
+            uint16 interestRate,
+            uint16 collateralRatio,
+            uint256 maxLoanAmount
+        )
+    {
+        return LibConsensus.processLoanTerms(request);
     }
 }

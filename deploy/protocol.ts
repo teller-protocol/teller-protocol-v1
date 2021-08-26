@@ -112,6 +112,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     {
       contract: 'CreateLoanConsensusFacet',
       skipIfAlreadyDeployed: false,
+      mock: process.env.TESTING === '1',
     },
     {
       contract: 'LoanDataFacet',

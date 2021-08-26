@@ -98,7 +98,7 @@ export default <HardhatUserConfig>{
     apiKey: ETHERSCAN_API_KEY,
   },
   tenderly: {
-    username: 'soltel',
+    username: 'teller',
     project: '{see utils/hre-extensions.ts}',
   },
   paths: {
