@@ -6,7 +6,7 @@
     "setup": "./scripts/setup.sh",
     "hf": "hf() { local network=\"$1\"; shift; FORKING_NETWORK=$network yarn hh \"$@\"; }; hf",
     "test": "test() { TS_NODE_TRANSPILE_ONLY=1 TESTING=1 yarn hf \"$1\" test; }; test",
-    "fork": "fork() { TS_NODE_TRANSPILE_ONLY=1 yarn hf \"$1\" fork; }; fork",
+    "fork": "fork() { TS_NODE_TRANSPILE_ONLY=1 local network=\"$1\"; shift; yarn hf $network fork \"$@\"; }; fork",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format:write": "prettier --write '**/*.sol' && eslint --fix '**/*.ts'",
