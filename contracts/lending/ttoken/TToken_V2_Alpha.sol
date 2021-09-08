@@ -44,10 +44,10 @@ contract TToken_V2_Alpha is TToken_V2 {
     /**
      * @notice Called by the Teller Diamond contract at the end of Alpha for recipient's earned interest.
      * @param recipient The address of the alpha participant claiming the interest.
-     * @param percent The proportional amount of interest earned by the recipient.
+     * @param interestRatio The proportional amount of interest earned by the recipient to the total interest earned.
      */
 
-    function claimAlphaInterest(address recipient, uint16 percent)
+    function claimAlphaInterest(address recipient, uint16 interestRatio)
         external
         authorized(CONTROLLER, _msgSender())
     {
@@ -56,11 +56,11 @@ contract TToken_V2_Alpha is TToken_V2 {
             !s().alphaInterestClaimed[recipient],
             "Teller: interest already claimed"
         );
-        require(percent > 0, "Teller: interest percent cannot be 0");
+        require(interestRatio > 0, "Teller: interest percent cannot be 0");
 
         uint256 userReward = NumbersLib.percent(
             s().alphaInterestEarned,
-            percent
+            interestRatio
         );
         SafeERC20.safeTransfer(s().underlying, recipient, userReward);
         s().alphaInterestClaimed[recipient] = true;
