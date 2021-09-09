@@ -22,7 +22,7 @@ import {
     MarketStorage,
     LoanStatus,
     Loan
-} from "../storage/market.sol";
+} from "../market/storage/market.sol";
 
 contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
     /**

@@ -14,7 +14,7 @@ import {
 import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../../storage/app.sol";
+import { AppStorageLib, AppStorage } from "../../settings/storage/app.sol";
 
 struct AssetSettingRequest {
     bytes32 key;

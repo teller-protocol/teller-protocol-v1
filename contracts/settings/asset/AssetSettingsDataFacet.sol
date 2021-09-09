@@ -29,7 +29,7 @@ import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 import { MaxDebtRatioLib } from "./libraries/MaxDebtRatioLib.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../../storage/app.sol";
+import { AppStorageLib, AppStorage } from "../../settings/storage/app.sol";
 import {
     PrizePoolInterface
 } from "../../shared/interfaces/pooltogether/PrizePoolInterface.sol";

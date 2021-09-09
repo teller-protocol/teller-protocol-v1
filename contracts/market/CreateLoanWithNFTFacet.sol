@@ -22,7 +22,11 @@ import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Storage
-import { LoanUserRequest, LoanStatus, Loan } from "../storage/market.sol";
+import {
+    LoanUserRequest,
+    LoanStatus,
+    Loan
+} from "../market/storage/market.sol";
 
 /**
  * @notice This facet contains the logic for taking out a loan using the Teller NFT.

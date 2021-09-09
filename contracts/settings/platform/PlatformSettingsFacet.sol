@@ -10,10 +10,10 @@ import {
     PlatformSettingsLib,
     PlatformSetting
 } from "./libraries/PlatformSettingsLib.sol";
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../../storage/app.sol";
+import { AppStorageLib, AppStorage } from "../../settings/storage/app.sol";
 
 /**
  * @notice Utility library of inline functions on the PlatformSetting struct.

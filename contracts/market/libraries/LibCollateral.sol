@@ -6,8 +6,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ICollateralEscrow } from "../collateral/ICollateralEscrow.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib } from "../../storage/market.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
+import { MarketStorageLib } from "../../market/storage/market.sol";
 
 library LibCollateral {
     /**

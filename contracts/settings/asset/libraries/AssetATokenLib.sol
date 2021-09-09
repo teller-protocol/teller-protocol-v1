@@ -10,7 +10,7 @@ import {
 import { IAToken } from "../../../shared/interfaces/IAToken.sol";
 
 // Storage
-import { AppStorageLib } from "../../../storage/app.sol";
+import { AppStorageLib } from "../../../settings/storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Aave asset setting.

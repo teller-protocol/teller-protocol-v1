@@ -20,7 +20,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
+import { NFTStorageLib, NFTStorage } from "../../nft/storage/nft.sol";
 
 contract NFTMainnetBridgingToPolygonFacet {
     address private constant POLYGON_NFT_ADDRESS =

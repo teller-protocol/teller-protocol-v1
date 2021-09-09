@@ -8,7 +8,10 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { ITToken } from "../ttoken/ITToken.sol";
 
 // Storage
-import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
+import {
+    MarketStorageLib,
+    MarketStorage
+} from "../../market/storage/market.sol";
 
 library LendingLib {
     bytes32 internal constant ID = keccak256("LENDING");

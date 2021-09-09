@@ -6,7 +6,7 @@ import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
 import { PAUSER } from "../../shared/roles.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 
 contract PausableFacet is RolesMods {
     /**

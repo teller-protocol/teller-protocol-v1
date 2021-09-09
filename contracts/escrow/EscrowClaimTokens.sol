@@ -10,7 +10,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
+import { MarketStorageLib, LoanStatus } from "../market/storage/market.sol";
 
 // Libraries
 import { LibLoans } from "../market/libraries/LibLoans.sol";
