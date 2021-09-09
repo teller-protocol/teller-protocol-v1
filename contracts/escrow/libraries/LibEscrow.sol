@@ -13,8 +13,11 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ILoansEscrow } from "../escrow/ILoansEscrow.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
+import {
+    MarketStorageLib,
+    MarketStorage
+} from "../../market/storage/market.sol";
 
 library LibEscrow {
     function s() internal pure returns (MarketStorage storage) {

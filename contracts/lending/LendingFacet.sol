@@ -24,7 +24,7 @@ import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
+import { AppStorageLib } from "../settings/storage/app.sol";
 
 contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     /**

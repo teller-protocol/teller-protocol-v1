@@ -6,12 +6,12 @@ import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "../shared/libraries/NumbersList.sol";
+import "../../shared/libraries/NumbersList.sol";
 
 // Interfaces
-import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
-import { ICollateralEscrow } from "../market/collateral/ICollateralEscrow.sol";
-import { ITToken } from "../lending/ttoken/ITToken.sol";
+import { ILoansEscrow } from "../../escrow/escrow/ILoansEscrow.sol";
+import { ICollateralEscrow } from "../collateral/ICollateralEscrow.sol";
+import { ITToken } from "../../lending/ttoken/ITToken.sol";
 
 // DEPRECATED
 struct LoanTerms {

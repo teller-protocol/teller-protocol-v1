@@ -34,13 +34,13 @@ import { ITToken } from "../lending/ttoken/ITToken.sol";
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
+import { AppStorageLib } from "../settings/storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
     Loan,
     LoanStatus
-} from "../storage/market.sol";
+} from "../market/storage/market.sol";
 
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 

@@ -13,8 +13,8 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../../storage/app.sol";
-import { NFTStorageLib, NFTStorage } from "../../storage/nft.sol";
+import { AppStorageLib, AppStorage } from "../../settings/storage/app.sol";
+import { NFTStorageLib, NFTStorage } from "../../nft/storage/nft.sol";
 
 library NFTLib {
     function s() internal pure returns (NFTStorage storage s_) {

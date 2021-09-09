@@ -10,7 +10,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { Loan, LoanDebt, LoanTerms } from "../storage/market.sol";
+import { Loan, LoanDebt, LoanTerms } from "../market/storage/market.sol";
 
 contract LoanDataFacet {
     /**

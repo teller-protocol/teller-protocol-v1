@@ -7,7 +7,7 @@ import { ADMIN } from "../shared/roles.sol";
 import { PriceAggregator } from "./PriceAggregator.sol";
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
+import { AppStorageLib } from "../settings/storage/app.sol";
 
 contract PriceAggFacet is RolesMods {
     function setPriceAggregator(address priceAggAddress)

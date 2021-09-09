@@ -9,7 +9,7 @@ import {
 } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
@@ -17,7 +17,7 @@ import {
     LoanStatus,
     LoanDebt,
     LoanTerms
-} from "../../storage/market.sol";
+} from "../../market/storage/market.sol";
 
 library LibLoans {
     using NumbersLib for int256;

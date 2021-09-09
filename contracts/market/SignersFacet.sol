@@ -11,7 +11,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { MarketStorageLib } from "../storage/market.sol";
+import { MarketStorageLib } from "../market/storage/market.sol";
 
 contract SignersFacet is RolesMods {
     /**

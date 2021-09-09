@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 
 abstract contract PausableMods {
     /**

@@ -22,8 +22,8 @@ import {
     LoanStatus,
     Loan,
     MarketStorageLib
-} from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
+} from "../../market/storage/market.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 
 library LibCreateLoan {
     /**

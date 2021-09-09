@@ -54,6 +54,7 @@ contract PriceAggregator is RolesFacet, Initializable {
         chainlinkPricer = ChainlinkPricer(pricer);
     }
 
+    // set assets for pricer
     function setAssetPricers(address pricer, address[] calldata assets)
         external
         authorized(ADMIN, msg.sender)
@@ -63,6 +64,7 @@ contract PriceAggregator is RolesFacet, Initializable {
         }
     }
 
+    // set asset for pricer
     function setAssetPricer(address asset, address pricer)
         public
         authorized(ADMIN, msg.sender)

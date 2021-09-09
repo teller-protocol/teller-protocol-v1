@@ -17,8 +17,11 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { MarketStorageLib, MarketStorage } from "../../../storage/market.sol";
-import { AppStorageLib } from "../../../storage/app.sol";
+import {
+    MarketStorageLib,
+    MarketStorage
+} from "../../../market/storage/market.sol";
+import { AppStorageLib } from "../../../settings/storage/app.sol";
 
 library LibDapps {
     function s() internal pure returns (MarketStorage storage) {

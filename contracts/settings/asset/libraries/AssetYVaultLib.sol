@@ -10,7 +10,7 @@ import {
 import { IVault } from "../../../shared/interfaces/IVault.sol";
 
 // Storage
-import { AppStorageLib } from "../../../storage/app.sol";
+import { AppStorageLib } from "../../../settings/storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Yearn vault asset setting.

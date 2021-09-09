@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "../nft/TellerNFTDictionary.sol";
+import "../TellerNFTDictionary.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";

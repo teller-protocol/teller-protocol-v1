@@ -3105,6 +3105,11 @@ bytewise@~1.1.0:
     bytewise-core "^1.2.2"
     typewise "^1.0.3"
 
+c3-linearization@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/c3-linearization/-/c3-linearization-0.3.0.tgz#0b7b41d8837a110f246d2d70a9a25f28734041f0"
+  integrity sha512-eQNsZQhFSJAhrNrITy2FpKh7EHS98q/pniDtQhndWqqsvayiPeqZ9T6I9V9PsHcm0nc+ZYJHKUvI/hh37I33HQ==
+
 cache-base@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/cache-base/-/cache-base-1.0.1.tgz#0a7f46416831c8b662ee36fe4e7c59d76f666ab2"
@@ -6224,6 +6229,13 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.1.9,
   version "4.2.8"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.8.tgz#e412b8d33f5e006593cbd3cee6df9f2cebbe802a"
   integrity sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==
+
+graphviz@0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/graphviz/-/graphviz-0.0.9.tgz#0bbf1df588c6a92259282da35323622528c4bbc4"
+  integrity sha512-SmoY2pOtcikmMCqCSy2NO1YsRfu9OO0wpTlOYW++giGjfX1a6gax/m1Fo8IdUd0/3H15cTOfR1SMKwohj4LKsg==
+  dependencies:
+    temp "~0.4.0"
 
 growl@1.10.3:
   version "1.10.3"
@@ -10349,6 +10361,11 @@ sha.js@^2.4.0, sha.js@^2.4.8:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
+sha1-file@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/sha1-file/-/sha1-file-1.0.4.tgz#63879d850d581d9343117d6959879430cec0b297"
+  integrity sha512-IgcUYjTck/UAx0wdtBoTwiy4/yiIZX6do4uaqUtryJY/pBOQC1w3Cb/bZMyC2H3QYnodL5vbX0lY69xlWqeBnA==
+
 sha1@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/sha1/-/sha1-1.1.1.tgz#addaa7a93168f393f19eb2b15091618e2700f848"
@@ -10996,6 +11013,19 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
+surya@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/surya/-/surya-0.4.2.tgz#c882806838fe1b87e9ee42f7937ecb8a332cf026"
+  integrity sha512-oEHDC8SS/soZ5Mw91n4bwwwjk0cNE7NwsWsJZdKXv73JEtxpYSLPz8Jz4JpzX/TaBw3/V1fZWx/ewPenyX+V2Q==
+  dependencies:
+    "@solidity-parser/parser" "^0.11.0"
+    c3-linearization "^0.3.0"
+    colors "^1.4.0"
+    graphviz "0.0.9"
+    sha1-file "^1.0.4"
+    treeify "^1.1.0"
+    yargs "^11.1.1"
+
 swarm-js@^0.1.40:
   version "0.1.40"
   resolved "https://registry.yarnpkg.com/swarm-js/-/swarm-js-0.1.40.tgz#b1bc7b6dcc76061f6c772203e004c11997e06b99"
@@ -11089,6 +11119,11 @@ tar@^4.0.2:
     mkdirp "^0.5.5"
     safe-buffer "^5.2.1"
     yallist "^3.1.1"
+
+temp@~0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/temp/-/temp-0.4.0.tgz#671ad63d57be0fe9d7294664b3fc400636678a60"
+  integrity sha1-ZxrWPVe+D+nXKUZks/xABjZnimA=
 
 test-value@^2.1.0:
   version "2.1.0"
@@ -11238,6 +11273,11 @@ tough-cookie@^2.3.3, tough-cookie@~2.5.0:
   dependencies:
     psl "^1.1.28"
     punycode "^2.1.1"
+
+treeify@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/treeify/-/treeify-1.1.0.tgz#4e31c6a463accd0943879f30667c4fdaff411bb8"
+  integrity sha512-1m4RA7xVAJrSGrrXGs0L3YTwyvBs2S8PbRHaLZAkFw7JR8oIFwYtysxlBZhYIa7xSyiYJKZ3iGrrk55cGA3i9A==
 
 trim-right@^1.0.1:
   version "1.0.1"
@@ -12833,6 +12873,13 @@ yargs-parser@^8.1.0:
   dependencies:
     camelcase "^4.1.0"
 
+yargs-parser@^9.0.2:
+  version "9.0.2"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-9.0.2.tgz#9ccf6a43460fe4ed40a9bb68f48d43b8a68cc077"
+  integrity sha1-nM9qQ0YP5O1Aqbto9I1DuKaMwHc=
+  dependencies:
+    camelcase "^4.1.0"
+
 yargs-unparser@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/yargs-unparser/-/yargs-unparser-1.6.0.tgz#ef25c2c769ff6bd09e4b0f9d7c605fb27846ea9f"
@@ -12892,6 +12939,24 @@ yargs@^10.0.3:
     which-module "^2.0.0"
     y18n "^3.2.1"
     yargs-parser "^8.1.0"
+
+yargs@^11.1.1:
+  version "11.1.1"
+  resolved "https://registry.yarnpkg.com/yargs/-/yargs-11.1.1.tgz#5052efe3446a4df5ed669c995886cc0f13702766"
+  integrity sha512-PRU7gJrJaXv3q3yQZ/+/X6KBswZiaQ+zOmdprZcouPYtQgvNU35i+68M4b1ZHLZtYFT5QObFLV+ZkmJYcwKdiw==
+  dependencies:
+    cliui "^4.0.0"
+    decamelize "^1.1.1"
+    find-up "^2.1.0"
+    get-caller-file "^1.0.1"
+    os-locale "^3.1.0"
+    require-directory "^2.1.1"
+    require-main-filename "^1.0.1"
+    set-blocking "^2.0.0"
+    string-width "^2.0.0"
+    which-module "^2.0.0"
+    y18n "^3.2.1"
+    yargs-parser "^9.0.2"
 
 yargs@^4.7.1:
   version "4.8.1"

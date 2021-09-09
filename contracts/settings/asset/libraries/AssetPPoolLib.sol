@@ -12,7 +12,7 @@ import {
 } from "../../../shared/interfaces/pooltogether/PrizePoolInterface.sol";
 
 // Storage
-import { AppStorageLib } from "../../../storage/app.sol";
+import { AppStorageLib } from "../../../settings/storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Pool together asset setting.

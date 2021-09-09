@@ -17,7 +17,7 @@ import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../storage/app.sol";
+import { AppStorageLib, AppStorage } from "../settings/storage/app.sol";
 
 struct InitArgs {
     address admin;

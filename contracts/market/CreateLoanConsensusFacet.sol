@@ -26,7 +26,7 @@ import {
     LoanStatus,
     Loan,
     MarketStorageLib
-} from "../storage/market.sol";
+} from "../market/storage/market.sol";
 
 contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
     /**

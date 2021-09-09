@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../settings/storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
@@ -9,7 +9,7 @@ import {
     LoanUserRequest,
     LoanConsensusResponse,
     Signature
-} from "../../storage/market.sol";
+} from "../../market/storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
 import {
