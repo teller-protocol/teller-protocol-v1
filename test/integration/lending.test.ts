@@ -228,16 +228,18 @@ describe.only('Lending', () => {
           const lendingBalBefore = await lendingToken.balanceOf(tToken.address)
           depositAmount1 = await fundLender({
             token: lendingToken,
-            amount: 100,
+            amount: 100000,
             hre,
           })
 
-          // lendingBalBefore
-          //   .eq(depositAmount1)
-          //   .should.eql(
-          //     true,
-          //     'TToken was not supplied token balance in last test'
-          //   )
+          // Approve amount to loan
+          await lendingToken
+            .connect(lender)
+            .approve(diamond.address, depositAmount1)
+
+          await diamond
+            .connect(lender)
+            .lendingPoolDeposit(lendingToken.address, depositAmount1)
 
           await tToken
             .rebalance()
