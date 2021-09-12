@@ -3,7 +3,7 @@ import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer, utils } from 'ethers'
 import hre, { fromBN } from 'hardhat'
 
-import { getMarkets } from '../../config'
+import { getMarkets, getNetworkName } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { RUN_EXISTING } from '../helpers/env-helpers'
@@ -123,12 +123,23 @@ describe.only('Lending', () => {
             const depositAmount = maxTVL.add(1)
 
             // Fund the lender
-            await getFunds({
-              to: await lender.getAddress(),
-              tokenSym: market.lendingToken,
-              amount: depositAmount,
-              hre,
-            })
+            if (getNetworkName(hre.network) == 'polygon') {
+              await getFunds({
+                to: await lender.getAddress(),
+                tokenSym: market.lendingToken,
+                amount: depositAmount,
+                hre,
+              }).should.be.revertedWith(
+                'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT'
+              )
+            } else {
+              await getFunds({
+                to: await lender.getAddress(),
+                tokenSym: market.lendingToken,
+                amount: depositAmount,
+                hre,
+              })
+            }
 
             // Approve amount to loan
             await lendingToken
@@ -146,7 +157,6 @@ describe.only('Lending', () => {
             const tTokenBalBefore = await tToken.balanceOf(
               await lender.getAddress()
             )
-            console.log({ tTokenBalBefore: tTokenBalBefore.toString() })
             tTokenBalBefore
               .eq(0)
               .should.eql(
@@ -248,14 +258,10 @@ describe.only('Lending', () => {
               'StrategyRebalanced'
             )
           const lendingBalAfter = await lendingToken.balanceOf(tToken.address)
-          console.log({
-            lendingBalBefore: lendingBalBefore.toString(),
-            depositAmount1: depositAmount1.toString(),
-            lendingBalAfter: lendingBalAfter.toString(),
-          })
-          lendingBalAfter
-            .lt(lendingBalBefore)
-            .should.eql(true, 'TToken lending balance not rebalanced')
+          lendingBalAfter.should.not.equal(
+            lendingBalBefore,
+            'TToken lending balance not rebalanced'
+          )
         })
 
         it('totalUnderlyingSupply - should return a value that is grater that the initial deposit after 1 block', async () => {
@@ -280,14 +286,13 @@ describe.only('Lending', () => {
 
         it('mint, rebalance - should be able to add an additional lender', async () => {
           // Fund the lender
-          depositAmount2 = toBN(10, await lendingToken.decimals())
+          depositAmount2 = toBN(100000, await lendingToken.decimals())
           await getFunds({
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
             amount: depositAmount2,
             hre,
           })
-
           // Approve amount to loan
           await lendingToken
             .connect(lender2)
@@ -295,10 +300,8 @@ describe.only('Lending', () => {
 
           // Deposit tokens and mint TTokens
           await tToken.connect(lender2).mint(depositAmount2)
-
           // Rebalance funds
           await tToken.connect(deployer).rebalance()
-
           // Mine blocks to generate interest
           await evm.advanceBlocks(1000)
         })
