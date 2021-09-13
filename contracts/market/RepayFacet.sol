@@ -67,6 +67,12 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         uint256 totalOwed
     );
 
+    event ProfitFeeClaimed(
+        uint256 indexed loanID,
+        uint256 amount,
+        address sender
+    );
+
     /**
      * @notice This event is emitted when a loan has been successfully liquidated
      * @param loanID ID of loan from which collateral was withdrawn
@@ -224,6 +230,47 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
                         LibLoans.loan(loanID).borrower
                     );
                 }
+
+                //MGMT Profit Fee
+                address lendingToken = LibLoans.loan(loanID).lendingToken;
+
+                uint256 lendingTokenBalance = LibEscrow.balanceOf(
+                    loanID,
+                    lendingToken
+                );
+
+                uint256 excessProfits;
+
+                if (
+                    lendingTokenBalance > LibLoans.loan(loanID).borrowedAmount
+                ) {
+                    //Determine how much excess profit the borrower has earned (look at amt of borrowed $$)
+                    excessProfits =
+                        lendingTokenBalance -
+                        LibLoans.loan(loanID).borrowedAmount;
+                }
+
+                // Multiply excess profits by the profit fee (5%)
+                uint256 amountForProfitFee = NumbersLib.percent(
+                    excessProfits,
+                    uint16(PlatformSettingsLib.getProfitFeePercent())
+                );
+
+                //If excess profit should be claimed for profit fee, send that amount to the tToken liq pool
+                if (amountForProfitFee > 0) {
+                    LibEscrow.e(loanID).claimToken(
+                        lendingToken,
+                        address(tToken),
+                        amountForProfitFee
+                    );
+
+                    emit ProfitFeeClaimed(
+                        loanID,
+                        amountForProfitFee,
+                        msg.sender
+                    );
+                }
+                //End MGMT profit fee
 
                 // Claim tokens in the escrow for the loan if any
                 __claimEscrowTokens(loanID);

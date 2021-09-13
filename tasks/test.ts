@@ -22,7 +22,7 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 
   // Disable logging
-  process.env.DISABLE_LOGS = 'true'
+  process.env.DISABLE_LOGS = 'false'
 
   // Run the actual test task
   await runSuper({
