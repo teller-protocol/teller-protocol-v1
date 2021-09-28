@@ -1,3 +1,4 @@
+import { Signer } from 'crypto'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -356,6 +357,8 @@ const deployTTokenBeacon = async (
     indent: 3,
   })
 
+  const deployer = await hre.getNamedSigner('deployer')
+
   // Check to see if we need to upgrade
   const currentImpl = await beacon.implementation()
   if (
@@ -366,7 +369,7 @@ const deployTTokenBeacon = async (
       indent: 4,
       star: true,
     })
-    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
+    await beacon.connect(deployer).upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
   }
 
   log('')
