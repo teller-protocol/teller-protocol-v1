@@ -77,7 +77,7 @@ describe('Lending', () => {
             })
             await tToken
               .connect(lender)
-              .functions['mint(uint256)'](depositAmount)
+              .mint(depositAmount)
               .should.be.revertedWith('Teller: platform restricted')
           })
 
