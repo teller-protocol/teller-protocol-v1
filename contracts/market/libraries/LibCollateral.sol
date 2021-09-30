@@ -107,8 +107,7 @@ library LibCollateral {
         // Check if collateral escrow exists
         if (address(e(token)) == address(0)) {
             // Create escrow
-            address escrow = AppStorageLib
-                .store()
+            address escrow = AppStorageLib.store()
                 .collateralEscrowBeacon
                 .cloneProxy("");
             ICollateralEscrow(escrow).init(
