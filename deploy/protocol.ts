@@ -416,8 +416,6 @@ const deployTTokenBeacon = async (
     indent: 4,
   })
 
-  const deployer = await hre.getNamedSigner('deployer')
-
   // Check to see if we need to upgrade
   const currentImpl = await beacon.implementation()
   if (

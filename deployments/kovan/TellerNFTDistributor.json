@@ -567,15 +567,7 @@
       ]
     }
   ],
-  "diamondCut": [
-    {
-      "facetAddress": "0x0000000000000000000000000000000000000000",
-      "functionSelectors": [
-        "0x23ab9151"
-      ],
-      "action": 2
-    }
-  ],
+  "diamondCut": [],
   "history": [
     {
       "address": "0xB94906FFA833B4857779318C330a80e54047FfD3",
