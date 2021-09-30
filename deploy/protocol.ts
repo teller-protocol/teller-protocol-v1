@@ -2,7 +2,7 @@ import { Signer } from 'crypto'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getNetworkName, getTokens } from '../config'
+import { getDappAddresses, getNativeToken, isEtheremNetwork } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -20,14 +20,16 @@ import {
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
   const { deployer } = await getNamedAccounts()
-  const networkName = getNetworkName(network)
 
   log('********** Teller Diamond **********', { indent: 1 })
 
-  const { address: nftAddress } = await contracts.get('TellerNFT')
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
+  const priceAggregator = await contracts.get('PriceAggregator')
+
+  const wrappedNativeToken = getNativeToken(network)
+  const dappAddresses = getDappAddresses(network)
 
   let execute: DeployDiamondArgs<ITellerDiamond, any>['execute']
 
@@ -36,17 +38,15 @@ const deployProtocol: DeployFunction = async (hre) => {
     await contracts.get('TellerDiamond')
 
     // If deployment exists execute upgrade function
-    const executeMethod = undefined
-    const upgradeExecute: DeployDiamondArgs<
-      ITellerDiamond,
-      typeof executeMethod
-    >['execute'] = undefined
+    const executeMethod = 'setPriceAggregator'
+    const upgradeExecute = {
+      methodName: executeMethod,
+      args: [priceAggregator.address],
+    }
 
     execute = upgradeExecute
   } catch {
     // Else execute initialize function
-
-    const tokens = getTokens(network)
     const executeMethod = 'init'
     const initExecute: DeployDiamondArgs<
       ITellerDiamond,
@@ -56,18 +56,14 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [
         {
           admin: deployer,
-          assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({
-            sym,
-            addr,
-          })),
-          cTokens: Object.values(tokens.compound),
-          tellerNFT: nftAddress,
           loansEscrowBeacon: loansEscrowBeacon.address,
           collateralEscrowBeacon: collateralEscrowBeacon.address,
           tTokenBeacon: tTokenBeacon.address,
           // Teller Gnosis Safe contract
           nftLiquidationController:
             '0x95143890162bd671d77ae9b771881a1cb76c29a4',
+          wrappedNativeToken: wrappedNativeToken,
+          priceAggregator: priceAggregator.address,
         },
       ],
     }
@@ -75,106 +71,149 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute = initExecute
   }
 
+  const nftV2 = await contracts.get('TellerNFT_V2')
   // Deploy platform diamond
   const facets: Facets = [
     // Settings
     {
       contract: 'SettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'PlatformSettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'AssetSettingsDataFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'AssetSettingsFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'PausableFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Pricing
     {
       contract: 'PriceAggFacet',
-      skipIfAlreadyDeployed: true,
-    },
-    {
-      contract: 'ChainlinkAggFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Lending
     {
       contract: 'LendingFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     // Loans
     {
       contract: 'CollateralFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
     {
-      contract: 'CreateLoanFacet',
-      skipIfAlreadyDeployed: true,
+      contract: 'CreateLoanConsensusFacet',
+      skipIfAlreadyDeployed: false,
     },
     {
       contract: 'LoanDataFacet',
-      skipIfAlreadyDeployed: true,
+      skipIfAlreadyDeployed: false,
     },
-    {
-      contract: 'RepayFacet',
-      skipIfAlreadyDeployed: true,
-    },
+
     {
       contract: 'SignersFacet',
       skipIfAlreadyDeployed: false,
     },
-    // NFT
+    // Dapps
     {
-      contract: 'NFTFacet',
-      skipIfAlreadyDeployed: true,
+      contract: 'AaveFacet',
+      skipIfAlreadyDeployed: false,
+      args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
-    // // Dapps
-    // {
-    //   contract: 'AaveFacet',
-    //   skipIfAlreadyDeployed: true,
-    // },
+    {
+      contract: 'PoolTogetherFacet',
+      skipIfAlreadyDeployed: false,
+    },
   ]
 
   // Network specify Facets
-  switch (networkName) {
-    case 'mainnet':
-    case 'kovan':
-    case 'rinkeby':
-    case 'ropsten':
-      facets.push(
-        // Dapps
-        {
-          contract: 'UniswapFacet',
-          skipIfAlreadyDeployed: true,
-        },
-        {
-          contract: 'CompoundFacet',
-          skipIfAlreadyDeployed: true,
-        }
-      )
+  if (isEtheremNetwork(network)) {
+    const nftMigrator = await contracts.get('NFTMigrator')
 
-      break
-
-    case 'polygon':
-      facets.push(
-        // Dapps
-        {
-          contract: 'SushiswapFacet',
-          skipIfAlreadyDeployed: true,
-        }
-      )
-
-      break
+    facets.push(
+      // Loans
+      {
+        contract: 'MainnetCreateLoanWithNFTFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'MainnetRepayFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      // NFT
+      {
+        contract: 'MainnetNFTFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftV2.address, nftMigrator.address],
+        mock: process.env.TESTING === '1',
+      },
+      {
+        contract: 'NFTMainnetBridgingToPolygonFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftMigrator.address],
+      },
+      {
+        contract: 'MainnetNFTInterestFacet',
+        skipIfAlreadyDeployed: true,
+      },
+      // Dapps
+      {
+        contract: 'UniswapFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.uniswapV2RouterAddress],
+      },
+      {
+        contract: 'CompoundFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'CompoundClaimCompFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.compoundComptrollerAddress],
+      }
+      // disable for now
+      // {
+      //   contract: 'YearnFacet',
+      //   skipIfAlreadyDeployed: false,
+      // }
+    )
+  } else {
+    facets.push(
+      // Loans
+      {
+        contract: 'CreateLoanWithNFTFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'RepayFacet',
+        args: [nftV2.address],
+        skipIfAlreadyDeployed: false,
+      },
+      // NFT
+      {
+        contract: 'NFTFacet',
+        skipIfAlreadyDeployed: false,
+        args: [nftV2.address],
+      },
+      // Dapps
+      {
+        contract: 'SushiswapFacet',
+        skipIfAlreadyDeployed: false,
+        args: [dappAddresses.sushiswapV2RouterAddress],
+      }
+    )
   }
 
   const tellerDiamondArgs: DeployDiamondArgs<ITellerDiamond, any> = {
@@ -185,8 +224,15 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
-
   await addAuthorizedAddresses(hre, diamond)
+  const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
+  // set approval for all tokens to be transfered by ERC1155 Predicate
+  if (
+    isEtheremNetwork(network, true) &&
+    nftV2.isApprovedForAll(diamond.address, ERC1155_PREDICATE)
+  ) {
+    await diamond.initNFTBridge()
+  }
 }
 
 const addAuthorizedAddresses = async (
@@ -232,7 +278,9 @@ const addAuthorizedAddresses = async (
 const deployLoansEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Loans Escrow Beacon **********', { indent: 2 })
   log('')
@@ -248,7 +296,7 @@ const deployLoansEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -256,7 +304,8 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
-    indent: 3,
+    skipIfAlreadyDeployed: true,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -266,10 +315,13 @@ const deployLoansEscrowBeacon = async (
     ethers.utils.getAddress(loansEscrowLogic.address)
   ) {
     log(`Upgrading Loans Escrow logic: ${loansEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
-    await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(loansEscrowLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')
@@ -280,7 +332,9 @@ const deployLoansEscrowBeacon = async (
 const deployCollateralEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Collateral Escrow Beacon **********', { indent: 2 })
   log('')
@@ -296,7 +350,7 @@ const deployCollateralEscrowBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -304,7 +358,8 @@ const deployCollateralEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'CollateralEscrowBeaconFactory',
     args: [beaconProxy.address, collateralEscrowLogic.address],
-    indent: 3,
+    skipIfAlreadyDeployed: true,
+    indent: 4,
   })
 
   // Check to see if we need to upgrade
@@ -314,10 +369,11 @@ const deployCollateralEscrowBeacon = async (
     ethers.utils.getAddress(collateralEscrowLogic.address)
   ) {
     log(`Upgrading Collateral Escrow logic: ${collateralEscrowLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
     await beacon
+      .connect(deployer)
       .upgradeTo(collateralEscrowLogic.address)
       .then(({ wait }) => wait())
   }
@@ -330,12 +386,14 @@ const deployCollateralEscrowBeacon = async (
 const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<UpgradeableBeaconFactory> => {
-  const { ethers, log } = hre
+  const { getNamedSigner, ethers, log } = hre
+
+  const deployer = await getNamedSigner('deployer')
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = 2
+  const logicVersion = '2_Alpha'
 
   const tTokenLogic = await deploy<ITToken>({
     hre,
@@ -346,7 +404,7 @@ const deployTTokenBeacon = async (
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
-    log: false,
+    indent: 4,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -354,7 +412,8 @@ const deployTTokenBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'TTokenBeaconFactory',
     args: [beaconProxy.address, tTokenLogic.address],
-    indent: 3,
+    skipIfAlreadyDeployed: true,
+    indent: 4,
   })
 
   const deployer = await hre.getNamedSigner('deployer')
@@ -366,10 +425,13 @@ const deployTTokenBeacon = async (
     ethers.utils.getAddress(tTokenLogic.address)
   ) {
     log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
-      indent: 4,
+      indent: 5,
       star: true,
     })
-    await beacon.connect(deployer).upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
+    await beacon
+      .connect(deployer)
+      .upgradeTo(tTokenLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log('')
@@ -378,6 +440,6 @@ const deployTTokenBeacon = async (
 }
 
 deployProtocol.tags = ['protocol']
-deployProtocol.dependencies = ['setup', 'nft']
+deployProtocol.dependencies = ['setup', 'nft', 'price-agg']
 
 export default deployProtocol

@@ -36,4 +36,8 @@ contract PolyTellerNFTMock is PolyTellerNFT {
         );
         _mint(owner, tokenId, uint256(amount), "");
     }
+
+    function addDepositor(address newDepositor) public {
+        _setupRole(DEPOSITOR, newDepositor);
+    }
 }

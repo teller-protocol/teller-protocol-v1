@@ -6,7 +6,9 @@ import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../shared/roles.sol";
 
 // Libraries
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
 import { MarketStorageLib } from "../storage/market.sol";

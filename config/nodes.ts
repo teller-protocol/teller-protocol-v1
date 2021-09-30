@@ -12,4 +12,6 @@ export const nodes: Record<string, Nodes> = {
   hardhat: {},
   localhost: {},
   mainnet: {},
+  polygon: {},
+  polygon_mumbai: {},
 }

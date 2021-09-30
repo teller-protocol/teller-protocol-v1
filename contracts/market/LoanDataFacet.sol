@@ -94,7 +94,6 @@ contract LoanDataFacet {
      */
     function getCollateralNeededInfo(uint256 loanID)
         external
-        view
         returns (
             uint256 neededInLendingTokens,
             uint256 neededInCollateralTokens,
@@ -122,26 +121,22 @@ contract LoanDataFacet {
      * @param loanID the identifier of the respective escrow's loan
      * @return the total value of the loan escrow
      */
-    function getLoanEscrowValue(uint256 loanID)
-        external
-        view
-        returns (uint256)
-    {
+    function getLoanEscrowValue(uint256 loanID) external returns (uint256) {
         return LibEscrow.calculateTotalValue(loanID);
     }
 
     /**
      * @notice it returns the total escrow tokens held by an escrow
      * @param loanID the identifier of the respective escrow's loan
-     * @return tokens_ the tokens held at the escrow loan 
+     * @return tokens_ the tokens held at the escrow loan
      */
     function getEscrowTokens(uint256 loanID)
         external
         view
         returns (address[] memory tokens_)
     {
-        EnumerableSet.AddressSet storage escrowTokens =
-            LibEscrow.getEscrowTokens(loanID);
+        EnumerableSet.AddressSet storage escrowTokens = LibEscrow
+            .getEscrowTokens(loanID);
         tokens_ = new address[](EnumerableSet.length(escrowTokens));
         for (uint256 i; i < tokens_.length; i++) {
             tokens_[i] = EnumerableSet.at(escrowTokens, i);

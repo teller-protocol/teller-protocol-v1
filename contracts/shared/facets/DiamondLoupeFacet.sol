@@ -31,9 +31,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         for (uint256 i; i < numFacets; i++) {
             address facetAddress_ = ds.facetAddresses[i];
             facets_[i].facetAddress = facetAddress_;
-            facets_[i].functionSelectors = ds.facetFunctionSelectors[
-                facetAddress_
-            ]
+            facets_[i].functionSelectors = ds
+                .facetFunctionSelectors[facetAddress_]
                 .functionSelectors;
         }
     }
@@ -48,7 +47,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         returns (bytes4[] memory facetFunctionSelectors_)
     {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        facetFunctionSelectors_ = ds.facetFunctionSelectors[_facet]
+        facetFunctionSelectors_ = ds
+            .facetFunctionSelectors[_facet]
             .functionSelectors;
     }
 
@@ -75,7 +75,8 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         returns (address facetAddress_)
     {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        facetAddress_ = ds.selectorToFacetAndPosition[_functionSelector]
+        facetAddress_ = ds
+            .selectorToFacetAndPosition[_functionSelector]
             .facetAddress;
     }
 

@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-enum CacheType { Address, Uint, Int, Byte, Bool }
+enum CacheType {
+    Address,
+    Uint,
+    Int,
+    Byte,
+    Bool
+}
 
 /**
  * @notice This struct manages the cache of the library instance.

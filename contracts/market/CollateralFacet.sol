@@ -46,7 +46,11 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Transfer tokens to the collateral escrow
-        LibCollateral.deposit(loanID, amount);
+        LibCollateral.deposit(
+            loanID,
+            LibLoans.loan(loanID).collateralToken,
+            amount
+        );
     }
 
     /**
@@ -118,8 +122,9 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         view
         returns (address[] memory tokens_)
     {
-        EnumerableSet.AddressSet storage collateralTokens =
-            MarketStorageLib.store().collateralTokens[asset];
+        EnumerableSet.AddressSet storage collateralTokens = MarketStorageLib
+            .store()
+            .collateralTokens[asset];
         tokens_ = new address[](EnumerableSet.length(collateralTokens));
         for (uint256 i; i < EnumerableSet.length(collateralTokens); i++) {
             tokens_[i] = EnumerableSet.at(collateralTokens, i);

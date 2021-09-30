@@ -3,8 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { TellerNFT } from "../nft/TellerNFT.sol";
-
-// Interfaces
+import { PriceAggregator } from "../price-aggregator/PriceAggregator.sol";
 
 // Libraries
 import {
@@ -25,13 +24,15 @@ struct AppStorage {
     //p
     mapping(bytes32 => PlatformSetting) platformSettings;
     mapping(address => Cache) assetSettings;
-    mapping(string => address) assetAddresses;
-    mapping(address => bool) cTokenRegistry;
+    mapping(string => address) _assetAddresses; // DEPRECATED
+    mapping(address => bool) _cTokenRegistry; // DEPRECATED
     TellerNFT nft;
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;
     address nftLiquidationController;
     UpgradeableBeaconFactory tTokenBeacon;
+    address wrappedNativeToken;
+    PriceAggregator priceAggregator;
 }
 
 library AppStorageLib {
