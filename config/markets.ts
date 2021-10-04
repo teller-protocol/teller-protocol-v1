@@ -48,11 +48,16 @@ const mapTokenMarkets = (
   networkTokens: string[],
   strategyFn: (...args: any[]) => MarketStrategy
 ): Market[] =>
-  networkTokens.map((lendingToken, _i, collateralTokens) => ({
-    lendingToken,
-    collateralTokens,
-    strategy: strategyFn(lendingToken),
-  }))
+  networkTokens.map((lendingToken, i, tokens) => {
+    // Remove the `lendingToken` from the collateral token list
+    const collateralTokens = tokens.concat()
+    collateralTokens.splice(i, 1)
+    return {
+      lendingToken,
+      collateralTokens,
+      strategy: strategyFn(lendingToken),
+    }
+  })
 
 const mainnetMarkets: Market[] = mapTokenMarkets(
   ['WETH', 'DAI', 'USDC', 'USDT', 'WBTC', 'LINK'],
