@@ -7,7 +7,6 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
@@ -44,13 +43,7 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
         LoanRequest calldata request,
         address collateralToken,
         uint256 collateralAmount
-    )
-        external
-        payable
-        paused(LibLoans.ID, false)
-        nonReentry("")
-        authorized(AUTHORIZED, msg.sender)
-    {
+    ) external payable paused(LibLoans.ID, false) nonReentry("") {
         // Perform loan request checks
         require(
             msg.sender == request.request.borrower,
