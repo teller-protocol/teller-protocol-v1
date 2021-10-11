@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 // Contracts
 import { TellerNFT_V2 } from "../TellerNFT_V2.sol";
 import { TellerNFTDictionary } from "../TellerNFTDictionary.sol";
-import { IERC721ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {
+    IERC721ReceiverUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
     /* Constants */

@@ -15,19 +15,33 @@ import {
     AssetSettingsFacet
 } from "../../settings/asset/AssetSettingsFacet.sol";
 import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
-import { PriceAggFacet } from "../../price-aggregator/PriceAggFacet.sol";
-import {
-    ChainlinkAggFacet
-} from "../../price-aggregator/chainlink/ChainlinkAggFacet.sol";
 import { LendingFacet } from "../../lending/LendingFacet.sol";
-import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
+import {
+    CreateLoanConsensusFacet
+} from "../../market/CreateLoanConsensusFacet.sol";
+import {
+    CreateLoanWithNFTFacet
+} from "../../market/CreateLoanWithNFTFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { NFTFacet } from "../../nft/NFTFacet.sol";
+import {
+    MainnetNFTInterestFacet
+} from "../../nft/mainnet/MainnetNFTInterestFacet.sol";
+import {
+    NFTMainnetBridgingToPolygonFacet
+} from "../../nft/mainnet/NFTMainnetBridgingToPolygonFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
-import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
+import {
+    CompoundClaimCompFacet
+} from "../../escrow/dapps/CompoundClaimComp.sol";
+import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
+import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
+import { UniswapFacet } from "../../escrow/dapps/swappers/UniswapFacet.sol";
+import { SushiswapFacet } from "../../escrow/dapps/swappers/SushiswapFacet.sol";
+import { YearnFacet } from "../../escrow/dapps/YearnFacet.sol";
 
 abstract contract ITellerDiamond is
     SettingsFacet,
@@ -35,17 +49,23 @@ abstract contract ITellerDiamond is
     AssetSettingsDataFacet,
     AssetSettingsFacet,
     PausableFacet,
-    PriceAggFacet,
-    ChainlinkAggFacet,
     LendingFacet,
     CollateralFacet,
-    CreateLoanFacet,
+    CreateLoanConsensusFacet,
+    CreateLoanWithNFTFacet,
     LoanDataFacet,
     RepayFacet,
     SignersFacet,
     NFTFacet,
+    MainnetNFTInterestFacet,
+    NFTMainnetBridgingToPolygonFacet,
     CompoundFacet,
+    CompoundClaimCompFacet,
+    AaveFacet,
+    PoolTogetherFacet,
     UniswapFacet,
+    SushiswapFacet,
+    YearnFacet,
     IDiamondCut,
     IDiamondLoupe
 {}

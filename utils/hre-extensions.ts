@@ -10,6 +10,7 @@ import {
   utils,
 } from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import moment from 'moment'
 
 import { getTokens } from '../config'
@@ -125,20 +126,52 @@ interface AddressObj {
   [name: string]: Address | AddressObj
 }
 
+/**
+ * Updates the Tenderly project name in the config based on the network being
+ *  used.
+ * @param hre {HardhatRuntimeEnvironment} Hardhat Environment variable to modify
+ *  directly
+ */
+const updateTenderlyConfig = (hre: HardhatRuntimeEnvironment): void => {
+  let projectName: string
+  switch (hre.network.name) {
+    case 'mainnet':
+      projectName = 'teller'
+      break
+
+    case 'kovan':
+      projectName = 'kovan'
+      break
+
+    case 'mumbai':
+      projectName = 'mumbai'
+      break
+
+    default:
+      projectName = 'test'
+  }
+
+  hre.config.tenderly.project = projectName
+}
+
 extendEnvironment((hre) => {
   const { deployments, ethers, network } = hre
+
+  updateTenderlyConfig(hre)
 
   hre.contracts = {
     async get<C extends Contract>(
       name: string,
       config?: ContractsGetConfig
     ): Promise<C> {
-      const {
-        abi,
-        address = config?.at,
-      }: { abi: unknown[]; address?: string } = await deployments
+      const { abi, address } = await deployments
         .get(name)
         .catch(() => deployments.getArtifact(name))
+        .then((artifact) => ({
+          abi: artifact.abi,
+          address:
+            config?.at ?? ('address' in artifact ? artifact.address : null),
+        }))
 
       if (address == null)
         throw new Error(
@@ -254,22 +287,4 @@ extendEnvironment((hre) => {
     const fn = config?.error ? process.stderr : process.stdout
     fn.write(formatMsg(msg, config))
   }
-})
-
-/**
- * Override `hardhat-deploy` deploy subtask to do some magic after it runs.
- */
-subtask('deploy:runDeploy', async (args, hre, runSuper) => {
-  if (!runSuper.isDefined) return
-
-  await runSuper(args)
-
-  // Only continue on a live network
-  if (!hre.network.live) return
-
-  // Verify contracts on Etherscan
-  await hre.run('etherscan-verify', { solcInput: true })
-
-  // Save and verify contracts on Tenderly
-  await hre.run('tenderly-contracts')
 })

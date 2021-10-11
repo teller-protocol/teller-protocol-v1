@@ -54,8 +54,20 @@ library LibCollateral {
      * @param loanID the respective loan ID
      * @param amount the amount of collateral to deposit
      */
-    function deposit(uint256 loanID, uint256 amount) internal {
-        e(loanID).deposit{ value: amount }(loanID, amount);
+    function deposit(
+        uint256 loanID,
+        address collateralToken,
+        uint256 amount
+    ) internal {
+        if (msg.value == 0) {
+            IERC20(collateralToken).transferFrom(
+                msg.sender,
+                address(this),
+                amount
+            );
+            IERC20(collateralToken).approve(address(e(loanID)), amount);
+        }
+        e(loanID).deposit{ value: msg.value }(loanID, amount);
 
         emit CollateralDeposited(loanID, msg.sender, amount);
     }
@@ -71,6 +83,8 @@ library LibCollateral {
         uint256 amount,
         address payable receiver
     ) internal {
+        if (amount == 0) return;
+
         e(loanID).withdraw(loanID, amount, receiver);
 
         emit CollateralWithdrawn(loanID, receiver, amount);
@@ -93,12 +107,13 @@ library LibCollateral {
         // Check if collateral escrow exists
         if (address(e(token)) == address(0)) {
             // Create escrow
-            address escrow =
-                AppStorageLib.store().collateralEscrowBeacon.cloneProxy("");
+            address escrow = AppStorageLib.store()
+                .collateralEscrowBeacon
+                .cloneProxy("");
             ICollateralEscrow(escrow).init(
                 token,
-                // Check if collateral token is WETH
-                token == AppStorageLib.store().assetAddresses["WETH"]
+                // Check if collateral token is the base network token
+                token == AppStorageLib.store().wrappedNativeToken
             );
 
             // Set max allowance

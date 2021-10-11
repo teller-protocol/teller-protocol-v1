@@ -1,11 +1,10 @@
 import { BytesLike } from '@ethersproject/bytes'
-import { BigNumberish, Signature } from 'ethers'
-import hre from 'hardhat'
+import { BigNumberish } from 'ethers'
+// import hre from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { ITellerDiamond } from '../../types/typechain'
 import { NULL_ADDRESS } from '../../utils/consts'
-
-const { contracts, getNamedSigner, ethers } = hre
 
 interface CRAArgs {
   lendingToken: string
@@ -46,14 +45,20 @@ export interface CRAReturn {
   responses: CRAResponse[]
 }
 
-export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
+export const mockCRAResponse = async (
+  hre: HardhatRuntimeEnvironment,
+  args: CRAArgs
+): Promise<CRAReturn> => {
+  const { contracts, getNamedSigner, ethers } = hre
   const network = await ethers.provider.getNetwork()
   const chainId = network.chainId.toString()
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const { length: nonce } = await diamond.getBorrowerLoans(args.borrower)
 
-  const requestTime = ethers.BigNumber.from(Date.now()).div(1000)
+  const { timestamp: currentTimestamp } = await ethers.provider.getBlock(
+    'latest'
+  )
   const request: CRARequest = {
     borrower: args.borrower,
     recipient: args.recipient ?? NULL_ADDRESS,
@@ -61,7 +66,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     requestNonce: nonce,
     amount: args.loanAmount,
     duration: args.loanTermLength,
-    requestTime,
+    requestTime: currentTimestamp,
   }
   const requestHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
@@ -80,13 +85,12 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         request.amount,
         nonce,
         request.duration,
-        requestTime,
+        currentTimestamp,
         chainId,
       ]
     )
   )
 
-  const responseTime = ethers.BigNumber.from(Date.now()).div(1000)
   const responseHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
       [
@@ -102,7 +106,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         args.lendingToken,
         args.loanAmount,
         requestHash,
-        responseTime,
+        currentTimestamp,
         args.interestRate,
         args.collateralRatio,
         chainId,
@@ -118,7 +122,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   responses.push({
     signer: await signer.getAddress(),
     assetAddress: args.lendingToken,
-    responseTime,
+    responseTime: currentTimestamp,
     interestRate: args.interestRate,
     collateralRatio: args.collateralRatio,
     maxLoanAmount: args.loanAmount,

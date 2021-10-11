@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
+import { ADMIN } from "../../shared/roles.sol";
 
 // Libraries
 import {
@@ -66,7 +66,7 @@ contract AssetSettingsFacet is RolesMods {
     /**
      * @notice It creates an asset settings with the given parameters.
      * @param asset the address to create settings for
-     * @param requests the multiple settings to update the asset with 
+     * @param requests the multiple settings to update the asset with
      */
     function createAssetSetting(
         address asset,

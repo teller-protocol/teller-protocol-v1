@@ -3,11 +3,10 @@ import chaiAsPromised from 'chai-as-promised'
 import { Signer } from 'ethers'
 import hre from 'hardhat'
 
-import { getChainlink, getTokens } from '../../config'
+import { getTokens } from '../../config'
+import { deployChainlinkPricer } from '../../deploy/price-agg'
 import { Address } from '../../types/custom/config-types'
-import { ITellerDiamond } from '../../types/typechain'
-import { NULL_ADDRESS } from '../../utils/consts'
-import { RUN_EXISTING } from '../helpers/env-helpers'
+import { ERC20, PriceAggregator } from '../../types/typechain'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -15,79 +14,94 @@ chai.use(chaiAsPromised)
 const { contracts, tokens, deployments, getNamedSigner, toBN } = hre
 
 describe('PriceAggregator', () => {
-  let diamond: ITellerDiamond
+  let priceAgg: PriceAggregator
   let deployer: Signer
 
-  const chainlink = getChainlink(hre.network)
   const tokenAddresses = getTokens(hre.network)
-  const pairs = Object.values(chainlink)
+  const pairs = [
+    ['dai', 'weth'],
+    ['usdc', 'weth'],
+    ['link', 'weth'],
+  ]
 
-  const getTokenAddress = (sym: string): Address => tokenAddresses.all[sym]
+  const getTokenAddress = (sym: string): Address =>
+    tokenAddresses.all[sym.toUpperCase()]
 
-  before(async () => {
-    await deployments.fixture('protocol')
+  beforeEach(async () => {
+    await deployments.fixture('protocol', {
+      keepExistingDeployments: false,
+    })
 
-    diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    priceAgg = await contracts.get<PriceAggregator>('PriceAggregator')
     deployer = await getNamedSigner('deployer')
   })
 
-  describe('addChainlinkAggregator', () => {
-    it('Should not be able to add a Chainlink aggregator as not an admin', async () => {
-      // Sender address
-      const lender = await getNamedSigner('lender')
+  describe('setChainlinkPricer', () => {
+    it('Should be able to set a pricer for Chainlink', async () => {
+      const chainlinkPricer = await deployChainlinkPricer(hre)
 
-      await diamond
-        .connect(lender)
-        .addChainlinkAggregator(
-          getTokenAddress(pairs[0].baseTokenName),
-          getTokenAddress(pairs[0].quoteTokenName),
-          pairs[0].address
-        )
-        .should.be.rejectedWith('AccessControl: not authorized')
+      await priceAgg
+        .connect(deployer)
+        .setChainlinkPricer(chainlinkPricer.address)
     })
 
-    for (const pair of pairs) {
-      it(`Should be able add Chainlink aggregators for ${pair.baseTokenName}/${pair.quoteTokenName} an admin`, async () => {
-        const srcTokenAddress = getTokenAddress(pair.baseTokenName)
-        const dstTokenAddress = getTokenAddress(pair.quoteTokenName)
+    it('Should not be able to set a pricer for Chainlink that is not a contract', async () => {
+      await priceAgg
+        .connect(deployer)
+        .setChainlinkPricer(await deployer.getAddress())
+        .should.be.revertedWith('Teller: Chainlink pricer not contract')
+    })
 
-        // Add aggregator
-        await diamond
-          .connect(deployer)
-          .addChainlinkAggregator(
-            srcTokenAddress,
-            dstTokenAddress,
-            pair.address
-          )
+    it('Should not be able to set a pricer for Chainlink as not deployer', async () => {
+      const chainlinkPricer = await deployChainlinkPricer(hre)
 
-        // Check if aggregator was successfully added
-        const aggregatorResponse = await diamond.getChainlinkAggregatorFor(
-          srcTokenAddress,
-          dstTokenAddress
-        )
+      const rando = await getNamedSigner('borrower')
+      await priceAgg
+        .connect(rando)
+        .setChainlinkPricer(chainlinkPricer.address)
+        .should.be.revertedWith('AccessControl: not authorized')
+    })
+  })
 
-        const tokenSupportResponse = await diamond.isChainlinkTokenSupported(
-          srcTokenAddress
-        )
+  describe('setAssetPricer', () => {
+    let token: ERC20
 
-        aggregatorResponse.agg.should.be.equals(
-          pair.address,
-          'Chainlink pair Aggregator was not stored'
-        )
-        tokenSupportResponse.should.eql(
-          true,
-          'Chainlink token not supported after pair added'
-        )
-      })
-    }
+    before(async () => {
+      token = await hre.tokens.get('DAI')
+    })
+
+    it('Should be able to set a pricer for an asset', async () => {
+      const chainlinkPricer = await deployChainlinkPricer(hre)
+
+      await priceAgg
+        .connect(deployer)
+        .setAssetPricer(token.address, chainlinkPricer.address)
+    })
+
+    it('Should not be able to set a pricer for an asset that is not a contract', async () => {
+      await priceAgg
+        .connect(deployer)
+        .setAssetPricer(token.address, await deployer.getAddress())
+        .should.be.revertedWith('Teller: Chainlink pricer not contract')
+    })
+
+    it('Should not be able to set a pricer for an asset as not deployer', async () => {
+      const chainlinkPricer = await deployChainlinkPricer(hre)
+
+      const rando = await getNamedSigner('borrower')
+      await priceAgg
+        .connect(rando)
+        .setAssetPricer(token.address, chainlinkPricer.address)
+        .should.be.revertedWith('AccessControl: not authorized')
+    })
   })
 
   describe('getPriceFor', () => {
-    for (const pair of pairs) {
-      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
-        const answer = await diamond.getPriceFor(
-          getTokenAddress(pair.baseTokenName),
-          getTokenAddress(pair.quoteTokenName)
+    for (const [base, quote] of pairs) {
+      it(`Should be able get the latest price for ${base}/${quote}`, async () => {
+        const answer = await priceAgg.getPriceFor(
+          getTokenAddress(base),
+          getTokenAddress(quote)
         )
 
         answer.gt(0).should.eql(true, 'Chainlink pair zero price')
@@ -96,74 +110,15 @@ describe('PriceAggregator', () => {
   })
 
   describe('getValueFor', () => {
-    for (const pair of pairs) {
-      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
-        const answer = await diamond.getValueFor(
-          getTokenAddress(pair.baseTokenName),
-          getTokenAddress(pair.quoteTokenName),
-          await tokens
-            .get(pair.baseTokenName)
-            .then(async (t) => toBN(1, await t.decimals()))
+    for (const [base, quote] of pairs) {
+      it(`Should be able get the latest price for ${base}/${quote}`, async () => {
+        const answer = await priceAgg.getValueFor(
+          getTokenAddress(base),
+          getTokenAddress(quote),
+          await tokens.get(base).then(async (t) => toBN(1, await t.decimals()))
         )
 
         answer.gt(0).should.eql(true, 'Chainlink pair zero value')
-      })
-    }
-  })
-
-  describe('removeChainlinkAggregator', () => {
-    it('Should not be able to remove an aggregator as not an admin', async () => {
-      // Sender address
-      const lender = await getNamedSigner('lender')
-
-      await diamond
-        .connect(lender)
-        .removeChainlinkAggregator(
-          getTokenAddress(pairs[0].baseTokenName),
-          getTokenAddress(pairs[0].quoteTokenName)
-        )
-        .should.be.rejectedWith('AccessControl: not authorized')
-    })
-
-    for (const pair of pairs) {
-      it(`Should be able remove the aggregator for ${pair.baseTokenName}/${pair.quoteTokenName} as an admin`, async () => {
-        const srcTokenAddress = getTokenAddress(pair.baseTokenName)
-        const dstTokenAddress = getTokenAddress(pair.quoteTokenName)
-
-        // Remove aggregator
-        await diamond
-          .connect(deployer)
-          .removeChainlinkAggregator(srcTokenAddress, dstTokenAddress)
-
-        // Check if aggregator was successfully removed
-        const { agg } = await diamond.getChainlinkAggregatorFor(
-          srcTokenAddress,
-          dstTokenAddress
-        )
-
-        agg.should.be.equal(NULL_ADDRESS, 'Chainlink Aggregator not removed')
-      })
-    }
-
-    const tokenAddresses = pairs.reduce(
-      (set, { baseTokenName, quoteTokenName }) => {
-        set.add(getTokenAddress(baseTokenName))
-        set.add(getTokenAddress(quoteTokenName))
-        return set
-      },
-      new Set<string>()
-    )
-
-    for (const tokenAddress of tokenAddresses) {
-      it(`should not support any tokens after all aggregators being removed`, async () => {
-        const tokenSupportResponse = await diamond.isChainlinkTokenSupported(
-          tokenAddress
-        )
-
-        tokenSupportResponse.should.eql(
-          false,
-          'Chainlink token still supported'
-        )
       })
     }
   })

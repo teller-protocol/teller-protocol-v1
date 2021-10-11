@@ -7,12 +7,14 @@ import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
+import fs from 'fs'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
 } from 'hardhat/types'
+import path from 'path'
 
 config()
 
@@ -24,18 +26,24 @@ const {
   COMPILING,
   CMC_KEY,
   ETHERSCAN_API_KEY,
-  GAS_PRICE_GWEI_KEY,
   INFURA_KEY,
   FORKING_NETWORK,
   MATIC_MAINNET_KEY,
   MATIC_MUMBAI_KEY,
   MNEMONIC_KEY,
   SAVE_GAS_REPORT,
+  TESTING,
 } = process.env
 
 if (COMPILING != 'true') {
   require('./tasks')
   require('./utils/hre-extensions')
+}
+let isTesting = false
+if (TESTING === '1') {
+  isTesting = true
+
+  require('./test/helpers/chai-helpers')
 }
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
@@ -46,10 +54,6 @@ const accounts: HardhatNetworkHDAccountsUserConfig = {
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
 
-const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = GAS_PRICE_GWEI_KEY
-  ? BN.from(ethers.utils.parseUnits(GAS_PRICE_GWEI_KEY, 'gwei')).toNumber()
-  : 'auto'
-
 const networkUrls: { [network: string]: string } = {
   kovan: ALCHEMY_KOVAN_KEY!,
   rinkeby: ALCHEMY_RINKEBY_KEY!,
@@ -59,10 +63,23 @@ const networkUrls: { [network: string]: string } = {
   polygon_mumbai: MATIC_MUMBAI_KEY!,
 }
 
-const networkForkingBlock: { [network: string]: number } = {
-  mainnet: 12648380,
-  // polygon: 14891625,
-  // polygon_mumbai: 14244031,
+const getLatestDeploymentBlock = (networkName: string): number | undefined => {
+  try {
+    return parseInt(
+      fs
+        .readFileSync(
+          path.resolve(
+            __dirname,
+            'deployments',
+            networkName,
+            '.latestDeploymentBlock'
+          )
+        )
+        .toString()
+    )
+  } catch {
+    // Network deployment does not exist
+  }
 }
 
 const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
@@ -70,11 +87,6 @@ const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
     ...config,
     accounts,
     gas: GAS,
-    gasPrice: config.live
-      ? GAS_PRICE
-      : GAS_PRICE === 'auto'
-      ? GAS_PRICE
-      : BN.from(GAS_PRICE).div(4).toNumber(),
   }
 
   return config
@@ -87,7 +99,7 @@ export default <HardhatUserConfig>{
   },
   tenderly: {
     username: 'soltel',
-    project: 'teller',
+    project: '{see utils/hre-extensions.ts}',
   },
   paths: {
     sources: 'contracts',
@@ -105,10 +117,10 @@ export default <HardhatUserConfig>{
   solidity: {
     compilers: [
       {
-        version: '0.8.3',
+        version: '0.8.4',
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: !isTesting,
             runs: 200,
           },
         },
@@ -121,6 +133,7 @@ export default <HardhatUserConfig>{
     disambiguatePaths: false,
   },
   gasReporter: {
+    enabled: true,
     currency: 'USD',
     coinmarketcap: CMC_KEY,
     outputFile: SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
@@ -153,6 +166,10 @@ export default <HardhatUserConfig>{
     craSigner: {
       hardhat: 10,
       localhost: 10,
+    },
+    attacker: {
+      hardhat: 11,
+      localhost: 11,
     },
   },
   networks: {
@@ -189,13 +206,14 @@ export default <HardhatUserConfig>{
     hardhat: networkConfig({
       chainId: 31337,
       live: false,
+      allowUnlimitedContractSize: true,
       forking:
         FORKING_NETWORK == null
           ? undefined
           : {
               enabled: true,
               url: networkUrls[FORKING_NETWORK],
-              blockNumber: networkForkingBlock[FORKING_NETWORK],
+              blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
             },
     }),
     localhost: networkConfig({
