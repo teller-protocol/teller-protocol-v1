@@ -7,7 +7,7 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { PausableMods } from "../settings/pausable/PausableMods.sol";
-import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+import { ADMIN } from "../shared/roles.sol";
 
 // Libraries
 import { LibLoans } from "./libraries/LibLoans.sol";
@@ -35,7 +35,6 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         payable
         paused("", false)
         nonReentry("")
-        authorized(AUTHORIZED, msg.sender)
     {
         uint256 status = uint256(LibLoans.loan(loanID).status);
         require(
@@ -62,7 +61,6 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         external
         paused("", false)
         nonReentry("")
-        authorized(AUTHORIZED, msg.sender)
     {
         // check if caller is borrower
         require(

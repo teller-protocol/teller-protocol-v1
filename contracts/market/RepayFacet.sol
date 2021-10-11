@@ -7,7 +7,6 @@ import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
 import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
@@ -93,7 +92,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     function escrowRepay(uint256 loanID, uint256 amount)
         external
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
         uint256 balance = LibEscrow.balanceOf(
@@ -127,7 +125,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         external
         nonReentry("")
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
     {
         __repayLoan(loanID, amount, msg.sender, false);
     }
@@ -275,7 +272,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         external
         nonReentry("")
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = LibLoans.loan(loanID);
 

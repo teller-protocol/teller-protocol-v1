@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+import { ADMIN } from "../shared/roles.sol";
 
 // Libraries
 import { NFTLib } from "./libraries/NFTLib.sol";

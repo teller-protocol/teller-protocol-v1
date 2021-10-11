@@ -31,9 +31,11 @@ describe('Upgrading the Teller diamond', () => {
 
     // Add an authorized address
     const { borrower: user } = await getNamedAccounts()
-    await protocol.addAuthorizedAddress(user)
+    await protocol.setNFTLiquidationController(user)
     const SettingsFacet = await contracts.get<SettingsFacet>('SettingsFacet')
-    const selector = SettingsFacet.interface.getSighash('addAuthorizedAddress')
+    const selector = SettingsFacet.interface.getSighash(
+      'setNFTLiquidationController'
+    )
     await protocol.diamondCut(
       [
         {
@@ -49,7 +51,7 @@ describe('Upgrading the Teller diamond', () => {
       }
     )
     await protocol
-      .addAuthorizedAddress(from)
+      .setNFTLiquidationController(from)
       .then((tx) => tx.wait())
       .should.revertedWith('Diamond: Function does not exist')
   })
