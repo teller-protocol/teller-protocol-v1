@@ -14,7 +14,7 @@ const { network, deployments, getNamedSigner, contracts, tokens } = hre
 
 // Only run this test if we are testing Ethereum mainnet or its testnet
 if (isEtheremNetwork(network)) {
-  describe('Claiming Alpha Interest', () => {
+  describe.skip('Claiming Alpha Interest', () => {
     const market = getMarkets(hre.network).find((m) => m.lendingToken === 'DAI')
     if (!market) throw Error('DAI market not found')
 
