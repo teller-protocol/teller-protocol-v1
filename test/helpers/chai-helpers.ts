@@ -1,6 +1,13 @@
 import chai from 'chai'
 import { BigNumber as BN } from 'ethers'
 
+const areBNs = (obj: any, other: any): boolean =>
+  BN.isBigNumber(obj) || BN.isBigNumber(other)
+
+const assertBN = (obj: BN, other: BN, message: string): void => {
+  new chai.Assertion(obj.toString()).to.eql(other.toString(), message)
+}
+
 chai.Assertion.overwriteMethod(
   'eql',
   (_super) =>

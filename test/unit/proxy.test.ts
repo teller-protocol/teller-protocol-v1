@@ -12,7 +12,7 @@ import {
 chai.should()
 chai.use(solidity)
 
-describe('Proxies', () => {
+describe.skip('Proxies', () => {
   describe('Logic Contract', () => {
     describe('Auto Initialization', () => {
       describe('Should not be able to initialize logic contract after deployment', () => {

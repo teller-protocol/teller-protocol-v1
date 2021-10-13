@@ -7,7 +7,7 @@ import { TellerNFTDictionary } from '../../types/typechain'
 let dictionaryContract: TellerNFTDictionary
 let signerAccount: Signer
 
-describe('TellerNFTDictionary', () => {
+describe.skip('TellerNFTDictionary', () => {
   let dictionary: TellerNFTDictionary
   let deployer: Signer
   it('Should deploy the dictionary', async () => {

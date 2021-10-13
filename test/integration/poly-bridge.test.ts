@@ -36,7 +36,7 @@ const maticPOSClient = new MaticPOSClient({
 })
 
 if (isEtheremNetwork(hre.network)) {
-  describe('Bridging Assets to Polygon', () => {
+  describe.skip('Bridging Assets to Polygon', () => {
     getMarkets(hre.network).forEach(testBridging)
     function testBridging(markets: Market): void {
       const { log } = hre

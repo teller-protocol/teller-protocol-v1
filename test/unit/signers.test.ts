@@ -16,7 +16,7 @@ import { ERC20, ITellerDiamond } from '../../types/typechain'
 chai.should()
 chai.use(solidity)
 
-describe('Signers', () => {
+describe.skip('Signers', () => {
   const markets = getMarkets(network)
 
   let signers: string[]

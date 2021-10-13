@@ -23,7 +23,7 @@ chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
-describe('NFT Staking', () => {
+describe.skip('NFT Staking', () => {
   let diamond: ITellerDiamond
   let tellerNFTV2: TellerNFTV2
   let deployer: Signer
