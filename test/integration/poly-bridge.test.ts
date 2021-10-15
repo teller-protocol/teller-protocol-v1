@@ -13,6 +13,8 @@ import hre, {
 import { getMarkets, isEtheremNetwork } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import {
+  IMainnetDiamond,
+  IPolyDiamond,
   ITellerDiamond,
   MainnetNFTFacet,
   MainnetNFTFacetMock,
@@ -42,7 +44,10 @@ if (isEtheremNetwork(hre.network)) {
       const { log } = hre
       // define needed variablez
       let deployer: Signer
-      let diamond: ITellerDiamond & MainnetNFTFacet & MainnetNFTFacetMock
+      let diamond: ITellerDiamond &
+        IMainnetDiamond &
+        IPolyDiamond &
+        MainnetNFTFacetMock
       let nftV1: TellerNFT
       let nftV2: TellerNFTV2 & MainnetTellerNFT
       let tellerDictionary: TellerNFTDictionary
