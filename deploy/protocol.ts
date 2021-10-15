@@ -6,6 +6,7 @@ import {
   ICollateralEscrow,
   ILoansEscrow,
   IMainnetDiamond,
+  IPolyDiamond,
   ITellerDiamond,
   ITToken,
   UpgradeableBeaconFactory,
@@ -231,12 +232,24 @@ const deployProtocol: DeployFunction = async (hre) => {
     owner: deployer,
     execute,
   }
+
+  const polygonDiamondArgs: DeployDiamondArgs<IPolyDiamond, any> = {
+    hre,
+    name: 'PolyDiamond',
+    facets,
+    owner: deployer,
+    execute,
+  }
+
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
   const mainnetDiamond = await deployDiamond<IMainnetDiamond, any>(
     mainnetDiamondArgs
   )
+  const polyDiamond = await deployDiamond<IPolyDiamond, any>(polygonDiamondArgs)
+
   await addAuthorizedAddresses(hre, diamond)
   await addAuthorizedAddresses(hre, mainnetDiamond)
+  await addAuthorizedAddresses(hre, polyDiamond)
   const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
   // set approval for all tokens to be transfered by ERC1155 Predicate
   if (
