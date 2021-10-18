@@ -2,7 +2,12 @@ import { Signer } from 'crypto'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getDappAddresses, getNativeToken, isEtheremNetwork } from '../config'
+import {
+  getDappAddresses,
+  getNativeToken,
+  getTokens,
+  isEtheremNetwork,
+} from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -20,6 +25,7 @@ import {
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
   const { deployer } = await getNamedAccounts()
+  const tokens = getTokens(hre.network)
 
   log('********** Teller Diamond **********', { indent: 1 })
 
@@ -135,6 +141,12 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
   ]
 
+  const stableCoins: string[] = [
+    tokens.all.DAI,
+    tokens.all.USDC,
+    tokens.all.USDT,
+  ]
+
   // Network specify Facets
   if (isEtheremNetwork(network)) {
     const nftMigrator = await contracts.get('NFTMigrator')
@@ -143,7 +155,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       // Loans
       {
         contract: 'MainnetCreateLoanWithNFTFacet',
-        args: [nftV2.address],
+        args: [nftV2.address, ...stableCoins],
         skipIfAlreadyDeployed: false,
       },
       {
@@ -193,7 +205,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       // Loans
       {
         contract: 'CreateLoanWithNFTFacet',
-        args: [nftV2.address],
+        args: [nftV2.address, ...stableCoins],
         skipIfAlreadyDeployed: false,
       },
       {

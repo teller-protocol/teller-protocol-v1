@@ -9,8 +9,18 @@ import { TellerNFT_V2 } from "../../nft/TellerNFT_V2.sol";
 import { NFTLib } from "../../nft/libraries/NFTLib.sol";
 
 contract MainnetCreateLoanWithNFTFacet is CreateLoanWithNFTFacet {
-    constructor(address tellerNFTV2Address)
-        CreateLoanWithNFTFacet(tellerNFTV2Address)
+    constructor(
+        address tellerNFTV2Address,
+        address daiAddress,
+        address usdcAddress,
+        address usdtAddress
+    )
+        CreateLoanWithNFTFacet(
+            tellerNFTV2Address,
+            daiAddress,
+            usdcAddress,
+            usdtAddress
+        )
     {}
 
     /**
