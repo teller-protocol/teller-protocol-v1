@@ -46,6 +46,7 @@ library LibCreateLoan {
         uint32 duration,
         uint16 interestRate
     ) internal returns (Loan storage loan_) {
+        require(assetAddress != address(0), "Teller: asset loan asset null");
         // Perform loan request checks
         require(
             PlatformSettingsLib.getMaximumLoanDurationValue() >= duration,
