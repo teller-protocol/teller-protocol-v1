@@ -11,6 +11,7 @@ const projectPath = path.resolve(__dirname, '..')
 interface NetworkArgs {
   chain: string
   block?: number
+  latest: boolean
   onlyDeployment: boolean
   noDeploy: boolean
 }
@@ -19,7 +20,7 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
   args: NetworkArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { block, onlyDeployment, noDeploy } = args
+  const { onlyDeployment } = args
   const { log, run, network } = hre
 
   if (network.name !== HARDHAT_NETWORK_NAME) {
@@ -59,10 +60,17 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
 
   // Start a local node for the network
   if (!onlyDeployment) {
+    if (args.latest && args.block != null)
+      throw new Error(
+        'Conflicting forking flags: `latest` and `block` cannot be used together'
+      )
+    const forkBlockNumber = args.latest
+      ? undefined
+      : args.block ?? network.config.forking.blockNumber
     await run('node', {
       fork: network.config.forking.url,
-      forkBlockNumber: block ?? network.config.forking.blockNumber,
-      noDeploy: noDeploy,
+      forkBlockNumber,
+      noDeploy: args.noDeploy,
       noReset: true,
     })
   }
@@ -76,6 +84,10 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
     'Fork network at a particular block number',
     undefined,
     types.int
+  )
+  .addFlag(
+    'latest',
+    'Forks the network at the latest block instead of last deployment block'
   )
   .addFlag(
     'onlyDeployment',
