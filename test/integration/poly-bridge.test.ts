@@ -315,7 +315,7 @@ if (isEtheremNetwork(hre.network)) {
             )
           })
 
-          it.only('tier data for v2 is all on chain and matching config', async () => {
+          it('tier data for v2 is all on chain and matching config', async () => {
             // array of v2 tiers
 
             const ID_PADDING = 10000
