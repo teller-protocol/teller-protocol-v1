@@ -10,6 +10,7 @@ import hre, {
   getNamedSigner,
 } from 'hardhat'
 
+import { getNFT } from '../../config'
 import { getMarkets, isEtheremNetwork } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import {
@@ -314,25 +315,35 @@ if (isEtheremNetwork(hre.network)) {
             )
           })
 
-          it('tier data for v2 is upgraded', async () => {
+          it.only('tier data for v2 is all on chain and matching config', async () => {
             // array of v2 tiers
-            const arrayOfTiers = [0, 1, 2, 3, 8, 9, 10, 11, 12]
 
             const ID_PADDING = 10000
-            const newTokenId = 9 * ID_PADDING + 0
+            const { tiers } = getNFT(hre.network)
 
-            const v2BaseLoanSize = await nftV2.tokenBaseLoanSize(newTokenId)
-            v2BaseLoanSize.should.eql(5000)
+            tiers.length.should.eql(9)
 
-            const v2ContributionSize = await nftV2.tokenContributionSize(
-              newTokenId
-            )
-            v2ContributionSize.should.eql(10000000000000000000)
+            for (let i = 0; i < tiers.length; i++) {
+              const tierData = tiers[i]
+              const newTokenId = (i + 1) * ID_PADDING + 0
 
-            const v2ContributionMultiplier =
-              await nftV2.tokenContributionMultiplier(newTokenId)
+              const v2BaseLoanSize = await nftV2.tokenBaseLoanSize(newTokenId)
+              v2BaseLoanSize.toString().should.eql(tierData.baseLoanSize)
 
-            v2ContributionMultiplier.should.eql(5000)
+              const v2ContributionSize = await nftV2.tokenContributionSize(
+                newTokenId
+              )
+              v2ContributionSize
+                .toString()
+                .should.eql(tierData.contributionSize)
+
+              const v2ContributionMultiplier =
+                await nftV2.tokenContributionMultiplier(newTokenId)
+
+              v2ContributionMultiplier
+                .toString()
+                .should.eql(tierData.contributionMultiplier)
+            }
           })
         })
       })
