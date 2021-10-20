@@ -1,11 +1,21 @@
 import { Market, MarketStrategy } from '../types/custom/config-types'
 
+const parseSym = (sym: string): string => {
+  sym = sym.toUpperCase()
+  switch (sym) {
+    case 'WETH':
+      return 'ETH'
+    default:
+      return sym
+  }
+}
+
 const compoundStrategy = (tokenSym: string): MarketStrategy => ({
   name: 'TTokenCompoundStrategy_1',
   initArgs: [
     {
       type: 'TokenSymbol',
-      value: `C${tokenSym.toUpperCase()}`,
+      value: `C${parseSym(tokenSym)}`,
     },
     {
       // Balance Ratio Min
@@ -25,7 +35,7 @@ const aaveStrategy = (tokenSym: string): MarketStrategy => ({
   initArgs: [
     {
       type: 'TokenSymbol',
-      value: `A${tokenSym.toUpperCase()}`,
+      value: `A${parseSym(tokenSym)}`,
     },
     {
       type: 'ProtocolAddressConstant',
