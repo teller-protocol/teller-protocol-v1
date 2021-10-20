@@ -256,6 +256,16 @@ export const tiers: TierInfo[] = [
       'QmYFXx2fDg3kwXyiGNBGYyChuaGmPCwPbp288bwVonpjFW',
     ],
   },
+  {
+    baseLoanSize: '5000',
+    contributionAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contributionSize: '10000000000000000000',
+    contributionMultiplier: '5000',
+    hashes: [
+      'QmQHFzhAaTtbBybgGMCrQw9GjUZdgxbjwvdnQkkGgirheY',
+      'QmYFXx2fDg3kwXyiGNBGYyChuaGmPCwPbp288bwVonpjFW',
+    ],
+  },
 ]
 
 export const nftMerkleTree: Record<string, NFTMerkleTree> = {

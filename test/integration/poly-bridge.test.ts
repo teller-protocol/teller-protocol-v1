@@ -223,7 +223,7 @@ if (isEtheremNetwork(hre.network)) {
       })
       describe('Mock tests', () => {
         describe('stake, unstake, deposit to polygon', () => {
-          it('tier data matches between v1 and v2', async () => {
+          it.skip('tier data matches between v1 and v2', async () => {
             // we use filter to get the Event that will be emitted when we mint the token
             const filter = nftV1.filters.Transfer(
               NULL_ADDRESS,
@@ -312,6 +312,27 @@ if (isEtheremNetwork(hre.network)) {
               v2TokensAfter.length +
                 (v2TokensBefore.length - v2TokensAfter.length)
             )
+          })
+
+          it('tier data for v2 is upgraded', async () => {
+            // array of v2 tiers
+            const arrayOfTiers = [0, 1, 2, 3, 8, 9, 10, 11, 12]
+
+            const ID_PADDING = 10000
+            const newTokenId = 9 * ID_PADDING + 0
+
+            const v2BaseLoanSize = await nftV2.tokenBaseLoanSize(newTokenId)
+            v2BaseLoanSize.should.eql(5000)
+
+            const v2ContributionSize = await nftV2.tokenContributionSize(
+              newTokenId
+            )
+            v2ContributionSize.should.eql(10000000000000000000)
+
+            const v2ContributionMultiplier =
+              await nftV2.tokenContributionMultiplier(newTokenId)
+
+            v2ContributionMultiplier.should.eql(5000)
           })
         })
       })
