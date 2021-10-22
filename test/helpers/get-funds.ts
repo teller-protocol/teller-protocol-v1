@@ -1,9 +1,9 @@
 import { BigNumber, BigNumberish, Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { getTokens } from '../../config'
+import { getTokens, isEtheremNetwork } from '../../config'
 import { Address, TokenSymbol } from '../../types/custom/config-types'
-import { ERC20, IUniswapV2Router } from '../../types/typechain'
+import { ERC20, IUniswapV2Router, IWETH } from '../../types/typechain'
 import {
   SUSHISWAP_ROUTER_V2_ADDRESS_POLYGON,
   UNISWAP_ROUTER_V2_ADDRESS,
@@ -17,7 +17,7 @@ export interface SwapArgs {
 }
 
 export const getFunds = async (args: SwapArgs): Promise<void> => {
-  const { getNamedSigner, ethers, contracts } = args.hre
+  const { getNamedSigner, ethers, contracts, network } = args.hre
 
   const funder = await getNamedSigner('funder')
 
@@ -65,13 +65,26 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
       to: toAddress,
       value: args.amount,
     })
+  } else if (args.tokenSym === 'WETH' && isEtheremNetwork(network)) {
+    await sendWrappedNativeToken({
+      tokenAddress: tokenAddresses.WETH,
+      amount: args.amount,
+      hre: args.hre,
+      toAddress,
+    })
+  } else if (args.tokenSym === 'WMATIC' && !isEtheremNetwork(network)) {
+    await sendWrappedNativeToken({
+      tokenAddress: tokenAddresses.WMATIC,
+      amount: args.amount,
+      hre: args.hre,
+      toAddress,
+    })
   } else {
     // ETH/MATIC balance
     const deployerBalance = await ethers.provider.getBalance(
       funder.getAddress()
     )
     const balanceToSend = deployerBalance.mul('1').div('10')
-
     // Swap ETH/WMATIC for given token
     await swapper.swapETHForExactTokens(
       args.amount,
@@ -99,4 +112,27 @@ export const fundLender = async (args: FundLenderArgs): Promise<BigNumber> => {
     hre: args.hre,
   })
   return amount
+}
+
+export interface SendNativeTokenArgs {
+  tokenAddress: string
+  amount: BigNumberish
+  toAddress: string
+  hre: HardhatRuntimeEnvironment
+}
+
+const sendWrappedNativeToken = async (
+  args: SendNativeTokenArgs
+): Promise<BigNumber> => {
+  const funder = await args.hre.getNamedSigner('funder')
+  const weth = await args.hre.contracts.get<IWETH>('IWETH', {
+    at: args.tokenAddress,
+    from: funder,
+  })
+  const balanceToSend = args.hre.ethers.BigNumber.from(args.amount).mul(2)
+  await weth.deposit({ value: balanceToSend, from: funder.getAddress() })
+  await weth.transfer(args.toAddress, args.amount, {
+    from: funder.getAddress(),
+  })
+  return await weth.balanceOf(args.toAddress)
 }
