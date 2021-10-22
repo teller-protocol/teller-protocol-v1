@@ -23,4 +23,11 @@ interface IWETH {
      * @param account Address to get balance of.
      */
     function balanceOf(address account) external view returns (uint256);
+
+    /**
+     * @notice It transfers the WETH amount specified to the given {account}.
+     * @param to Address to transfer to
+     * @param value Amount of WETH to transfer
+     */
+    function transfer(address to, uint256 value) external returns (bool);
 }
