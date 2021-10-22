@@ -48,7 +48,9 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         address usdcAddress,
         address usdtAddress
     ) {
+        require(daiAddress != address(0), "DAI null");
         require(usdcAddress != address(0), "USDC null");
+        require(usdtAddress != address(0), "USDT null");
 
         TELLER_NFT_V2 = TellerNFT_V2(tellerNFTV2Address);
         DAI = daiAddress;
@@ -90,9 +92,11 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         ) {
             allowedLoanSize = allowedBaseLoanSize;
         } else {
-            allowedLoanSize = AppStorageLib.store()
-                .priceAggregator
-                .getValueFor(USDC, assetAddress, allowedBaseLoanSize);
+            allowedLoanSize = AppStorageLib.store().priceAggregator.getValueFor(
+                    USDC,
+                    assetAddress,
+                    allowedBaseLoanSize
+                );
         }
         require(
             loan.borrowedAmount <= allowedLoanSize * (10**lendingDecimals),
