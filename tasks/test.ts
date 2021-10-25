@@ -4,7 +4,7 @@ import { subtask } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import Mocha from 'mocha'
 
-import { generateAllStoryTests } from '../test/integration/story-test-manager'
+// import { generateAllStoryTests } from '../test/integration/story-test-manager'
 
 task('test').setAction(async (args, hre, runSuper) => {
   const { run } = hre
@@ -30,18 +30,18 @@ task('test').setAction(async (args, hre, runSuper) => {
   })
 })
 
-const runStoryTests = async (
-  hre: HardhatRuntimeEnvironment
-): Promise<number> => {
-  // Create new mocha instance
-  const mocha = new Mocha(hre.config.mocha)
+// const runStoryTests = async (
+//   hre: HardhatRuntimeEnvironment
+// ): Promise<number> => {
+//   // Create new mocha instance
+//   const mocha = new Mocha(hre.config.mocha)
 
-  generateAllStoryTests(mocha, hre)
+//   generateAllStoryTests(mocha, hre)
 
-  return await new Promise<number>((resolve, _) => {
-    mocha.run(resolve)
-  })
-}
+//   return await new Promise<number>((resolve, _) => {
+//     mocha.run(resolve)
+//   })
+// }
 
 // https://github.com/nomiclabs/hardhat/blob/master/packages/hardhat-core/src/builtin-tasks/test.ts
 // https://github.com/cgewecke/hardhat-gas-reporter/blob/master/src/index.ts
@@ -56,7 +56,7 @@ subtask(TASK_TEST_RUN_MOCHA_TESTS).setAction(
   async ({ testFiles }: { testFiles: string[] }, hre, runSuper) => {
     let failures = 0
     failures += (await runSuper({ testFiles })) as number
-    failures += await runStoryTests(hre)
+    // failures += await runStoryTests(hre)
     return failures
   }
 )
