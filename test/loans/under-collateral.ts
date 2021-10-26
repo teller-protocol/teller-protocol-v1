@@ -22,7 +22,7 @@ setTestEnv('Loans', (testEnv: TestEnv) => {
     expect(lenderBalanceBefore).to.be.gt(lenderBalanceAfter)
   })
 
-  it('Should be able to successfully take out a loan', async () => {
+  it('Should be able to successfully take out a secured loan', async () => {
     const { tellerDiamond, borrower, dai, weth, priceAggregator } = testEnv
 
     // Loan params
