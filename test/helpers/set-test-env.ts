@@ -5,7 +5,12 @@ import { Signer } from 'ethers'
 import hre from 'hardhat'
 
 import { updatePlatformSetting } from '../../tasks'
-import { ERC20, ITellerDiamond, PriceAggregator } from '../../types/typechain'
+import {
+  ERC20,
+  ITellerDiamond,
+  PriceAggregator,
+  TellerNFT,
+} from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { evmRevert, evmSnapshot } from './misc'
 
@@ -15,6 +20,7 @@ export interface TestEnv {
   borrower: Signer
   tellerDiamond: ITellerDiamond
   priceAggregator: PriceAggregator
+  nft: TellerNFT
   dai: ERC20
   weth: ERC20
 }
@@ -25,6 +31,7 @@ const testEnv: TestEnv = {
   borrower: {} as Signer,
   tellerDiamond: {} as ITellerDiamond,
   priceAggregator: {} as PriceAggregator,
+  nft: {} as TellerNFT,
   dai: {} as ERC20,
   weth: {} as ERC20,
 } as TestEnv
@@ -67,13 +74,19 @@ export async function initTestEnv() {
     .connect(testEnv.lender)
     .lendingPoolDeposit(testEnv.dai.address, '10000')
 
-  // Fund borrower
+  // Fund borrower with ETH
   await getFunds({
     to: testEnv.borrower,
     tokenSym: 'WETH',
     amount: '10',
     hre,
   })
+
+  // Mint an NFT for the borrower
+  testEnv.nft = await contracts.get('TellerNFT')
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
 
   // Set singer responses to 1
   const percentageSubmission = {
