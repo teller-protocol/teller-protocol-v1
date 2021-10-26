@@ -80,13 +80,7 @@ const polygonMarkets: Market[] = mapTokenMarkets(
 )
 
 export const markets: Record<string, Market[]> = {
-  kovan: [
-    {
-      lendingToken: 'DAI',
-      collateralTokens: ['WETH'],
-      strategy: compoundStrategy('dai'),
-    },
-  ],
+  kovan: mapTokenMarkets(['WETH', 'DAI', 'USDC', 'USDT'], compoundStrategy),
   rinkeby: [
     {
       lendingToken: 'DAI',
