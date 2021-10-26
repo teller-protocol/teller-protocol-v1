@@ -165,7 +165,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       {
         contract: 'MainnetNFTInterestFacet',
-        skipIfAlreadyDeployed: true,
+        skipIfAlreadyDeployed: false,
       },
       // Dapps
       {
