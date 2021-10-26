@@ -8,7 +8,7 @@ import { setTestEnv, TestEnv } from '../helpers/set-test-env'
 chai.should()
 chai.use(solidity)
 
-setTestEnv('Loans', (testEnv: TestEnv) => {
+setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
     const { tellerDiamond, lender, dai } = testEnv
     // Balance before lending
