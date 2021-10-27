@@ -88,16 +88,6 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
                 address(tToken),
                 amount
             );
-            SafeERC20.safeIncreaseAllowance(
-                IERC20(asset),
-                address(tToken),
-                amount
-            );
-            SafeERC20.safeIncreaseAllowance(
-                IERC20(asset),
-                address(tToken),
-                amount
-            );
         } else {
             ERC20WrapperUpgradeable(asset).depositFor(address(this), amount);
         }
