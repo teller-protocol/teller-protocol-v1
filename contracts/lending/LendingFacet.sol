@@ -20,6 +20,9 @@ import {
 import {
     SafeERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {
+    ERC20WrapperUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20WrapperUpgradeable.sol";
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 
@@ -70,15 +73,33 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: deposit TVL exceeded"
         );
 
-        // Transfer tokens from lender
-        SafeERC20.safeTransferFrom(
-            IERC20(asset),
-            msg.sender,
-            address(this),
-            amount
-        );
-        // Set allowance for Teller token to pull funds to mint
-        SafeERC20.safeIncreaseAllowance(IERC20(asset), address(tToken), amount);
+        if (msg.value == 0) {
+            // Transfer tokens from lender
+            SafeERC20.safeTransferFrom(
+                IERC20(asset),
+                msg.sender,
+                address(this),
+                amount
+            );
+            // Set allowance for Teller token to pull funds to mint
+            SafeERC20.safeIncreaseAllowance(
+                IERC20(asset),
+                address(tToken),
+                amount
+            );
+            SafeERC20.safeIncreaseAllowance(
+                IERC20(asset),
+                address(tToken),
+                amount
+            );
+            SafeERC20.safeIncreaseAllowance(
+                IERC20(asset),
+                address(tToken),
+                amount
+            );
+        } else {
+            ERC20WrapperUpgradeable(asset).depositFor(address(this), amount);
+        }
         // Mint Teller tokens, then transfer to lender
         SafeERC20Upgradeable.safeTransfer(
             tToken,
