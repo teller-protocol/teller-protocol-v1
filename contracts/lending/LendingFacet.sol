@@ -55,6 +55,7 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingPoolDeposit(address asset, uint256 amount)
         external
+        payable
         paused(LendingLib.ID, false)
         authorized(AUTHORIZED, msg.sender)
         nonReentry(LendingLib.ID)
