@@ -1,21 +1,24 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { ethers } from 'hardhat'
+import { ethers, toBN } from 'hardhat'
 
-import { MainnetNFTFacetMock } from '../../types/typechain'
+import { ERC20, MainnetNFTFacetMock } from '../../types/typechain'
 import { setTestEnv, TestEnv } from '../helpers/set-test-env'
 
 chai.should()
 chai.use(solidity)
 
-setTestEnv('Loans', (testEnv: TestEnv) => {
-  it('Should be able to successfully take out a DAI loan with an NFT', async () => {
-    const { tellerDiamond, borrower, dai, nft } = testEnv
+setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
+  const nftLoan = async (
+    lendingAsset: ERC20,
+    amount: string
+  ): Promise<void> => {
+    const { tellerDiamond, borrower, nft } = testEnv
 
     // Loan params
-    const lendingToken = dai
+    const lendingToken = lendingAsset
     const loanDuration = '84600'
-    const loanAmount = '1000'
+    const loanAmount = toBN(amount, await lendingToken.decimals())
 
     // Get borrower NFT
     const ownedNfts = await nft
@@ -28,12 +31,12 @@ setTestEnv('Loans', (testEnv: TestEnv) => {
     // Stake NFT
     await (tellerDiamond as any as MainnetNFTFacetMock)
       .connect(borrower)
-      .mockStakeNFTsV1(ownedNfts)
+      .mockStakeNFTsV1([ownedNfts[0]])
 
     // Encode token data
     const tokenData = ethers.utils.defaultAbiCoder.encode(
       ['uint16', 'bytes'],
-      [1, ethers.utils.defaultAbiCoder.encode(['uint256[]'], [ownedNfts])]
+      [1, ethers.utils.defaultAbiCoder.encode(['uint256[]'], [[ownedNfts[0]]])]
     )
 
     // Take out loan
@@ -55,9 +58,32 @@ setTestEnv('Loans', (testEnv: TestEnv) => {
     const loanID = await tellerDiamond.getBorrowerLoans(
       await borrower.getAddress()
     )
-    const loan = await tellerDiamond.getLoan(loanID[0].toString())
+    const loan = await tellerDiamond.getLoan(
+      loanID[loanID.length - 1].toString()
+    )
 
     expect(loan.duration.toString()).to.eq(loanDuration)
     expect(loan.borrowedAmount).to.eq(loanAmount)
+  }
+
+  it('Should be able to successfully take out a DAI loan with an NFT', async () => {
+    const { dai } = testEnv
+    await nftLoan(dai, '2000')
+  })
+  it('Should be able to successfully take out a USDC loan with an NFT', async () => {
+    const { usdc } = testEnv
+    await nftLoan(usdc, '400')
+  })
+  it('Should be able to successfully take out a LINK loan with an NFT', async () => {
+    const { link } = testEnv
+    await nftLoan(link, '10')
+  })
+  it('Should be able to successfully take out a WETH loan with an NFT', async () => {
+    const { weth } = testEnv
+    await nftLoan(weth, '0.2')
+  })
+  it('Should be able to successfully take out a WBTC loan with an NFT', async () => {
+    const { wbtc } = testEnv
+    await nftLoan(wbtc, '0.01')
   })
 })
