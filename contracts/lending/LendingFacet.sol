@@ -20,9 +20,7 @@ import {
 import {
     SafeERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {
-    ERC20WrapperUpgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20WrapperUpgradeable.sol";
+import { IWETH } from "../shared/interfaces/IWETH.sol";
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 
@@ -88,7 +86,11 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
                 amount
             );
         } else {
-            ERC20WrapperUpgradeable(asset).depositFor(address(this), amount);
+            require(
+                asset == AppStorageLib.store().wrappedNativeToken,
+                "Teller: incorrect wrapped native token address"
+            );
+            IWETH(asset).deposit{ value: msg.value }();
         }
         // Mint Teller tokens, then transfer to lender
         SafeERC20Upgradeable.safeTransfer(
