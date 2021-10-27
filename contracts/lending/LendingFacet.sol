@@ -79,12 +79,6 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
                 address(this),
                 amount
             );
-            // Set allowance for Teller token to pull funds to mint
-            SafeERC20.safeIncreaseAllowance(
-                IERC20(asset),
-                address(tToken),
-                amount
-            );
         } else {
             require(
                 asset == AppStorageLib.store().wrappedNativeToken,
@@ -92,6 +86,8 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             );
             IWETH(asset).deposit{ value: msg.value }();
         }
+        // Set allowance for Teller token to pull funds to mint
+        SafeERC20.safeIncreaseAllowance(IERC20(asset), address(tToken), amount);
         // Mint Teller tokens, then transfer to lender
         SafeERC20Upgradeable.safeTransfer(
             tToken,
