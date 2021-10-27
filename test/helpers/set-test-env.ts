@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Signer } from 'ethers'
-import hre from 'hardhat'
+import hre, { toBN } from 'hardhat'
 
 import { updatePlatformSetting } from '../../tasks'
 import {
@@ -22,7 +22,10 @@ export interface TestEnv {
   priceAggregator: PriceAggregator
   nft: TellerNFT
   dai: ERC20
+  usdc: ERC20
   weth: ERC20
+  link: ERC20
+  wbtc: ERC20
 }
 
 const testEnv: TestEnv = {
@@ -33,7 +36,10 @@ const testEnv: TestEnv = {
   priceAggregator: {} as PriceAggregator,
   nft: {} as TellerNFT,
   dai: {} as ERC20,
+  usdc: {} as ERC20,
   weth: {} as ERC20,
+  link: {} as ERC20,
+  wbtc: {} as ERC20,
 } as TestEnv
 
 const { contracts, deployments, getNamedSigner, tokens } = hre
@@ -62,17 +68,13 @@ export async function initTestEnv() {
 
   // Set tokens
   testEnv.dai = await tokens.get('DAI')
+  testEnv.usdc = await tokens.get('USDC')
   testEnv.weth = await tokens.get('WETH')
+  testEnv.link = await tokens.get('LINK')
+  testEnv.wbtc = await tokens.get('WBTC')
 
-  // Approve diamond
-  await testEnv.dai
-    .connect(testEnv.lender)
-    .approve(testEnv.tellerDiamond.address, '10000')
-
-  // Deposit funds as lender
-  await testEnv.tellerDiamond
-    .connect(testEnv.lender)
-    .lendingPoolDeposit(testEnv.dai.address, '10000')
+  // Fund market with tokens allowed by the protocol
+  await fundMarket(testEnv)
 
   // Fund borrower with ETH
   await getFunds({
@@ -82,8 +84,28 @@ export async function initTestEnv() {
     hre,
   })
 
-  // Mint an NFT for the borrower
+  // Mint 6 NFTs for the borrower
   testEnv.nft = await contracts.get('TellerNFT')
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
+
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
+
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
+
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
+
+  await testEnv.nft
+    .connect(testEnv.deployer)
+    .mint(0, await testEnv.borrower.getAddress())
+
   await testEnv.nft
     .connect(testEnv.deployer)
     .mint(0, await testEnv.borrower.getAddress())
@@ -120,4 +142,29 @@ const setHardhatEvmSnapshotId = (id: string) => {
 
 const revertHead = async () => {
   await evmRevert(hardhatEvmSnapshotId)
+}
+
+const fundMarket = async (testEnv: TestEnv) => {
+  const { tellerDiamond, dai, lender } = testEnv
+  // Get list of tokens
+  const collateralTokens = await tellerDiamond.getCollateralTokens(dai.address)
+  // Deposit for each asset
+  for (let i = 0; i < collateralTokens.length; i++) {
+    // Load each collateral token address into an ERC20 contract
+    const token = await contracts.get('ERC20', { at: collateralTokens[i] })
+    const bnedAmount = toBN('1000', await token.decimals())
+    // Get funds for lender
+    await getFunds({
+      to: lender,
+      tokenSym: await token.symbol(),
+      amount: bnedAmount,
+      hre,
+    })
+    // Approve protocol
+    await token.connect(lender).approve(tellerDiamond.address, bnedAmount)
+    // Deposit funds
+    await tellerDiamond
+      .connect(lender)
+      .lendingPoolDeposit(collateralTokens[i], bnedAmount)
+  }
 }
