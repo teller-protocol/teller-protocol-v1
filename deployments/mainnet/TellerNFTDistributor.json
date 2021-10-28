@@ -574,22 +574,7 @@
       ]
     }
   ],
-  "diamondCut": [
-    {
-      "facetAddress": "0x0000000000000000000000000000000000000000",
-      "functionSelectors": [
-        "0x23ab9151"
-      ],
-      "action": 2
-    },
-    {
-      "facetAddress": "0x8E446d96D9CdD00Ee32252C02D44F3C5B2004e4E",
-      "functionSelectors": [
-        "0x89e21733"
-      ],
-      "action": 1
-    }
-  ],
+  "diamondCut": [],
   "history": [
     {
       "address": "0x058F447199025e9ACF52E4A1473f4Ad9cC44D299",

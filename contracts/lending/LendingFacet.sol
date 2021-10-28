@@ -7,7 +7,7 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+import { ADMIN } from "../shared/roles.sol";
 
 // Interfaces
 import { ITToken } from "./ttoken/ITToken.sol";
@@ -56,7 +56,6 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     function lendingPoolDeposit(address asset, uint256 amount)
         external
         paused(LendingLib.ID, false)
-        authorized(AUTHORIZED, msg.sender)
         nonReentry(LendingLib.ID)
     {
         ITToken tToken = LendingLib.tToken(asset);

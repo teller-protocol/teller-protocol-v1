@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
+import { ADMIN } from "../../shared/roles.sol";
 
 // Libraries
 import {

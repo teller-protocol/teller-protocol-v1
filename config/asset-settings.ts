@@ -9,8 +9,24 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
-    USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Token }],
-    WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Token }],
+    USDC: [
+      { key: 'cToken', value: 'CUSDC', type: AssetType.Token },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDT: [
+      { key: 'cToken', value: 'CUSDT', type: AssetType.Token },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    WETH: [
+      { key: 'cToken', value: 'CETH', type: AssetType.Token },
+      { key: 'MaxLoanAmount', value: 10, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 1000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
   },
   rinkeby: {
     DAI: [
@@ -105,7 +121,7 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
     USDC: [{ key: 'aToken', value: 'AUSDC', type: AssetType.Token }],
-    WETH: [{ key: 'aToken', value: 'AETH', type: AssetType.Token }],
+    WETH: [{ key: 'aToken', value: 'AWETH', type: AssetType.Token }],
   },
   polygon_mumbai: {
     DAI: [
@@ -115,6 +131,6 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
     USDC: [{ key: 'aToken', value: 'AUSDC', type: AssetType.Token }],
-    WETH: [{ key: 'aToken', value: 'AETH', type: AssetType.Token }],
+    WETH: [{ key: 'aToken', value: 'AWETH', type: AssetType.Token }],
   },
 }

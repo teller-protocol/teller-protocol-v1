@@ -7,7 +7,6 @@ import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { LoanDataFacet } from "./LoanDataFacet.sol";
 import { EscrowClaimTokens } from "../escrow/EscrowClaimTokens.sol";
 
@@ -93,7 +92,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
     function escrowRepay(uint256 loanID, uint256 amount)
         external
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
         uint256 balance = LibEscrow.balanceOf(
@@ -127,7 +125,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         external
         nonReentry("")
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
     {
         __repayLoan(loanID, amount, msg.sender, false);
     }
@@ -275,7 +272,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         external
         nonReentry("")
         paused("", false)
-        authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = LibLoans.loan(loanID);
 
@@ -396,8 +392,7 @@ library RepayLib {
 
         // Calculate available collateral for reward
         if (collateralAmount > 0) {
-            collateralValue_ = AppStorageLib
-                .store()
+            collateralValue_ = AppStorageLib.store()
                 .priceAggregator
                 .getValueFor(
                     LibLoans.loan(loanID).collateralToken,
@@ -443,8 +438,7 @@ library RepayLib {
         // if the lending reward is less than the collateral lending tokens, then aggregate
         // the value for the lending token with the collateral token and send it to the liquidator
         if (rewardInLending <= collateralInLending) {
-            uint256 rewardInCollateral = AppStorageLib
-                .store()
+            uint256 rewardInCollateral = AppStorageLib.store()
                 .priceAggregator
                 .getValueFor(
                     LibLoans.loan(loanID).lendingToken,
@@ -477,8 +471,7 @@ library RepayLib {
         address recipient,
         uint256 value
     ) private {
-        EnumerableSet.AddressSet storage tokens = MarketStorageLib
-            .store()
+        EnumerableSet.AddressSet storage tokens = MarketStorageLib.store()
             .escrowTokens[loanID];
         uint256 valueLeftToTransfer = value;
 
@@ -528,8 +521,7 @@ library RepayLib {
             if (token == LibLoans.loan(loanID).lendingToken) {
                 balanceInLending = balance;
             } else {
-                balanceInLending = AppStorageLib
-                    .store()
+                balanceInLending = AppStorageLib.store()
                     .priceAggregator
                     .getValueFor(
                         token,

@@ -6,7 +6,7 @@ import { TellerNFT } from "../../nft/TellerNFT.sol";
 import { TellerNFT_V2 } from "../../nft/TellerNFT_V2.sol";
 import { NFTFacet } from "../NFTFacet.sol";
 import { NFTMigrator } from "./NFTMigrator.sol";
-import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
+import { ADMIN } from "../../shared/roles.sol";
 
 // Libraries
 import { NFTLib } from "../libraries/NFTLib.sol";
@@ -128,8 +128,5 @@ contract MainnetNFTFacet is NFTFacet {
 
             NFTLib.stakeV2(V2Id, 1, msg.sender);
         }
-
-        // Give the caller authorization to protocol
-        RolesLib.grantRole(AUTHORIZED, msg.sender);
     }
 }
