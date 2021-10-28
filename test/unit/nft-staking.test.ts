@@ -127,7 +127,15 @@ describe('NFT Staking', () => {
           ownedNFTsV1 = await tellerNFTV1.getOwnedTokens(borrowerAddress)
         })
 
-        afterEach(async () => {})
+        const BNArrayToString = (arr: BigNumber[]): string[] =>
+          arr.map((n) => n.toString())
+        const BNArrayAssertion = (
+          a: BigNumber[],
+          b: BigNumber[],
+          errMsg?: string
+        ): void => {
+          BNArrayToString(a).should.eql(BNArrayToString(b), errMsg)
+        }
 
         it('should be able to stake V1 NFTs and auto migrate to V2 NFTs', async () => {
           const expectedV2IDs = await convertV1IDsToV2Balances(ownedNFTsV1)
@@ -139,7 +147,16 @@ describe('NFT Staking', () => {
           const stakedNFTs = await diamond1.getStakedNFTsV2(borrowerAddress)
 
           // every tokenId of the owned NFT should equate a token ID from the stakedNFT
-          stakedNFTs.should.eql(expectedV2IDs)
+          BNArrayAssertion(
+            stakedNFTs[0],
+            expectedV2IDs[0],
+            'V2 token IDs do not match'
+          )
+          BNArrayAssertion(
+            stakedNFTs[1],
+            expectedV2IDs[1],
+            'V2 token amounts do not match'
+          )
         })
 
         it('should be able to unstake V1 NFTs and get V2 NFTs in return', async () => {
@@ -156,22 +173,32 @@ describe('NFT Staking', () => {
           const stakedNFTsV1 = await diamond1.getStakedNFTs(borrowerAddress)
           stakedNFTsV1.should.eql(ownedNFTsV1, 'Staked NFTs do not match')
 
-          const expectedV2IDs = await convertV1IDsToV2Balances(stakedNFTsV1)
+          const [expectedV2IDs, expectedV2Balances] =
+            await convertV1IDsToV2Balances(stakedNFTsV1)
 
           await diamond1.connect(borrower).unstakeNFTs(stakedNFTsV1)
-          const ownedTokensV2 = await tellerNFTV2.getOwnedTokens(
+          const ownedTokensV2IDs = await tellerNFTV2.getOwnedTokens(
             //owns 5
             borrowerAddress
           )
-          const addresses = new Array(ownedTokensV2.length).fill(
+          const addresses = new Array(ownedTokensV2IDs.length).fill(
             borrowerAddress
           )
           const tokenBalancesV2 = await tellerNFTV2.balanceOfBatch(
             addresses,
-            ownedTokensV2
+            ownedTokensV2IDs
           )
 
-          tokenBalancesV2.should.eql(expectedV2IDs[1])
+          BNArrayAssertion(
+            ownedTokensV2IDs,
+            expectedV2IDs,
+            'V2 token IDs do not match'
+          )
+          BNArrayAssertion(
+            tokenBalancesV2,
+            expectedV2Balances,
+            'V2 token amounts do not match'
+          )
         })
 
         it('should not be able to unstake NFTs from the wrong address', async () => {
