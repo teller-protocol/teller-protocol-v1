@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ICollateralEscrow } from "../collateral/ICollateralEscrow.sol";
 
 // Storage
@@ -10,6 +13,8 @@ import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib } from "../../storage/market.sol";
 
 library LibCollateral {
+    using SafeERC20 for IERC20;
+
     /**
      * @notice This event is emitted when collateral has been deposited for the loan
      * @param loanID ID of the loan for which collateral was deposited
@@ -117,7 +122,7 @@ library LibCollateral {
             );
 
             // Set max allowance
-            IERC20(token).approve(escrow, type(uint256).max);
+            IERC20(token).safeApprove(escrow, type(uint256).max);
             // Save escrow address for loan
             MarketStorageLib.store().collateralEscrows[
                 token
