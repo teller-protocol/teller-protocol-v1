@@ -18,7 +18,7 @@ struct AppStorage {
     // is it initialized
     bool initialized;
     // is it platform restricted
-    bool platformRestricted;
+    bool platformRestricted; // DEPRECATED
     // mapping between contract IDs and if they're paused
     mapping(bytes32 => bool) paused;
     //p

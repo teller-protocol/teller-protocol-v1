@@ -1,3 +1,4 @@
+import { Signer } from 'crypto'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -223,7 +224,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     execute,
   }
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
-  await addAuthorizedAddresses(hre, diamond)
   const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
   // set approval for all tokens to be transfered by ERC1155 Predicate
   if (
@@ -232,46 +232,6 @@ const deployProtocol: DeployFunction = async (hre) => {
   ) {
     await diamond.initNFTBridge()
   }
-}
-
-const addAuthorizedAddresses = async (
-  hre: HardhatRuntimeEnvironment,
-  diamond: ITellerDiamond
-): Promise<void> => {
-  const { getNamedSigner, getNamedAccounts, network } = hre
-
-  const addresses = new Set([
-    '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5', // - deployer
-    '0xd59e99927018b995ee9Ad6b9003677f1e7393F8A', // - noah
-    '0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA', // - ryry
-    '0x592000b2c8c590531d490893C16AfC4b9cbbe6B9', // - ryry
-    '0xd965Cd540d2B80e7ef2840Ff097016B3A0e930fC', // - jer
-    '0xb8fAF03a268F259dDD9adfAf8E1148Fc81021e54', // - sy
-    '0xc756Be144729EcDBE51f49073D295ABd318f0048', // - tan
-  ])
-  if (network.name === 'mainnet') {
-  } else if (network.name === 'hardhat' || network.name === 'localhost') {
-    const accounts = await getNamedAccounts()
-    addresses.add(accounts.lender)
-    addresses.add(accounts.borrower)
-    addresses.add(accounts.liquidator)
-    addresses.add(accounts.funder)
-  }
-
-  // Check if addresses in list already have authorization
-  const list: string[] = []
-  for (const address of Array.from(addresses)) {
-    const has = await diamond.hasAuthorization(address)
-    if (!has) {
-      list.push(address)
-    }
-  }
-
-  if (list.length > 0)
-    await diamond
-      .connect(await getNamedSigner('deployer'))
-      .addAuthorizedAddressList(list)
-      .then(({ wait }) => wait())
 }
 
 const deployLoansEscrowBeacon = async (

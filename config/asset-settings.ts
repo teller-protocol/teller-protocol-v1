@@ -105,7 +105,7 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
     USDC: [{ key: 'aToken', value: 'AUSDC', type: AssetType.Token }],
-    WETH: [{ key: 'aToken', value: 'AETH', type: AssetType.Token }],
+    WETH: [{ key: 'aToken', value: 'AWETH', type: AssetType.Token }],
   },
   polygon_mumbai: {
     DAI: [
@@ -115,6 +115,6 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
     USDC: [{ key: 'aToken', value: 'AUSDC', type: AssetType.Token }],
-    WETH: [{ key: 'aToken', value: 'AETH', type: AssetType.Token }],
+    WETH: [{ key: 'aToken', value: 'AWETH', type: AssetType.Token }],
   },
 }
