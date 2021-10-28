@@ -93,7 +93,7 @@ export const tokens: Record<string, NetworkTokens> = {
       WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
       USDC: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
-      USDT: '0xA68895Df8F959F5827A6B6427C0176044A4beba6',
+      USDT: '0x07de306ff27a2b630b1141956844eb1552b956b5',
       LINK: '0xa36085F69e2889c224210F603D836748e7dC0088',
     },
   },
