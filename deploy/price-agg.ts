@@ -15,7 +15,7 @@ import { DUMMY_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
 const registerPriceAggregators: DeployFunction = async (hre) => {
-  const { network, log } = hre
+  const { network, log, ethers } = hre
 
   const tokens = getTokens(network)
 
@@ -41,6 +41,14 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
     },
   })
 
+  const definedPricer = await priceAgg.chainlinkPricer()
+  if (
+    ethers.utils.getAddress(definedPricer) !=
+    ethers.utils.getAddress(chainlinkPricer.address)
+  ) {
+    await priceAgg.setChainlinkPricer(chainlinkPricer.address)
+  }
+
   await addCompoundPricer(priceAgg, hre)
   await addAavePricer(priceAgg, hre)
   await addPoolTogetherPricer(priceAgg, hre)
@@ -52,29 +60,44 @@ export const deployChainlinkPricer = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<ChainlinkPricer> => {
   let resolverAddress: string
+  let chainlinkPricer: ChainlinkPricer
   switch (getNetworkName(hre.network)) {
     case 'mainnet':
     case 'rinkeby':
     case 'ropsten':
       resolverAddress = '0x122eb74f9d0F1a5ed587F43D120C1c2BbDb9360B'
+      chainlinkPricer = await deploy<ChainlinkPricer>({
+        contract: 'ChainlinkPricer',
+        args: [resolverAddress],
+        skipIfAlreadyDeployed: false,
+        hre,
+      })
       break
 
     case 'polygon':
     case 'polygon_mumbai':
+      resolverAddress = await deployChainlinkENS(hre)
+      chainlinkPricer = await deploy<ChainlinkPricer>({
+        contract: 'PolygonChainlinkPricer',
+        name: 'ChainlinkPricer',
+        args: [resolverAddress],
+        skipIfAlreadyDeployed: false,
+        hre,
+      })
+      break
     case 'kovan':
       resolverAddress = await deployChainlinkENS(hre)
+      chainlinkPricer = await deploy<ChainlinkPricer>({
+        contract: 'ChainlinkPricer',
+        args: [resolverAddress],
+        skipIfAlreadyDeployed: false,
+        hre,
+      })
       break
 
     default:
       throw new Error('Invalid network name')
   }
-
-  const chainlinkPricer = await deploy<ChainlinkPricer>({
-    contract: 'ChainlinkPricer',
-    args: [resolverAddress],
-    skipIfAlreadyDeployed: true,
-    hre,
-  })
 
   return chainlinkPricer
 }
