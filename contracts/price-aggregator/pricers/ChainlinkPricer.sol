@@ -44,6 +44,7 @@ contract ChainlinkPricer {
     function _getTokenSymbol(address token)
         internal
         view
+        virtual
         returns (string memory)
     {
         string memory symbol_ = ERC20(token).symbol();
