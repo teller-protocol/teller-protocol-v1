@@ -29,9 +29,6 @@ import { NFTFacet } from "../../nft/NFTFacet.sol";
 import {
     MainnetNFTInterestFacet
 } from "../../nft/mainnet/MainnetNFTInterestFacet.sol";
-import {
-    NFTMainnetBridgingToPolygonFacet
-} from "../../nft/mainnet/NFTMainnetBridgingToPolygonFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
 import {
@@ -58,7 +55,6 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     MainnetNFTInterestFacet,
-    NFTMainnetBridgingToPolygonFacet,
     CompoundFacet,
     CompoundClaimCompFacet,
     AaveFacet,

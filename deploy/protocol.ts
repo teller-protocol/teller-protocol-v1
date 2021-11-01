@@ -6,6 +6,8 @@ import { getDappAddresses, getNativeToken, isEtheremNetwork } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
+  IMainnetDiamond,
+  IPolyDiamond,
   ITellerDiamond,
   ITToken,
   UpgradeableBeaconFactory,
@@ -223,6 +225,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     owner: deployer,
     execute,
   }
+
   const diamond = await deployDiamond<ITellerDiamond, any>(tellerDiamondArgs)
   const ERC1155_PREDICATE = `0x0B9020d4E32990D67559b1317c7BF0C15D6EB88f`
   // set approval for all tokens to be transfered by ERC1155 Predicate
@@ -230,7 +233,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     isEtheremNetwork(network, true) &&
     nftV2.isApprovedForAll(diamond.address, ERC1155_PREDICATE)
   ) {
-    await diamond.initNFTBridge()
+    await (diamond as IMainnetDiamond).initNFTBridge()
   }
 }
 
