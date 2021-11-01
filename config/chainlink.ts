@@ -90,6 +90,16 @@ const polygonChainlink: Chainlink = {
     quoteTokenName: 'USDC',
     address: '0x49B0c695039243BBfEb8EcD054EB70061fd54aa0',
   },
+  WBTC_ETH: {
+    baseTokenName: 'WBTC',
+    quoteTokenName: 'ETH',
+    address: '0xA338e0492B2F944E9F8C0653D3AD1484f2657a37',
+  },
+  WBTC_DAI: {
+    baseTokenName: 'WBTC',
+    quoteTokenName: 'DAI',
+    address: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6',
+  },
 }
 
 export const chainlink: Record<string, Chainlink> = {
