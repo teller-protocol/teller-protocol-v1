@@ -39,14 +39,23 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
       const tokenData = ethers.utils.defaultAbiCoder.encode(
         ['uint16', 'bytes'],
         [
-          1,
-          ethers.utils.defaultAbiCoder.encode(['uint256[]'], [[ownedNfts[0]]]),
+          2,
+          ethers.utils.defaultAbiCoder.encode(
+            ['uint256[]', 'uint256[]'],
+            [[ownedNfts[0]], [1]]
+          ),
         ]
       )
       // Stake NFT
-      await (tellerDiamond as any as MainnetNFTFacetMock)
+      await nft
         .connect(borrower)
-        .mockStakeNFTsV1([ownedNfts[0]])
+        .safeBatchTransferFrom(
+          await borrower.getAddress(),
+          tellerDiamond.address,
+          [ownedNfts[0]],
+          ['1'],
+          '0x'
+        )
 
       // Take out loan
       await tellerDiamond
