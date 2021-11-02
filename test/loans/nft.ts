@@ -1,8 +1,14 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { ethers, toBN } from 'hardhat'
+import { contracts, ethers, network, toBN } from 'hardhat'
 
-import { ERC20, MainnetNFTFacetMock } from '../../types/typechain'
+import { isEtheremNetwork } from '../../config'
+import {
+  ERC20,
+  MainnetNFTFacetMock,
+  PolyTellerNFTMock,
+} from '../../types/typechain'
+import { mergeV2IDsToBalances } from '../helpers/nft'
 import { setTestEnv, TestEnv } from '../helpers/set-test-env'
 
 chai.should()
@@ -13,7 +19,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
     lendingAsset: ERC20,
     amount: string
   ): Promise<void> => {
-    const { tellerDiamond, borrower, nft } = testEnv
+    const { tellerDiamond, borrower, deployer, nft } = testEnv
 
     // Loan params
     const lendingToken = lendingAsset
@@ -28,32 +34,76 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
     // Set NFT approval
     await nft.connect(borrower).setApprovalForAll(tellerDiamond.address, true)
 
-    // Stake NFT
-    await (tellerDiamond as any as MainnetNFTFacetMock)
-      .connect(borrower)
-      .mockStakeNFTsV1([ownedNfts[0]])
+    if (isEtheremNetwork(network)) {
+      // Encode token data
+      const tokenData = ethers.utils.defaultAbiCoder.encode(
+        ['uint16', 'bytes'],
+        [
+          1,
+          ethers.utils.defaultAbiCoder.encode(['uint256[]'], [[ownedNfts[0]]]),
+        ]
+      )
+      // Stake NFT
+      await (tellerDiamond as any as MainnetNFTFacetMock)
+        .connect(borrower)
+        .mockStakeNFTsV1([ownedNfts[0]])
 
-    // Encode token data
-    const tokenData = ethers.utils.defaultAbiCoder.encode(
-      ['uint16', 'bytes'],
-      [1, ethers.utils.defaultAbiCoder.encode(['uint256[]'], [[ownedNfts[0]]])]
-    )
+      // Take out loan
+      await tellerDiamond
+        .connect(borrower)
+        .takeOutLoanWithNFTs(
+          lendingToken.address,
+          loanAmount,
+          loanDuration,
+          tokenData
+        )
+    } else {
+      await (nft as any as PolyTellerNFTMock)
+        .connect(deployer)
+        .addDepositor(await deployer.getAddress())
 
-    // Take out loan
-    await tellerDiamond
-      .connect(borrower)
-      .takeOutLoanWithNFTs(
-        lendingToken.address,
-        loanAmount,
-        loanDuration,
-        tokenData
+      const depositData = ethers.utils.defaultAbiCoder.encode(
+        ['uint256[]', 'uint256[]', 'bytes'],
+        [[ownedNfts[0]], [1], '0x']
       )
 
-    const ownedNftsAfter = await nft
-      .connect(borrower)
-      .getOwnedTokens(await borrower.getAddress())
+      const takeOutLoanData = ethers.utils.defaultAbiCoder.encode(
+        ['uint16', 'bytes'],
+        [
+          2,
+          ethers.utils.defaultAbiCoder.encode(
+            ['uint256[]', 'uint256[]'],
+            [[ownedNfts[0]], [1]]
+          ),
+        ]
+      )
 
-    expect(ownedNftsAfter.length).to.be.lt(ownedNfts.length)
+      await (nft as any as PolyTellerNFTMock)
+        .connect(deployer)
+        .deposit(await borrower.getAddress(), depositData)
+
+      const balances = mergeV2IDsToBalances([ownedNfts[0]])
+      // diamond and teller nft
+      await nft.connect(borrower).setApprovalForAll(tellerDiamond.address, true)
+      await nft
+        .connect(borrower)
+        .safeBatchTransferFrom(
+          await borrower.getAddress(),
+          tellerDiamond.address,
+          balances.ids,
+          balances.balances,
+          '0x'
+        )
+      // Take out loan
+      await tellerDiamond
+        .connect(borrower)
+        .takeOutLoanWithNFTs(
+          lendingToken.address,
+          loanAmount,
+          loanDuration,
+          takeOutLoanData
+        )
+    }
 
     const loanID = await tellerDiamond.getBorrowerLoans(
       await borrower.getAddress()
@@ -67,23 +117,36 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
   }
 
   it('Should be able to successfully take out a DAI loan with an NFT', async () => {
-    const { dai } = testEnv
-    await nftLoan(dai, '2000')
+    const { tokens } = testEnv
+    const dai = tokens.find((o) => o.name === 'DAI')!.token
+    await nftLoan(dai, '1000')
   })
   it('Should be able to successfully take out a USDC loan with an NFT', async () => {
-    const { usdc } = testEnv
-    await nftLoan(usdc, '400')
+    const { tokens } = testEnv
+    const usdc = tokens.find((o) => o.name === 'USDC')!.token
+    await nftLoan(usdc, '40')
   })
-  it('Should be able to successfully take out a LINK loan with an NFT', async () => {
-    const { link } = testEnv
-    await nftLoan(link, '10')
-  })
+  if (isEtheremNetwork(network)) {
+    it('Should be able to successfully take out a LINK loan with an NFT', async () => {
+      const { tokens } = testEnv
+      const link = tokens.find((o) => o.name === 'LINK')!.token
+      await nftLoan(link, '1')
+    })
+  } else {
+    it('Should be able to successfully take out a WMATIC loan with an NFT', async () => {
+      const { tokens } = testEnv
+      const wmatic = tokens.find((o) => o.name === 'WMATIC')!.token
+      await nftLoan(wmatic, '1')
+    })
+  }
   it('Should be able to successfully take out a WETH loan with an NFT', async () => {
-    const { weth } = testEnv
+    const { tokens } = testEnv
+    const weth = tokens.find((o) => o.name === 'WETH')!.token
     await nftLoan(weth, '0.2')
   })
   it('Should be able to successfully take out a WBTC loan with an NFT', async () => {
-    const { wbtc } = testEnv
+    const { tokens } = testEnv
+    const wbtc = tokens.find((o) => o.name === 'WBTC')!.token
     await nftLoan(wbtc, '0.01')
   })
 })

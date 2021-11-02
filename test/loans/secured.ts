@@ -10,7 +10,8 @@ chai.use(solidity)
 
 setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
-    const { tellerDiamond, lender, dai } = testEnv
+    const { tellerDiamond, lender, tokens } = testEnv
+    const dai = tokens.find((o) => o.name === 'DAI')!.token
     // Balance before lending
     const lenderBalanceBefore = await dai.balanceOf(await lender.getAddress())
     // Approve diamond
@@ -23,7 +24,10 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   })
 
   it('Should be able to successfully take out a secured loan', async () => {
-    const { tellerDiamond, borrower, dai, weth, priceAggregator } = testEnv
+    const { tellerDiamond, borrower, priceAggregator, tokens } = testEnv
+
+    const dai = tokens.find((o) => o.name === 'DAI')!.token
+    const weth = tokens.find((o) => o.name === 'WETH')!.token
 
     // Loan params
     const lendingToken = dai
