@@ -6372,9 +6372,9 @@ hardhat-contract-sizer@^2.0.2:
     cli-table3 "^0.6.0"
     colors "^1.4.0"
 
-hardhat-deploy@teller-protocol/hardhat-deploy#84efdfa22e5c252c2415e9a0fb587f5c92993abe:
+"hardhat-deploy@git://github.com/teller-protocol/hardhat-deploy#84efdfa22e5c252c2415e9a0fb587f5c92993abe":
   version "0.8.11"
-  resolved "https://codeload.github.com/teller-protocol/hardhat-deploy/tar.gz/84efdfa22e5c252c2415e9a0fb587f5c92993abe"
+  resolved "git://github.com/teller-protocol/hardhat-deploy#84efdfa22e5c252c2415e9a0fb587f5c92993abe"
   dependencies:
     "@ethersproject/abi" "^5.3.1"
     "@ethersproject/abstract-signer" "^5.3.0"
