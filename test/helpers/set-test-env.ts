@@ -4,15 +4,25 @@
 import { Signer } from 'ethers'
 import hre, { toBN } from 'hardhat'
 
-import { updatePlatformSetting } from '../../tasks'
+import {
+  getPlatformSetting,
+  getPrice,
+  updatePlatformSetting,
+} from '../../tasks'
 import {
   ERC20,
   ITellerDiamond,
+  MainnetTellerNFT,
+  PolyTellerNFTMock,
   PriceAggregator,
-  TellerNFT,
 } from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { evmRevert, evmSnapshot } from './misc'
+
+export interface TokenData {
+  name: string
+  token: ERC20
+}
 
 export interface TestEnv {
   deployer: Signer
@@ -20,12 +30,8 @@ export interface TestEnv {
   borrower: Signer
   tellerDiamond: ITellerDiamond
   priceAggregator: PriceAggregator
-  nft: TellerNFT
-  dai: ERC20
-  usdc: ERC20
-  weth: ERC20
-  link: ERC20
-  wbtc: ERC20
+  nft: PolyTellerNFTMock | MainnetTellerNFT
+  tokens: TokenData[]
 }
 
 const testEnv: TestEnv = {
@@ -34,12 +40,8 @@ const testEnv: TestEnv = {
   borrower: {} as Signer,
   tellerDiamond: {} as ITellerDiamond,
   priceAggregator: {} as PriceAggregator,
-  nft: {} as TellerNFT,
-  dai: {} as ERC20,
-  usdc: {} as ERC20,
-  weth: {} as ERC20,
-  link: {} as ERC20,
-  wbtc: {} as ERC20,
+  nft: {} as PolyTellerNFTMock | MainnetTellerNFT,
+  tokens: [] as TokenData[],
 } as TestEnv
 
 const { contracts, deployments, getNamedSigner, tokens } = hre
@@ -66,13 +68,6 @@ export async function initTestEnv() {
     hre,
   })
 
-  // Set tokens
-  testEnv.dai = await tokens.get('DAI')
-  testEnv.usdc = await tokens.get('USDC')
-  testEnv.weth = await tokens.get('WETH')
-  testEnv.link = await tokens.get('LINK')
-  testEnv.wbtc = await tokens.get('WBTC')
-
   // Fund market with tokens allowed by the protocol
   await fundMarket(testEnv)
 
@@ -85,41 +80,28 @@ export async function initTestEnv() {
   })
 
   // Mint 6 NFTs for the borrower
-  testEnv.nft = await contracts.get('TellerNFT')
+  testEnv.nft = await contracts.get('TellerNFT_V2')
   await testEnv.nft
     .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
+    .mint(await testEnv.borrower.getAddress(), 3, 6)
 
-  await testEnv.nft
-    .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
+  const currentSetting = await getPlatformSetting(
+    'RequiredSubmissionsPercentage',
+    hre
+  )
 
-  await testEnv.nft
-    .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
-
-  await testEnv.nft
-    .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
-
-  await testEnv.nft
-    .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
-
-  await testEnv.nft
-    .connect(testEnv.deployer)
-    .mint(0, await testEnv.borrower.getAddress())
-
-  // Set singer responses to 1
-  const percentageSubmission = {
-    name: 'RequiredSubmissionsPercentage',
-    value: 100,
+  if (currentSetting.value.toString() !== '100') {
+    // Set singer responses to 1
+    const percentageSubmission = {
+      name: 'RequiredSubmissionsPercentage',
+      value: 100,
+    }
+    await updatePlatformSetting(percentageSubmission, hre)
   }
-  await updatePlatformSetting(percentageSubmission, hre)
 }
 
 export function setTestEnv(name: string, tests: (testEnv: TestEnv) => void) {
-  describe(name, () => {
+  describe.only(name, () => {
     before(async () => {
       await initTestEnv()
       await setSnapshot()
@@ -145,14 +127,27 @@ const revertHead = async () => {
 }
 
 const fundMarket = async (testEnv: TestEnv) => {
-  const { tellerDiamond, dai, lender } = testEnv
+  const { tellerDiamond, lender } = testEnv
   // Get list of tokens
-  const collateralTokens = await tellerDiamond.getCollateralTokens(dai.address)
+  const dai = await tokens.get('DAI')
+  const collateralTokens = Array.from(
+    await tellerDiamond.getCollateralTokens(dai.address)
+  )
+  collateralTokens.push(dai.address)
   // Deposit for each asset
   for (let i = 0; i < collateralTokens.length; i++) {
     // Load each collateral token address into an ERC20 contract
-    const token = await contracts.get('ERC20', { at: collateralTokens[i] })
-    const bnedAmount = toBN('1000', await token.decimals())
+    const token: ERC20 = await contracts.get('ERC20', {
+      at: collateralTokens[i],
+    })
+    const tokenName = await token.symbol()
+    // testEnv.tokens.push({ tokenName: token })
+    testEnv.tokens.push({ name: tokenName, token: token })
+    const fundAmount = await getPrice(
+      { src: 'DAI', dst: tokenName, amount: '10000' },
+      hre
+    )
+    const bnedAmount = toBN(fundAmount.value, await token.decimals())
     // Get funds for lender
     await getFunds({
       to: lender,
