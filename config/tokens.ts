@@ -21,6 +21,7 @@ const mainnetTokens: NetworkTokens = {
   poolTogether: {
     PTDAI: '0x334cbb5858417aee161b53ee0d5349ccf54514cf',
     PTDAIS: '0x0A2E7f69fe9588fa7fBa5F5864236883Cd4AaC6d',
+    PTUSDC: '0xD81b1A8B1AD00Baa2D6609E0BAE28A38713872f7',
   },
   yearn: {
     YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
@@ -59,6 +60,7 @@ const polygonTokens: NetworkTokens = {
     PTDAI: '0x3e35681E6439961EC7F2b1ABaB6b967D6a645270',
     PTDAIS: '0xB102A0Ba3707A94a64CE63c7BeA8039680e1ad5C',
     PTUSDT: '0x9ecB26631098973834925eb453De1908Ea4bdD4e',
+    PTUSDC: '0x6a304dFdb9f808741244b6bfEe65ca7B3b3A6076',
   },
   erc20: {
     // Aave
