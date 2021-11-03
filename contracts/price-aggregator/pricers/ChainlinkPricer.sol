@@ -40,7 +40,7 @@ contract ChainlinkPricer {
         ) = ChainlinkAgg(getEthAggregator(token)).latestRoundData();
         require(rawPrice > 0, "Chainlink price <= 0");
         require(updateTime != 0, "Incomplete round");
-        require(answeredInRound >= roundID, "Stale price");
+        require(answeredInRound + 2 >= roundID, "Stale price");
         price_ = SafeCast.toUint256(rawPrice);
     }
 
