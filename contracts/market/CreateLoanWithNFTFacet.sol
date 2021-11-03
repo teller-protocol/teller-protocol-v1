@@ -15,6 +15,7 @@ import {
     PlatformSettingsLib
 } from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
+import { AppStorageLib } from "../storage/app.sol";
 
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 
@@ -37,9 +38,24 @@ import { LoanUserRequest, LoanStatus, Loan } from "../storage/market.sol";
 contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
     // TELLER NFT V2
     TellerNFT_V2 private immutable TELLER_NFT_V2;
+    address private immutable DAI;
+    address private immutable USDC;
+    address private immutable USDT;
 
-    constructor(address tellerNFTV2Address) {
+    constructor(
+        address tellerNFTV2Address,
+        address daiAddress,
+        address usdcAddress,
+        address usdtAddress
+    ) {
+        require(daiAddress != address(0), "DAI null");
+        require(usdcAddress != address(0), "USDC null");
+        require(usdtAddress != address(0), "USDT null");
+
         TELLER_NFT_V2 = TellerNFT_V2(tellerNFTV2Address);
+        DAI = daiAddress;
+        USDC = usdcAddress;
+        USDT = usdtAddress;
     }
 
     /**
@@ -66,10 +82,22 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
 
         // Calculate the max loan size based on NFT V1 values
         uint8 lendingDecimals = ERC20(assetAddress).decimals();
-        uint256 allowedLoanSize = _takeOutLoanProcessTokenDataVersion(
+        uint256 allowedBaseLoanSize = _takeOutLoanProcessTokenDataVersion(
             loan.id,
             tokenData
         );
+        uint256 allowedLoanSize;
+        if (
+            assetAddress == DAI || assetAddress == USDC || assetAddress == USDT
+        ) {
+            allowedLoanSize = allowedBaseLoanSize;
+        } else {
+            allowedLoanSize = AppStorageLib.store().priceAggregator.getValueFor(
+                    USDC,
+                    assetAddress,
+                    allowedBaseLoanSize
+                );
+        }
         require(
             loan.borrowedAmount <= allowedLoanSize * (10**lendingDecimals),
             "Teller: insufficient NFT loan size"
