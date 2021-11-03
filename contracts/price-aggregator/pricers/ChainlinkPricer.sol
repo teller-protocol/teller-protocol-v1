@@ -31,9 +31,17 @@ contract ChainlinkPricer {
     }
 
     function getEthPrice(address token) external view returns (uint256 price_) {
-        price_ = SafeCast.toUint256(
-            ChainlinkAgg(getEthAggregator(token)).latestAnswer()
-        );
+        (
+            uint80 roundID,
+            int256 rawPrice,
+            uint256 startedAt,
+            uint256 updateTime,
+            uint80 answeredInRound
+        ) = ChainlinkAgg(getEthAggregator(token)).latestRoundData();
+        require(rawPrice > 0, "Chainlink price <= 0");
+        require(updateTime != 0, "Incomplete round");
+        require(answeredInRound + 2 >= roundID, "Stale price");
+        price_ = SafeCast.toUint256(rawPrice);
     }
 
     function getEthAggregator(address token) public view returns (address) {
