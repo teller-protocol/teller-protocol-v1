@@ -6,7 +6,7 @@ export const signers: Record<string, Signers> = {
   ropsten: [],
   hardhat: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
   localhost: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
-  mainnet: [],
+  mainnet: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
   polygon: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
   polygon_mumbai: ['0xd380829600546D4B3b6aC5F0d9D5ED97cF799b92'],
 }
