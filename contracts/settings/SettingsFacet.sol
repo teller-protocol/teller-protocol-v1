@@ -75,4 +75,20 @@ contract SettingsFacet is RolesMods {
         s.wrappedNativeToken = _args.wrappedNativeToken;
         s.priceAggregator = PriceAggregator(_args.priceAggregator);
     }
+
+    function init2(address wrappedNativeTokenAddress, address priceAggAddress)
+        external
+        authorized(ADMIN, msg.sender)
+    {
+        require(
+            AppStorageLib.store().wrappedNativeToken == address(0) ||
+                address(AppStorageLib.store().priceAggregator) == address(0),
+            "Teller: already init2"
+        );
+
+        AppStorageLib.store().wrappedNativeToken = wrappedNativeTokenAddress;
+        AppStorageLib.store().priceAggregator = PriceAggregator(
+            priceAggAddress
+        );
+    }
 }

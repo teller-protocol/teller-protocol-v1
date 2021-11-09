@@ -44,10 +44,10 @@ const deployProtocol: DeployFunction = async (hre) => {
     await contracts.get('TellerDiamond')
 
     // If deployment exists execute upgrade function
-    const executeMethod = 'setPriceAggregator'
+    const executeMethod = 'init2'
     const upgradeExecute = {
       methodName: executeMethod,
-      args: [priceAggregator.address],
+      args: [wrappedNativeToken, priceAggregator.address],
     }
 
     execute = upgradeExecute
@@ -99,11 +99,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     },
     {
       contract: 'PausableFacet',
-      skipIfAlreadyDeployed: false,
-    },
-    // Pricing
-    {
-      contract: 'PriceAggFacet',
       skipIfAlreadyDeployed: false,
     },
     // Lending
