@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
@@ -10,24 +9,15 @@ import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../shared/roles.sol";
 
 // Interfaces
-import { ITToken } from "./ttoken/ITToken.sol";
+import { ITToken_V3 } from "./ttoken/ITToken_V3.sol";
 
 // Libraries
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    SafeERC20Upgradeable
-} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import { IWETH } from "../shared/interfaces/IWETH.sol";
-import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
 
-contract LendingFacet is RolesMods, ReentryMods, PausableMods {
+contract LendingFacet is RolesMods, ReentryMods {
     /**
      * @notice This event is emitted when a new lending pool is initialized.
      * @param sender address.
@@ -48,56 +38,6 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     }
 
     /**
-     * @notice It allows users to deposit tokens into the pool.
-     * @dev the user must call ERC20.approve function previously.
-     * @dev If the cToken is available (not 0x0), it deposits the lending asset amount into Compound directly.
-     * @param asset Token address to deposit into the lending pool.
-     * @param amount Amount of {asset} to deposit in the pool.
-     */
-    function lendingPoolDeposit(address asset, uint256 amount)
-        external
-        payable
-        paused(LendingLib.ID, false)
-        nonReentry(LendingLib.ID)
-    {
-        ITToken tToken = LendingLib.tToken(asset);
-        require(
-            address(tToken) != address(0),
-            "Teller: lending pool not initialized"
-        );
-
-        require(
-            tToken.currentTVL() + amount <= MaxTVLLib.get(asset),
-            "Teller: deposit TVL exceeded"
-        );
-
-        if (msg.value == 0) {
-            // Transfer tokens from lender
-            SafeERC20.safeTransferFrom(
-                IERC20(asset),
-                msg.sender,
-                address(this),
-                amount
-            );
-        } else {
-            require(
-                asset == AppStorageLib.store().wrappedNativeToken,
-                "Teller: incorrect wrapped native token address"
-            );
-            IWETH(asset).deposit{ value: msg.value }();
-        }
-        // Set allowance for Teller token to pull funds to mint
-        SafeERC20.safeIncreaseAllowance(IERC20(asset), address(tToken), amount);
-        // Mint Teller tokens, then transfer to lender
-        SafeERC20Upgradeable.safeTransfer(
-            tToken,
-            msg.sender,
-            // Minting returns the amount of Teller tokens minted
-            tToken.mint(amount)
-        );
-    }
-
-    /**
      * @notice It initializes a new lending pool for the respective token
      * @param asset Token address to initialize the lending pool for.
      */
@@ -113,9 +53,13 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         // Create a new Teller Token
         address tToken = AppStorageLib.store().tTokenBeacon.cloneProxy("");
         // Set the Teller Token to the asset mapping
-        LendingLib.s().tTokens[asset] = ITToken(tToken);
+        LendingLib.s().tTokens[asset] = ITToken_V3(tToken);
         // Initialize the Teller Token
-        LendingLib.s().tTokens[asset].initialize(msg.sender, asset);
+        LendingLib.s().tTokens[asset].initialize(
+            msg.sender,
+            asset,
+            AppStorageLib.store().wrappedNativeToken == asset
+        );
 
         // Emit event
         emit LendingPoolInitialized(msg.sender, asset);

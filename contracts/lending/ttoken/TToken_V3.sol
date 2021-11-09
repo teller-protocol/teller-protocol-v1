@@ -24,6 +24,7 @@ import {
     ReentryMods
 } from "../../contexts2/access-control/reentry/ReentryMods.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
+import { IWETH } from "../../shared/interfaces/IWETH.sol";
 
 // Storage
 import "./token-storage.sol" as Storage;
@@ -202,28 +203,35 @@ contract TToken_V3 is ITToken_V3, ReentryMods {
      */
     function mint(uint256 amount)
         external
+        payable
         override
         nonReentry(keccak256("MINT"))
         returns (uint256)
     {
         require(amount > 0, "Teller: cannot mint 0");
-        require(
-            amount <= s().underlying.balanceOf(_msgSender()),
-            "Teller: insufficient underlying"
-        );
 
         // Calculate amount of tokens to mint
         uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate());
-
         require(mintAmount > 0, "Teller: amount to be minted cannot be 0");
 
-        // Transfer tokens from lender
-        SafeERC20.safeTransferFrom(
-            s().underlying,
-            _msgSender(),
-            address(this),
-            amount
-        );
+        if (msg.value > 0) {
+            require(
+                s().isWrappedNative,
+                "Teller: value given for non native token"
+            );
+            require(msg.value == amount, "Teller: incorrect value");
+
+            // Wrap the native token
+            IWETH(address(s().underlying)).deposit{ value: msg.value }();
+        } else {
+            // Transfer tokens from lender
+            SafeERC20.safeTransferFrom(
+                s().underlying,
+                _msgSender(),
+                address(this),
+                amount
+            );
+        }
 
         // Mint Teller token value of underlying
         _mint(_msgSender(), mintAmount);
@@ -369,15 +377,16 @@ contract TToken_V3 is ITToken_V3, ReentryMods {
      * @notice it initializes the Teller Token
      * @param admin address of the admin to the respective Teller Token
      * @param underlying address of the ERC20 token
+     * @param isWrappedNative boolean indicating the underlying asset is the wrapped native token
      *
      * Requirements:
      *  - Underlying token must implement `name`, `symbol` and `decimals`
      */
-    function initialize(address admin, address underlying)
-        external
-        override
-        initializer
-    {
+    function initialize(
+        address admin,
+        address underlying,
+        bool isWrappedNative
+    ) external override initializer {
         require(
             Address.isContract(msg.sender),
             "Teller: controller not contract"
@@ -396,6 +405,7 @@ contract TToken_V3 is ITToken_V3, ReentryMods {
             string(abi.encodePacked("t", s().underlying.symbol()))
         );
         s().decimals = s().underlying.decimals();
+        s().isWrappedNative = isWrappedNative;
     }
 
     /**

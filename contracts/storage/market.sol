@@ -11,7 +11,7 @@ import "../shared/libraries/NumbersList.sol";
 // Interfaces
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 import { ICollateralEscrow } from "../market/collateral/ICollateralEscrow.sol";
-import { ITToken } from "../lending/ttoken/ITToken.sol";
+import { ITToken_V3 } from "../lending/ttoken/ITToken_V3.sol";
 
 // DEPRECATED
 struct LoanTerms {
@@ -132,7 +132,7 @@ struct MarketStorage {
     // Maps accounts to owned loan IDs
     mapping(address => uint128[]) borrowerLoans;
     // Maps lending token to overall amount of interest collected from loans
-    mapping(address => ITToken) tTokens;
+    mapping(address => ITToken_V3) tTokens;
     // Maps lending token to list of signer addresses who are only ones allowed to verify loan requests
     mapping(address => EnumerableSet.AddressSet) signers;
     // Maps lending token to list of allowed collateral tokens
