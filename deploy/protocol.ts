@@ -359,7 +359,7 @@ const deployTTokenBeacon = async (
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
 
-  const logicVersion = '2_Alpha'
+  const logicVersion = 3
 
   const tTokenLogic = await deploy<ITToken>({
     hre,
