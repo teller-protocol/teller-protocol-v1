@@ -66,6 +66,12 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
             uint16 collateralRatio,
             uint256 maxLoanAmount
         ) = LibConsensus.processLoanTerms(request);
+
+        require(
+            maxLoanAmount >= request.request.amount,
+            "Teller: asset max loan amount exceeded"
+        );
+
         Loan storage loan = LibCreateLoan.initNewLoan(
             request.request.assetAddress,
             maxLoanAmount,
