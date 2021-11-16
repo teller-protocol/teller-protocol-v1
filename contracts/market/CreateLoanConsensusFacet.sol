@@ -68,7 +68,7 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
         ) = LibConsensus.processLoanTerms(request);
 
         require(
-            maxLoanAmount >= request.request.amount,
+            maxLoanAmount <= request.request.amount,
             "Teller: asset max loan amount exceeded"
         );
 
