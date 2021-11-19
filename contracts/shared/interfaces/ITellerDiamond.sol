@@ -38,7 +38,6 @@ import {
     CompoundClaimCompFacet
 } from "../../escrow/dapps/CompoundClaimComp.sol";
 import { AaveFacet } from "../../escrow/dapps/AaveFacet.sol";
-import { PoolTogetherFacet } from "../../escrow/dapps/PoolTogetherFacet.sol";
 import { UniswapFacet } from "../../escrow/dapps/swappers/UniswapFacet.sol";
 import { SushiswapFacet } from "../../escrow/dapps/swappers/SushiswapFacet.sol";
 import { YearnFacet } from "../../escrow/dapps/YearnFacet.sol";
@@ -62,7 +61,6 @@ abstract contract ITellerDiamond is
     CompoundFacet,
     CompoundClaimCompFacet,
     AaveFacet,
-    PoolTogetherFacet,
     UniswapFacet,
     SushiswapFacet,
     YearnFacet,

@@ -130,10 +130,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       skipIfAlreadyDeployed: false,
       args: [dappAddresses.aaveLendingPoolAddressProvider],
     },
-    {
-      contract: 'PoolTogetherFacet',
-      skipIfAlreadyDeployed: false,
-    },
   ]
 
   const stableCoins: string[] = [
