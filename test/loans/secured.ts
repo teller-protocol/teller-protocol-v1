@@ -87,6 +87,7 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
 
     expect(loansAfter.length).to.be.gt(loansBefore.length)
   }
+
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
     const { tellerDiamond, lender, tokens } = testEnv
     const dai = tokens.find((o) => o.name === 'DAI')!.token
@@ -104,10 +105,11 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
     expect(lenderBalanceBefore).to.be.gt(lenderBalanceAfter)
   })
 
-  it('Should be able to successfully take out a secured WETH loan', async () => {
+  it('Should be able to successfully take out a secured loan w/ WETH collateral', async () => {
     await securedLoan('DAI', 'WETH', '1000')
   })
-  it('Should be able to successfully take out a secured ETH loan', async () => {
+
+  it('Should be able to successfully take out a secured loan w/ ETH collateral', async () => {
     // Advance time
     const { value: rateLimit } = await getPlatformSetting(
       'RequestLoanTermsRateLimit',

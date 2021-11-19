@@ -25,7 +25,6 @@ import {
     PoolTogetherLib
 } from "../../escrow/dapps/libraries/PoolTogetherLib.sol";
 import { MaxLoanAmountLib } from "./libraries/MaxLoanAmountLib.sol";
-import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 import { MaxDebtRatioLib } from "./libraries/MaxDebtRatioLib.sol";
 
 // Storage
@@ -51,15 +50,6 @@ contract AssetSettingsDataFacet {
         returns (uint256)
     {
         return MaxLoanAmountLib.get(asset);
-    }
-
-    /**
-     * @notice it gets the maxTVL of an asset
-     * @param asset the address of the asset
-     * @return it returns the maxTVL
-     */
-    function getAssetMaxTVL(address asset) external view returns (uint256) {
-        return MaxTVLLib.get(asset);
     }
 
     /**

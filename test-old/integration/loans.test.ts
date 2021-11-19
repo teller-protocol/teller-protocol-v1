@@ -36,7 +36,6 @@ describe.skip('Loans', () => {
         assetSym: market.lendingToken,
         amount: 100000,
         keepExistingDeployments: true,
-        extendMaxTVL: true,
       })
 
       deployer = await getNamedSigner('deployer')

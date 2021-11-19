@@ -16,7 +16,6 @@ export interface FundedMarketArgs {
   tags?: string[]
   // fund?: boolean
   keepExistingDeployments?: boolean
-  extendMaxTVL?: boolean
 }
 
 export interface FundedMarketReturn {
@@ -33,7 +32,6 @@ export const fundedMarket = async (
   const { tags, keepExistingDeployments } = Object.assign(opts, {
     tags: [],
     keepExistingDeployments: true,
-    extendMaxTVL: false,
     ...opts,
   })
 
@@ -50,7 +48,7 @@ const depositFunds = async (
   args: FundedMarketArgs
 ): Promise<FundedMarketReturn> => {
   const { contracts, tokens, getNamedSigner, toBN } = hre
-  const { assetSym, amount, extendMaxTVL } = args
+  const { assetSym, amount } = args
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const lendingToken = await tokens.get(assetSym)
@@ -63,23 +61,6 @@ const depositFunds = async (
     amountToFundLP = toBN(amount, decimals)
   } else {
     amountToFundLP = maxTVL
-  }
-
-  const tToken = await contracts.get<ITToken>('ITToken', {
-    at: await diamond.getTTokenFor(lendingToken.address),
-  })
-  const marketState = await tToken.callStatic.getMarketState()
-  const newTotalSupply = marketState.totalSupplied
-    .add(marketState.totalOnLoan)
-    .add(amountToFundLP.mul(2))
-  if (extendMaxTVL && newTotalSupply.gt(maxTVL)) {
-    // TODO: strip out into a Hardhat task
-    const deployer = await getNamedSigner('deployer')
-    await diamond.connect(deployer).updateAssetSetting(lendingToken.address, {
-      key: hre.ethers.utils.id('MaxTVL'),
-      value: hre.ethers.utils.hexZeroPad(newTotalSupply.toHexString(), 32),
-      cacheType: 1,
-    })
   }
 
   const funder = await getNamedSigner('funder')
