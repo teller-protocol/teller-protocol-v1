@@ -90,7 +90,7 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
     const { tellerDiamond, lender, tokens } = testEnv
     const dai = tokens.find((o) => o.name === 'DAI')!.token
-    const tDai: TTokenV3 = await hre.contracts.get('TTokenV3', {
+    const tDai: TTokenV3 = await hre.contracts.get('TToken_V3', {
       at: await tellerDiamond.getTTokenFor(dai.address),
     })
     // Balance before lending

@@ -141,7 +141,7 @@ const fundMarket = async (testEnv: TestEnv) => {
     const token: ERC20 = await contracts.get('ERC20', {
       at: collateralTokens[i],
     })
-    const tToken: TTokenV3 = await contracts.get('TTokenV3', {
+    const tToken: TTokenV3 = await contracts.get('TToken_V3', {
       at: await tellerDiamond.getTTokenFor(token.address),
     })
     const tokenName = await token.symbol()

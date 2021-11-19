@@ -210,8 +210,11 @@ contract TToken_V3 is ITToken_V3, ReentryMods {
     {
         require(amount > 0, "Teller: cannot mint 0");
 
+        // Get the exchange rate by static calling this contract.
+        // It fails when ETH value is sent when delegate calling the `totalUnderlyingSupply` function on the strategy.
+        uint256 exchangeRate = TToken_V3(address(this)).exchangeRate();
         // Calculate amount of tokens to mint
-        uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate());
+        uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate);
         require(mintAmount > 0, "Teller: amount to be minted cannot be 0");
 
         if (msg.value > 0) {
