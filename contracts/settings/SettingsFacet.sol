@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, PAUSER, AUTHORIZED } from "../shared/roles.sol";
+import { ADMIN, PAUSER } from "../shared/roles.sol";
 import {
     UpgradeableBeaconFactory
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
@@ -30,69 +30,6 @@ struct InitArgs {
 }
 
 contract SettingsFacet is RolesMods {
-    /**
-     * @notice This event is emitted when the platform restriction is switched
-     * @param restriction Boolean representing the state of the restriction
-     * @param pauser address of the pauser flipping the switch
-     */
-    event PlatformRestricted(bool restriction, address indexed pauser);
-
-    /**
-     * @notice Restricts the use of the Teller protocol to authorized wallet addresses only
-     * @param restriction Bool turning the resitriction on or off
-     */
-    function restrictPlatform(bool restriction)
-        internal
-        authorized(ADMIN, msg.sender)
-    {
-        AppStorageLib.store().platformRestricted = restriction;
-        emit PlatformRestricted(restriction, msg.sender);
-    }
-
-    /**
-     * @notice Adds a wallet address to the list of authorized wallets
-     * @param account The wallet address of the user being authorized
-     */
-    function addAuthorizedAddress(address account)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        RolesLib.grantRole(AUTHORIZED, account);
-    }
-
-    /**
-     * @notice Adds a list of wallet addresses to the list of authorized wallets
-     * @param addressesToAdd The list of wallet addresses being authorized
-     */
-    function addAuthorizedAddressList(address[] calldata addressesToAdd)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        for (uint256 i; i < addressesToAdd.length; i++) {
-            RolesLib.grantRole(AUTHORIZED, addressesToAdd[i]);
-        }
-    }
-
-    /**
-     * @notice Removes a wallet address from the list of authorized wallets
-     * @param account The wallet address of the user being unauthorized
-     */
-    function removeAuthorizedAddress(address account)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        RolesLib.revokeRole(AUTHORIZED, account);
-    }
-
-    /**
-     * @notice Tests whether an account has authorization
-     * @param account The account address to check for
-     * @return True if account has authorization, false if it does not
-     */
-    function hasAuthorization(address account) external view returns (bool) {
-        return RolesLib.hasRole(AUTHORIZED, account);
-    }
-
     /**
      * @notice Sets a new address to which NFTs should be sent when used for taking out a loan and gets liquidated.
      * @param newController The address where NFTs should be transferred.
@@ -137,5 +74,21 @@ contract SettingsFacet is RolesMods {
         s.nftLiquidationController = _args.nftLiquidationController;
         s.wrappedNativeToken = _args.wrappedNativeToken;
         s.priceAggregator = PriceAggregator(_args.priceAggregator);
+    }
+
+    function init2(address wrappedNativeTokenAddress, address priceAggAddress)
+        external
+        authorized(ADMIN, msg.sender)
+    {
+        require(
+            AppStorageLib.store().wrappedNativeToken == address(0) ||
+                address(AppStorageLib.store().priceAggregator) == address(0),
+            "Teller: already init2"
+        );
+
+        AppStorageLib.store().wrappedNativeToken = wrappedNativeTokenAddress;
+        AppStorageLib.store().priceAggregator = PriceAggregator(
+            priceAggAddress
+        );
     }
 }

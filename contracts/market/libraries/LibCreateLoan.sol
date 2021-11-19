@@ -46,6 +46,7 @@ library LibCreateLoan {
         uint32 duration,
         uint16 interestRate
     ) internal returns (Loan storage loan_) {
+        require(assetAddress != address(0), "Teller: asset loan asset null");
         // Perform loan request checks
         require(
             PlatformSettingsLib.getMaximumLoanDurationValue() >= duration,
@@ -101,16 +102,14 @@ library LibCreateLoan {
      * @return id_ the new ID requested, which stores it in the loan data
      */
     function newID() internal returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib
-            .store()
+        Counters.Counter storage counter = MarketStorageLib.store()
             .loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
     }
 
     function currentID() internal view returns (uint256 id_) {
-        Counters.Counter storage counter = MarketStorageLib
-            .store()
+        Counters.Counter storage counter = MarketStorageLib.store()
             .loanIDCounter;
         id_ = Counters.current(counter);
     }

@@ -17,7 +17,7 @@ struct Store {
     // The decimals of the underlying ERC20 asset
     uint8 decimals;
     // The status of token investment restriction
-    bool restricted;
+    bool restricted; // DEPRECATED
     // The status of Teller Alpha running
     bool alphaEnded;
     // The total amount of interest earned by the protocol from disbursed loans

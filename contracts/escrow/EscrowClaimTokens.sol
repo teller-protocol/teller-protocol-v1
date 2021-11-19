@@ -46,8 +46,7 @@ contract EscrowClaimTokens is PausableMods {
     function __claimEscrowTokens(uint256 loanID) internal {
         __claimToken(loanID, LibLoans.loan(loanID).lendingToken);
 
-        EnumerableSet.AddressSet storage tokens = MarketStorageLib
-            .store()
+        EnumerableSet.AddressSet storage tokens = MarketStorageLib.store()
             .escrowTokens[loanID];
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
             __claimToken(loanID, EnumerableSet.at(tokens, i));
