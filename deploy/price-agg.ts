@@ -51,7 +51,6 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
 
   await addCompoundPricer(priceAgg, hre)
   await addAavePricer(priceAgg, hre)
-  await addPoolTogetherPricer(priceAgg, hre)
 
   log('')
 }
