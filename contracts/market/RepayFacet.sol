@@ -29,7 +29,7 @@ import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
-import { ITToken } from "../lending/ttoken/ITToken.sol";
+import { ITToken_V3 } from "../lending/ttoken/ITToken_V3.sol";
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
 // Storage
@@ -157,7 +157,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods, EscrowClaimTokens {
         }
 
         // Get the Teller token for the loan
-        ITToken tToken = MarketStorageLib.store().tTokens[
+        ITToken_V3 tToken = MarketStorageLib.store().tTokens[
             LibLoans.loan(loanID).lendingToken
         ];
         // Transfer funds from an escrow if an escrow is calling it

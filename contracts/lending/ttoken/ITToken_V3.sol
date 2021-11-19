@@ -150,6 +150,7 @@ abstract contract ITToken_V3 is ERC20Upgradeable, RolesFacet {
      */
     function mint(uint256 amount)
         external
+        payable
         virtual
         returns (uint256 mintAmount_);
 
@@ -194,6 +195,11 @@ abstract contract ITToken_V3 is ERC20Upgradeable, RolesFacet {
      * @notice it initializes the Teller Token
      * @param admin address of the admin to the respective Teller Token
      * @param underlying address of the ERC20 token
+     * @param isWrappedNative boolean indicating the underlying asset is the wrapped native token
      */
-    function initialize(address admin, address underlying) external virtual;
+    function initialize(
+        address admin,
+        address underlying,
+        bool isWrappedNative
+    ) external virtual;
 }

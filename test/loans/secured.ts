@@ -3,6 +3,7 @@ import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 
 import { getPlatformSetting } from '../../tasks'
+import { TTokenV3 } from '../../types/typechain'
 import { mockCRAResponse } from '../helpers/mock-cra-response'
 import { setTestEnv, TestEnv } from '../helpers/set-test-env'
 
@@ -89,12 +90,15 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
     const { tellerDiamond, lender, tokens } = testEnv
     const dai = tokens.find((o) => o.name === 'DAI')!.token
+    const tDai: TTokenV3 = await hre.contracts.get('TToken_V3', {
+      at: await tellerDiamond.getTTokenFor(dai.address),
+    })
     // Balance before lending
     const lenderBalanceBefore = await dai.balanceOf(await lender.getAddress())
     // Approve diamond
-    await dai.connect(lender).approve(tellerDiamond.address, '10000')
+    await dai.connect(lender).approve(tDai.address, '10000')
     // Deposit funds as lender
-    await tellerDiamond.connect(lender).lendingPoolDeposit(dai.address, '10000')
+    await tDai.connect(lender).mint('10000')
     // Balance after lending
     const lenderBalanceAfter = await dai.balanceOf(await lender.getAddress())
     expect(lenderBalanceBefore).to.be.gt(lenderBalanceAfter)

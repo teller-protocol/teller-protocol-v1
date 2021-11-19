@@ -166,10 +166,10 @@ const deployProtocol: DeployFunction = async (hre) => {
         skipIfAlreadyDeployed: false,
         args: [nftMigrator.address],
       },
-      {
-        contract: 'MainnetNFTInterestFacet',
-        skipIfAlreadyDeployed: false,
-      },
+      // {
+      //   contract: 'MainnetNFTInterestFacet',
+      //   skipIfAlreadyDeployed: false,
+      // },
       // Dapps
       {
         contract: 'UniswapFacet',

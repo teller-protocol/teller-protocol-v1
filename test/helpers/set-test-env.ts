@@ -15,6 +15,7 @@ import {
   MainnetTellerNFT,
   PolyTellerNFTMock,
   PriceAggregator,
+  TTokenV3,
 } from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { evmRevert, evmSnapshot } from './misc'
@@ -140,6 +141,9 @@ const fundMarket = async (testEnv: TestEnv) => {
     const token: ERC20 = await contracts.get('ERC20', {
       at: collateralTokens[i],
     })
+    const tToken: TTokenV3 = await contracts.get('TToken_V3', {
+      at: await tellerDiamond.getTTokenFor(token.address),
+    })
     const tokenName = await token.symbol()
     // testEnv.tokens.push({ tokenName: token })
     testEnv.tokens.push({ name: tokenName, token: token })
@@ -156,10 +160,8 @@ const fundMarket = async (testEnv: TestEnv) => {
       hre,
     })
     // Approve protocol
-    await token.connect(lender).approve(tellerDiamond.address, bnedAmount)
+    await token.connect(lender).approve(tToken.address, bnedAmount)
     // Deposit funds
-    await tellerDiamond
-      .connect(lender)
-      .lendingPoolDeposit(collateralTokens[i], bnedAmount)
+    await tToken.connect(lender).mint(bnedAmount)
   }
 }
