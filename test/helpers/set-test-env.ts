@@ -102,7 +102,7 @@ export async function initTestEnv() {
 }
 
 export function setTestEnv(name: string, tests: (testEnv: TestEnv) => void) {
-  describe.only(name, () => {
+  describe(name, () => {
     before(async () => {
       await initTestEnv()
       await setSnapshot()
