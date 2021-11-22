@@ -123,7 +123,7 @@ const setHardhatEvmSnapshotId = (id: string) => {
   hardhatEvmSnapshotId = id
 }
 
-const revertHead = async () => {
+export const revertHead = async () => {
   await evmRevert(hardhatEvmSnapshotId)
 }
 
@@ -145,7 +145,6 @@ const fundMarket = async (testEnv: TestEnv) => {
       at: await tellerDiamond.getTTokenFor(token.address),
     })
     const tokenName = await token.symbol()
-    // testEnv.tokens.push({ tokenName: token })
     testEnv.tokens.push({ name: tokenName, token: token })
     const fundAmount = await getPrice(
       { src: 'DAI', dst: tokenName, amount: '10000' },
@@ -160,8 +159,14 @@ const fundMarket = async (testEnv: TestEnv) => {
       hre,
     })
     // Approve protocol
-    await token.connect(lender).approve(tToken.address, bnedAmount)
+    await token
+      .connect(lender)
+      .approve(tToken.address, bnedAmount)
+      .then(({ wait }) => wait())
     // Deposit funds
-    await tToken.connect(lender).mint(bnedAmount)
+    await tToken
+      .connect(lender)
+      .mint(bnedAmount)
+      .then(({ wait }) => wait())
   }
 }

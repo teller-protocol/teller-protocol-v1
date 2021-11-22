@@ -32,7 +32,10 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
       .getOwnedTokens(await borrower.getAddress())
 
     // Set NFT approval
-    await nft.connect(borrower).setApprovalForAll(tellerDiamond.address, true)
+    await nft
+      .connect(borrower)
+      .setApprovalForAll(tellerDiamond.address, true)
+      .then(({ wait }) => wait())
 
     if (isEtheremNetwork(network)) {
       // Encode token data
@@ -56,6 +59,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
           ['1'],
           '0x'
         )
+        .then(({ wait }) => wait())
 
       // Take out loan
       await tellerDiamond
@@ -66,6 +70,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
           loanDuration,
           tokenData
         )
+        .then(({ wait }) => wait())
     } else {
       await (nft as any as PolyTellerNFTMock)
         .connect(deployer)
@@ -90,6 +95,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
       await (nft as any as PolyTellerNFTMock)
         .connect(deployer)
         .deposit(await borrower.getAddress(), depositData)
+        .then(({ wait }) => wait())
 
       const balances = mergeV2IDsToBalances([ownedNfts[0]])
       // diamond and teller nft
@@ -103,6 +109,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
           balances.balances,
           '0x'
         )
+        .then(({ wait }) => wait())
       // Take out loan
       await tellerDiamond
         .connect(borrower)
@@ -112,6 +119,7 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
           loanDuration,
           takeOutLoanData
         )
+        .then(({ wait }) => wait())
     }
 
     const loanID = await tellerDiamond.getBorrowerLoans(
