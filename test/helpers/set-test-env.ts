@@ -15,6 +15,7 @@ import {
   MainnetTellerNFT,
   PolyTellerNFTMock,
   PriceAggregator,
+  TTokenV3,
 } from '../../types/typechain'
 import { getFunds } from './get-funds'
 import { evmRevert, evmSnapshot } from './misc'
@@ -101,7 +102,7 @@ export async function initTestEnv() {
 }
 
 export function setTestEnv(name: string, tests: (testEnv: TestEnv) => void) {
-  describe.only(name, () => {
+  describe(name, () => {
     before(async () => {
       await initTestEnv()
       await setSnapshot()
@@ -122,7 +123,7 @@ const setHardhatEvmSnapshotId = (id: string) => {
   hardhatEvmSnapshotId = id
 }
 
-const revertHead = async () => {
+export const revertHead = async () => {
   await evmRevert(hardhatEvmSnapshotId)
 }
 
@@ -140,8 +141,10 @@ const fundMarket = async (testEnv: TestEnv) => {
     const token: ERC20 = await contracts.get('ERC20', {
       at: collateralTokens[i],
     })
+    const tToken: TTokenV3 = await contracts.get('TToken_V3', {
+      at: await tellerDiamond.getTTokenFor(token.address),
+    })
     const tokenName = await token.symbol()
-    // testEnv.tokens.push({ tokenName: token })
     testEnv.tokens.push({ name: tokenName, token: token })
     const fundAmount = await getPrice(
       { src: 'DAI', dst: tokenName, amount: '10000' },
@@ -156,10 +159,14 @@ const fundMarket = async (testEnv: TestEnv) => {
       hre,
     })
     // Approve protocol
-    await token.connect(lender).approve(tellerDiamond.address, bnedAmount)
-    // Deposit funds
-    await tellerDiamond
+    await token
       .connect(lender)
-      .lendingPoolDeposit(collateralTokens[i], bnedAmount)
+      .approve(tToken.address, bnedAmount)
+      .then(({ wait }) => wait())
+    // Deposit funds
+    await tToken
+      .connect(lender)
+      .mint(bnedAmount)
+      .then(({ wait }) => wait())
   }
 }

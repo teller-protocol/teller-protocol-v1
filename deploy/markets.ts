@@ -143,6 +143,9 @@ const initializeMarkets: DeployFunction = async (hre) => {
       log(` with ${gas}`)
     }
   }
+
+  await network.provider.send('evm_setAutomine', [false])
+  await network.provider.send('evm_setIntervalMining', [5000])
 }
 
 const waitAndLog = async (

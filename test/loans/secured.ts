@@ -3,8 +3,9 @@ import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 
 import { getPlatformSetting } from '../../tasks'
+import { TTokenV3 } from '../../types/typechain'
 import { mockCRAResponse } from '../helpers/mock-cra-response'
-import { setTestEnv, TestEnv } from '../helpers/set-test-env'
+import { revertHead, setTestEnv, TestEnv } from '../helpers/set-test-env'
 
 chai.should()
 chai.use(solidity)
@@ -59,6 +60,7 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
       await collateralToken
         .connect(borrower)
         .approve(tellerDiamond.address, collAmount)
+        .then(({ wait }) => wait())
 
       // Take out loan
       await tellerDiamond
@@ -68,6 +70,7 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
           collateralToken.address,
           collAmount
         )
+        .then(({ wait }) => wait())
     } else {
       // Take out loan
       await tellerDiamond
@@ -78,23 +81,34 @@ setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
           collAmount,
           { value: collAmount }
         )
+        .then(({ wait }) => wait())
     }
 
     const loansAfter = await tellerDiamond.getBorrowerLoans(
       await borrower.getAddress()
     )
 
-    expect(loansAfter.length).to.be.gt(loansBefore.length)
+    expect(loansAfter.length).to.be.gt(
+      loansBefore.length,
+      'Expected loans to increase'
+    )
+    await revertHead()
   }
   it('Sanity check - Should be able to successfully deposit as a lender', async () => {
     const { tellerDiamond, lender, tokens } = testEnv
     const dai = tokens.find((o) => o.name === 'DAI')!.token
+    const tDai: TTokenV3 = await hre.contracts.get('TToken_V3', {
+      at: await tellerDiamond.getTTokenFor(dai.address),
+    })
     // Balance before lending
     const lenderBalanceBefore = await dai.balanceOf(await lender.getAddress())
     // Approve diamond
-    await dai.connect(lender).approve(tellerDiamond.address, '10000')
+    await dai.connect(lender).approve(tDai.address, '10000')
     // Deposit funds as lender
-    await tellerDiamond.connect(lender).lendingPoolDeposit(dai.address, '10000')
+    await tDai
+      .connect(lender)
+      .mint('10000')
+      .then(({ wait }) => wait())
     // Balance after lending
     const lenderBalanceAfter = await dai.balanceOf(await lender.getAddress())
     expect(lenderBalanceBefore).to.be.gt(lenderBalanceAfter)

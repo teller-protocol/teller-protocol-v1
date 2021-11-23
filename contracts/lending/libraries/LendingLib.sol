@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Interfaces
-import { ITToken } from "../ttoken/ITToken.sol";
+import { ITToken_V3 } from "../ttoken/ITToken_V3.sol";
 
 // Storage
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
@@ -17,7 +17,7 @@ library LendingLib {
         return MarketStorageLib.store();
     }
 
-    function tToken(address asset) internal view returns (ITToken tToken_) {
+    function tToken(address asset) internal view returns (ITToken_V3 tToken_) {
         tToken_ = s().tTokens[asset];
     }
 }
