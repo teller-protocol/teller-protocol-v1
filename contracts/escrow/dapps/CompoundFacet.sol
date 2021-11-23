@@ -62,7 +62,10 @@ contract CompoundFacet is PausableMods, DappMods {
         bytes memory result;
         if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Unwrap WETH to deposit into cETH
-            IWETH(tokenAddress).withdraw(amount);
+            LibEscrow.e(loanID).callDapp(
+                tokenAddress,
+                abi.encodeWithSelector(IWETH.withdraw.selector, amount)
+            );
 
             result = LibEscrow.e(loanID).callDapp{ value: amount }(
                 address(cToken),
@@ -109,11 +112,6 @@ contract CompoundFacet is PausableMods, DappMods {
             abi.encodeWithSelector(ICErc20.redeemUnderlying.selector, amount)
         );
 
-        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
-            // Wrap ETH back to WETH
-            IWETH(tokenAddress).deposit{ value: amount }();
-        }
-
         emit CompoundRedeemed(tokenAddress, address(cToken), amount);
     }
 
@@ -137,13 +135,6 @@ contract CompoundFacet is PausableMods, DappMods {
                 cToken.balanceOf(address(LibEscrow.e(loanID)))
             )
         );
-
-        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
-            // Wrap ETH back to WETH
-            IWETH(tokenAddress).deposit{
-                value: cToken.balanceOf(address(LibEscrow.e(loanID)))
-            }();
-        }
 
         emit CompoundRedeemed(
             tokenAddress,
@@ -179,6 +170,15 @@ contract CompoundFacet is PausableMods, DappMods {
             abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
             "Teller: compound dapp withdrawal error"
         );
+
+        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
+            // Wrap ETH back to WETH
+            LibEscrow.e(loanID).callDapp{
+                value: IWETH(tokenAddress).balanceOf(
+                    address(LibEscrow.e(loanID))
+                )
+            }(tokenAddress, abi.encodeWithSelector(IWETH.deposit.selector));
+        }
 
         LibEscrow.tokenUpdated(loanID, cTokenAddress);
         LibEscrow.tokenUpdated(loanID, tokenAddress);
