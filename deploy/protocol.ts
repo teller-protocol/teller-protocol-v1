@@ -252,6 +252,7 @@ const deployLoansEscrowBeacon = async (
   const loansEscrowLogic = await deploy<ILoansEscrow>({
     hre,
     contract: `LoansEscrow_V${logicVersion}`,
+    skipIfAlreadyDeployed: false,
     indent: 3,
   })
 

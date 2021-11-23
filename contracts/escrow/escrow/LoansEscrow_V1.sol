@@ -41,6 +41,7 @@ contract LoansEscrow_V1 is ILoansEscrow {
      */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
+        payable
         override
         onlyOwner
         returns (bytes memory resData_)
@@ -48,6 +49,30 @@ contract LoansEscrow_V1 is ILoansEscrow {
         resData_ = Address.functionCall(
             dappAddress,
             dappData,
+            "Teller: dapp call failed"
+        );
+    }
+
+    /**
+     * @notice it calls a dapp like YearnFinance at a target contract address with specified calldata
+     * @param dappAddress address of the target contract address
+     * @param dappData encoded abi of the function in our contract we want to call
+     * @param amount amount to call the dapp with as msg.value
+     * @return resData_ the called data in
+     */
+    function callDappWithValue(
+        address dappAddress,
+        bytes calldata dappData,
+        uint256 amount
+    ) external payable override onlyOwner returns (bytes memory resData_) {
+        require(
+            address(this).balance <= amount,
+            "Escrow does not have enough balance"
+        );
+        resData_ = Address.functionCallWithValue(
+            dappAddress,
+            dappData,
+            amount,
             "Teller: dapp call failed"
         );
     }

@@ -68,6 +68,8 @@ interface ICErc20 {
 
     function underlying() external view returns (address);
 
+    function symbol() external view returns (string memory);
+
     /**
         @notice Each cToken is convertible into an ever increasing quantity of the underlying asset, as interest accrues in the market. The exchange rate between a cToken and the underlying asset is
         equal to: exchangeRate = (getCash() + totalBorrows() - totalReserves()) / totalSupply()
