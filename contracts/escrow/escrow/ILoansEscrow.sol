@@ -12,6 +12,7 @@ interface ILoansEscrow {
      */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
+        payable
         returns (bytes memory);
 
     /**

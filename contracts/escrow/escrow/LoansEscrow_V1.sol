@@ -41,13 +41,15 @@ contract LoansEscrow_V1 is ILoansEscrow {
      */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
+        payable
         override
         onlyOwner
         returns (bytes memory resData_)
     {
-        resData_ = Address.functionCall(
+        resData_ = Address.functionCallWithValue(
             dappAddress,
             dappData,
+            msg.value,
             "Teller: dapp call failed"
         );
     }
