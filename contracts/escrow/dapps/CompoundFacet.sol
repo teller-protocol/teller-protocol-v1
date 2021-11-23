@@ -82,11 +82,11 @@ contract CompoundFacet is PausableMods, DappMods {
                 address(cToken),
                 abi.encodeWithSelector(ICErc20.mint.selector, amount)
             );
+            require(
+                abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
+                "Teller: compound deposit error"
+            );
         }
-        require(
-            abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
-            "Teller: compound deposit error"
-        );
 
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);
