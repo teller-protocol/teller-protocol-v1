@@ -16,6 +16,7 @@ import {
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
+import { IWETH } from "../../shared/interfaces/IWETH.sol";
 
 contract CompoundFacet is PausableMods, DappMods {
     /**
@@ -55,17 +56,38 @@ contract CompoundFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
 
-        LibEscrow.e(loanID).setTokenAllowance(tokenAddress, address(cToken));
+        if (
+            keccak256(abi.encodePacked(cToken.symbol())) ==
+            keccak256(abi.encodePacked("cETH"))
+        ) {
+            // Unwrap WETH to deposit into cETH
+            IWETH(tokenAddress).withdraw(amount);
 
-        bytes memory result = LibEscrow.e(loanID).callDapp(
-            address(cToken),
-            abi.encodeWithSelector(ICErc20.mint.selector, amount)
-        );
+            bytes memory result = LibEscrow.e(loanID).callDapp(
+                address(cToken),
+                abi.encodeWithSelector(ICErc20.mint.selector, amount)
+            );
 
-        require(
-            abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
-            "Teller: compound deposit error"
-        );
+            require(
+                abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
+                "Teller: compound deposit error"
+            );
+        } else {
+            LibEscrow.e(loanID).setTokenAllowance(
+                tokenAddress,
+                address(cToken)
+            );
+
+            bytes memory result = LibEscrow.e(loanID).callDapp(
+                address(cToken),
+                abi.encodeWithSelector(ICErc20.mint.selector, amount)
+            );
+
+            require(
+                abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
+                "Teller: compound deposit error"
+            );
+        }
 
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);
@@ -92,6 +114,14 @@ contract CompoundFacet is PausableMods, DappMods {
             abi.encodeWithSelector(ICErc20.redeemUnderlying.selector, amount)
         );
 
+        if (
+            keccak256(abi.encodePacked(cToken.symbol())) ==
+            keccak256(abi.encodePacked("cETH"))
+        ) {
+            // Wrap ETH back to WETH
+            IWETH(tokenAddress).deposit{ value: amount }();
+        }
+
         emit CompoundRedeemed(tokenAddress, address(cToken), amount);
     }
 
@@ -115,6 +145,16 @@ contract CompoundFacet is PausableMods, DappMods {
                 cToken.balanceOf(address(LibEscrow.e(loanID)))
             )
         );
+
+        if (
+            keccak256(abi.encodePacked(cToken.symbol())) ==
+            keccak256(abi.encodePacked("cETH"))
+        ) {
+            // Wrap ETH back to WETH
+            IWETH(tokenAddress).deposit{
+                value: cToken.balanceOf(address(LibEscrow.e(loanID)))
+            }();
+        }
 
         emit CompoundRedeemed(
             tokenAddress,
