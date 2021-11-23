@@ -18,6 +18,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 import { IWETH } from "../../shared/interfaces/IWETH.sol";
 
+// Storage
+import { AppStorageLib } from "../../storage/app.sol";
+
 contract CompoundFacet is PausableMods, DappMods {
     /**
      * @notice This event is emitted every time Compound lend is invoked successfully.
@@ -56,10 +59,7 @@ contract CompoundFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
 
-        if (
-            keccak256(abi.encodePacked(cToken.symbol())) ==
-            keccak256(abi.encodePacked("cETH"))
-        ) {
+        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Unwrap WETH to deposit into cETH
             IWETH(tokenAddress).withdraw(amount);
 
@@ -114,10 +114,7 @@ contract CompoundFacet is PausableMods, DappMods {
             abi.encodeWithSelector(ICErc20.redeemUnderlying.selector, amount)
         );
 
-        if (
-            keccak256(abi.encodePacked(cToken.symbol())) ==
-            keccak256(abi.encodePacked("cETH"))
-        ) {
+        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Wrap ETH back to WETH
             IWETH(tokenAddress).deposit{ value: amount }();
         }
@@ -146,10 +143,7 @@ contract CompoundFacet is PausableMods, DappMods {
             )
         );
 
-        if (
-            keccak256(abi.encodePacked(cToken.symbol())) ==
-            keccak256(abi.encodePacked("cETH"))
-        ) {
+        if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Wrap ETH back to WETH
             IWETH(tokenAddress).deposit{
                 value: cToken.balanceOf(address(LibEscrow.e(loanID)))
