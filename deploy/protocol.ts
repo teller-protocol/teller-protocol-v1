@@ -266,7 +266,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
-    skipIfAlreadyDeployed: true,
+    skipIfAlreadyDeployed: false,
     indent: 4,
   })
 
