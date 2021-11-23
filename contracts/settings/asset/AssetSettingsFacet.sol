@@ -11,7 +11,6 @@ import {
     Cache,
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
-import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -52,15 +51,6 @@ contract AssetSettingsFacet is RolesMods {
         returns (bool)
     {
         return CacheLib.exists(s(asset));
-    }
-
-    /**
-     * @notice it gets the MaxTVL amount of an asset
-     * @param asset the address of the asset
-     * @return the max TVL amount
-     */
-    function getMaxTVLAmount(address asset) external view returns (uint256) {
-        return MaxTVLLib.get(asset);
     }
 
     /**
