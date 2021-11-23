@@ -85,7 +85,7 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint256 allowedBaseLoanSize = _takeOutLoanProcessTokenDataVersion(
             loan.id,
             tokenData
-        );
+        ) * (10**lendingDecimals); // Convert base loan with decimals
         uint256 allowedLoanSize;
         if (
             assetAddress == DAI || assetAddress == USDC || assetAddress == USDT
@@ -99,7 +99,7 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
                 );
         }
         require(
-            loan.borrowedAmount <= allowedLoanSize * (10**lendingDecimals),
+            loan.borrowedAmount <= allowedLoanSize,
             "Teller: insufficient NFT loan size"
         );
 
