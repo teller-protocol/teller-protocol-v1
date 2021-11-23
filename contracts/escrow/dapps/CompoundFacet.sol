@@ -67,9 +67,10 @@ contract CompoundFacet is PausableMods, DappMods {
                 abi.encodeWithSelector(IWETH.withdraw.selector, amount)
             );
 
-            result = LibEscrow.e(loanID).callDapp{ value: amount }(
+            result = LibEscrow.e(loanID).callDappWithValue(
                 address(cToken),
-                abi.encodeWithSelector(ICErc20.mint.selector, amount)
+                abi.encodeWithSelector(ICErc20.mint.selector, amount),
+                amount
             );
         } else {
             LibEscrow.e(loanID).setTokenAllowance(
@@ -173,9 +174,11 @@ contract CompoundFacet is PausableMods, DappMods {
 
         if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Wrap ETH back to WETH
-            LibEscrow.e(loanID).callDapp{
-                value: address(LibEscrow.e(loanID)).balance
-            }(tokenAddress, abi.encodeWithSelector(IWETH.deposit.selector));
+            LibEscrow.e(loanID).callDappWithValue(
+                tokenAddress,
+                abi.encodeWithSelector(IWETH.deposit.selector),
+                address(LibEscrow.e(loanID)).balance
+            );
         }
 
         LibEscrow.tokenUpdated(loanID, cTokenAddress);

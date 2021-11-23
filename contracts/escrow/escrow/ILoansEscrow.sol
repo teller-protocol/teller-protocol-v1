@@ -15,6 +15,12 @@ interface ILoansEscrow {
         payable
         returns (bytes memory);
 
+    function callDappWithValue(
+        address dappAddress,
+        bytes calldata dappData,
+        uint256 amount
+    ) external payable returns (bytes memory);
+
     /**
      * @notice it approves the spender to spend a maximum amount of a respective token from a token address
      * @param token address of the respective ERC20 token to approve for the spender
