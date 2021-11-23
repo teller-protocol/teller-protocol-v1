@@ -85,7 +85,9 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
         uint256 allowedBaseLoanSize = _takeOutLoanProcessTokenDataVersion(
             loan.id,
             tokenData
-        ) * (10**lendingDecimals); // Convert base loan with decimals
+        ) *
+            (10**lendingDecimals) *
+            10; // Convert base loan with decimals
         uint256 allowedLoanSize;
         if (
             assetAddress == DAI || assetAddress == USDC || assetAddress == USDT
