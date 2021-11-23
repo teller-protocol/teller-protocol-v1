@@ -252,6 +252,7 @@ const deployLoansEscrowBeacon = async (
   const loansEscrowLogic = await deploy<ILoansEscrow>({
     hre,
     contract: `LoansEscrow_V${logicVersion}`,
+    skipIfAlreadyDeployed: false,
     indent: 3,
   })
 
@@ -266,7 +267,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
-    skipIfAlreadyDeployed: false,
+    skipIfAlreadyDeployed: true,
     indent: 4,
   })
 
