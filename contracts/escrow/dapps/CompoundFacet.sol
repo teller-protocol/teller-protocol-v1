@@ -174,9 +174,7 @@ contract CompoundFacet is PausableMods, DappMods {
         if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Wrap ETH back to WETH
             LibEscrow.e(loanID).callDapp{
-                value: IWETH(tokenAddress).balanceOf(
-                    address(LibEscrow.e(loanID))
-                )
+                value: address(LibEscrow.e(loanID)).balance
             }(tokenAddress, abi.encodeWithSelector(IWETH.deposit.selector));
         }
 
