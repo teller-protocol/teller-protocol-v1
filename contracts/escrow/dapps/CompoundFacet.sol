@@ -59,18 +59,14 @@ contract CompoundFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
 
+        bytes memory result;
         if (tokenAddress == AppStorageLib.store().wrappedNativeToken) {
             // Unwrap WETH to deposit into cETH
             IWETH(tokenAddress).withdraw(amount);
 
-            bytes memory result = LibEscrow.e(loanID).callDapp(
+            result = LibEscrow.e(loanID).callDapp{ value: amount }(
                 address(cToken),
                 abi.encodeWithSelector(ICErc20.mint.selector, amount)
-            );
-
-            require(
-                abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
-                "Teller: compound deposit error"
             );
         } else {
             LibEscrow.e(loanID).setTokenAllowance(
@@ -78,16 +74,15 @@ contract CompoundFacet is PausableMods, DappMods {
                 address(cToken)
             );
 
-            bytes memory result = LibEscrow.e(loanID).callDapp(
+            result = LibEscrow.e(loanID).callDapp(
                 address(cToken),
                 abi.encodeWithSelector(ICErc20.mint.selector, amount)
             );
-
-            require(
-                abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
-                "Teller: compound deposit error"
-            );
         }
+        require(
+            abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
+            "Teller: compound deposit error"
+        );
 
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);
