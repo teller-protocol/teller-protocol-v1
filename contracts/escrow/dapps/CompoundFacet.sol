@@ -69,7 +69,7 @@ contract CompoundFacet is PausableMods, DappMods {
 
             result = LibEscrow.e(loanID).callDappWithValue(
                 address(cToken),
-                abi.encodeWithSelector(ICErc20.mint.selector, amount),
+                abi.encodeWithSignature("mint()"),
                 amount
             );
         } else {
