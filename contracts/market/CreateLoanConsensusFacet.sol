@@ -101,12 +101,14 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
         )
             ? loan.borrower
             : LibCreateLoan.createEscrow(loan.id);
-        LibEscrow.tokenUpdated(loan.id, loan.lendingToken);
+
         LibCreateLoan.fundLoan(
             loan.lendingToken,
             borrower,
             loan.borrowedAmount
         );
+
+        LibEscrow.tokenUpdated(loan.id, loan.lendingToken);
 
         // Set the loan to active
         loan.status = LoanStatus.Active;
