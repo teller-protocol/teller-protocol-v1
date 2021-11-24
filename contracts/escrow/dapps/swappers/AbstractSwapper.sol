@@ -17,10 +17,10 @@ abstract contract AbstractSwapper is PausableMods, DappMods {
             .store()
             .priceAggregator
             .chainlinkPricer();
-        return
-            src == AppStorageLib.store().wrappedNativeToken ||
-            (address(chainlinkPricer.getEthAggregator(src)) != address(0) &&
-                dst == AppStorageLib.store().wrappedNativeToken) ||
-            address(chainlinkPricer.getEthAggregator(dst)) != address(0);
+        bool srcCheck = (src == AppStorageLib.store().wrappedNativeToken ||
+            address(chainlinkPricer.getEthAggregator(src)) != address(0));
+        bool dstCheck = (dst == AppStorageLib.store().wrappedNativeToken ||
+            address(chainlinkPricer.getEthAggregator(dst)) != address(0));
+        return srcCheck && dstCheck;
     }
 }
