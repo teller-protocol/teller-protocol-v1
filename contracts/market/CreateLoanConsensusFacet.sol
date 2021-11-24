@@ -15,7 +15,6 @@ import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { LendingLib } from "../lending/libraries/LendingLib.sol";
-import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -107,8 +106,6 @@ contract CreateLoanConsensusFacet is RolesMods, ReentryMods, PausableMods {
             borrower,
             loan.borrowedAmount
         );
-
-        LibEscrow.tokenUpdated(loan.id, loan.lendingToken);
 
         // Set the loan to active
         loan.status = LoanStatus.Active;
