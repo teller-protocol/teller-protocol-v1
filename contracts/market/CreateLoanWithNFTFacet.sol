@@ -16,7 +16,6 @@ import {
 } from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NFTLib } from "../nft/libraries/NFTLib.sol";
 import { AppStorageLib } from "../storage/app.sol";
-import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 
 import { TellerNFT_V2 } from "../nft/TellerNFT_V2.sol";
 
@@ -112,7 +111,6 @@ contract CreateLoanWithNFTFacet is ReentryMods, PausableMods {
             LibCreateLoan.createEscrow(loan.id),
             loan.borrowedAmount
         );
-        LibEscrow.tokenUpdated(loan.id, loan.lendingToken);
 
         // Set the loan to active
         loan.status = LoanStatus.Active;
