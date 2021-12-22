@@ -7,6 +7,8 @@ struct Store {
     ICErc20 cToken;
     uint16 balanceRatioMax;
     uint16 balanceRatioMin;
+    address bonusGnosisSafe;
+    uint256 lastBonusIntTimestamp;
 }
 
 bytes32 constant POSITION = keccak256(
