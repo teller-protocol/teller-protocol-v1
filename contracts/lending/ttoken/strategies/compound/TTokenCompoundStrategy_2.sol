@@ -41,8 +41,6 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
 
     string public constant NAME = "CompoundStrategy_2";
 
-    uint32 constant BLOCKS_PER_YEAR = 2351330;
-
     /* External Functions */
 
     function totalUnderlyingSupply() external override returns (uint256) {
@@ -53,7 +51,7 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
         // Calculate bonus interest due
         uint256 bonusInterest = ((currentSupply * 10) / 100) *
             ((block.timestamp - compoundStore().lastBonusIntTimestamp) /
-                BLOCKS_PER_YEAR);
+                365 days);
         uint256 bonusSupply = tokenStore().underlying.balanceOf(
             compoundStore().bonusGnosisSafe
         );
