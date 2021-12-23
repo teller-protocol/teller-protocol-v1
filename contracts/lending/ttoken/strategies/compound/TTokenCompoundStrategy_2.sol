@@ -58,7 +58,6 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
             address(this),
             bonusInterest
         );
-        ITToken_V3(address(this)).mint(bonusInterest);
 
         return currentSupply + bonusInterest;
     }
