@@ -52,9 +52,6 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
         uint256 bonusInterest = ((currentSupply * 10) / 100) *
             ((block.timestamp - compoundStore().lastBonusIntTimestamp) /
                 365 days);
-        uint256 bonusSupply = tokenStore().underlying.balanceOf(
-            compoundStore().bonusGnosisSafe
-        );
         // Deposit into
         tokenStore().underlying.transferFrom(
             compoundStore().bonusGnosisSafe,
