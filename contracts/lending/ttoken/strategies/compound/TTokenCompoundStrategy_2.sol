@@ -1,53 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// contracts
-import {
-    RolesMods
-} from "../../../../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN } from "../../data.sol";
+// Contracts
+import { TTokenCompoundStrategy_1 } from "./TTokenCompoundStrategy_1.sol";
 
 // Interfaces
 import { ICErc20 } from "../../../../shared/interfaces/ICErc20.sol";
-import { TTokenStrategy } from "../TTokenStrategy.sol";
-import { ITToken_V3 } from "../../ITToken_V3.sol";
-
-// Libraries
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
 import { LibMeta } from "../../../../shared/libraries/LibMeta.sol";
-import {
-    LibCompound
-} from "../../../../escrow/dapps/libraries/LibCompound.sol";
 
-// Storage
-import "../../token-storage.sol" as TokenStorage;
-import "./compound-storage.sol" as CompoundStorage;
-
-contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
-    /**
-     * @dev it creates a reference to the TToken storage
-     */
-    function() pure returns (TokenStorage.Store storage)
-        private constant tokenStore = TokenStorage.store;
-
-    /**
-     * @dev it creates a reference to the Compound storage
-     */
-    function() pure returns (CompoundStorage.Store storage)
-        private constant compoundStore = CompoundStorage.store;
-
-    string public constant NAME = "CompoundStrategy_2";
-
+contract TTokenCompoundStrategy_2 is TTokenCompoundStrategy_1 {
     /* External Functions */
 
-    function totalUnderlyingSupply() external override returns (uint256) {
+    function totalUnderlyingSupply() public override returns (uint256) {
         // Get current supply
-        uint256 currentSupply = tokenStore().underlying.balanceOf(
-            address(this)
-        ) + compoundStore().cToken.balanceOfUnderlying(address(this));
+        uint256 currentSupply = super.totalUnderlyingSupply();
         // Calculate bonus interest due
         uint256 bonusInterest = ((currentSupply * 10) / 100) *
             ((block.timestamp - compoundStore().lastBonusIntTimestamp) /
@@ -60,113 +26,6 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
         );
 
         return currentSupply + bonusInterest;
-    }
-
-    /**
-     * @notice Rebalances the underlying asset held by the Teller Token.
-     *
-     * This strategy looks at the ratio of held underlying asset balance and balance deposited into
-     * Compound. Based on the store {balanceRatioMin} and {balanceRatioMax} values, will deposit
-     * (storedRatio > balanceRatioMax) or withdraw to keep the ratio within that range.
-     */
-    function rebalance() public override {
-        (
-            uint256 storedBal,
-            uint256 compoundBal,
-            uint16 storedRatio
-        ) = _getBalanceInfo();
-        if (storedRatio > compoundStore().balanceRatioMax) {
-            // Calculate median ratio to rebalance to
-            uint16 medianRatio = (compoundStore().balanceRatioMax +
-                compoundStore().balanceRatioMin) / 2;
-            uint256 requiredBal = NumbersLib.percent(
-                storedBal + compoundBal,
-                medianRatio
-            );
-            uint256 amountToDeposit = storedBal - requiredBal;
-
-            // Allow Compound to take underlying tokens
-            SafeERC20.safeIncreaseAllowance(
-                tokenStore().underlying,
-                address(compoundStore().cToken),
-                amountToDeposit
-            );
-
-            // Deposit tokens into Compound
-            require(
-                compoundStore().cToken.mint(amountToDeposit) ==
-                    LibCompound.NO_ERROR,
-                "Teller: Strategy deposit error - Compound"
-            );
-
-            emit StrategyRebalanced(NAME, _msgSender());
-        } else if (storedRatio < compoundStore().balanceRatioMin) {
-            // Withdraw tokens from Compound
-            _withdraw(0, storedBal, compoundBal);
-
-            emit StrategyRebalanced(NAME, _msgSender());
-        }
-    }
-
-    /**
-     * @notice Rebalances the TToken funds by indicating a minimum {amount} of underlying tokens that must be present
-     *  after the call.
-     * @notice If the minimum amount is present, no rebalance happens.
-     * @param amount Amount of underlying tokens that must be available.
-     */
-    function withdraw(uint256 amount) external override {
-        (uint256 storedBal, uint256 compoundBal, ) = _getBalanceInfo();
-        if (storedBal < amount) {
-            _withdraw(amount, storedBal, compoundBal);
-        }
-    }
-
-    /**
-     * @notice it gets balances and the current ratio of the underlying asset stored on the TToken.
-     * @return storedBalance_ returns the total stored balance of the current underlying token
-     * @return compoundBalance_ returns the amount of underlying value stored in Compound
-     * @return storedRatio_ ratio of current storedBalance_ over storedBalance_ and compoundBalance_
-     */
-    function _getBalanceInfo()
-        internal
-        returns (
-            uint256 storedBalance_,
-            uint256 compoundBalance_,
-            uint16 storedRatio_
-        )
-    {
-        storedBalance_ = tokenStore().underlying.balanceOf(address(this));
-        compoundBalance_ = compoundStore().cToken.balanceOfUnderlying(
-            address(this)
-        );
-        storedRatio_ = NumbersLib.ratioOf(
-            storedBalance_,
-            storedBalance_ + compoundBalance_
-        );
-    }
-
-    /**
-     * @notice it rebalances funds stored on the TToken by indicating an extra {amount} to withdraw.
-     */
-    function _withdraw(
-        uint256 amount,
-        uint256 storedBal,
-        uint256 compoundBal
-    ) internal {
-        // Calculate amount to rebalance
-        uint16 medianRatio = (compoundStore().balanceRatioMax +
-            compoundStore().balanceRatioMin) / 2;
-        uint256 requiredBal = NumbersLib.percent(
-            storedBal + compoundBal - amount,
-            medianRatio
-        );
-        uint256 redeemAmount = requiredBal + amount - storedBal;
-        // Withdraw tokens from Compound if needed
-        require(
-            compoundStore().cToken.redeemUnderlying(redeemAmount) ==
-                LibCompound.NO_ERROR,
-            "Teller: Strategy withdraw error - Compound"
-        );
     }
 
     /**
@@ -192,6 +51,7 @@ contract TTokenCompoundStrategy_2 is RolesMods, TTokenStrategy {
         compoundStore().balanceRatioMax = balanceRatioMax;
         compoundStore().bonusGnosisSafe = bonusGnosisSafe;
         compoundStore().lastBonusIntTimestamp = block.timestamp;
+        NAME = "CompoundStrategy_2";
         emit StrategyInitialized(NAME, cTokenAddress, LibMeta.msgSender());
     }
 }
