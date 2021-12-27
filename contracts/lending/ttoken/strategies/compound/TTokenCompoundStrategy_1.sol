@@ -170,7 +170,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
         address cTokenAddress,
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
-    ) external {
+    ) external virtual {
         require(
             balanceRatioMax > balanceRatioMin,
             "Teller: Max ratio balance should be greater than Min ratio balance"
