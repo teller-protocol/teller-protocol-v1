@@ -1,10 +1,10 @@
 import colors from 'colors'
-import { ContractTransaction } from 'ethers'
+import { Contract, ContractTransaction } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getDappAddresses, getMarkets, getSigners, getTokens } from '../config'
-import { ITellerDiamond, ITToken } from '../types/typechain'
+import { IERC20, ITellerDiamond, ITToken } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
@@ -102,11 +102,22 @@ const initializeMarkets: DeployFunction = async (hre) => {
       })
     }
 
-    const tTokenStrategy = await deploy({
-      hre,
-      contract: market.strategy.name,
-      indent: 4,
-    })
+    let tTokenStrategy: Contract
+
+    if (market.strategy.name == 'TTokenCompoundStrategy_2') {
+      tTokenStrategy = await deploy({
+        hre,
+        contract: market.strategy.name,
+        indent: 4,
+        args: [await (await getNamedSigner('deployer')).getAddress()],
+      })
+    } else {
+      tTokenStrategy = await deploy({
+        hre,
+        contract: market.strategy.name,
+        indent: 4,
+      })
+    }
 
     const tToken = await contracts.get<ITToken>('ITToken', {
       at: tTokenAddress,
