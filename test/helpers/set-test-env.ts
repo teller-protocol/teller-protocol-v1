@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Signer } from 'ethers'
 import hre, { toBN } from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import {
   getPlatformSetting,
@@ -33,6 +34,7 @@ export interface TestEnv {
   priceAggregator: PriceAggregator
   nft: PolyTellerNFTMock | MainnetTellerNFT
   tokens: TokenData[]
+  hre: HardhatRuntimeEnvironment
 }
 
 const testEnv: TestEnv = {
@@ -43,6 +45,7 @@ const testEnv: TestEnv = {
   priceAggregator: {} as PriceAggregator,
   nft: {} as PolyTellerNFTMock | MainnetTellerNFT,
   tokens: [] as TokenData[],
+  hre: {} as HardhatRuntimeEnvironment,
 } as TestEnv
 
 const { contracts, deployments, getNamedSigner, tokens } = hre
@@ -52,6 +55,7 @@ export async function initTestEnv() {
   testEnv.deployer = await getNamedSigner('deployer')
   testEnv.lender = await getNamedSigner('lender')
   testEnv.borrower = await getNamedSigner('borrower')
+  testEnv.hre = hre
 
   // Get a fresh market
   await deployments.fixture('markets', {
