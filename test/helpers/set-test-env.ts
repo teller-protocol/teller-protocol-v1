@@ -128,7 +128,7 @@ export const revertHead = async () => {
 }
 
 const fundMarket = async (testEnv: TestEnv) => {
-  const { tellerDiamond, lender } = testEnv
+  const { tellerDiamond, lender, deployer } = testEnv
   // Get list of tokens
   const dai = await tokens.get('DAI')
   const collateralTokens = Array.from(
@@ -158,6 +158,26 @@ const fundMarket = async (testEnv: TestEnv) => {
       amount: bnedAmount,
       hre,
     })
+
+    // Get funds for deployer for bonus int
+    await getFunds({
+      to: deployer,
+      tokenSym: await token.symbol(),
+      amount: bnedAmount,
+      hre,
+    })
+
+    // Approve protocol for bonus int
+    await token
+      .connect(deployer)
+      .approve(tToken.address, bnedAmount.mul(10))
+      .then(({ wait }) => wait())
+
+    const allowance = await token.allowance(
+      await deployer.getAddress(),
+      tToken.address
+    )
+
     // Approve protocol
     await token
       .connect(lender)
