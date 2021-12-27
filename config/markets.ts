@@ -11,7 +11,7 @@ const parseCompoundWeth = (sym: string): string => {
 }
 
 const compoundStrategy = (tokenSym: string): MarketStrategy => ({
-  name: 'TTokenCompoundStrategy_1',
+  name: 'TTokenCompoundStrategy_2',
   initArgs: [
     {
       type: 'TokenSymbol',
