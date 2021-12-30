@@ -39,12 +39,27 @@ contract TTokenCompoundStrategy_2 is TTokenCompoundStrategy_1 {
     }
 
     /**
+     * @notice Sets the Compound token that should be used to manage the underlying Teller Token asset.
+     * @param cTokenAddress Address of the Compound token that has the same underlying asset as the TToken.
+     * @param balanceRatioMin Percentage indicating the _ limit of underlying token balance should remain on the TToken
+     * @param balanceRatioMax Percentage indicating the _ limit of underlying token balance should remain on the TToken
+     * @dev Note that the balanceRatio percentages have to be scaled by ONE_HUNDRED_PERCENT
+     */
+    function init(
+        address cTokenAddress,
+        uint16 balanceRatioMin,
+        uint16 balanceRatioMax
+    ) public override {
+        super.init(cTokenAddress, balanceRatioMin, balanceRatioMax);
+        compoundStore().lastBonusIntTimestamp = block.timestamp;
+        NAME = "CompoundStrategy_2";
+    }
+
+    /**
      * @notice Sets the address of the bonus gnosis safe for the bonus interest disbursment
      * @param _bonusGnosisSafe The address of the gnosisSafe to pull funds from for bonus interest
      */
     constructor(address _bonusGnosisSafe) {
         bonusGnosisSafe = _bonusGnosisSafe;
-        compoundStore().lastBonusIntTimestamp = block.timestamp;
-        NAME = "CompoundStrategy_2";
     }
 }
