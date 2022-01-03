@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { contracts, ethers, network, toBN } from 'hardhat'
+import moment from 'moment'
 
 import { ERC20, TTokenV3 } from '../../types/typechain'
 import { getFunds } from '../helpers/get-funds'
@@ -47,13 +48,10 @@ setTestEnv('Lending - TToken bonus interest', (testEnv: TestEnv) => {
       .then(({ wait }) => wait())
 
     // Advance time
-    const currentBlockTimestamp = (
-      await hre.ethers.provider.getBlock(
-        await hre.ethers.provider.getBlockNumber()
-      )
-    ).timestamp
-
-    await advanceBlock(currentBlockTimestamp + 6400) // block for a year
+    await hre.ethers.provider.send('evm_increaseTime', [
+      moment.duration(365, 'days').asSeconds(),
+    ])
+    await hre.ethers.provider.send('evm_mine', [])
 
     // Check tToken total underlying
     const totalUnderlyingAfter = await tDai.callStatic.totalUnderlyingSupply()
