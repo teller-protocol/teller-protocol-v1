@@ -16,10 +16,13 @@ contract TTokenCompoundStrategy_2 is TTokenCompoundStrategy_1 {
     function totalUnderlyingSupply() public override returns (uint256) {
         // Get current supply
         uint256 currentSupply = super.totalUnderlyingSupply();
+
         // Calculate bonus interest due
-        uint256 bonusInterest = ((currentSupply / 10) / 365 days) *
-            ((block.timestamp - compoundStore().lastBonusIntTimestamp) /
-                1 days);
+        uint256 interestTimeperiod = block.timestamp -
+            compoundStore().lastBonusIntTimestamp;
+        uint256 dailyInterest = ((currentSupply / 10) / 365 days) * 1 days;
+        uint256 bonusInterest = dailyInterest * (interestTimeperiod / 1 days);
+
         uint256 gnosisBalance = tokenStore().underlying.balanceOf(
             bonusGnosisSafe
         );
