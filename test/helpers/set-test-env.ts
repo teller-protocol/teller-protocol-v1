@@ -59,7 +59,7 @@ export async function initTestEnv() {
 
   // Get a fresh market
   await deployments.fixture('markets', {
-    keepExistingDeployments: true,
+    keepExistingDeployments: false,
   })
 
   testEnv.tellerDiamond = await contracts.get('TellerDiamond')
