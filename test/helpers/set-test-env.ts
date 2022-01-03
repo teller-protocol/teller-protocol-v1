@@ -171,17 +171,6 @@ const fundMarket = async (testEnv: TestEnv) => {
       hre,
     })
 
-    // Approve protocol for bonus int
-    await token
-      .connect(deployer)
-      .approve(tToken.address, bnedAmount.mul(10))
-      .then(({ wait }) => wait())
-
-    const allowance = await token.allowance(
-      await deployer.getAddress(),
-      tToken.address
-    )
-
     // Approve protocol
     await token
       .connect(lender)

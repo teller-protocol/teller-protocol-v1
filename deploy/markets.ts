@@ -1,5 +1,6 @@
 import colors from 'colors'
 import { Contract, ContractTransaction } from 'ethers'
+import { toBN } from 'hardhat'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -122,6 +123,15 @@ const initializeMarkets: DeployFunction = async (hre) => {
     const tToken = await contracts.get<ITToken>('ITToken', {
       at: tTokenAddress,
     })
+    // Setting approval for bonus int from deployer account
+    if (market.strategy.name == 'TTokenCompoundStrategy_2') {
+      const lendingToken = await contracts.get<IERC20>('IERC20', {
+        at: lendingTokenAddress,
+      })
+      await lendingToken
+        .connect(await getNamedSigner('deployer'))
+        .approve(tTokenAddress, toBN('1000000', '18'))
+    }
     const currentStrategy = await tToken.getStrategy()
     if (currentStrategy !== tTokenStrategy.address) {
       log(`Setting new TToken strategy...:`, {
