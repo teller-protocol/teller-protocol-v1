@@ -23,13 +23,14 @@ contract TTokenCompoundStrategy_2 is TTokenCompoundStrategy_1 {
         uint256 dailyInterest = ((currentSupply / 10) / 365 days) * 1 days;
         uint256 bonusInterest = dailyInterest * (interestTimeperiod / 1 days);
 
-        uint256 gnosisBalance = tokenStore().underlying.balanceOf(
-            bonusGnosisSafe
-        );
-        if (gnosisBalance < bonusInterest) {
-            bonusInterest = gnosisBalance;
-        }
         if (bonusInterest > 0) {
+            uint256 gnosisBalance = tokenStore().underlying.balanceOf(
+                bonusGnosisSafe
+            );
+            if (gnosisBalance < bonusInterest) {
+                bonusInterest = gnosisBalance;
+            }
+
             // Deposit into
             tokenStore().underlying.transferFrom(
                 bonusGnosisSafe,
