@@ -110,7 +110,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
         hre,
         contract: market.strategy.name,
         indent: 4,
-        args: [await (await getNamedSigner('deployer')).getAddress()],
+        args: [await (await getNamedSigner('gnosisSafe')).getAddress()],
       })
     } else {
       tTokenStrategy = await deploy({
@@ -128,9 +128,16 @@ const initializeMarkets: DeployFunction = async (hre) => {
       const lendingToken = await contracts.get<IERC20>('IERC20', {
         at: lendingTokenAddress,
       })
-      await lendingToken
-        .connect(await getNamedSigner('deployer'))
-        .approve(tTokenAddress, toBN('1000000', '18'))
+      const currentAllowance = await lendingToken.allowance(
+        await (await getNamedSigner('gnosisSafe')).getAddress(),
+        tTokenAddress
+      )
+
+      if (currentAllowance.eq('0')) {
+        await lendingToken
+          .connect(await getNamedSigner('gnosisSafe'))
+          .approve(tTokenAddress, toBN('1000000', '18'))
+      }
     }
     const currentStrategy = await tToken.getStrategy()
     if (currentStrategy !== tTokenStrategy.address) {
