@@ -30,6 +30,7 @@ export interface TestEnv {
   deployer: Signer
   lender: Signer
   borrower: Signer
+  gnosisSafe: Signer
   tellerDiamond: ITellerDiamond
   priceAggregator: PriceAggregator
   nft: PolyTellerNFTMock | MainnetTellerNFT
@@ -41,6 +42,7 @@ const testEnv: TestEnv = {
   deployer: {} as Signer,
   lender: {} as Signer,
   borrower: {} as Signer,
+  gnosisSafe: {} as Signer,
   tellerDiamond: {} as ITellerDiamond,
   priceAggregator: {} as PriceAggregator,
   nft: {} as PolyTellerNFTMock | MainnetTellerNFT,
@@ -55,6 +57,7 @@ export async function initTestEnv() {
   testEnv.deployer = await getNamedSigner('deployer')
   testEnv.lender = await getNamedSigner('lender')
   testEnv.borrower = await getNamedSigner('borrower')
+  testEnv.gnosisSafe = await getNamedSigner('gnosisSafe')
   testEnv.hre = hre
 
   // Get a fresh market
@@ -132,7 +135,7 @@ export const revertHead = async () => {
 }
 
 const fundMarket = async (testEnv: TestEnv) => {
-  const { tellerDiamond, lender, deployer } = testEnv
+  const { tellerDiamond, lender, deployer, gnosisSafe } = testEnv
   // Get list of tokens
   const dai = await tokens.get('DAI')
   const collateralTokens = Array.from(
@@ -165,7 +168,7 @@ const fundMarket = async (testEnv: TestEnv) => {
 
     // Get funds for deployer for bonus int
     await getFunds({
-      to: deployer,
+      to: gnosisSafe,
       tokenSym: await token.symbol(),
       amount: bnedAmount,
       hre,
