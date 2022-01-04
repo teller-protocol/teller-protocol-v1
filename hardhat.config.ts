@@ -171,6 +171,10 @@ export default <HardhatUserConfig>{
       hardhat: 11,
       localhost: 11,
     },
+    gnosisSafe: {
+      hardhat: 13,
+      localhost: 13,
+    },
   },
   networks: {
     kovan: networkConfig({

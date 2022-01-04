@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Signer } from 'ethers'
 import hre, { toBN } from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import {
   getPlatformSetting,
@@ -29,20 +30,24 @@ export interface TestEnv {
   deployer: Signer
   lender: Signer
   borrower: Signer
+  gnosisSafe: Signer
   tellerDiamond: ITellerDiamond
   priceAggregator: PriceAggregator
   nft: PolyTellerNFTMock | MainnetTellerNFT
   tokens: TokenData[]
+  hre: HardhatRuntimeEnvironment
 }
 
 const testEnv: TestEnv = {
   deployer: {} as Signer,
   lender: {} as Signer,
   borrower: {} as Signer,
+  gnosisSafe: {} as Signer,
   tellerDiamond: {} as ITellerDiamond,
   priceAggregator: {} as PriceAggregator,
   nft: {} as PolyTellerNFTMock | MainnetTellerNFT,
   tokens: [] as TokenData[],
+  hre: {} as HardhatRuntimeEnvironment,
 } as TestEnv
 
 const { contracts, deployments, getNamedSigner, tokens } = hre
@@ -52,10 +57,12 @@ export async function initTestEnv() {
   testEnv.deployer = await getNamedSigner('deployer')
   testEnv.lender = await getNamedSigner('lender')
   testEnv.borrower = await getNamedSigner('borrower')
+  testEnv.gnosisSafe = await getNamedSigner('gnosisSafe')
+  testEnv.hre = hre
 
   // Get a fresh market
   await deployments.fixture('markets', {
-    keepExistingDeployments: true,
+    keepExistingDeployments: false,
   })
 
   testEnv.tellerDiamond = await contracts.get('TellerDiamond')
@@ -128,7 +135,7 @@ export const revertHead = async () => {
 }
 
 const fundMarket = async (testEnv: TestEnv) => {
-  const { tellerDiamond, lender } = testEnv
+  const { tellerDiamond, lender, deployer, gnosisSafe } = testEnv
   // Get list of tokens
   const dai = await tokens.get('DAI')
   const collateralTokens = Array.from(
@@ -158,6 +165,15 @@ const fundMarket = async (testEnv: TestEnv) => {
       amount: bnedAmount,
       hre,
     })
+
+    // Get funds for deployer for bonus int
+    await getFunds({
+      to: gnosisSafe,
+      tokenSym: await token.symbol(),
+      amount: bnedAmount,
+      hre,
+    })
+
     // Approve protocol
     await token
       .connect(lender)

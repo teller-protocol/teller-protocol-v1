@@ -30,15 +30,15 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @dev it creates a reference to the TToken storage
      */
     function() pure returns (TokenStorage.Store storage)
-        private constant tokenStore = TokenStorage.store;
+        internal constant tokenStore = TokenStorage.store;
 
     /**
      * @dev it creates a reference to the Compound storage
      */
     function() pure returns (CompoundStorage.Store storage)
-        private constant compoundStore = CompoundStorage.store;
+        internal constant compoundStore = CompoundStorage.store;
 
-    string public constant NAME = "CompoundStrategy_1";
+    string public NAME;
 
     /* External Functions */
 
@@ -46,7 +46,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
      * @notice it returns the total supply of an underlying asset in a Teller token.
      * @return uint256 the underlying supply
      */
-    function totalUnderlyingSupply() external override returns (uint256) {
+    function totalUnderlyingSupply() public virtual override returns (uint256) {
         return
             tokenStore().underlying.balanceOf(address(this)) +
             compoundStore().cToken.balanceOfUnderlying(address(this));
@@ -170,7 +170,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
         address cTokenAddress,
         uint16 balanceRatioMin,
         uint16 balanceRatioMax
-    ) external {
+    ) public virtual {
         require(
             balanceRatioMax > balanceRatioMin,
             "Teller: Max ratio balance should be greater than Min ratio balance"
@@ -178,6 +178,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
         compoundStore().cToken = ICErc20(cTokenAddress);
         compoundStore().balanceRatioMin = balanceRatioMin;
         compoundStore().balanceRatioMax = balanceRatioMax;
+        NAME = "CompoundStrategy_1";
         emit StrategyInitialized(NAME, cTokenAddress, LibMeta.msgSender());
     }
 }
