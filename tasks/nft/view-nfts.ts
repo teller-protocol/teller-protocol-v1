@@ -47,6 +47,16 @@ export const viewNFTs = async (
     claimable: {},
     claimed: {},
   }
+
+  // First pass: collect all claims that need to be checked
+  interface ClaimToCheck {
+    distributionIndex: number
+    claimIndex: number
+    amount: string
+    tierIndex: number
+  }
+  const claimsToCheck: ClaimToCheck[] = []
+
   for (let i = 0; i < distributions.length; i++) {
     const { merkleRoot, tierIndex, tokenTotal, claims } = distributions[i]
     const info: MerkleDistributorInfo = {
@@ -69,21 +79,45 @@ export const viewNFTs = async (
     const claimEntries = Object.entries(info.claims)
     for (const [, claim] of claimEntries) {
       if (!claim) continue
-      const isClaimed = await nftDistributor.isClaimed(i, claim.index)
+      claimsToCheck.push({
+        distributionIndex: i,
+        claimIndex: claim.index,
+        amount: claim.amount,
+        tierIndex: merkleTrees[i].tierIndex,
+      })
+    }
+  }
 
-      const skip = (claimed && !isClaimed) || (claimable && isClaimed)
-      if (skip) continue
+  // Second pass: batch all isClaimed calls and execute in parallel (10 at a time)
+  const BATCH_SIZE = 5
+  const isClaimedResults: boolean[] = []
 
-      const { tierIndex } = merkleTrees[i]
-      if (isClaimed) {
-        tierIndices.claimed.add(tierIndex)
-        tierTokens.claimed[tierIndex] =
-          parseInt(claim.amount, 16) + (tierTokens.claimed[tierIndex] ?? 0)
-      } else {
-        tierIndices.claimable.add(tierIndex)
-        tierTokens.claimable[tierIndex] =
-          parseInt(claim.amount, 16) + (tierTokens.claimable[tierIndex] ?? 0)
-      }
+  for (let i = 0; i < claimsToCheck.length; i += BATCH_SIZE) {
+    const batch = claimsToCheck.slice(i, i + BATCH_SIZE)
+    const batchPromises = batch.map((claim) =>
+      nftDistributor.isClaimed(claim.distributionIndex, claim.claimIndex)
+    )
+    const batchResults = await Promise.all(batchPromises)
+    isClaimedResults.push(...batchResults)
+  }
+
+  // Third pass: process results
+  for (let i = 0; i < claimsToCheck.length; i++) {
+    const claim = claimsToCheck[i]
+    const isClaimed = isClaimedResults[i]
+
+    const skip = (claimed && !isClaimed) || (claimable && isClaimed)
+    if (skip) continue
+
+    if (isClaimed) {
+      tierIndices.claimed.add(claim.tierIndex)
+      tierTokens.claimed[claim.tierIndex] =
+        parseInt(claim.amount, 16) + (tierTokens.claimed[claim.tierIndex] ?? 0)
+    } else {
+      tierIndices.claimable.add(claim.tierIndex)
+      tierTokens.claimable[claim.tierIndex] =
+        parseInt(claim.amount, 16) +
+        (tierTokens.claimable[claim.tierIndex] ?? 0)
     }
   }
 
