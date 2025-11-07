@@ -1,4 +1,4 @@
-import { BigNumberish } from 'ethers'
+import { BigNumber, BigNumberish } from 'ethers'
 import fs from 'fs'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -11,6 +11,7 @@ interface ClaimNFTArgs {
   account: string
   merkleIndex?: number
   sendTx?: boolean
+  printArgs?: boolean
 }
 
 export const claimNFT = async (
@@ -19,13 +20,25 @@ export const claimNFT = async (
 ): Promise<void> => {
   const { contracts, network, ethers, toBN, log } = hre
 
-  if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
-    console.log()
-    console.log('================================================')
-    console.log('  Must pass --send-tx flag to execute tx')
-    console.log('================================================')
-    console.log()
-    return
+  // Validate that exactly one of printArgs or sendTx is set for non-local networks
+  if (!['localhost', 'hardhat'].includes(network.name)) {
+    if (!args.sendTx && !args.printArgs) {
+      console.log()
+      console.log('================================================')
+      console.log('  Must pass either --send-tx or --print-args')
+      console.log('================================================')
+      console.log()
+      return
+    }
+    if (args.sendTx && args.printArgs) {
+      console.log()
+      console.log('================================================')
+      console.log('  Cannot use both --send-tx and --print-args')
+      console.log('  Please choose only one')
+      console.log('================================================')
+      console.log()
+      return
+    }
   }
 
   const { account, merkleIndex } = args
@@ -99,9 +112,57 @@ export const claimNFT = async (
   log('')
 
   if (requests.length > 0) {
-    await nftDistributor
-      .claim(args.account, requests)
-      .then(({ wait }) => wait())
+    if (args.printArgs) {
+      // Print non-encoded arguments
+      log('Function Arguments:', { indent: 2, star: true })
+      log(`Contract: ${nftDistributor.address}`, { indent: 4 })
+      log(`Function: claim(address,tuple[])`, { indent: 4 })
+      log(
+        `Etherscan: https://etherscan.io/address/${nftDistributor.address}#writeProxyContract#F1`,
+        { indent: 4 }
+      )
+      log(`Account: ${args.account}`, { indent: 4 })
+      log('Requests:', { indent: 4 })
+      requests.forEach((req, idx) => {
+        log(`Request ${idx}:`, { indent: 6 })
+        log(`  merkleIndex: ${BigNumber.from(req.merkleIndex).toString()}`, {
+          indent: 6,
+        })
+        log(`  nodeIndex: ${BigNumber.from(req.nodeIndex).toString()}`, {
+          indent: 6,
+        })
+        log(`  amount: ${BigNumber.from(req.amount).toString()}`, { indent: 6 })
+        log(`  merkleProof: [${req.merkleProof.join(', ')}]`, { indent: 6 })
+      })
+      log('')
+
+      // Print encoded requests for Etherscan tuple[] input
+      const encodedRequests = requests.map((req) => [
+        BigNumber.from(req.merkleIndex).toString(),
+        BigNumber.from(req.nodeIndex).toString(),
+        BigNumber.from(req.amount).toString(),
+        req.merkleProof,
+      ])
+      log('Encoded Requests (for Etherscan tuple[] input):', {
+        indent: 2,
+        star: true,
+      })
+      log(JSON.stringify(encodedRequests), { indent: 4 })
+      log('')
+
+      // Print encoded calldata
+      const encodedData = nftDistributor.interface.encodeFunctionData('claim', [
+        args.account,
+        requests,
+      ])
+      log('Full Encoded Calldata:', { indent: 2, star: true })
+      log(encodedData, { indent: 4 })
+      log('')
+    } else {
+      await nftDistributor
+        .claim(args.account, requests)
+        .then(({ wait }) => wait())
+    }
   }
 
   log('Done.')
@@ -113,5 +174,9 @@ task('claim-nft', 'Claims an NFT on behalf of an account')
     'merkleIndex',
     'Only claim tokens using the specified merkle index.'
   )
-  .addFlag('sendTx', 'Required flag to ensure this is not ran on accident')
+  .addFlag('sendTx', 'Execute the transaction on-chain')
+  .addFlag(
+    'printArgs',
+    'Print encoded and non-encoded arguments without sending'
+  )
   .setAction(claimNFT)

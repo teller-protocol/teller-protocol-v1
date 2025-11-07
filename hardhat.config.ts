@@ -6,7 +6,7 @@ import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
-import { BigNumber as BN, ethers } from 'ethers'
+import { ethers } from 'ethers'
 import fs from 'fs'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
