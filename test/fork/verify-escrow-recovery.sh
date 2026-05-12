@@ -212,11 +212,11 @@ step "ADMIN clears V1 NFT references"
 cast rpc anvil_setBalance "$ADMIN" 0x100000000000000000 --rpc-url "$RPC_URL" >/dev/null
 cast rpc anvil_impersonateAccount "$ADMIN" --rpc-url "$RPC_URL" >/dev/null
 
-# Sanity: ADMIN actually has the ADMIN role on chain
-ADMIN_ROLE=$(cast keccak "ADMIN")
-HAS_ROLE=$(cast call "$TELLER_DIAMOND" "hasRole(bytes32,address)(bool)" \
-  "$ADMIN_ROLE" "$ADMIN" --rpc-url "$RPC_URL")
-expect_eq "$HAS_ROLE" "true" "$ADMIN holds ADMIN role"
+# The deployed mainnet diamond doesn't expose an external `hasRole`
+# selector (RolesFacet is in the repo but was never cut into the live
+# diamond), so we can't directly query the ADMIN role here. The real
+# proof is that the privileged call below succeeds when sent from
+# `$ADMIN` and is rejected for everyone else — see the non-admin step.
 
 cast send "$TELLER_DIAMOND" "adminClearV1NFTs(uint256[])" "[$TARGET_LOAN_ID]" \
   --from "$ADMIN" --unlocked --rpc-url "$RPC_URL" >/dev/null
