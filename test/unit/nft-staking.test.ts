@@ -1,6 +1,5 @@
 import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
-import { BigNumber, BigNumberish, Signer } from 'ethers'
+import { BigNumberish, Signer } from 'ethers'
 import hre from 'hardhat'
 import Prando from 'prando'
 
@@ -19,7 +18,6 @@ import {
 import { mergeV2IDsToBalances, V2Balances } from '../helpers/nft'
 
 chai.should()
-chai.use(solidity)
 
 const { getNamedSigner, contracts, tokens, ethers, evm, toBN } = hre
 
@@ -56,7 +54,7 @@ describe('NFT Staking', () => {
         tellerNFTV1 = await contracts.get('TellerNFT')
       })
 
-      const mintV1 = async (tierIndex: number): Promise<BigNumber> => {
+      const mintV1 = async (tierIndex: number): Promise<bigint> => {
         const receipt = await tellerNFTV1
           .connect(deployer)
           .mint(tierIndex, borrowerAddress)
@@ -109,7 +107,7 @@ describe('NFT Staking', () => {
       }
 
       describe('V1 => V2', () => {
-        let ownedNFTsV1: BigNumber[]
+        let ownedNFTsV1: bigint[]
         let diamond1: ITellerDiamond & MainnetNFTFacetMock
 
         beforeEach(async () => {
@@ -127,11 +125,11 @@ describe('NFT Staking', () => {
           ownedNFTsV1 = await tellerNFTV1.getOwnedTokens(borrowerAddress)
         })
 
-        const BNArrayToString = (arr: BigNumber[]): string[] =>
+        const BNArrayToString = (arr: bigint[]): string[] =>
           arr.map((n) => n.toString())
         const BNArrayAssertion = (
-          a: BigNumber[],
-          b: BigNumber[],
+          a: bigint[],
+          b: bigint[],
           errMsg?: string
         ): void => {
           BNArrayToString(a).should.eql(BNArrayToString(b), errMsg)
@@ -244,13 +242,14 @@ describe('NFT Staking', () => {
       })
 
       const prando = new Prando()
-      const mintV2 = async (tierIndex: number): Promise<BigNumber> => {
+      const mintV2 = async (tierIndex: number): Promise<bigint> => {
         const tierTokenCount = await $tellerNFTV2.tierTokenCount(tierIndex)
-        const tierTokenID = prando.nextInt(0, tierTokenCount.toNumber())
-        const tokenIDV2 = BigNumber.from(
+        const tierTokenID = prando.nextInt(0, Number(tierTokenCount))
+        const tokenIDV2 = BigInt(
           `${tierIndex}${tierTokenID.toString().padStart(4, '0')}`
         )
-        const data = ethers.utils.defaultAbiCoder.encode(
+        const abiCoder = ethers.AbiCoder.defaultAbiCoder()
+        const data = abiCoder.encode(
           ['uint256[]', 'uint256[]', 'bytes'],
           [[tokenIDV2], [1], '0x']
         )

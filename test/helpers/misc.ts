@@ -16,7 +16,7 @@ export const evmRevert = async (id: string) =>
 
 export const timeLatest = async () => {
   const block = await ethers.provider.getBlock('latest')
-  return new BigNumber(block.timestamp)
+  return new BigNumber(block!.timestamp)
 }
 
 export const advanceBlock = async (timestamp: number) =>
@@ -34,7 +34,7 @@ export const impersonateAddress = async (
     method: 'hardhat_impersonateAccount',
     params: [addressToImpersonate],
   })
-  return hre.ethers.provider.getSigner(addressToImpersonate)
+  return await hre.ethers.provider.getSigner(addressToImpersonate)
 }
 
 export enum LoanType {

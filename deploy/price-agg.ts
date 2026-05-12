@@ -43,8 +43,8 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
 
   const definedPricer = await priceAgg.chainlinkPricer()
   if (
-    ethers.utils.getAddress(definedPricer) !=
-    ethers.utils.getAddress(chainlinkPricer.address)
+    ethers.getAddress(definedPricer) !=
+    ethers.getAddress(chainlinkPricer.address)
   ) {
     await priceAgg.setChainlinkPricer(chainlinkPricer.address)
   }
@@ -120,12 +120,12 @@ export const deployChainlinkENS = async (
   })
 
   const tld = 'eth'
-  const tldLabel = hre.ethers.utils.id(tld)
-  const tldNode = hre.ethers.utils.namehash(tld)
+  const tldLabel = hre.ethers.id(tld)
+  const tldNode = hre.ethers.namehash(tld)
 
   const mainDomain = 'data'
-  const dataLabel = hre.ethers.utils.id(mainDomain)
-  const dataNode = hre.ethers.utils.namehash(`${mainDomain}.${tld}`)
+  const dataLabel = hre.ethers.id(mainDomain)
+  const dataNode = hre.ethers.namehash(`${mainDomain}.${tld}`)
 
   if (ensRegistry.deployResult.newlyDeployed) {
     await ensRegistry
@@ -161,8 +161,8 @@ export const deployChainlinkENS = async (
   for (const config of Object.values(chainlink)) {
     const chainlinkAggSubdomain = `${config.baseTokenName.toLowerCase()}-${config.quoteTokenName.toLowerCase()}`
     const chainlinkAggDomain = `${chainlinkAggSubdomain}.${mainDomain}.${tld}`
-    const chainlinkAggLabel = hre.ethers.utils.id(chainlinkAggSubdomain)
-    const chainlinkAggNode = hre.ethers.utils.namehash(chainlinkAggDomain)
+    const chainlinkAggLabel = hre.ethers.id(chainlinkAggSubdomain)
+    const chainlinkAggNode = hre.ethers.namehash(chainlinkAggDomain)
     const address = await resolver['addr(bytes32)'](chainlinkAggNode)
 
     hre.log(`${colors.underline(chainlinkAggSubdomain)}: ${config.address}`, {

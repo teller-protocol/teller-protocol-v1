@@ -1,6 +1,4 @@
-import { BigNumber } from 'ethers'
-
-export const MAX_VALUE = BigNumber.from(2).pow(256).mul(1)
+export const MAX_VALUE = 2n ** 256n
 export const ONE_DAY = 60 * 60 * 24
 
 export const HUNDRED_PERCENT = 10000

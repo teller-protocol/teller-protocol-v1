@@ -1,5 +1,5 @@
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
+import '@nomicfoundation/hardhat-chai-matchers'
+import '@nomicfoundation/hardhat-ethers'
 import '@tenderly/hardhat-tenderly'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
@@ -31,6 +31,8 @@ const {
   MATIC_MAINNET_KEY,
   MATIC_MUMBAI_KEY,
   MNEMONIC_KEY,
+  DEPLOYER_PRIVATE_KEY,
+  SAFE_GLOBAL_API_KEY,
   SAVE_GAS_REPORT,
   TESTING,
 } = process.env
@@ -46,11 +48,13 @@ if (TESTING === '1') {
   require('./test/helpers/chai-helpers')
 }
 
-const accounts: HardhatNetworkHDAccountsUserConfig = {
-  mnemonic: MNEMONIC_KEY,
-  count: 15,
-  accountsBalance: ethers.utils.parseEther('100000000').toString(),
-}
+const accounts: HardhatNetworkHDAccountsUserConfig | string[] = DEPLOYER_PRIVATE_KEY
+  ? [DEPLOYER_PRIVATE_KEY]
+  : {
+      mnemonic: MNEMONIC_KEY,
+      count: 15,
+      accountsBalance: ethers.parseEther('100000000').toString(),
+    }
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
 
@@ -94,6 +98,9 @@ const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
+  safe_api: {
+    apiKey: SAFE_GLOBAL_API_KEY,
+  },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
@@ -170,6 +177,10 @@ export default <HardhatUserConfig>{
     attacker: {
       hardhat: 11,
       localhost: 11,
+    },
+    safeAddress: {
+      mainnet: '0x9E3bfee4C6b4D28b5113E4786A1D9812eB3D2Db6',
+      polygon: '0xFea0FB908E31567CaB641865212cF76BE824D848',
     },
   },
   networks: {

@@ -32,7 +32,7 @@ const transferDiamondOwnership = async (
   const tx = await diamond.transferOwnership(args.newowner)
   const receipt = await tx.wait()
 
-  log(`Ownership transferred! tx: ${receipt.transactionHash}`, {
+  log(`Ownership transferred! tx: ${receipt?.hash}`, {
     indent: 1,
     star: true,
   })

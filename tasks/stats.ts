@@ -1,4 +1,4 @@
-import { BigNumber as BN, FixedNumber as FN } from 'ethers'
+import { FixedNumber } from 'ethers'
 import { subtask, task } from 'hardhat/config'
 
 import {
@@ -37,7 +37,7 @@ subtask('stats:current-tvl')
   .addFlag('disableLog', 'Disables console output')
   .setAction(async (args, hre) => {
     if ('currentTVL' in args) {
-      return BN.from(args.currentTVL)
+      return BigInt(args.currentTVL)
     }
 
     const diamond: ITellerDiamond = await hre.contracts.get('TellerDiamond')
@@ -46,11 +46,11 @@ subtask('stats:current-tvl')
       at: await diamond.getTTokenFor(dai.address),
     })
 
-    const currentTVL = await tDai.callStatic.currentTVL()
+    const currentTVL = await tDai.currentTVL.staticCall()
 
     if (!args.disableLog) {
-      const currentTVLFN = FN.from(currentTVL).divUnsafe(
-        FN.from(hre.toBN(1, 18))
+      const currentTVLFN = FixedNumber.fromValue(currentTVL, 0).divUnsafe(
+        FixedNumber.fromValue(hre.toBN(1, 18), 0)
       )
       hre.log(`${currentTVLFN.toString()} current TVL`, { star: true })
     }
@@ -71,7 +71,7 @@ subtask('stats:loans-taken-out')
     const LibCreateLoan = await hre.contracts.get<LibCreateLoan>(
       'LibCreateLoan',
       {
-        at: diamond.address,
+        at: diamond.target as string,
       }
     )
     const loanFilter = LibCreateLoan.filters.LoanTakenOut(
@@ -81,7 +81,10 @@ subtask('stats:loans-taken-out')
       null
     )
     const loanEvents = await diamond.queryFilter(loanFilter)
-    const loanIDs = loanEvents.map(({ args: { loanID } }) => loanID.toString())
+    const loanIDs = loanEvents.map((event) => {
+      const args = (event as any).args
+      return args.loanID.toString()
+    })
 
     if (!args.disableLog) {
       hre.log(`${loanIDs.length} loans taken out`, { star: true })
@@ -109,8 +112,14 @@ subtask('stats:loans-repaid')
     )
     const loanRepaidEvents = await diamond.queryFilter(loanRepaidFilter)
     const repaidLoanIDs = loanRepaidEvents
-      .filter((event) => event.args.totalOwed.eq(0))
-      .map(({ args: { loanID } }) => loanID.toString())
+      .filter((event) => {
+        const args = (event as any).args
+        return args.totalOwed === 0n
+      })
+      .map((event) => {
+        const args = (event as any).args
+        return args.loanID.toString()
+      })
 
     if (!args.disableLog) {
       hre.log(`${repaidLoanIDs.length} loans repaid`, { star: true })
@@ -129,13 +138,13 @@ subtask('stats:average-loan-amount')
       at: await diamond.getTTokenFor(dai.address),
     })
 
-    const ms = await tDai.callStatic.getMarketState()
+    const ms = await tDai.getMarketState.staticCall()
     const loansTakenOut: number[] = await hre.run('stats:loans-taken-out', args)
-    const averageLoanAmount = ms.totalBorrowed.div(loansTakenOut.length)
+    const averageLoanAmount = ms.totalBorrowed / BigInt(loansTakenOut.length)
 
     if (!args.disableLog) {
-      const averageLoanAmountFN = FN.from(averageLoanAmount).divUnsafe(
-        FN.from(hre.toBN(1, 18))
+      const averageLoanAmountFN = FixedNumber.fromValue(averageLoanAmount, 0).divUnsafe(
+        FixedNumber.fromValue(hre.toBN(1, 18), 0)
       )
       hre.log(`${averageLoanAmountFN.toString()} average loan amount`, {
         star: true,
@@ -157,25 +166,25 @@ subtask('stats:interest-generated')
     const mintFilter = tDai.filters.Mint(null, null, null)
     const mintEvents = await tDai.queryFilter(mintFilter)
     const mintAmount = mintEvents.reduce(
-      (sum, event) => sum.add(event.args.underlyingAmount),
-      BN.from(0)
+      (sum, event) => sum + ((event as any).args.underlyingAmount as bigint),
+      0n
     )
     const redeemFilter = tDai.filters.Redeem(null, null, null)
     const redeemEvents = await tDai.queryFilter(redeemFilter)
     const redeemAmount = redeemEvents.reduce(
-      (sum, event) => sum.add(event.args.underlyingAmount),
-      BN.from(0)
+      (sum, event) => sum + ((event as any).args.underlyingAmount as bigint),
+      0n
     )
-    const currentTVL: BN = await hre.run('stats:current-tvl', {
+    const currentTVL: bigint = await hre.run('stats:current-tvl', {
       ...args,
       disableLogs: true,
     })
-    const totalInterestGenerated = currentTVL.sub(mintAmount.sub(redeemAmount))
+    const totalInterestGenerated = currentTVL - (mintAmount - redeemAmount)
 
     if (!args.disableLog) {
-      const totalInterestGeneratedFN = FN.from(
-        totalInterestGenerated
-      ).divUnsafe(FN.from(hre.toBN(1, 18)))
+      const totalInterestGeneratedFN = FixedNumber.fromValue(
+        totalInterestGenerated, 0
+      ).divUnsafe(FixedNumber.fromValue(hre.toBN(1, 18), 0))
       hre.log(`${totalInterestGeneratedFN.toString()} interest generated`, {
         star: true,
       })
@@ -201,11 +210,11 @@ subtask('stats:pending-interest-owed')
       {}
     )
 
-    let pendingInterestOwed = BN.from(0)
+    let pendingInterestOwed = 0n
     const fetchPendingInterestOwed = async (loanID: number): Promise<void> => {
       if (!loansRepaidMap[loanID]) {
         const debt = await diamond.getDebtOwed(loanID)
-        pendingInterestOwed = pendingInterestOwed.add(debt.interestOwed)
+        pendingInterestOwed = pendingInterestOwed + debt.interestOwed
       }
     }
 
@@ -214,8 +223,8 @@ subtask('stats:pending-interest-owed')
     )
 
     if (!args.disableLog) {
-      const pendingInterestOwedFN = FN.from(pendingInterestOwed).divUnsafe(
-        FN.from(hre.toBN(1, 18))
+      const pendingInterestOwedFN = FixedNumber.fromValue(pendingInterestOwed, 0).divUnsafe(
+        FixedNumber.fromValue(hre.toBN(1, 18), 0)
       )
       hre.log(`${pendingInterestOwedFN} pending interest owed`, { star: true })
     }
@@ -229,7 +238,7 @@ subtask('stats:staked-nft-balance')
     const diamond: ITellerDiamond = await hre.contracts.get('TellerDiamond')
     const nft: ITellerNFT & IERC721 = await hre.contracts.get('TellerNFT')
 
-    const stakedNFTs = await nft.balanceOf(diamond.address)
+    const stakedNFTs = await nft.balanceOf(diamond.target as string)
 
     if (!args.disableLog) {
       hre.log(`${stakedNFTs} NFTs staked`, { star: true })

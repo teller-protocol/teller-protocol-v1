@@ -1,6 +1,6 @@
 import colors from 'colors'
 import { makeNodeDisklet } from 'disklet'
-import { Contract } from 'ethers'
+import { BaseContract } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployOptions, DeployResult } from 'hardhat-deploy/types'
 import { Libraries } from 'hardhat-deploy/types'
@@ -20,9 +20,9 @@ export interface DeployArgs extends CommonDeployArgs {
   mock?: boolean
 }
 
-type DeployedContract<C extends Contract> = C & { deployResult: DeployResult }
+type DeployedContract<C extends BaseContract> = C & { deployResult: DeployResult }
 
-export const deploy = async <C extends Contract>(
+export const deploy = async <C extends BaseContract>(
   args: DeployArgs
 ): Promise<DeployedContract<C>> => {
   const { hre, skipIfAlreadyDeployed = true, indent = 1 } = args
@@ -78,7 +78,7 @@ type FacetConfig = Omit<DeployArgs, 'hre'>
 export type Facets = Array<string | FacetConfig>
 
 export interface DeployDiamondArgs<
-  C extends Contract,
+  C extends BaseContract,
   F = string | undefined,
   A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
 > extends CommonDeployArgs {
@@ -91,7 +91,7 @@ export interface DeployDiamondArgs<
 }
 
 export const deployDiamond = async <
-  C extends Contract,
+  C extends BaseContract,
   F = string | undefined,
   A = F extends keyof C['functions'] ? Parameters<C[F]> : undefined
 >(

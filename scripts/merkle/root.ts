@@ -1,8 +1,6 @@
-import { BigNumber, BigNumberish, utils } from 'ethers'
+import { BigNumberish, isAddress, getAddress } from 'ethers'
 
 import BalanceTree from './balance-tree'
-
-const { isAddress, getAddress } = utils
 
 // This is the blob that gets distributed and pinned to IPFS.
 // It is completely sufficient for recreating the entire merkle tree.
@@ -32,7 +30,7 @@ export function generateMerkleDistribution(
 ): MerkleDistributorInfo {
   const dataByAddress = balances.reduce<{
     [address: string]: {
-      amount: BigNumber
+      amount: bigint
       flags?: { [flag: string]: boolean }
     }
   }>((memo, { address: account, count }) => {
@@ -41,8 +39,8 @@ export function generateMerkleDistribution(
     }
     const parsed = getAddress(account)
     if (memo[parsed]) throw new Error(`Duplicate address: ${parsed}`)
-    const parsedNum = BigNumber.from(count)
-    if (parsedNum.lte(0))
+    const parsedNum = BigInt(count)
+    if (parsedNum <= 0n)
       throw new Error(`Invalid count for account: ${account}`)
 
     memo[parsed] = { amount: parsedNum }
@@ -71,22 +69,22 @@ export function generateMerkleDistribution(
     const { amount, flags } = dataByAddress[address]
     memo[address] = {
       index,
-      amount: amount.toHexString(),
+      amount: '0x' + amount.toString(16),
       proof: tree.getProof(index, address, amount),
       ...(flags ? { flags } : {}),
     }
     return memo
   }, {})
 
-  const tokenTotal: BigNumber = sortedAddresses.reduce<BigNumber>(
-    (memo, key) => memo.add(dataByAddress[key].amount),
-    BigNumber.from(0)
+  const tokenTotal: bigint = sortedAddresses.reduce<bigint>(
+    (memo, key) => memo + dataByAddress[key].amount,
+    0n
   )
 
   return {
     merkleRoot: tree.getHexRoot(),
     tierIndex: tierIndex,
-    tokenTotal: tokenTotal.toHexString(),
+    tokenTotal: '0x' + tokenTotal.toString(16),
     claims,
   }
 }

@@ -69,7 +69,7 @@ export const viewNFTs = async (
     if (getAll) {
       info.claims = claims
     } else if (account != null) {
-      const checkedAddress = ethers.utils.getAddress(account)
+      const checkedAddress = ethers.getAddress(account)
       const { [checkedAddress]: claim } = claims
       info.claims[checkedAddress] = claim
     } else if (tier != null && merkleTrees[i].tierIndex === tier) {

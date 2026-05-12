@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai'
-import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 
 import { getPlatformSetting } from '../../tasks'
@@ -8,7 +7,6 @@ import { mockCRAResponse } from '../helpers/mock-cra-response'
 import { revertHead, setTestEnv, TestEnv } from '../helpers/set-test-env'
 
 chai.should()
-chai.use(solidity)
 
 setTestEnv('Loans - Secured', (testEnv: TestEnv) => {
   const securedLoan = async (

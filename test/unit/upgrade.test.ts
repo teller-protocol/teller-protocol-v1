@@ -1,5 +1,4 @@
 import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
 import {
   contracts,
   deployments,
@@ -13,7 +12,6 @@ import { NULL_ADDRESS } from '../../utils/consts'
 import { RUN_EXISTING } from '../helpers/env-helpers'
 
 chai.should()
-chai.use(solidity)
 
 describe('Upgrading the Teller diamond', () => {
   it('Should be able to disable adding an authorized address', async () => {

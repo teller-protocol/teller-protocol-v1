@@ -36,10 +36,10 @@ const upgradeFacet = async (
 
   // Get function selectors from the facet ABI
   const artifact = await getArtifact(args.facet)
-  const iface = new ethers.utils.Interface(artifact.abi)
-  const selectors = Object.keys(iface.functions).map((fn) =>
-    iface.getSighash(fn)
-  )
+  const iface = new ethers.Interface(artifact.abi)
+  const selectors = iface.fragments
+    .filter((f): f is import('ethers').FunctionFragment => f.type === 'function')
+    .map((f) => f.selector)
 
   log(`Found ${selectors.length} function selectors`, {
     indent: 2,
@@ -62,7 +62,7 @@ const upgradeFacet = async (
         functionSelectors: selectors,
       },
     ],
-    ethers.constants.AddressZero,
+    ethers.ZeroAddress,
     '0x'
   )
 
