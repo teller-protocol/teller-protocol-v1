@@ -24,6 +24,9 @@ import {
 } from "../../market/CreateLoanWithNFTFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
+import {
+    EscrowRecoveryFacet
+} from "../../market/EscrowRecoveryFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { NFTFacet } from "../../nft/NFTFacet.sol";
 //import {
@@ -54,6 +57,7 @@ abstract contract ITellerDiamond is
     CreateLoanWithNFTFacet,
     LoanDataFacet,
     RepayFacet,
+    EscrowRecoveryFacet,
     SignersFacet,
     NFTFacet,
     //    MainnetNFTInterestFacet,
