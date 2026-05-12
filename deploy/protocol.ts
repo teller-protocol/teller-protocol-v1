@@ -43,14 +43,8 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Try to get deployment of TellerDiamond
     await contracts.get('TellerDiamond')
 
-    // If deployment exists execute upgrade function
-    const executeMethod = 'init2'
-    const upgradeExecute = {
-      methodName: executeMethod,
-      args: [wrappedNativeToken, priceAggregator.address],
-    }
-
-    execute = upgradeExecute
+    // If deployment exists, skip execute (init2 already called)
+    execute = undefined
   } catch {
     // Else execute initialize function
     const executeMethod = 'init'

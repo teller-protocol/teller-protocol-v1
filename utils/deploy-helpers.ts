@@ -128,10 +128,20 @@ export const deployDiamond = async <
     }
   }
 
+  const facetConfigs = args.facets.map((f) => {
+    if (typeof f === 'string') return f
+    const config: { name: string; contract: string; args?: any[] } = {
+      name: f.contract,
+      contract: f.contract,
+    }
+    if (f.args) config.args = f.args
+    return config
+  })
+
   const result = await diamond.deploy(args.name, {
     owner: args.owner ?? deployer,
     libraries: args.libraries,
-    facets: args.facets,
+    facets: facetConfigs,
     // @ts-expect-error fix type
     execute: args.execute,
     from: deployer,

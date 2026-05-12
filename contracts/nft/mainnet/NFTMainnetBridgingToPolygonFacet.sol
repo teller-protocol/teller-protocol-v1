@@ -93,11 +93,17 @@ contract NFTMainnetBridgingToPolygonFacet {
         EnumerableSet.UintSet storage stakedNFTs = NFTLib.s().stakedNFTs[
             msg.sender
         ];
+
+      
+
         // we are creating a new array so that we can overrwrite each element
         // with a newTokenId.
         if (EnumerableSet.contains(stakedNFTs, tokenId)) {
             NFTLib.unstake(tokenId, msg.sender);
-        } else if (TELLER_NFT_V1.ownerOf(tokenId) == msg.sender) {
+        } else {
+
+            require(TELLER_NFT_V1.ownerOf(tokenId) == msg.sender);
+            
             TELLER_NFT_V1.transferFrom(msg.sender, address(this), tokenId);
         }
 
