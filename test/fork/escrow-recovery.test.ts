@@ -94,15 +94,20 @@ describe('EscrowRecoveryFacet (mainnet fork)', function () {
       this.skip()
     }
 
-    // Pin the fork at a recent block, regardless of repo defaults.
-    await network.provider.request({
-      method: 'hardhat_reset',
-      params: [
-        {
-          forking: { jsonRpcUrl: url, blockNumber: DEFAULT_FORK_BLOCK },
-        },
-      ],
-    })
+    // We intentionally do NOT call `hardhat_reset` here. In Hardhat 2.6 the
+    // reset path leaves the ForkBlockchain's block-number→hash cache in a
+    // partial state, so the first eth_call works but the next call that
+    // resolves "latest" by number throws `Block not found`.
+    //
+    // Instead, we rely on the natural fork configured at hardhat startup:
+    // hardhat.config.ts reads `deployments/mainnet/.latestDeploymentBlock` and
+    // forks at that block. To control the fork block for this test, write the
+    // desired block number to that file before running:
+    //
+    //   echo 15000000 > deployments/mainnet/.latestDeploymentBlock
+    //
+    // Choose a pre-Cancun, post-V1-NFT-migration block (i.e. in the open
+    // interval (13680055, 19426587]). 15000000 (Aug 2022) works.
 
     diamond = new ethers.Contract(
       TELLER_DIAMOND,
