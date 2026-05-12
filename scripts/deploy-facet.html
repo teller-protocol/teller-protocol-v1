@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Deploy EscrowRecoveryFacet via MetaMask</title>
+<style>
+  :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+  body { max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  p.sub { color: #777; margin-top: 0; }
+  textarea { width: 100%; min-height: 12rem; font-family: ui-monospace, monospace; font-size: 0.85rem; box-sizing: border-box; padding: 0.5rem; }
+  input[type=text] { width: 100%; font-family: ui-monospace, monospace; font-size: 0.9rem; padding: 0.4rem; box-sizing: border-box; }
+  button { padding: 0.55rem 1rem; font-size: 1rem; cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
+  .row { margin: 1rem 0; }
+  .log { background: #1118; color: #f4f4f4; padding: 0.75rem; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-all; min-height: 4rem; }
+  .pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; background: #2a4; color: #fff; font-size: 0.75rem; }
+  .warn { background: #fffae0; color: #5a4500; border: 1px solid #d8c067; padding: 0.5rem 0.75rem; border-radius: 4px; margin: 1rem 0; }
+</style>
+</head>
+<body>
+
+<h1>Deploy EscrowRecoveryFacet via MetaMask</h1>
+<p class="sub">Self-contained, no external scripts. Opens as a local file. Signs through whatever wallet exposes <code>window.ethereum</code> (MetaMask, Rabby, Frame, etc.).</p>
+
+<div class="warn">
+<strong>Verify mainnet</strong>: this tool sends whatever network MetaMask is currently on. Switch to Ethereum Mainnet (chain id 1) before signing.
+</div>
+
+<div class="row">
+  <button id="connect">Connect wallet</button>
+  <span id="account" class="pill" style="display:none"></span>
+  <span id="chain" class="pill" style="background:#46c; display:none"></span>
+</div>
+
+<div class="row">
+  <label for="bytecode"><strong>Bytecode</strong> (the <code>data</code> blob from <code>scripts/print-recovery-txs.sh</code> TX 1)</label>
+  <textarea id="bytecode" placeholder="0x6080604052..."></textarea>
+</div>
+
+<div class="row">
+  <label for="gas"><strong>Gas limit</strong> (optional; leave blank for wallet's estimate)</label>
+  <input id="gas" type="text" placeholder="1500000" />
+</div>
+
+<div class="row">
+  <button id="deploy" disabled>Deploy contract</button>
+</div>
+
+<div class="row">
+  <strong>Status</strong>
+  <div id="log" class="log">Idle.</div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const log = (msg) => { $('log').textContent = (typeof msg === 'string') ? msg : JSON.stringify(msg, null, 2); };
+  const append = (msg) => { $('log').textContent += '\n' + (typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2)); };
+
+  let account = null;
+
+  async function refreshChain() {
+    try {
+      const id = await ethereum.request({ method: 'eth_chainId' });
+      const dec = parseInt(id, 16);
+      $('chain').textContent = `chain ${dec}${dec === 1 ? ' (mainnet)' : ' — NOT MAINNET'}`;
+      $('chain').style.background = dec === 1 ? '#46c' : '#c33';
+      $('chain').style.display = 'inline-block';
+    } catch (e) {}
+  }
+
+  $('connect').onclick = async () => {
+    if (!window.ethereum) {
+      log('No wallet found. Install MetaMask (or another EIP-1193 wallet) and reload.');
+      return;
+    }
+    try {
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      account = accounts[0];
+      $('account').textContent = account;
+      $('account').style.display = 'inline-block';
+      $('deploy').disabled = false;
+      log(`Connected as ${account}`);
+      refreshChain();
+      ethereum.on('chainChanged', refreshChain);
+      ethereum.on('accountsChanged', (a) => { account = a[0]; $('account').textContent = account; });
+    } catch (e) {
+      log(`Connect failed: ${e.message || e}`);
+    }
+  };
+
+  $('deploy').onclick = async () => {
+    let data = $('bytecode').value.trim();
+    if (!data) return log('Paste the bytecode first.');
+    if (!data.startsWith('0x')) data = '0x' + data;
+    if (!/^0x[0-9a-fA-F]+$/.test(data)) return log('Bytecode is not valid hex.');
+
+    const tx = { from: account, data };
+    const gasInput = $('gas').value.trim();
+    if (gasInput) tx.gas = '0x' + parseInt(gasInput, 10).toString(16);
+
+    log('Sending tx to wallet for signature...');
+    let hash;
+    try {
+      hash = await ethereum.request({ method: 'eth_sendTransaction', params: [tx] });
+    } catch (e) {
+      return log(`Wallet rejected or RPC failed: ${e.message || e}`);
+    }
+    append(`tx hash: ${hash}`);
+    append('Waiting for receipt...');
+
+    // Poll for receipt.
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const r = await ethereum.request({ method: 'eth_getTransactionReceipt', params: [hash] });
+      if (r) {
+        append(`status: ${r.status === '0x1' ? 'success' : 'FAILED'}`);
+        if (r.contractAddress) {
+          append('');
+          append(`▸ Deployed contract address: ${r.contractAddress}`);
+          append('');
+          append('Use this as FACET_ADDR for the next step:');
+          append(`  FACET_ADDR=${r.contractAddress} bash scripts/print-recovery-txs.sh`);
+        } else {
+          append('No contractAddress in receipt — was this a creation tx?');
+        }
+        return;
+      }
+    }
+    append('Timed out waiting for receipt. Check the tx hash on Etherscan and proceed manually.');
+  };
+</script>
+</body>
+</html>
