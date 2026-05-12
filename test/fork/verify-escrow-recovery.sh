@@ -181,11 +181,27 @@ cast rpc anvil_stopImpersonatingAccount "$DIAMOND_OWNER" --rpc-url "$RPC_URL" >/
 
 # ---- read V1 NFT references before clearing --------------------------------
 
+# Helper: count entries in a cast-formatted uint256[] response. cast returns
+# the array as either `[]` (empty) or `[a, b, c]` with decimal entries.
+count_array_entries() {
+  local arr="$1"
+  local inner
+  inner=$(printf '%s' "$arr" | tr -d '[:space:]')
+  inner=${inner#\[}
+  inner=${inner%\]}
+  if [ -z "$inner" ]; then echo 0; return; fi
+  printf '%s' "$inner" | tr ',' '\n' | grep -c .
+}
+
 step "Verifying V1 NFT references exist on loan $TARGET_LOAN_ID"
 
-V1_BEFORE=$(cast call "$TELLER_DIAMOND" "getLoanV1NFTs(uint256)(uint256[])" "$TARGET_LOAN_ID" \
-  --rpc-url "$RPC_URL")
-V1_COUNT_BEFORE=$(echo "$V1_BEFORE" | grep -o '0x[0-9a-fA-F]\+' | wc -l)
+if ! V1_BEFORE=$(cast call "$TELLER_DIAMOND" \
+    "getLoanV1NFTs(uint256)(uint256[])" "$TARGET_LOAN_ID" \
+    --rpc-url "$RPC_URL" 2>&1); then
+  fail "cast call getLoanV1NFTs reverted: $V1_BEFORE"
+fi
+printf "  raw response: %s\n" "$V1_BEFORE"
+V1_COUNT_BEFORE=$(count_array_entries "$V1_BEFORE")
 [ "$V1_COUNT_BEFORE" -gt 0 ] || fail "loan $TARGET_LOAN_ID has no V1 NFT refs (test target invalid at this block)"
 pass "loan $TARGET_LOAN_ID has $V1_COUNT_BEFORE V1 NFT reference(s)"
 
@@ -208,7 +224,7 @@ pass "adminClearV1NFTs([$TARGET_LOAN_ID]) succeeded"
 
 V1_AFTER=$(cast call "$TELLER_DIAMOND" "getLoanV1NFTs(uint256)(uint256[])" "$TARGET_LOAN_ID" \
   --rpc-url "$RPC_URL")
-V1_COUNT_AFTER=$(echo "$V1_AFTER" | grep -o '0x[0-9a-fA-F]\+' | wc -l)
+V1_COUNT_AFTER=$(count_array_entries "$V1_AFTER")
 expect_eq "$V1_COUNT_AFTER" "0" "V1 NFT references now cleared"
 
 cast rpc anvil_stopImpersonatingAccount "$ADMIN" --rpc-url "$RPC_URL" >/dev/null
