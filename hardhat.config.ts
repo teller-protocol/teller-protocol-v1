@@ -13,6 +13,7 @@ import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
+  HardhatNetworkAccountUserConfig,
 } from 'hardhat/types'
 import path from 'path'
 
@@ -48,12 +49,22 @@ if (TESTING === '1') {
   require('./test/helpers/chai-helpers')
 }
 
-const accounts: HardhatNetworkHDAccountsUserConfig | string[] = DEPLOYER_PRIVATE_KEY
+const defaultBalance = ethers.parseEther('100000000').toString()
+
+const hardhatAccounts = DEPLOYER_PRIVATE_KEY
+  ? [{ privateKey: DEPLOYER_PRIVATE_KEY, balance: defaultBalance }]
+  : {
+      mnemonic: MNEMONIC_KEY,
+      count: 15,
+      accountsBalance: defaultBalance,
+    }
+
+const liveAccounts: string[] | HardhatNetworkHDAccountsUserConfig = DEPLOYER_PRIVATE_KEY
   ? [DEPLOYER_PRIVATE_KEY]
   : {
       mnemonic: MNEMONIC_KEY,
       count: 15,
-      accountsBalance: ethers.parseEther('100000000').toString(),
+      accountsBalance: defaultBalance,
     }
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
@@ -86,15 +97,19 @@ const getLatestDeploymentBlock = (networkName: string): number | undefined => {
   }
 }
 
-const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
-  config = {
-    ...config,
-    accounts,
-    gas: GAS,
-  }
+const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => ({
+  ...config,
+  accounts: liveAccounts,
+  gas: GAS,
+})
 
-  return config
-}
+const hardhatNetworkConfig = (
+  config: HardhatNetworkUserConfig
+): HardhatNetworkUserConfig => ({
+  ...config,
+  accounts: hardhatAccounts,
+  gas: GAS,
+})
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
@@ -149,7 +164,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
+    deployer: 0,
     lender: {
       hardhat: 5,
       localhost: 5,
@@ -214,7 +229,7 @@ export default <HardhatUserConfig>{
       chainId: 80001,
       live: true,
     }),
-    hardhat: networkConfig({
+    hardhat: hardhatNetworkConfig({
       chainId: 31337,
       live: false,
       allowUnlimitedContractSize: true,
