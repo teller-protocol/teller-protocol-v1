@@ -68,7 +68,7 @@ export async function generateLedgerSignature(
       request.txHash ||
       ethers.TypedDataEncoder.hash(domain, types, message)
 
-    const ledgerAccountId = options?.ledgerAccountId ?? 9
+    const ledgerAccountId = options?.ledgerAccountId ?? 0
     const derivationPath = "44'/60'/0'/0/" + ledgerAccountId.toString()
 
     // Get the address for this derivation path
