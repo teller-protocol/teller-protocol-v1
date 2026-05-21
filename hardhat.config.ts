@@ -48,23 +48,28 @@ if (TESTING === '1') {
   require('./test/helpers/chai-helpers')
 }
 
-const accounts: HardhatNetworkHDAccountsUserConfig | string[] = DEPLOYER_PRIVATE_KEY
-  ? [DEPLOYER_PRIVATE_KEY]
-  : {
-      mnemonic: MNEMONIC_KEY,
-      count: 15,
-      accountsBalance: ethers.parseEther('100000000').toString(),
-    }
+const normalizePrivateKey = (key: string): string =>
+  key.startsWith('0x') ? key.slice(2) : key
+
+const accounts = DEPLOYER_PRIVATE_KEY
+  ? [normalizePrivateKey(DEPLOYER_PRIVATE_KEY)]
+  : MNEMONIC_KEY
+    ? {
+        mnemonic: MNEMONIC_KEY,
+        count: 15,
+        accountsBalance: ethers.parseEther('100000000').toString(),
+      }
+    : undefined
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
 
-const networkUrls: { [network: string]: string } = {
-  kovan: ALCHEMY_KOVAN_KEY!,
-  rinkeby: ALCHEMY_RINKEBY_KEY!,
-  ropsten: ALCHEMY_ROPSTEN_KEY!,
-  mainnet: ALCHEMY_MAINNET_KEY!,
-  polygon: MATIC_MAINNET_KEY!,
-  polygon_mumbai: MATIC_MUMBAI_KEY!,
+const networkUrls: { [network: string]: string | undefined } = {
+  kovan: ALCHEMY_KOVAN_KEY,
+  rinkeby: ALCHEMY_RINKEBY_KEY,
+  ropsten: ALCHEMY_ROPSTEN_KEY,
+  mainnet: ALCHEMY_MAINNET_KEY,
+  polygon: MATIC_MAINNET_KEY,
+  polygon_mumbai: MATIC_MUMBAI_KEY,
 }
 
 const getLatestDeploymentBlock = (networkName: string): number | undefined => {
@@ -86,15 +91,11 @@ const getLatestDeploymentBlock = (networkName: string): number | undefined => {
   }
 }
 
-const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
-  config = {
-    ...config,
-    accounts,
-    gas: GAS,
-  }
-
-  return config
-}
+const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => ({
+  ...config,
+  accounts,
+  gas: GAS,
+})
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
@@ -184,35 +185,47 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
-    kovan: networkConfig({
-      url: networkUrls.kovan,
-      chainId: 42,
-      live: true,
+    ...(networkUrls.kovan && {
+      kovan: networkConfig({
+        url: networkUrls.kovan,
+        chainId: 42,
+        live: true,
+      }),
     }),
-    rinkeby: networkConfig({
-      url: networkUrls.rinkeby,
-      chainId: 4,
-      live: true,
+    ...(networkUrls.rinkeby && {
+      rinkeby: networkConfig({
+        url: networkUrls.rinkeby,
+        chainId: 4,
+        live: true,
+      }),
     }),
-    ropsten: networkConfig({
-      url: networkUrls.ropsten,
-      chainId: 3,
-      live: true,
+    ...(networkUrls.ropsten && {
+      ropsten: networkConfig({
+        url: networkUrls.ropsten,
+        chainId: 3,
+        live: true,
+      }),
     }),
-    mainnet: networkConfig({
-      url: networkUrls.mainnet,
-      chainId: 1,
-      live: true,
+    ...(networkUrls.mainnet && {
+      mainnet: networkConfig({
+        url: networkUrls.mainnet,
+        chainId: 1,
+        live: true,
+      }),
     }),
-    polygon: networkConfig({
-      url: networkUrls.polygon,
-      chainId: 137,
-      live: true,
+    ...(networkUrls.polygon && {
+      polygon: networkConfig({
+        url: networkUrls.polygon,
+        chainId: 137,
+        live: true,
+      }),
     }),
-    polygon_mumbai: networkConfig({
-      url: networkUrls.polygon_mumbai,
-      chainId: 80001,
-      live: true,
+    ...(networkUrls.polygon_mumbai && {
+      polygon_mumbai: networkConfig({
+        url: networkUrls.polygon_mumbai,
+        chainId: 80001,
+        live: true,
+      }),
     }),
     hardhat: networkConfig({
       chainId: 31337,
@@ -223,7 +236,7 @@ export default <HardhatUserConfig>{
           ? undefined
           : {
               enabled: true,
-              url: networkUrls[FORKING_NETWORK],
+              url: networkUrls[FORKING_NETWORK]!,
               blockNumber: getLatestDeploymentBlock(FORKING_NETWORK),
             },
     }),

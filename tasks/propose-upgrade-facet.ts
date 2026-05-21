@@ -8,6 +8,8 @@ interface ProposeUpgradeFacetArgs {
   facet: string
   args?: string
   safe?: string
+  diamond?: string
+  action?: number
 }
 
 const proposeUpgradeFacet = async (
@@ -67,9 +69,14 @@ const proposeUpgradeFacet = async (
     star: true,
   })
 
-  // Get the TellerDiamond address
-  const diamondDeployment = await hre.deployments.get('TellerDiamond')
+  // Get the diamond address (defaults to TellerDiamond)
+  const diamondName = args.diamond ?? 'TellerDiamond'
+  const diamondDeployment = await hre.deployments.get(diamondName)
   const diamondAddress = diamondDeployment.address
+  const facetAction = args.action ?? 1 // 0=Add, 1=Replace, 2=Remove
+  const actionLabels = ['Add', 'Replace', 'Remove']
+  log(`Diamond: ${diamondName} (${diamondAddress})`, { indent: 2, star: true })
+  log(`Action: ${actionLabels[facetAction]} (${facetAction})`, { indent: 2, star: true })
 
   // Encode diamondCut() calldata
   const diamondCutIface = new ethers.Interface([
@@ -80,7 +87,7 @@ const proposeUpgradeFacet = async (
     [
       {
         facetAddress: deployResult.address,
-        action: 1, // FacetCutAction.Replace
+        action: facetAction,
         functionSelectors: selectors,
       },
     ],
@@ -135,5 +142,17 @@ task(
     'Override the Gnosis Safe address',
     undefined,
     types.string
+  )
+  .addOptionalParam(
+    'diamond',
+    'Diamond contract name (default: TellerDiamond)',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'action',
+    'FacetCutAction: 0=Add, 1=Replace, 2=Remove (default: 1)',
+    undefined,
+    types.int
   )
   .setAction(proposeUpgradeFacet)
