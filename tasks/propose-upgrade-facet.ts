@@ -8,6 +8,7 @@ interface ProposeUpgradeFacetArgs {
   facet: string
   args?: string
   safe?: string
+  facetAddress?: string
   diamond?: string
   action?: number
 }
@@ -17,7 +18,7 @@ const proposeUpgradeFacet = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
   const {
-    deployments: { deploy, getArtifact },
+    deployments: { getArtifact },
     getNamedAccounts,
     ethers,
     log,
@@ -45,20 +46,30 @@ const proposeUpgradeFacet = async (
   log(`Proposing facet upgrade: ${args.facet}`, { indent: 1, star: true })
   log(`Safe: ${safeAddress}`, { indent: 2, star: true })
 
-  // Parse constructor args if provided
-  const constructorArgs: any[] = args.args ? JSON.parse(args.args) : []
+  const artifact = await getArtifact(args.facet)
+  let facetAddress: string
 
-  // Deploy the new facet
-  const deployResult = await deploy(args.facet, {
-    from: deployer,
-    args: constructorArgs,
-    log: true,
-  })
-
-  log(`Facet deployed at ${deployResult.address}`, { indent: 2, star: true })
+  if (args.facetAddress) {
+    // Reuse an already-deployed facet
+    facetAddress = args.facetAddress
+    log(`Using existing facet at ${facetAddress}`, { indent: 2, star: true })
+  } else {
+    // Deploy the new facet using ethers directly (hardhat-deploy has
+    // a compat issue with ethers v5 formatter on contract creation txs)
+    const constructorArgs: any[] = args.args ? JSON.parse(args.args) : []
+    const [signer] = await ethers.getSigners()
+    const factory = new ethers.ContractFactory(
+      artifact.abi,
+      artifact.bytecode,
+      signer
+    )
+    const facetContract = await factory.deploy(...constructorArgs)
+    await facetContract.waitForDeployment()
+    facetAddress = await facetContract.getAddress()
+    log(`Facet deployed at ${facetAddress}`, { indent: 2, star: true })
+  }
 
   // Get function selectors from the facet ABI
-  const artifact = await getArtifact(args.facet)
   const iface = new ethers.Interface(artifact.abi)
   const selectors = iface.fragments
     .filter((f): f is FunctionFragment => f.type === 'function')
@@ -86,7 +97,7 @@ const proposeUpgradeFacet = async (
   const calldata = diamondCutIface.encodeFunctionData('diamondCut', [
     [
       {
-        facetAddress: deployResult.address,
+        facetAddress: facetAddress,
         action: facetAction,
         functionSelectors: selectors,
       },
@@ -134,6 +145,12 @@ task(
   .addOptionalParam(
     'args',
     'Constructor arguments as a JSON array (e.g. \'["0x123..."]\')',
+    undefined,
+    types.string
+  )
+  .addOptionalParam(
+    'facetAddress',
+    'Use an already-deployed facet address (skips deployment)',
     undefined,
     types.string
   )

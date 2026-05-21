@@ -13,6 +13,7 @@ import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
+  HardhatNetworkAccountUserConfig,
 } from 'hardhat/types'
 import path from 'path'
 
@@ -51,13 +52,23 @@ if (TESTING === '1') {
 const normalizePrivateKey = (key: string): string =>
   key.startsWith('0x') ? key.slice(2) : key
 
-const accounts = DEPLOYER_PRIVATE_KEY
+const defaultBalance = ethers.parseEther('100000000').toString()
+
+const hardhatAccounts = DEPLOYER_PRIVATE_KEY
+  ? [{ privateKey: normalizePrivateKey(DEPLOYER_PRIVATE_KEY), balance: defaultBalance }]
+  : {
+      mnemonic: MNEMONIC_KEY,
+      count: 15,
+      accountsBalance: defaultBalance,
+    }
+
+const liveAccounts = DEPLOYER_PRIVATE_KEY
   ? [normalizePrivateKey(DEPLOYER_PRIVATE_KEY)]
   : MNEMONIC_KEY
     ? {
         mnemonic: MNEMONIC_KEY,
         count: 15,
-        accountsBalance: ethers.parseEther('100000000').toString(),
+        accountsBalance: defaultBalance,
       }
     : undefined
 
@@ -93,7 +104,15 @@ const getLatestDeploymentBlock = (networkName: string): number | undefined => {
 
 const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => ({
   ...config,
-  accounts,
+  accounts: liveAccounts,
+  gas: GAS,
+})
+
+const hardhatNetworkConfig = (
+  config: HardhatNetworkUserConfig
+): HardhatNetworkUserConfig => ({
+  ...config,
+  accounts: hardhatAccounts,
   gas: GAS,
 })
 
@@ -150,7 +169,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
+    deployer: 0,
     lender: {
       hardhat: 5,
       localhost: 5,
@@ -227,7 +246,7 @@ export default <HardhatUserConfig>{
         live: true,
       }),
     }),
-    hardhat: networkConfig({
+    hardhat: hardhatNetworkConfig({
       chainId: 31337,
       live: false,
       allowUnlimitedContractSize: true,
