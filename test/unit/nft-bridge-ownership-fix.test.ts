@@ -76,7 +76,7 @@ describe('NFT Bridge Ownership Fix', () => {
       params: [
         {
           forking: {
-            jsonRpcUrl: process.env.ALCHEMY_MAINNET_KEY,
+            jsonRpcUrl: process.env.MAINNET_RPC_URL,
             blockNumber: POST_UPGRADE_BLOCK,
           },
         },

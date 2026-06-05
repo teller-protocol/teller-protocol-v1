@@ -20,17 +20,17 @@ import path from 'path'
 config()
 
 const {
-  ALCHEMY_KOVAN_KEY,
-  ALCHEMY_RINKEBY_KEY,
-  ALCHEMY_ROPSTEN_KEY,
-  ALCHEMY_MAINNET_KEY,
+  KOVAN_RPC_URL,
+  RINKEBY_RPC_URL,
+  ROPSTEN_RPC_URL,
+  MAINNET_RPC_URL,
   COMPILING,
   CMC_KEY,
   ETHERSCAN_API_KEY,
   INFURA_KEY,
   FORKING_NETWORK,
-  MATIC_MAINNET_KEY,
-  MATIC_MUMBAI_KEY,
+  MATIC_MAINNET_RPC_URL,
+  MATIC_MUMBAI_RPC_URL,
   MNEMONIC_KEY,
   DEPLOYER_PRIVATE_KEY,
   SAFE_GLOBAL_API_KEY,
@@ -70,12 +70,12 @@ const liveAccounts: string[] | HardhatNetworkHDAccountsUserConfig = DEPLOYER_PRI
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
 
 const networkUrls: { [network: string]: string } = {
-  kovan: ALCHEMY_KOVAN_KEY!,
-  rinkeby: ALCHEMY_RINKEBY_KEY!,
-  ropsten: ALCHEMY_ROPSTEN_KEY!,
-  mainnet: ALCHEMY_MAINNET_KEY!,
-  polygon: MATIC_MAINNET_KEY!,
-  polygon_mumbai: MATIC_MUMBAI_KEY!,
+  kovan: KOVAN_RPC_URL!,
+  rinkeby: RINKEBY_RPC_URL!,
+  ropsten: ROPSTEN_RPC_URL!,
+  mainnet: MAINNET_RPC_URL!,
+  polygon: MATIC_MAINNET_RPC_URL!,
+  polygon_mumbai: MATIC_MUMBAI_RPC_URL!,
 }
 
 const getLatestDeploymentBlock = (networkName: string): number | undefined => {
@@ -110,6 +110,26 @@ const hardhatNetworkConfig = (
   accounts: hardhatAccounts,
   gas: GAS,
 })
+
+// Live (HTTP) networks keyed by name with their chainId. A network is only
+// registered if its RPC URL is configured via the environment — skipping the
+// rest avoids Hardhat's "networks.<x>.url - Expected a value of type string"
+// validation crash. Using an unconfigured network then fails with a clear
+// "network <x> is not defined" error instead.
+const liveNetworkChainIds: { [name: string]: number } = {
+  kovan: 42,
+  rinkeby: 4,
+  ropsten: 3,
+  mainnet: 1,
+  polygon: 137,
+  polygon_mumbai: 80001,
+}
+
+const liveNetworks: { [name: string]: NetworkUserConfig } = {}
+for (const [name, chainId] of Object.entries(liveNetworkChainIds)) {
+  const url = networkUrls[name]
+  if (url) liveNetworks[name] = networkConfig({ url, chainId, live: true })
+}
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
@@ -199,36 +219,7 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
-    kovan: networkConfig({
-      url: networkUrls.kovan,
-      chainId: 42,
-      live: true,
-    }),
-    rinkeby: networkConfig({
-      url: networkUrls.rinkeby,
-      chainId: 4,
-      live: true,
-    }),
-    ropsten: networkConfig({
-      url: networkUrls.ropsten,
-      chainId: 3,
-      live: true,
-    }),
-    mainnet: networkConfig({
-      url: networkUrls.mainnet,
-      chainId: 1,
-      live: true,
-    }),
-    polygon: networkConfig({
-      url: networkUrls.polygon,
-      chainId: 137,
-      live: true,
-    }),
-    polygon_mumbai: networkConfig({
-      url: networkUrls.polygon_mumbai,
-      chainId: 80001,
-      live: true,
-    }),
+    ...liveNetworks,
     hardhat: hardhatNetworkConfig({
       chainId: 31337,
       live: false,
