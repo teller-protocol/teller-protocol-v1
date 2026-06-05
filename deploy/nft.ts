@@ -51,7 +51,7 @@ const deployNFT: DeployFunction = async (hre) => {
             methodName: 'initialize',
             args: [
               // Initial minters
-              ethers.utils.defaultAbiCoder.encode(
+              ethers.AbiCoder.defaultAbiCoder().encode(
                 ['address[]'],
                 [minterAddresses]
               ),
@@ -71,7 +71,7 @@ const deployNFT: DeployFunction = async (hre) => {
     })
 
     // Add the distributor as a minter if not already
-    const minterRole = ethers.utils.id('MINTER')
+    const minterRole = ethers.id('MINTER')
     const distributorIsDictAdmin = await nft.hasRole(
       minterRole,
       nftDistributor.address

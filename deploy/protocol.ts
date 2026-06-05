@@ -43,14 +43,8 @@ const deployProtocol: DeployFunction = async (hre) => {
     // Try to get deployment of TellerDiamond
     await contracts.get('TellerDiamond')
 
-    // If deployment exists execute upgrade function
-    const executeMethod = 'init2'
-    const upgradeExecute = {
-      methodName: executeMethod,
-      args: [wrappedNativeToken, priceAggregator.address],
-    }
-
-    execute = upgradeExecute
+    // If deployment exists, skip execute (init2 already called)
+    execute = undefined
   } catch {
     // Else execute initialize function
     const executeMethod = 'init'
@@ -274,8 +268,8 @@ const deployLoansEscrowBeacon = async (
   // Check to see if we need to upgrade
   const currentImpl = await beacon.implementation()
   if (
-    ethers.utils.getAddress(currentImpl) !==
-    ethers.utils.getAddress(loansEscrowLogic.address)
+    ethers.getAddress(currentImpl) !==
+    ethers.getAddress(loansEscrowLogic.address)
   ) {
     log(`Upgrading Loans Escrow logic: ${loansEscrowLogic.address}`, {
       indent: 5,
@@ -328,8 +322,8 @@ const deployCollateralEscrowBeacon = async (
   // Check to see if we need to upgrade
   const currentImpl = await beacon.implementation()
   if (
-    ethers.utils.getAddress(currentImpl) !==
-    ethers.utils.getAddress(collateralEscrowLogic.address)
+    ethers.getAddress(currentImpl) !==
+    ethers.getAddress(collateralEscrowLogic.address)
   ) {
     log(`Upgrading Collateral Escrow logic: ${collateralEscrowLogic.address}`, {
       indent: 5,
@@ -382,8 +376,8 @@ const deployTTokenBeacon = async (
   // Check to see if we need to upgrade
   const currentImpl = await beacon.implementation()
   if (
-    ethers.utils.getAddress(currentImpl) !==
-    ethers.utils.getAddress(tTokenLogic.address)
+    ethers.getAddress(currentImpl) !==
+    ethers.getAddress(tTokenLogic.address)
   ) {
     log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
       indent: 5,

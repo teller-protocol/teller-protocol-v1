@@ -1,5 +1,4 @@
 import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import hre from 'hardhat'
 
@@ -10,7 +9,6 @@ import {
 } from '../../types/typechain'
 
 chai.should()
-chai.use(solidity)
 
 describe('Proxies', () => {
   describe('Logic Contract', () => {

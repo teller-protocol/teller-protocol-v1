@@ -9,6 +9,7 @@ abstract contract mod_initializer_Initializable_v1 is sto_Initializable {
             !initializableStorage().initialized,
             "Teller: already initialized"
         );
+        initializableStorage().initialized = true;
         _;
     }
 }

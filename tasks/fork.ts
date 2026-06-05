@@ -102,7 +102,7 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
   const [mainAccount] = await hre.getUnnamedAccounts()
   const { deployer } = await hre.getNamedAccounts()
   if (
-    ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
+    ethers.getAddress(mainAccount) !== ethers.getAddress(deployer)
   ) {
     const chain = process.env.FORKING_NETWORK
     if (
@@ -114,14 +114,14 @@ subtask('fork:fund-deployer').setAction(async (args, hre) => {
       await getFunds({
         to: deployer,
         tokenSym: 'ETH',
-        amount: hre.ethers.utils.parseEther('1000'),
+        amount: hre.ethers.parseEther('1000'),
         hre,
       })
     } else {
       await getFunds({
         to: deployer,
         tokenSym: 'MATIC',
-        amount: hre.ethers.utils.parseEther('10000'),
+        amount: hre.ethers.parseEther('10000'),
         hre,
       })
     }

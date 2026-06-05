@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, Signer } from 'ethers'
+import { BigNumberish, Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getTokens, isEtheremNetwork } from '../../config'
@@ -56,9 +56,10 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
     from: funder,
   })
 
-  const toAddress = Signer.isSigner(args.to)
-    ? await args.to.getAddress()
-    : args.to
+  const toAddress =
+    typeof args.to === 'string'
+      ? args.to
+      : await (args.to as Signer).getAddress()
 
   if (args.tokenSym === 'ETH' || args.tokenSym === 'MATIC') {
     await funder.sendTransaction({
@@ -82,9 +83,9 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
   } else {
     // ETH/MATIC balance
     const deployerBalance = await ethers.provider.getBalance(
-      funder.getAddress()
+      await funder.getAddress()
     )
-    const balanceToSend = deployerBalance.mul('1').div('10')
+    const balanceToSend = deployerBalance / 10n
     // Swap ETH/WMATIC for given token
     await swapper.swapETHForExactTokens(
       args.amount,
@@ -102,7 +103,7 @@ export interface FundLenderArgs {
   hre: HardhatRuntimeEnvironment
 }
 
-export const fundLender = async (args: FundLenderArgs): Promise<BigNumber> => {
+export const fundLender = async (args: FundLenderArgs): Promise<bigint> => {
   const amount = args.hre.toBN(args.amount, await args.token.decimals())
   // Get lender DAI to deposit
   await getFunds({
@@ -123,16 +124,16 @@ export interface SendNativeTokenArgs {
 
 const sendWrappedNativeToken = async (
   args: SendNativeTokenArgs
-): Promise<BigNumber> => {
+): Promise<bigint> => {
   const funder = await args.hre.getNamedSigner('funder')
   const weth = await args.hre.contracts.get<IWETH>('IWETH', {
     at: args.tokenAddress,
     from: funder,
   })
-  const balanceToSend = args.hre.ethers.BigNumber.from(args.amount).mul(2)
-  await weth.deposit({ value: balanceToSend, from: funder.getAddress() })
+  const balanceToSend = BigInt(args.amount) * 2n
+  await weth.deposit({ value: balanceToSend, from: await funder.getAddress() })
   await weth.transfer(args.toAddress, args.amount, {
-    from: funder.getAddress(),
+    from: await funder.getAddress(),
   })
   return await weth.balanceOf(args.toAddress)
 }

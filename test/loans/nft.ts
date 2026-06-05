@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { contracts, ethers, network, toBN } from 'hardhat'
 
 import { isEtheremNetwork } from '../../config'
@@ -12,7 +11,6 @@ import { mergeV2IDsToBalances } from '../helpers/nft'
 import { setTestEnv, TestEnv } from '../helpers/set-test-env'
 
 chai.should()
-chai.use(solidity)
 
 setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
   const nftLoan = async (
@@ -39,11 +37,11 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
 
     if (isEtheremNetwork(network)) {
       // Encode token data
-      const tokenData = ethers.utils.defaultAbiCoder.encode(
+      const tokenData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['uint16', 'bytes'],
         [
           2,
-          ethers.utils.defaultAbiCoder.encode(
+          ethers.AbiCoder.defaultAbiCoder().encode(
             ['uint256[]', 'uint256[]'],
             [[ownedNfts[0]], [1]]
           ),
@@ -76,16 +74,16 @@ setTestEnv('Loans - NFT', (testEnv: TestEnv) => {
         .connect(deployer)
         .addDepositor(await deployer.getAddress())
 
-      const depositData = ethers.utils.defaultAbiCoder.encode(
+      const depositData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['uint256[]', 'uint256[]', 'bytes'],
         [[ownedNfts[0]], [1], '0x']
       )
 
-      const takeOutLoanData = ethers.utils.defaultAbiCoder.encode(
+      const takeOutLoanData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['uint16', 'bytes'],
         [
           2,
-          ethers.utils.defaultAbiCoder.encode(
+          ethers.AbiCoder.defaultAbiCoder().encode(
             ['uint256[]', 'uint256[]'],
             [[ownedNfts[0]], [1]]
           ),

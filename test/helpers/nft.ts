@@ -1,4 +1,3 @@
-import { BigNumber } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import {
@@ -46,23 +45,23 @@ export const mintNFTV2 = async (args: MintNFTV2Args): Promise<void> => {
   await nft.connect(deployer).mint(borrower, tierIndex, amount)
 }
 
-export type V2BalanceArray = [BigNumber[], BigNumber[]]
+export type V2BalanceArray = [bigint[], bigint[]]
 export interface V2BalanceObj {
-  ids: BigNumber[]
-  balances: BigNumber[]
+  ids: bigint[]
+  balances: bigint[]
 }
 export type V2Balances = V2BalanceArray & V2BalanceObj
 
-export const mergeV2IDsToBalances = (v2IDs: BigNumber[]): V2Balances => {
-  const v2Balances: { [v2ID: number]: BigNumber } = {}
+export const mergeV2IDsToBalances = (v2IDs: bigint[]): V2Balances => {
+  const v2Balances: { [v2ID: number]: bigint } = {}
   for (const v2IDBN of v2IDs) {
-    const v2ID = v2IDBN.toNumber()
-    if (v2Balances[v2ID] == null) v2Balances[v2ID] = BigNumber.from(0)
-    v2Balances[v2ID] = v2Balances[v2ID].add(1)
+    const v2ID = Number(v2IDBN)
+    if (v2Balances[v2ID] == null) v2Balances[v2ID] = 0n
+    v2Balances[v2ID] = v2Balances[v2ID] + 1n
   }
 
-  const ids: BigNumber[] = []
-  const balances: BigNumber[] = []
+  const ids: bigint[] = []
+  const balances: bigint[] = []
   const response: V2Balances = Object.assign<V2BalanceArray, V2BalanceObj>(
     [ids, balances],
     {
@@ -71,7 +70,7 @@ export const mergeV2IDsToBalances = (v2IDs: BigNumber[]): V2Balances => {
     }
   )
   for (const [v2ID, v2Balance] of Object.entries(v2Balances)) {
-    ids.push(BigNumber.from(v2ID))
+    ids.push(BigInt(v2ID))
     balances.push(v2Balance)
   }
   return response

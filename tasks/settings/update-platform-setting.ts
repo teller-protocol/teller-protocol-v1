@@ -28,12 +28,12 @@ export async function updatePlatformSetting(
 
   const settings = await contracts.get<ITellerDiamond>('TellerDiamond')
 
-  const keccak = ethers.utils.id(name)
+  const keccak = ethers.id(name)
   const currentSetting = await settings.getPlatformSetting(keccak)
 
   await settings.connect(deployer).updatePlatformSetting(keccak, value)
 
-  log(`Platform Settings (Settings: ${settings.address})`, {
+  log(`Platform Settings (Settings: ${await settings.getAddress()})`, {
     indent: 1,
     star: true,
   })

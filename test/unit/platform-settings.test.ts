@@ -1,5 +1,4 @@
 import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import hre from 'hardhat'
 
@@ -7,7 +6,6 @@ import { getPlatformSettings } from '../../config'
 import { ITellerDiamond } from '../../types/typechain'
 import { RUN_EXISTING } from '../helpers/env-helpers'
 chai.should()
-chai.use(solidity)
 
 const { contracts, deployments, getNamedSigner, ethers, network } = hre
 
@@ -34,10 +32,10 @@ describe.skip('Platform Settings', () => {
 
     for (const settingName of settingNames) {
       it('should not be able to update a platform setting as not an admin', async () => {
-        const nameId = ethers.utils.id(settingName)
+        const nameId = ethers.id(settingName)
         const setting = platformSettings[settingName]
 
-        const newValue = ethers.BigNumber.from(setting.value).div(2)
+        const newValue = BigInt(setting.value) / 2n
 
         const lender = await getNamedSigner('lender')
 
@@ -51,10 +49,10 @@ describe.skip('Platform Settings', () => {
 
     for (const settingName of settingNames) {
       it('should be able to update a platform setting as an admin', async () => {
-        const nameId = ethers.utils.id(settingName)
+        const nameId = ethers.id(settingName)
         const setting = platformSettings[settingName]
 
-        const newValue = ethers.BigNumber.from(setting.value).div(2)
+        const newValue = BigInt(setting.value) / 2n
 
         // Update setting
         await diamond
@@ -72,10 +70,10 @@ describe.skip('Platform Settings', () => {
 
     for (const settingName of settingNames) {
       it('should not be able to update a platform setting with the same value', async () => {
-        const nameId = ethers.utils.id(settingName)
+        const nameId = ethers.id(settingName)
         const setting = platformSettings[settingName]
 
-        const newValue = ethers.BigNumber.from(setting.value)
+        const newValue = BigInt(setting.value)
 
         // Try to update a setting
         await diamond
@@ -87,10 +85,10 @@ describe.skip('Platform Settings', () => {
 
     for (const settingName of settingNames) {
       it('should not be able to update a platform setting above the max value', async () => {
-        const nameId = ethers.utils.id(settingName)
+        const nameId = ethers.id(settingName)
         const setting = platformSettings[settingName]
 
-        const newValue = ethers.BigNumber.from(setting.max).add(1)
+        const newValue = BigInt(setting.max) + 1n
 
         // Update setting
         await diamond
@@ -104,10 +102,10 @@ describe.skip('Platform Settings', () => {
 
     for (const settingName of settingNames) {
       it('should not be able to update a platform setting below the min value', async () => {
-        const nameId = ethers.utils.id(settingName)
+        const nameId = ethers.id(settingName)
         const setting = platformSettings[settingName]
 
-        const newValue = ethers.BigNumber.from(setting.min).sub(1)
+        const newValue = BigInt(setting.min) - 1n
 
         // Update setting
         await diamond

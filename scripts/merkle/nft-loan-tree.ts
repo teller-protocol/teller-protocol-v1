@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, utils } from 'ethers'
+import { BigNumberish, solidityPackedKeccak256 } from 'ethers'
 
 import MerkleTree from './merkle-tree'
 
@@ -43,8 +43,7 @@ export default class NftLoanTree {
 
   public static toNode(id: BigNumberish, baseLoanSize: BigNumberish): Buffer {
     return Buffer.from(
-      utils
-        .solidityKeccak256(['uint256', 'uint256'], [id, baseLoanSize])
+      solidityPackedKeccak256(['uint256', 'uint256'], [id, baseLoanSize])
         .substr(2),
       'hex'
     )
@@ -61,10 +60,10 @@ export default class NftLoanTree {
 
   public getElements(): NftSizeElementsOutput {
     return this.elements.map((e) => ({
-      id: BigNumber.from(e.id).toString(),
-      baseLoanSize: BigNumber.from(e.baseLoanSize).toString(),
+      id: BigInt(e.id).toString(),
+      baseLoanSize: BigInt(e.baseLoanSize).toString(),
       proof: this.getProof(e.id, e.baseLoanSize),
-      tierIndex: BigNumber.from(e.tierIndex).toString(),
+      tierIndex: BigInt(e.tierIndex).toString(),
     }))
   }
 }

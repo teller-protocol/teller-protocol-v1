@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers'
+import { BigNumberish } from 'ethers'
 import fs from 'fs'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -42,7 +42,7 @@ export const claimNFT = async (
   }
 
   const { account, merkleIndex } = args
-  const checkedAddress = ethers.utils.getAddress(account)
+  const checkedAddress = ethers.getAddress(account)
 
   const nftDistributor = await contracts.get<ITellerNFTDistributor>(
     'TellerNFTDistributor'
@@ -94,7 +94,7 @@ export const claimNFT = async (
   const tierIndices: number[] = []
   const tierTokens: { [index: number]: number } = []
   for (const request of requests) {
-    const merkleIndex = toBN(request.merkleIndex).toNumber()
+    const merkleIndex = Number(toBN(request.merkleIndex))
     const { claims } = distributions[merkleIndex]
     const { tierIndex } = merkleTrees[merkleIndex]
 
@@ -125,22 +125,22 @@ export const claimNFT = async (
       log('Requests:', { indent: 4 })
       requests.forEach((req, idx) => {
         log(`Request ${idx}:`, { indent: 6 })
-        log(`  merkleIndex: ${BigNumber.from(req.merkleIndex).toString()}`, {
+        log(`  merkleIndex: ${BigInt(req.merkleIndex).toString()}`, {
           indent: 6,
         })
-        log(`  nodeIndex: ${BigNumber.from(req.nodeIndex).toString()}`, {
+        log(`  nodeIndex: ${BigInt(req.nodeIndex).toString()}`, {
           indent: 6,
         })
-        log(`  amount: ${BigNumber.from(req.amount).toString()}`, { indent: 6 })
+        log(`  amount: ${BigInt(req.amount).toString()}`, { indent: 6 })
         log(`  merkleProof: [${req.merkleProof.join(', ')}]`, { indent: 6 })
       })
       log('')
 
       // Print encoded requests for Etherscan tuple[] input
       const encodedRequests = requests.map((req) => [
-        BigNumber.from(req.merkleIndex).toString(),
-        BigNumber.from(req.nodeIndex).toString(),
-        BigNumber.from(req.amount).toString(),
+        BigInt(req.merkleIndex).toString(),
+        BigInt(req.nodeIndex).toString(),
+        BigInt(req.amount).toString(),
         req.merkleProof,
       ])
       log('Encoded Requests (for Etherscan tuple[] input):', {

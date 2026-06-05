@@ -24,8 +24,8 @@ const tenderlyVerify = async (
   const { deployments, tenderly } = hre
 
   const allDeployments = await deployments.all().then((all) =>
-    Object.entries(all).map(([name, { artifactName, address }]) => ({
-      name: artifactName ?? name,
+    Object.entries(all).map(([name, {   address }]) => ({
+      name:  name,
       customName: name,
       address,
     }))

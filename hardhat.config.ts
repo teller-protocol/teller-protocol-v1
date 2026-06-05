@@ -1,5 +1,5 @@
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
+import '@nomicfoundation/hardhat-chai-matchers'
+import '@nomicfoundation/hardhat-ethers'
 import '@tenderly/hardhat-tenderly'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
@@ -13,24 +13,27 @@ import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
+  HardhatNetworkAccountUserConfig,
 } from 'hardhat/types'
 import path from 'path'
 
 config()
 
 const {
-  ALCHEMY_KOVAN_KEY,
-  ALCHEMY_RINKEBY_KEY,
-  ALCHEMY_ROPSTEN_KEY,
-  ALCHEMY_MAINNET_KEY,
+  KOVAN_RPC_URL,
+  RINKEBY_RPC_URL,
+  ROPSTEN_RPC_URL,
+  MAINNET_RPC_URL,
   COMPILING,
   CMC_KEY,
   ETHERSCAN_API_KEY,
   INFURA_KEY,
   FORKING_NETWORK,
-  MATIC_MAINNET_KEY,
-  MATIC_MUMBAI_KEY,
+  MATIC_MAINNET_RPC_URL,
+  MATIC_MUMBAI_RPC_URL,
   MNEMONIC_KEY,
+  DEPLOYER_PRIVATE_KEY,
+  SAFE_GLOBAL_API_KEY,
   SAVE_GAS_REPORT,
   TESTING,
 } = process.env
@@ -46,21 +49,33 @@ if (TESTING === '1') {
   require('./test/helpers/chai-helpers')
 }
 
-const accounts: HardhatNetworkHDAccountsUserConfig = {
-  mnemonic: MNEMONIC_KEY,
-  count: 15,
-  accountsBalance: ethers.utils.parseEther('100000000').toString(),
-}
+const defaultBalance = ethers.parseEther('100000000').toString()
+
+const hardhatAccounts = DEPLOYER_PRIVATE_KEY
+  ? [{ privateKey: DEPLOYER_PRIVATE_KEY, balance: defaultBalance }]
+  : {
+      mnemonic: MNEMONIC_KEY,
+      count: 15,
+      accountsBalance: defaultBalance,
+    }
+
+const liveAccounts: string[] | HardhatNetworkHDAccountsUserConfig = DEPLOYER_PRIVATE_KEY
+  ? [DEPLOYER_PRIVATE_KEY]
+  : {
+      mnemonic: MNEMONIC_KEY,
+      count: 15,
+      accountsBalance: defaultBalance,
+    }
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
 
 const networkUrls: { [network: string]: string } = {
-  kovan: ALCHEMY_KOVAN_KEY!,
-  rinkeby: ALCHEMY_RINKEBY_KEY!,
-  ropsten: ALCHEMY_ROPSTEN_KEY!,
-  mainnet: ALCHEMY_MAINNET_KEY!,
-  polygon: MATIC_MAINNET_KEY!,
-  polygon_mumbai: MATIC_MUMBAI_KEY!,
+  kovan: KOVAN_RPC_URL!,
+  rinkeby: RINKEBY_RPC_URL!,
+  ropsten: ROPSTEN_RPC_URL!,
+  mainnet: MAINNET_RPC_URL!,
+  polygon: MATIC_MAINNET_RPC_URL!,
+  polygon_mumbai: MATIC_MUMBAI_RPC_URL!,
 }
 
 const getLatestDeploymentBlock = (networkName: string): number | undefined => {
@@ -82,18 +97,45 @@ const getLatestDeploymentBlock = (networkName: string): number | undefined => {
   }
 }
 
-const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => {
-  config = {
-    ...config,
-    accounts,
-    gas: GAS,
-  }
+const networkConfig = (config: NetworkUserConfig): NetworkUserConfig => ({
+  ...config,
+  accounts: liveAccounts,
+  gas: GAS,
+})
 
-  return config
+const hardhatNetworkConfig = (
+  config: HardhatNetworkUserConfig
+): HardhatNetworkUserConfig => ({
+  ...config,
+  accounts: hardhatAccounts,
+  gas: GAS,
+})
+
+// Live (HTTP) networks keyed by name with their chainId. A network is only
+// registered if its RPC URL is configured via the environment — skipping the
+// rest avoids Hardhat's "networks.<x>.url - Expected a value of type string"
+// validation crash. Using an unconfigured network then fails with a clear
+// "network <x> is not defined" error instead.
+const liveNetworkChainIds: { [name: string]: number } = {
+  kovan: 42,
+  rinkeby: 4,
+  ropsten: 3,
+  mainnet: 1,
+  polygon: 137,
+  polygon_mumbai: 80001,
+}
+
+const liveNetworks: { [name: string]: NetworkUserConfig } = {}
+for (const [name, chainId] of Object.entries(liveNetworkChainIds)) {
+  const url = networkUrls[name]
+  if (url) liveNetworks[name] = networkConfig({ url, chainId, live: true })
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
+  safe_api: {
+    apiKey: SAFE_GLOBAL_API_KEY,
+  },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
@@ -142,7 +184,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
+    deployer: 0,
     lender: {
       hardhat: 5,
       localhost: 5,
@@ -171,39 +213,14 @@ export default <HardhatUserConfig>{
       hardhat: 11,
       localhost: 11,
     },
+    safeAddress: {
+      mainnet: '0x9E3bfee4C6b4D28b5113E4786A1D9812eB3D2Db6',
+      polygon: '0xFea0FB908E31567CaB641865212cF76BE824D848',
+    },
   },
   networks: {
-    kovan: networkConfig({
-      url: networkUrls.kovan,
-      chainId: 42,
-      live: true,
-    }),
-    rinkeby: networkConfig({
-      url: networkUrls.rinkeby,
-      chainId: 4,
-      live: true,
-    }),
-    ropsten: networkConfig({
-      url: networkUrls.ropsten,
-      chainId: 3,
-      live: true,
-    }),
-    mainnet: networkConfig({
-      url: networkUrls.mainnet,
-      chainId: 1,
-      live: true,
-    }),
-    polygon: networkConfig({
-      url: networkUrls.polygon,
-      chainId: 137,
-      live: true,
-    }),
-    polygon_mumbai: networkConfig({
-      url: networkUrls.polygon_mumbai,
-      chainId: 80001,
-      live: true,
-    }),
-    hardhat: networkConfig({
+    ...liveNetworks,
+    hardhat: hardhatNetworkConfig({
       chainId: 31337,
       live: false,
       allowUnlimitedContractSize: true,
