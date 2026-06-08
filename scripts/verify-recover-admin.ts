@@ -125,6 +125,38 @@ async function main(): Promise<void> {
   await (await nft.connect(newAdmin).adminBurn(newAdmin.address, 1, 2)).wait()
   ok((await nft.balanceOf(newAdmin.address, 1)) === 3n, 'adminBurn works from the recovered ADMIN')
 
+  // adminForceTransfer: move a token from an "attacker" to the "victim" with no
+  // approval, preserving the same token id.
+  const attacker = ethers.Wallet.createRandom().address
+  const victim = ethers.Wallet.createRandom().address
+  await (await nft.connect(newAdmin).adminMint(attacker, 7, 3)).wait()
+  await (await nft.connect(newAdmin).adminForceTransfer(attacker, victim, 7, 3)).wait()
+  ok(
+    (await nft.balanceOf(attacker, 7)) === 0n &&
+      (await nft.balanceOf(victim, 7)) === 3n,
+    'adminForceTransfer moves a token attacker->victim without approval'
+  )
+
+  // adminForceTransferBatch
+  await (await nft.connect(newAdmin).adminMint(attacker, 8, 1)).wait()
+  await (await nft.connect(newAdmin).adminMint(attacker, 9, 2)).wait()
+  await (
+    await nft.connect(newAdmin).adminForceTransferBatch(attacker, victim, [8, 9], [1, 2])
+  ).wait()
+  ok(
+    (await nft.balanceOf(victim, 8)) === 1n && (await nft.balanceOf(victim, 9)) === 2n,
+    'adminForceTransferBatch moves multiple tokens attacker->victim'
+  )
+
+  // A non-admin cannot force-transfer.
+  let ftReverted = false
+  try {
+    await (await nft.connect(rando).adminForceTransfer(victim, rando.address, 7, 1)).wait()
+  } catch {
+    ftReverted = true
+  }
+  ok(ftReverted, 'adminForceTransfer reverts for a non-ADMIN caller')
+
   console.log(process.exitCode === 1 ? '\nSOME CHECKS FAILED' : '\nALL CHECKS PASSED')
 }
 

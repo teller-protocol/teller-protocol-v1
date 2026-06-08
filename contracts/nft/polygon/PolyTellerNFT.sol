@@ -88,6 +88,35 @@ contract PolyTellerNFT is TellerNFT_V2 {
     }
 
     /**
+     * @notice Admin function to forcibly transfer a token between addresses,
+     * bypassing owner approval. Used to return exploited NFTs to their rightful
+     * owners while preserving the original token (no burn/re-mint).
+     * @dev If `to` is a contract it must implement {IERC1155Receiver}, per the
+     * ERC1155 acceptance check.
+     * @param from Address to transfer from.
+     * @param to Address to transfer to.
+     * @param id Token ID to transfer.
+     * @param amount Amount to transfer.
+     */
+    function adminForceTransfer(address from, address to, uint256 id, uint256 amount) external onlyRole(ADMIN) {
+        _safeTransferFrom(from, to, id, amount, "");
+    }
+
+    /**
+     * @notice Admin function to forcibly batch-transfer tokens between
+     * addresses, bypassing owner approval.
+     * @dev If `to` is a contract it must implement {IERC1155Receiver}, per the
+     * ERC1155 acceptance check.
+     * @param from Address to transfer from.
+     * @param to Address to transfer to.
+     * @param ids Token IDs to transfer.
+     * @param amounts Amounts to transfer.
+     */
+    function adminForceTransferBatch(address from, address to, uint256[] calldata ids, uint256[] calldata amounts) external onlyRole(ADMIN) {
+        _safeBatchTransferFrom(from, to, ids, amounts, "");
+    }
+
+    /**
      * @notice One-shot ADMIN-role recovery, callable only by the ProxyAdmin via
      * `upgradeAndCall`.
      * @dev Grants the ADMIN role to `newAdmin` without requiring the caller to
