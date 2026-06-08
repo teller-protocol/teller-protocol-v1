@@ -46,6 +46,36 @@ contract PolyTellerNFT is TellerNFT_V2 {
     }
 
     /**
+     * @notice Admin function to mint a token to an address.
+     * @param to Address to mint to.
+     * @param id Token ID to mint.
+     * @param amount Amount to mint.
+     */
+    function adminMint(address to, uint256 id, uint256 amount) external onlyRole(ADMIN) {
+        _mint(to, id, amount, "");
+    }
+
+    /**
+     * @notice Admin function to burn a token from an address.
+     * @param from Address to burn from.
+     * @param id Token ID to burn.
+     * @param amount Amount to burn.
+     */
+    function adminBurn(address from, uint256 id, uint256 amount) external onlyRole(ADMIN) {
+        _burn(from, id, amount);
+    }
+
+    /**
+     * @notice Admin function to batch burn tokens from an address.
+     * @param from Address to burn from.
+     * @param ids Token IDs to burn.
+     * @param amounts Amounts to burn.
+     */
+    function adminBurnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external onlyRole(ADMIN) {
+        _burnBatch(from, ids, amounts);
+    }
+
+    /**
      * @notice called when user wants to withdraw single token back to root chain
      * @dev Should burn user's tokens. This transaction will be verified when exiting on root chain
      * @param id id to withdraw
