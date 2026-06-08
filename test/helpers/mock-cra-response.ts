@@ -1,5 +1,4 @@
-import { BytesLike } from '@ethersproject/bytes'
-import { BigNumberish } from 'ethers'
+import { BigNumberish, BytesLike, Signature } from 'ethers'
 // import hre from 'hardhat'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -56,9 +55,8 @@ export const mockCRAResponse = async (
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const { length: nonce } = await diamond.getBorrowerLoans(args.borrower)
 
-  const { timestamp: currentTimestamp } = await ethers.provider.getBlock(
-    'latest'
-  )
+  const block = await ethers.provider.getBlock('latest')
+  const currentTimestamp = block!.timestamp
   const request: CRARequest = {
     borrower: args.borrower,
     recipient: args.recipient ?? NULL_ADDRESS,
@@ -68,8 +66,9 @@ export const mockCRAResponse = async (
     duration: args.loanTermLength,
     requestTime: currentTimestamp,
   }
-  const requestHash = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
+  const abiCoder = ethers.AbiCoder.defaultAbiCoder()
+  const requestHash = ethers.keccak256(
+    abiCoder.encode(
       [
         'address', // borrower
         'address', // assetAddress
@@ -91,8 +90,8 @@ export const mockCRAResponse = async (
     )
   )
 
-  const responseHash = ethers.utils.keccak256(
-    ethers.utils.defaultAbiCoder.encode(
+  const responseHash = ethers.keccak256(
+    abiCoder.encode(
       [
         'address', // assetAddress
         'uint256', // maxLoanAmount
@@ -115,9 +114,9 @@ export const mockCRAResponse = async (
   )
 
   const signer = await getNamedSigner('craSigner')
-  const responseHashArray = ethers.utils.arrayify(responseHash)
+  const responseHashArray = ethers.getBytes(responseHash)
   const signedMessage = await signer.signMessage(responseHashArray)
-  const sig = ethers.utils.splitSignature(signedMessage)
+  const sig = Signature.from(signedMessage)
   const responses: CRAResponse[] = []
   responses.push({
     signer: await signer.getAddress(),

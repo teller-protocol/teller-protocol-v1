@@ -126,42 +126,42 @@ const buildAssetSettingRequests = async (
   const requests: AssetSettingsRequestObj = {}
   const values: AssetSettingsValues = {}
   for (const setting of settings) {
-    const key = ethers.utils.id(setting.key)
+    const key = ethers.id(setting.key)
     let value: string
     let realValue: string
     let cacheType: CacheType
     switch (setting.type) {
       case AssetType.Token:
-        value = realValue = ethers.utils.getAddress(tokens.all[setting.value])
+        value = realValue = ethers.getAddress(tokens.all[setting.value])
         cacheType = CacheType.Address
         break
 
       case AssetType.Address:
-        value = realValue = ethers.utils.getAddress(setting.value)
+        value = realValue = ethers.getAddress(setting.value)
         cacheType = CacheType.Address
         break
 
       case AssetType.Amount:
         realValue = toBN(setting.value, decimals).toString()
-        value = toBN(setting.value, decimals).toHexString()
+        value = '0x' + toBN(setting.value, decimals).toString(16)
         cacheType = CacheType.Uint
         break
 
       case AssetType.Bool:
         realValue = setting.value
-        value = ethers.utils.hexlify(realValue)
+        value = ethers.hexlify(realValue)
         cacheType = CacheType.Bool
         break
 
       case AssetType.Uint:
         realValue = toBN(setting.value).toString()
-        value = toBN(setting.value).toHexString()
+        value = '0x' + toBN(setting.value).toString(16)
         cacheType = CacheType.Uint
         break
     }
 
-    value = ethers.utils.hexZeroPad(value, 32)
-    if (ethers.BigNumber.from(value).isZero()) continue
+    value = ethers.zeroPadValue(value, 32)
+    if (BigInt(value) === 0n) continue
 
     requests[setting.key] = {
       key,

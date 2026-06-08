@@ -19,11 +19,11 @@ const pauseProtocol = async (
 
   log('')
 
-  let ID = ethers.utils.formatBytes32String('')
+  let ID = ethers.encodeBytes32String('')
   if (args.id == null) {
     log(`Pausing the entire Teller Protocol`, { indent: 1, star: true })
   } else {
-    ID = ethers.utils.id(args.id)
+    ID = ethers.id(args.id)
 
     log(`Pausing the Teller Protocol ID "${args.id}" (${ID})`, {
       indent: 1,

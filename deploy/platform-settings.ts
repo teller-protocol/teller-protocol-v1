@@ -20,7 +20,7 @@ const createPlatformSettings: DeployFunction = async (hre) => {
     const { max, min, processOnDeployment, value } = setting
 
     if (processOnDeployment) {
-      const keccak = ethers.utils.id(settingName)
+      const keccak = ethers.id(settingName)
       log(`${settingName}: `, { indent: 2, star: true, nl: false })
 
       // Check if the platform setting has already been created

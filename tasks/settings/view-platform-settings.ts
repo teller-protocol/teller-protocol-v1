@@ -41,7 +41,7 @@ export const getPlatformSetting = async (
 ): Promise<GetPlatformSettingsReturn> => {
   const diamond = await hre.contracts.get<ITellerDiamond>('TellerDiamond')
 
-  const keccak = hre.ethers.utils.id(name)
+  const keccak = hre.ethers.id(name)
   const setting = await diamond.getPlatformSetting(keccak)
 
   hre.log(`${name}:`, { indent: 2, star: true })

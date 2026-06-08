@@ -1,5 +1,5 @@
 import colors from 'colors'
-import { ContractTransaction } from 'ethers'
+import { ContractTransactionResponse } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -66,11 +66,11 @@ const initializeMarkets: DeployFunction = async (hre) => {
     )
     const collateralTokensToAdd = new Set(
       market.collateralTokens.map((sym) =>
-        ethers.utils.getAddress(tokenAddresses.all[sym])
+        ethers.getAddress(tokenAddresses.all[sym])
       )
     )
     for (const token of existingCollateralTokens) {
-      const tokenAddress = ethers.utils.getAddress(token)
+      const tokenAddress = ethers.getAddress(token)
       if (collateralTokensToAdd.has(tokenAddress))
         collateralTokensToAdd.delete(tokenAddress)
     }
@@ -150,7 +150,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
 
 const waitAndLog = async (
   msg: string,
-  tx: Promise<ContractTransaction>,
+  tx: Promise<ContractTransactionResponse>,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
   const receipt = await tx.then(({ wait }) => wait())

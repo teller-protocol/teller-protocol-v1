@@ -49,7 +49,7 @@ export const addTiers = async (
   const { tiers } = getNFT(network)
   for (let i = 0; i < tiers.length; i++) {
     const tierIndex = i + 1
-    if (existingTiersCount.gt(i)) {
+    if (existingTiersCount > BigInt(i)) {
       log(`Tier ${tierIndex} ${colors.yellow('already')} exists`, {
         indent: 3,
         star: true,

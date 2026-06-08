@@ -1,4 +1,4 @@
-import { BigNumberish } from 'ethers'
+import { BigNumberish, FixedNumber } from 'ethers'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -20,7 +20,6 @@ export const getPrice = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<GetPricesReturn> => {
   const { contracts, network, tokens, ethers, toBN, log } = hre
-  const { BigNumber: BN, FixedNumber: FN } = ethers
 
   let srcStr = args.src.toUpperCase()
   let dstStr = args.dst.toUpperCase()
@@ -43,21 +42,18 @@ export const getPrice = async (
   log(`Price for ${srcStr}/${dstStr}`, { indent: 1 })
 
   const answer = await priceAgg.getPriceFor(srcAddress, dstAddress)
-  const price = FN.from(answer).divUnsafe(FN.from(dstFactor))
+  const price = FixedNumber.fromValue(answer, 0).divUnsafe(FixedNumber.fromValue(dstFactor, 0))
   let value = price
   if (args.amount) {
     const valueFor = await priceAgg.getValueFor(
       srcAddress,
       dstAddress,
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      BN.from(
-        ethers.utils.parseUnits(
-          BN.from(args.amount).toString(),
-          await src.decimals()
-        )
+      ethers.parseUnits(
+        BigInt(args.amount).toString(),
+        await src.decimals()
       )
     )
-    value = FN.from(valueFor.toString()).divUnsafe(FN.from(dstFactor))
+    value = FixedNumber.fromValue(valueFor, 0).divUnsafe(FixedNumber.fromValue(dstFactor, 0))
   }
 
   log(`Price   : ${price.toString()}`, { indent: 2, star: true })

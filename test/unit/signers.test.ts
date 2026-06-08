@@ -1,5 +1,4 @@
 import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import {
   contracts,
@@ -14,7 +13,6 @@ import { getMarkets } from '../../config'
 import { ERC20, ITellerDiamond } from '../../types/typechain'
 
 chai.should()
-chai.use(solidity)
 
 describe('Signers', () => {
   const markets = getMarkets(network)

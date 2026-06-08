@@ -1,13 +1,10 @@
-import '@nomiclabs/hardhat-ethers'
+import '@nomicfoundation/hardhat-ethers'
 import 'hardhat-deploy'
 
 import {
-  BigNumber,
+  BaseContract,
   BigNumberish,
-  Contract,
-  providers,
   Signer,
-  utils,
 } from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -24,8 +21,8 @@ declare module 'hardhat/types/runtime' {
     tokens: TokensExtension
     evm: EVM
     getNamedSigner: (name: string) => Promise<Signer>
-    toBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
-    fromBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
+    toBN: (amount: BigNumberish, decimals?: BigNumberish) => bigint
+    fromBN: (amount: BigNumberish, decimals?: BigNumberish) => bigint
     log: (msg: string, config?: LogConfig) => void
   }
 }
@@ -36,7 +33,7 @@ interface LogConfig extends FormatMsgConfig {
 }
 
 interface ContractsExtension {
-  get: <C extends Contract>(
+  get: <C extends BaseContract>(
     name: string,
     config?: ContractsGetConfig
   ) => Promise<C>
@@ -160,7 +157,7 @@ extendEnvironment((hre) => {
   updateTenderlyConfig(hre)
 
   hre.contracts = {
-    async get<C extends Contract>(
+    async get<C extends BaseContract>(
       name: string,
       config?: ContractsGetConfig
     ): Promise<C> {
@@ -181,32 +178,33 @@ extendEnvironment((hre) => {
       let contract = await ethers.getContractAt(abi, address)
 
       if (config?.from) {
-        const signer = Signer.isSigner(config.from)
-          ? config.from
-          : ethers.provider.getSigner(config.from)
-        contract = contract.connect(signer)
+        const signer =
+          typeof config.from === 'string'
+            ? await ethers.provider.getSigner(config.from)
+            : config.from
+        contract = contract.connect(signer) as typeof contract
       }
 
-      return contract as C
+      return contract as unknown as C
     },
   }
 
   hre.tokens = {
     async get(nameOrAddress: string): Promise<ERC20> {
       let address: string
-      if (ethers.utils.isAddress(nameOrAddress)) {
+      if (ethers.isAddress(nameOrAddress)) {
         address = nameOrAddress
       } else {
         const tokens = getTokens(network)
         address = tokens.all[nameOrAddress.toUpperCase()]
       }
-      return (await ethers.getContractAt('ERC20', address)) as ERC20
+      return (await ethers.getContractAt('ERC20', address)) as unknown as ERC20
     },
   }
 
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
     const accounts = await hre.getNamedAccounts()
-    return ethers.provider.getSigner(accounts[name])
+    return await ethers.provider.getSigner(accounts[name])
   }
 
   hre.evm = {
@@ -214,7 +212,7 @@ extendEnvironment((hre) => {
       if (moment.isDuration(seconds)) seconds = seconds.asSeconds()
 
       const secsPerBlock = 15
-      const blocks = BigNumber.from(seconds).div(secsPerBlock).toNumber()
+      const blocks = Number(BigInt(seconds as any) / BigInt(secsPerBlock))
       await this.advanceBlocks(blocks, secsPerBlock)
     },
 
@@ -260,22 +258,22 @@ extendEnvironment((hre) => {
     },
   }
 
-  hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
+  hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): bigint => {
     if (typeof amount === 'string') {
-      return ethers.utils.parseUnits(amount, decimals)
+      return ethers.parseUnits(amount, decimals)
     }
 
-    const num = BigNumber.from(amount)
+    const num = BigInt(amount)
     if (decimals) {
-      return num.mul(BigNumber.from('10').pow(decimals))
+      return num * 10n ** BigInt(decimals)
     }
     return num
   }
 
-  hre.fromBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
-    const num = BigNumber.from(amount)
+  hre.fromBN = (amount: BigNumberish, decimals?: BigNumberish): bigint => {
+    const num = BigInt(amount)
     if (decimals) {
-      return num.div(BigNumber.from('10').pow(decimals))
+      return num / (10n ** BigInt(decimals))
     }
     return num
   }
