@@ -4,7 +4,12 @@ import path from 'path'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { GnosisSafeAdminClient } from '../../helpers/gnosis-safe'
+import {
+  GnosisSafeAdminClient,
+  MULTISEND_CALL_ONLY,
+  encodeMultiSend,
+  MultiSendTx,
+} from '../../helpers/gnosis-safe'
 
 /**
  * Mainnet MainnetTellerNFT proxy (TellerNFT_V2). Overridable via --nft.
@@ -16,6 +21,7 @@ interface ReturnArgs {
   nft?: string
   safe?: string
   send?: boolean
+  batch: string
 }
 
 /**
@@ -122,7 +128,7 @@ const returnStolenNFTs = async (
     const safeHasAdmin: boolean = await nft.hasRole(ADMIN_ROLE, safeAddress)
     log(
       `Safe ${safeAddress} holds ADMIN: ${safeHasAdmin}${
-        safeHasAdmin ? '' : '  <-- run propose-recover-admin first!'
+        safeHasAdmin ? '' : '  <-- run propose-grant-nft-admin-mainnet first!'
       }`,
       { indent: 2, star: true }
     )
@@ -174,8 +180,14 @@ const returnStolenNFTs = async (
   }
 
   if (!args.send) {
+    const perBatch = Math.max(1, parseInt(args.batch, 10) || 30)
+    const nBatches = Math.ceil(entries.length / perBatch)
     log('')
-    log('Dry run complete. Pass --send to propose to the Safe.', { indent: 1 })
+    log(
+      `Dry run complete. With --batch ${perBatch}, this would be ${nBatches} ` +
+        `MultiSend Safe tx(s) for ${entries.length} transfers. Pass --send to propose.`,
+      { indent: 1 }
+    )
     return
   }
 
@@ -192,33 +204,64 @@ const returnStolenNFTs = async (
 
   const safeClient = new GnosisSafeAdminClient({ apiKey })
 
-  log('')
-  log('=== Proposing to Gnosis Safe (Ledger) ===', { indent: 1 })
-  for (const [i, e] of entries.entries()) {
-    const data = nftIface.encodeFunctionData('adminForceTransferBatch', [
+  // Bundle the per-entry adminForceTransferBatch calls into MultiSend batches so
+  // the multisig signs a handful of transactions instead of one per (holder,staker).
+  const perBatch = Math.max(1, parseInt(args.batch, 10) || 30)
+
+  // Guard: MultiSend must be deployed on this network, or the delegatecall fails.
+  const msCode = await ethers.provider.getCode(MULTISEND_CALL_ONLY)
+  if (msCode === '0x') {
+    throw new Error(
+      `MultiSendCallOnly not found at ${MULTISEND_CALL_ONLY} on ${networkName}. ` +
+        'Aborting (cannot batch).'
+    )
+  }
+
+  const calls: MultiSendTx[] = entries.map((e) => ({
+    to: nftAddress,
+    data: nftIface.encodeFunctionData('adminForceTransferBatch', [
       e.from,
       e.to,
       e.ids,
       e.amounts,
-    ])
+    ]),
+  }))
+
+  const chunks: MultiSendTx[][] = []
+  for (let i = 0; i < calls.length; i += perBatch) {
+    chunks.push(calls.slice(i, i + perBatch))
+  }
+
+  log('')
+  log('=== Proposing MultiSend batches to Gnosis Safe (Ledger) ===', {
+    indent: 1,
+  })
+  log(
+    `${entries.length} force-transfers → ${chunks.length} Safe tx(s) (${perBatch}/batch) via MultiSend`,
+    { indent: 2, star: true }
+  )
+
+  for (const [i, chunk] of chunks.entries()) {
+    const data = encodeMultiSend(chunk)
     const result = await safeClient.proposeTransaction({
       safeAddress,
-      to: nftAddress,
+      to: MULTISEND_CALL_ONLY,
       data,
       network: networkName,
-      nonceOffset: i, // queue sequentially after the current Safe nonce
+      operation: 1, // delegatecall — required for MultiSend
+      nonceOffset: i, // queue batches sequentially after the current Safe nonce
     })
     log(
-      `entry ${i}: ${e.from} -> ${e.to} (${e.ids.length} ids) safeTx ${result.safeTxHash}`,
+      `batch ${i + 1}/${chunks.length}: ${chunk.length} transfers, safeTx ${result.safeTxHash}`,
       { indent: 2, star: true }
     )
   }
 
   log('')
-  log(`Proposed ${entries.length} transactions to the Safe queue.`, {
-    indent: 1,
-    star: true,
-  })
+  log(
+    `Proposed ${chunks.length} MultiSend transaction(s) covering ${entries.length} transfers.`,
+    { indent: 1, star: true }
+  )
 }
 
 task('return-stolen-nfts', 'Force-transfer exploited NFTs back to original stakers via Gnosis Safe')
@@ -230,5 +273,11 @@ task('return-stolen-nfts', 'Force-transfer exploited NFTs back to original stake
   )
   .addOptionalParam('nft', 'MainnetTellerNFT address', undefined, types.string)
   .addOptionalParam('safe', 'Override the Gnosis Safe address', undefined, types.string)
+  .addParam(
+    'batch',
+    'Force-transfers per MultiSend Safe tx (bundles proposals)',
+    '30',
+    types.string
+  )
   .addFlag('send', 'Propose the transactions to the Safe (otherwise dry run)')
   .setAction(returnStolenNFTs)

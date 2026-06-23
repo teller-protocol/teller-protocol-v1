@@ -2,6 +2,41 @@ import { ethers } from 'ethers'
 
 import { generateLedgerSignature } from './ledger'
 
+/**
+ * Canonical Safe `MultiSendCallOnly` v1.3.0 — same address on mainnet & polygon.
+ * It batches many plain CALLs into one Safe transaction; the Safe executes it via
+ * delegatecall (operation=1), so each inner CALL's msg.sender is the Safe itself.
+ * "CallOnly" rejects sub-delegatecalls, which is what we want for admin calls.
+ */
+export const MULTISEND_CALL_ONLY =
+  '0x40A2aCCbd92BCA938b02010E17A5b8929b49130D'
+
+/** One CALL to batch via MultiSend. */
+export interface MultiSendTx {
+  to: string
+  value?: string
+  data: string
+}
+
+/**
+ * ABI-packs transactions for `MultiSend.multiSend(bytes)`: per tx
+ * operation(1) ‖ to(20) ‖ value(32) ‖ dataLength(32) ‖ data. All entries use
+ * operation 0 (CALL) since MultiSendCallOnly forbids delegatecall sub-txs.
+ */
+export const encodeMultiSend = (txs: MultiSendTx[]): string => {
+  const packed = ethers.concat(
+    txs.map((t) =>
+      ethers.solidityPacked(
+        ['uint8', 'address', 'uint256', 'uint256', 'bytes'],
+        [0, t.to, t.value ?? 0, ethers.dataLength(t.data), t.data]
+      )
+    )
+  )
+  return new ethers.Interface([
+    'function multiSend(bytes transactions)',
+  ]).encodeFunctionData('multiSend', [packed])
+}
+
 interface SafeTransactionRequest {
   safe: string
   to: string
@@ -44,6 +79,7 @@ export class GnosisSafeAdminClient {
     value?: string
     network: string
     nonceOffset?: number
+    operation?: number
   }): Promise<ProposalResult> {
     const {
       safeAddress,
@@ -52,17 +88,18 @@ export class GnosisSafeAdminClient {
       value = '0',
       network,
       nonceOffset = 0,
+      operation = 0,
     } = args
 
     const nonce = await this.getNextNonce(safeAddress, network, nonceOffset)
-    console.log({ nonce })
+    console.log({ nonce, operation })
 
     const txHash = await this.generateTransactionHash(
       safeAddress,
       to,
       data,
       value,
-      0,
+      operation,
       0,
       0,
       0,
@@ -86,7 +123,7 @@ export class GnosisSafeAdminClient {
       to,
       value,
       data,
-      operation: 0,
+      operation,
       gasToken: '0x0000000000000000000000000000000000000000',
       safeTxGas: 0,
       baseGas: 0,

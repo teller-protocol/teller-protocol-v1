@@ -5,10 +5,10 @@ Inputs (all under investigation/, produced by the on-chain forensic trace):
   - nft_attack_staker_attribution_2026-06-23.csv  (original_staker, v2_tier, units_owed)
   - nft_attack_ledger_2026-06-23.csv              (v2_tier, current_holder, ..., units_held_now)
 
-Policy knob: CLAWBACK_ELIGIBLE — addresses we will force-transfer FROM. Defaults
-to the attacker + the main consolidation wallet (both clearly attacker-controlled).
-Innocent third-party buyers are intentionally NOT clawed back; the units they hold
-become re-mint obligations instead.
+Policy knob: CLAWBACK_ELIGIBLE — addresses we will force-transfer FROM. Per the
+2026-06-23 decision this is None = ALL current holders (downstream buyers who
+skipped due diligence are clawed back too). Units we still can't source (sent to
+holders not yet traced into the ledger, or burned) become re-mint obligations.
 
 Outputs:
   - recovery_map.json   : [{from,to,ids,amounts}]  -> force-transfers (adminForceTransferBatch)
@@ -21,9 +21,11 @@ from collections import defaultdict, deque
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ATTACKER = "0x7550c40e188b3da9349c9d7b941a699c2f62e0e3"
-CONSOLIDATION = "0xa56d424ceb11d1f3c55e5cc0ab0911f2aa9926f2"
-# Addresses we are willing to force-transfer FROM (attacker-controlled). Edit per policy.
-CLAWBACK_ELIGIBLE = {ATTACKER, CONSOLIDATION}
+# Policy (2026-06-23): claw back from ALL current holders of stolen units — the
+# downstream recipients failed their due diligence buying exploited NFTs and are
+# not treated as innocent. Set CLAWBACK_ELIGIBLE = None to use every holder in
+# the ledger as a force-transfer source; or pin to a specific set to restrict.
+CLAWBACK_ELIGIBLE = None
 
 def load_attribution():
     owed = defaultdict(list)  # tier -> [(staker, units)]
@@ -33,13 +35,15 @@ def load_attribution():
     return owed
 
 def load_recoverable():
-    # current on-chain balances of clawback-eligible holders, by tier
-    pool = defaultdict(lambda: defaultdict(int))  # tier -> {holder: units_now}
-    with open(os.path.join(HERE, "nft_attack_ledger_2026-06-23.csv")) as f:
+    # taint-traced current holders of STOLEN units, by tier (full forward trace —
+    # attributes only the stolen portion of each holder's balance, not legit ones).
+    pool = defaultdict(lambda: defaultdict(int))  # tier -> {holder: stolen_units}
+    with open(os.path.join(HERE, "nft_attack_full_ledger_2026-06-23.csv")) as f:
         for r in csv.DictReader(f):
             h = r["current_holder"].lower()
-            if h in CLAWBACK_ELIGIBLE:
-                pool[int(r["v2_tier"])][h] += int(r["units_held_now"])
+            if CLAWBACK_ELIGIBLE is not None and h not in CLAWBACK_ELIGIBLE:
+                continue
+            pool[int(r["v2_tier"])][h] += int(r["stolen_units_held"])
     return pool
 
 def main():
@@ -78,7 +82,7 @@ def main():
     json.dump(recovery_map, open(os.path.join(HERE, "recovery_map.json"), "w"), indent=2)
     json.dump(remint, open(os.path.join(HERE, "remint_list.json"), "w"), indent=2)
 
-    print(f"clawback-eligible sources: {sorted(CLAWBACK_ELIGIBLE)}")
+    print(f"clawback-eligible: {'ALL current holders' if CLAWBACK_ELIGIBLE is None else sorted(CLAWBACK_ELIGIBLE)}")
     print(f"total units owed:        {total_owed}")
     print(f"  -> force-transfer:     {total_xfer}  ({len(recovery_map)} Safe txs / (from,to) pairs)")
     print(f"  -> re-mint (shortfall): {total_remint}  ({len(remint)} adminMint calls)")
