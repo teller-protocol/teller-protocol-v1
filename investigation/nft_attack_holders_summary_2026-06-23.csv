@@ -1,0 +1,13 @@
+holder,holder_type,units_received,units_held_now
+0x69ad4cbd248eb1839fe78c11f6a7a04b528ef8cd,first-hop recipient,96,0
+0xbe7498c9b9afb92f6b9f4a06cd0fbcb4d1542253,first-hop recipient,84,0
+0xa56d424ceb11d1f3c55e5cc0ab0911f2aa9926f2,first-hop recipient,72,133
+0x7550c40e188b3da9349c9d7b941a699c2f62e0e3,attacker,32,32
+0x03a7c8b9fc330a8980b20adb0a80a2f7913efb19,first-hop recipient,8,11
+0x89f690bdf5e6d838cb0d4cd4c3a8eb538dc5fdac,first-hop recipient,6,6
+0xa37e105acc179d8251845e929ea6b9be6a5e7ea2,first-hop recipient,5,5
+0x2d1d94a02165b135c74dbb107bdc2e9d9d5a6d58,first-hop recipient,4,0
+0x22f679716aaf45311cf6fc75478cced38c6be498,first-hop recipient,3,0
+0xd2ab77a10cab66433c167e9aa4cc3178fe133def,first-hop recipient,3,3
+0xc4dd52892e4a18500379987a7800b5204d0d58e6,first-hop recipient,2,0
+0x025750699c6cf25b6a405af39464c9805faed324,first-hop recipient,1,0

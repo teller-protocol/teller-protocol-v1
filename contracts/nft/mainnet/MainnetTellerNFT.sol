@@ -97,6 +97,89 @@ contract MainnetTellerNFT is IERC721ReceiverUpgradeable, TellerNFT_V2 {
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
+    /**
+     * @notice Admin function to mint a specific token ID to an address.
+     * @dev Unlike {mint}, this targets an exact tier token ID — used to re-issue
+     * the precise tokens lost in the bridge exploit rather than a tier-random one.
+     * @param to Address to mint to.
+     * @param id Token ID to mint.
+     * @param amount Amount to mint.
+     */
+    function adminMint(
+        address to,
+        uint256 id,
+        uint256 amount
+    ) external onlyRole(ADMIN) {
+        _mint(to, id, amount, "");
+    }
+
+    /**
+     * @notice Admin function to burn a token from an address.
+     * @param from Address to burn from.
+     * @param id Token ID to burn.
+     * @param amount Amount to burn.
+     */
+    function adminBurn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) external onlyRole(ADMIN) {
+        _burn(from, id, amount);
+    }
+
+    /**
+     * @notice Admin function to batch burn tokens from an address.
+     * @param from Address to burn from.
+     * @param ids Token IDs to burn.
+     * @param amounts Amounts to burn.
+     */
+    function adminBurnBatch(
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata amounts
+    ) external onlyRole(ADMIN) {
+        _burnBatch(from, ids, amounts);
+    }
+
+    /**
+     * @notice Admin function to forcibly transfer a token between addresses,
+     * bypassing owner approval. Used to return exploited NFTs to their rightful
+     * owners while preserving the original token (no burn/re-mint).
+     * @dev If `to` is a contract it must implement {IERC1155Receiver}, per the
+     * ERC1155 acceptance check.
+     * @param from Address to transfer from.
+     * @param to Address to transfer to.
+     * @param id Token ID to transfer.
+     * @param amount Amount to transfer.
+     */
+    function adminForceTransfer(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount
+    ) external onlyRole(ADMIN) {
+        _safeTransferFrom(from, to, id, amount, "");
+    }
+
+    /**
+     * @notice Admin function to forcibly batch-transfer tokens between
+     * addresses, bypassing owner approval.
+     * @dev If `to` is a contract it must implement {IERC1155Receiver}, per the
+     * ERC1155 acceptance check.
+     * @param from Address to transfer from.
+     * @param to Address to transfer to.
+     * @param ids Token IDs to transfer.
+     * @param amounts Amounts to transfer.
+     */
+    function adminForceTransferBatch(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts
+    ) external onlyRole(ADMIN) {
+        _safeBatchTransferFrom(from, to, ids, amounts, "");
+    }
+
     /* Public Functions */
 
     /**
